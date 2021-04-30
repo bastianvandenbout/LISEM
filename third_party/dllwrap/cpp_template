@@ -1,0 +1,111 @@
+#include <windows.h>
+#include <stdio.h>
+#include "hook_macro.h"
+
+HINSTANCE mHinst = 0, mHinstDLL = 0;
+
+{{ 'extern "C" ' if architecture == 'x64' else '' }}UINT_PTR mProcs[{{ ordinal_and_names|length }}] = {0};
+
+LPCSTR mImportNames[] = {
+{% for ordinal, symbol, name in ordinal_and_names %}
+{% if name == '[NONAME]' %}
+  (LPCSTR){{ ordinal }},
+{% else %}
+  "{{ name }}",
+{% endif %}
+{% endfor %}
+};
+
+#ifndef _DEBUG
+inline void log_info(const char* info) {
+}
+#else
+FILE* debug;
+inline void log_info(const char* info) {
+  fprintf(debug, "%s\n", info);
+  fflush(debug);
+}
+#endif
+
+#include "{{ hook }}"
+
+inline void _hook_setup() {
+{% for ordinal, symbol, name in ordinal_and_names %}
+#ifdef {{ name | upper }}
+  {{ name }}_real = ({{ name }}_ptr)mProcs[{{ loop.index0 }}];
+  mProcs[{{ loop.index0 }}] = (UINT_PTR)&{{ name }}_fake;
+#endif
+{% endfor %}
+}
+const size_t ENV_BUF_SIZE = 16384; // Enough for your PATH?
+#include <string>
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+  mHinst = hinstDLL;
+  if (fdwReason == DLL_PROCESS_ATTACH) {
+    char path[MAX_PATH];
+	HMODULE hm = NULL;
+
+	if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
+			GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			(LPCSTR) &DllMain, &hm) == 0)
+	{
+		return FALSE;
+	}
+	if (GetModuleFileName(hm, path, sizeof(path)) == 0)
+	{
+		return FALSE;
+	}
+	char buf[ENV_BUF_SIZE];
+    size_t bufsize = ENV_BUF_SIZE;
+	int e = getenv_s(&bufsize,buf,bufsize,"PATH");  
+	if (e) {
+        exit(EXIT_FAILURE);
+    }
+	std::string paths = path;
+	if(paths.size() > 16)
+	{
+		paths.erase((paths.size()-16),16);
+	}
+	std::string env_path;
+	
+	env_path = paths + "lisem\\bin\\"+ ";" + std::string(buf);
+	
+	
+    e = _putenv_s("PATH",env_path.c_str());
+    if (e) {
+        exit(EXIT_FAILURE);
+    }
+	
+	mHinstDLL = LoadLibrary("real_{{ dll }}");
+    if (!mHinstDLL) {
+      return FALSE;
+    }
+    for (int i = 0; i < {{ ordinal_and_names|length }}; ++i) {
+      mProcs[i] = (UINT_PTR)GetProcAddress(mHinstDLL, mImportNames[i]);
+    }
+    _hook_setup();
+
+  } else if (fdwReason == DLL_PROCESS_DETACH) {
+
+    FreeLibrary(mHinstDLL);
+  }
+  return TRUE;
+}
+
+{% for ordinal, symbol, name in ordinal_and_names %}
+{% if name == '[NONAME]' %}
+{% set wrapper_name = 'ExportByOrdinal' + ordinal|string %}
+{% else %}
+{% set wrapper_name = name + '_wrapper' %}
+{% endif %}
+{% if architecture == 'x64' %}
+extern "C" void {{ wrapper_name }}();
+{% else %}
+extern "C" __declspec(naked) void __stdcall {{ wrapper_name }}(){
+#ifdef _DEBUG
+  log_info("calling {{ name }}");
+#endif
+  __asm{jmp mProcs[{{ loop.index0 }} * 4]}
+}
+{% endif %}
+{% endfor %}

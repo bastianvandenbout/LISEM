@@ -1,0 +1,2717 @@
+#cross
+Provides the Cross product for 3-dimensional vectors. Gives a vector perpendicular to both VectorX and VectorY, and with magnitude |X||Y|cos(angle).
+@return cross
+The three dimensional result of the cross product. 
+@param VectorX
+The first (left) operand of the cross product.
+@param VectorY
+The second (right) operand of the cross product.
+
+#dot
+Provides the Dot product for vectors. Gives the sum of product-wise multiplication, which is equal to |X||Y|sin(angle).
+@return cross
+A dot product. 
+@param VectorX
+The first (left) operand of the dot product.
+@param VectorY
+The second (right) operand of the dot product.
+
+#normalize
+Creates a vector with length 1, by dividing all compenents by the length of the vector.
+@return normalized
+A normalized vector with length 1.
+@param Vector
+The first operand of the normalization.
+
+#length
+Returns the length or norm of a vector.
+@return Length
+Length of vector
+@param X
+Vector
+
+#distance
+Return distance between two vectors (equal to abs(v1-v2));
+@return Distance
+Distance between two vectors.
+@param v1
+First input vector
+@param v2
+Second input vector
+
+#reflect
+Reflection code:
+Calculated as I - 2.0 * dot(N, I) * N
+@return vout
+Outgoing vector.
+@param In
+Incoming vector.
+@param Normal
+Normal vector.
+
+#refract
+Refraction code. 
+Calculated as k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I)); 
+if (k < 0.0)
+    R = vec3(0.0,0.0,0.0);
+else
+    R = eta * I - (eta * dot(N, I) + sqrt(k)) * N;
+@return vout
+Outgoing vector.
+@param In
+Incoming vector.
+@param Normal
+Normal vector.
+@param eta
+Ratio between indices of refraction.
+
+#Aspect
+Provides the angle of steepest descent, defined counter-clockwise and relative to north.
+@return Aspect
+The terrain angle.
+@param Elevation
+The elevation map
+
+#BilateralFilter
+Applies a bilateral filter to a map. This is a noice-reducing, edge-preserving filter that scales based on local gradient magnitude.
+@return Filtered
+Filtered map
+@param Window
+The extent of the filter kernel.
+@param Spatial sigma
+The range in space along which filtering occurs.
+@param Value sigma
+The range in values among which filtering occurs.
+
+#HillShade
+Creates a shaded relief map from an elevation map. Solar angle is the GIS-standard 45 degree North-West.
+@return Hillshade
+Hillshaded relief map
+@param Elevation
+Elevation.
+@param Elevation Scale
+Multiplier for the elevation data.
+
+#DistanceTransform
+Provides the actual closest euclidian distance to any true cell in the input.
+@return Map
+Boolean map, either false or true. This is determined by checking if !(map < 0.5).
+
+#RasterFourier
+Creates the fourier transform of the input data. Is significantly faster if the inputs size is a power of 2.
+@return Map
+Input data converted to frequency space.
+@param Map
+Input data map.
+
+#RasterInverseFourier
+Creates the inverse fourier transform of the input data. Is significantly faster if the inputs size is a power of 2.
+@return Map
+Input data converted to normal space. 
+@param Map
+Input data map. If this input is an output of fourier transform, the original input is approximated.
+
+#MapCohensKappa
+Returns the Cohens Kappa model reliability indicator which is corrected for the data-inherent probability of succesfull guesses.
+@return Kappa
+Kappa value which indicates the correctness of the model compared to observed.
+@param Observed
+Boolean map, either false or true. This is determined by checking if !(map < 0.5).
+@param Model
+Boolean map, either false or true. This is determined by checking if !(map < 0.5).
+
+#MapContinuousCohensKappa
+Returns a continuous extension of the Cohens Kappa model reliability indicator. This is corrected for the data-inherent probability of succesfull guesses.
+@return Kappa
+Kappa value which indicates the correctness of the model compared to observed.
+@param Observed
+Boolean map, either false or true. This is determined by checking if !(map < 0.5).
+@param Model
+Boolean map, either false or true. This is determined by checking if !(map < 0.5).
+@param Threshold
+The threshold value for the model map.
+
+#WaitForAllDownloads
+Wait for all of the script-initiated downloads to finish, or fail.
+@return Succeeded.
+Wether all downloads succeeded.
+
+#DownloadFileAbsPath
+Downloads some content and stores it to a local file.
+@return Succeeded
+True if download was succesfull or succesfully started, False otherwise.
+@param URL
+The adress of the file to download.
+@param File
+The filename to save the downloaded file to. Absolute path.
+@param Wait
+Wait for the download, or start and continue?
+@param Timeout
+The connection time-out limit, in milliseconds.
+@param Username
+If not empty, this username is added to the download request.
+@param Password
+If not empty, this password is added to the download request.
+NOTE: The password is not stored in an encrypted format.
+
+#DownloadFile
+Downloads some content and stores it to a local file.
+@return Succeeded
+True if download was succesfull or succesfully started, False otherwise.
+@param URL
+The adress of the file to download.
+@param File
+The filename to save the downloaded file to. Path relative to working directory.
+@param Wait
+Wait for the download, or start and continue?
+@param Timeout
+The connection time-out limit, in milliseconds.
+@param Username
+If not empty, this username is added to the download request.
+@param Password
+If not empty, this password is added to the download request.
+NOTE: The password is not stored in an encrypted format.
+
+#FitGumbel
+Find an optimized set of coefficients for a gumbel probability density distribution that fits the input data.
+@return Parameters
+The optimized parameters
+@param xdata
+The data for the variable under investigation
+@param ydata
+The estimated probability density for the related x-data.
+
+#FitGumbel
+Find an optimized set of coefficients for a gumbel probability density distribution that fits the input data.
+@return Parameters
+The optimized parameters
+@param xdata
+The data for the variable under investigation
+@param ydata
+The estimated probability density for the related x-data.
+@param guess_c1
+An initial estimate of the first coefficient.
+@param guess_c2
+An initial estimate of the second coefficient.
+
+#OptimizeCustom
+Find a set of parameter values for which a custom error function returns its lowest value. 
+Uses an gradient desctent/Armijo-backtracking algorithm. 
+Gradients are determined using a finite difference calculation.
+If you set the finite difference step to be small, make sure your custom error function provides sufficient accuracy (use double).
+Note that map calculations use float internally.
+@return CalibratedParameters
+The set of calibrated parameters for which the error function is minimal.
+@param Initial
+The set of parameter initial values.
+@param Positive
+Wether the parameter must be positive or not.
+@param Function
+The callback function. Must have the signature double f(array<double> paramvalues). 
+Provide a handle to this function.
+@param FiniteStep
+The finite difference step used in estimating the gradient of the error function.
+For usage with the multi-hazard model, a value of 0.01 is adviced.
+@param GradientStep
+The gradient descent step used in estimating the new parameter values.
+For usage with the multi-hazard model, a value of 0.05 is adviced.
+For more stable, smooth and linearized error function, a higher value (with 1 as maximum) can be used.
+
+#OptimizeCustom
+Find a set of parameter values for which a custom error function returns its lowest value. 
+Uses an gradient desctent/Armijo-backtracking algorithm. 
+Gradients are determined using a finite difference calculation.
+If you set the finite difference step to be small, make sure your custom error function provides sufficient accuracy (use double).
+Note that map calculations use float internally.
+@return CalibratedParameters
+The set of calibrated parameters for which the error function is minimal.
+@param Initial
+The set of parameter initial values.
+@param Function
+The callback function. Must have the signature double f(array<double> paramvalues). 
+Provide a handle to this function.
+@param FiniteStep
+The finite difference step used in estimating the gradient of the error function.
+For usage with the multi-hazard model, a value of 0.01 is adviced.
+@param GradientStep
+The gradient descent step used in estimating the new parameter values.
+For usage with the multi-hazard model, a value of 0.05 is adviced.
+For more stable, smooth and linearized error function, a higher value (with 1 as maximum) can be used.
+
+#MapIf
+Can be used to make if,else statements with maps. e.g. MapIf(mapa >> mapb, a,b);
+@return Covered
+The shifted map.
+@param Boolean
+Input value map, with boolean values (is considered true if non-MV and > 0.5)
+@param TrueVal
+Value assigned if the boolean is true.
+@param FalseVal
+Values assigned if the boolean is false.
+
+#Cover
+Replaces all the missing value cells with the specified input.
+@return Covered
+The covered map.
+@param Values
+Input value map.
+@param CoverVal
+The value with which to replace MV cells.
+
+#Shift(Map,int,int)
+Shifts the content of the map, and replaces the edges with 0.0.
+@return Shifted
+The shifted map.
+@param Values
+Input value map.
+@param xshift
+The number of cells to shift in the West-East direction.
+@param yshift
+The number of cells to shift in the North-South direction.
+
+#Shift(Map,int,int,float)
+Shifts the content of the map, and replaces the edges with a specified value.
+@return Shifted
+The shifted map.
+@param Values
+Input value map.
+@param xshift
+The number of cells to shift in the West-East direction.
+@param yshift
+The number of cells to shift in the North-South direction.
+@param fill
+The value to fill in at the edges of the shifted contents.
+
+#ShiftMV
+Shifts the content of the map, and replaces the edges with missing values.
+@return Shifted
+The shifted map.
+@param Values
+Input value map.
+@param xshift
+The number of cells to shift in the West-East direction.
+@param yshift
+The number of cells to shift in the North-South direction.
+
+#InverseDistance
+An interpolation method where the interpolated value the weighted sum of all datapoints, with weights given by the inverse of the distance to a specified power. For any cell with mask true (non-MV and > 0.5) and points missing value, a new interpolated value is calculated based on all points.
+@return Interpolated
+The inverse-distance interpolated map.
+@param Mask
+Interpolated values will only be found for cells where Mask is true (non-MV and > 0.5)
+@param Points
+The input data. Should be non-MV for data points and MV for cells that require an interpolated value. 
+@param Power
+The power used in the inversedistance interpolation (normal value is 2.0)
+
+#SpreadOne
+Spreads the values into the MV domain. Normal values remain intact. MV are replaced by the first (clockwise order starting north) found non-MV value in its direct lateral or diagonal surroundings.
+@return Spreaded
+The input map spreaded one cell length into the MV domain.
+@param Values
+An input map which can contain both normal and missing value cells.
+
+#Catchments
+Provides a unique id for each cell based on the catchment to which it belongs. If provided, the Outlet (pits, LDD = 5)  identifiers are used as identifiers for the catchments.
+@return Outlets
+The unique identifier of the catchment to which each cell belongs.
+@param Drainage Network
+A valid LDD (Local Drainage Network). This can be created from an elevation dataset using !DrainageNetwork.
+@param Outlet ID
+The unique identifiers for the outlets. Can be obtained using !Outlets.
+
+#Outlets
+Provides a unique id for each of the outlets (pits, LDD = 5) within a drainage network.
+@return Outlets
+Outlet identifiers
+@param Drainage Network
+A valid LDD (Local Drainage Network). This can be created from an elevation dataset using !DrainageNetwork.
+
+#StreamOrder
+Provides the stream order of the drainage network. All streams start with order 1. 
+When two streams of identical value join, their order is incremented by 1. 
+@return StreamOrder
+The stream order for the drainage network.
+@param Drainage Network
+A valid LDD (Local Drainage Network). This can be created from an elevation dataset using !DrainageNetwork.
+
+#SpreadZone
+The spread function provides the closest source area based on a mimimized traversal cost.
+@return Spreaded
+Source area with the lowest minimum distance cost. 
+@param Source Area
+The results is the closest source area (with the least mimimum distance cost from each cell to the source areas).
+Positive, non-mv cells are considered a source.
+@param Initial Friction
+The initial friction costs for the source areas.
+@param Friction Cost
+The friction cost for traversing a cell.
+
+#Spread
+The spread function is an approximate distance function using a pixel-based iterative process. 
+Based on the positive, non-mv locations within the Source Area, 
+a minimum traversal cost is found to each other cell based on the initial friction of the source cell and the friction cost for traversing a cell.
+@return Spreaded
+The mimumim distance cost for traversing from each cell to a source area.
+@param Source Area
+The results is a mimimum distance cost from each cell to the source areas (positive, non-mv cells are considered a source).
+@param Initial Friction
+The initial friction costs for the source areas.
+@param Friction Cost
+The friction cost for traversing a cell.
+
+#GeoProjectionFromEPSG
+Tries to obtain a CRS from an EPSG code. If no CRS is found, a generic non-transforming CRS is returned.
+@return CRS
+The CRS
+@param EPSG
+The EPSG CRS code
+
+#GeoProjectionFromWKT
+Tries to obtain a CRS from the WKT string format. If no CRS is found, a generic non-transforming CRS is returned.
+@return CRS
+The CRS
+@param WKT
+A CRS desribed through the WKT format.
+
+#GeoProjectionFromWGS84UTM
+Tries to obtain a CRS from a WGS-84 Universal Transverse Mercator zone. 
+This global universal system devides the Earth into a set of uniformly distributed projected zones. 
+If the provided zone number is outside of the range [1-60], a generic, non-transforming CRS is returned.
+@return CRS
+The CRS
+@param Zone
+The zone number, valid input ranges from 1 to 60.
+@param North
+True if the zone should be North, false if the zone should be South.
+
+#RasterContour
+Generate contour lines from a raster map. Typically used to generate elevation contour lines from an elevation model.
+@return Contour
+The shapefile containing the contour lines.
+@param Elevation
+The raster from which to generate contour lines.
+@param Interval
+The height interval along which contour lines should be generated 
+(the number of contour lines is inversely proportional to the interval used).
+
+
+
+#RasterWarp
+Warps a raster, or series of rasters, and pasts them onto a target raster.
+@return Warped
+The warped raster file
+@param Target
+The shapefile to be warped.
+@param Input
+The Coordinate Reference System to which the input raster(s) should be warped.
+@param interpolation
+The interpolation method used during warping. Options are "linear" or "cubic".
+
+#VectorWarp
+Warps a shapefile to another Coordinate Reference System. This function alters all key points that define shapes to be transformed.
+It does not segmentize long line-segments to conform to curvature of the new spatial structure. 
+Thus, for extreme transformations, use !Segmentize first.
+If the input shapefile has no valid CRS attached, no transformation is done.
+@return Warped
+The warped shapefile
+@param Shapes
+The shapefile to be warped.
+@param CRS
+The Coordinate Reference System to which the shapefile should be warped.
+
+#Rasterize
+A shape to raster conversion function
+Returns the input raster, but values where the shapefile is present are filled with 
+either an attribute or constant value.
+@return Rasterized
+The rasterized shapefile.
+@param Raster
+The raster on which the shapefile is rasterized. 
+This raster is not set to be empty, but instead the shape values are written on the previous contents.
+@param Shapefile
+A collection of shapes of any topological nature.
+@param Attribute Name
+The name of the attribute of which values are used to fill the raster cells.
+@param Fill Values
+If this option is selected, no attribute is used, instead a constant value is used to rasterize the shapes.
+The value can be set using the next parameter.
+@param Fill Value
+The value that is used to rasterize the shapes if the previous parameter is set to "yes".
+@param Include Edge
+The value that is used to rasterize the shapes if the previous parameter is set to "yes".
+
+
+#DrainageNetwork(Map)
+This function create a local drainage network based on an elevation model.
+Directions are indicates as values 1-9:
+9:North-East
+8:North
+7:North-West
+6:East
+5:Pit (no direction, or outlet)
+4:West
+3:South-East
+2:South
+1:South-West
+Initially the local drainage direction is chosen based on a local steepest neighbor (including diagonals).
+Each pit is the head of a sub-catchment that drains into that cell.
+All pits are resolved by finding the lowest outflow point into another sub-catchment.
+This calculation requires projected input.
+@return LDD
+The Local Drainage Network map
+@param Elevation model
+A digital elevation model. The function is indifferent to units, so no conversion needs to be made. 
+Be sure to correct all other input parameters into the same unit system.
+
+#DrainageNetwork
+This function create a local drainage network based on an elevation model.
+Directions are indicates as values 1-9:
+9:North-East
+8:North
+7:North-West
+6:East
+5:Pit (no direction, or outlet)
+4:West
+3:South-East
+2:South
+1:South-West
+Initially the local drainage direction is chosen based on a local steepest neighbor (including diagonals).
+Each pit is the head of a sub-catchment that drains into that cell.
+Based on the parameters, pits are then resolved by finding the lowest outflow point into another sub-catchment.
+This calculation requires projected input.
+@return LDD
+The Local Drainage Network map
+@param Elevation model
+A digital elevation model. The function is indifferent to units, so no conversion needs to be made. 
+Be sure to correct all other input parameters into the same unit system.
+@param Outflow depth
+@param Core volume
+@param Core Area
+@param Precipiration
+@param LDD Edge Resolve
+
+#DrainageNetworkDEM(Map)
+This function fills local depressions in an elevation mode based on a local drainage network. Depressions are all set to the elevation of the lowest outflow point.
+@return DEM
+The elevation map with local depressions filled.
+@param Elevation model
+A digital elevation model. The function is indifferent to units, so no conversion needs to be made. 
+Be sure to correct all other input parameters into the same unit system.
+
+#DrainageNetworkDEM
+This function fills local depressions in an elevation mode based on a local drainage network. Depressions are set to the elevation of the lowest outflow point if the depression is smaller than the provided threshold options.
+@return DEM
+The elevation map with local depressions filled.
+@param Elevation model
+A digital elevation model. The function is indifferent to units, so no conversion needs to be made. 
+Be sure to correct all other input parameters into the same unit system.
+@param Outflow depth
+@param Core volume
+@param Core Area
+@param Precipiration
+@param LDD Edge Resolve
+
+#DownStream
+Replaces each value in a raster with the average from the surrounding area.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return Downstream
+Values downstream,
+@param LDD
+Local drainage network.
+@param Values
+The value map.
+
+#UpStream
+Replaces each value in a raster with the direct upstream value according to a local drainage network
+@return Upstream
+Values upstream.
+@param LDD
+Local drainage network.
+@param Values
+The value map.
+
+#XIndex
+Replaces all cells with the X-index (from 0 to, but not including, the number of columns, starting at the left side).
+@return XIndex
+Map containing shifted values.
+@param Values
+The value map.
+
+#YIndex
+Replaces all cells with the Y-index (from 0 to, but not including, the number of rows, starting at the top side).
+@return YIndex
+Map containing shifted values.
+@param Values
+The value map.
+
+#Clone
+Returns a map completely filled with one speficied value.
+@return Clone
+Map with identical extent, containing filler value.
+@param Values
+The value map.
+@param Filler
+The value used to fill the new clone.
+
+#Clump
+Joins together all areas with similar values, and gives them a unique integer identifier. The similarity depends on the threshold provided to this function, and wether adaptive threshold is set.
+If adaptive is true, local values are compared. If adaptive is false, values are compared to the first value that was added to the group.
+@return Clumped
+Map with clumped areas.
+@param Values
+The value map.
+@param Threshold
+The threshold values used to determine similarity.
+@param Adaptive
+Wether or not adaptive thresholds are used.
+
+#Shift
+Shifts all the values within the raster by a specified amount of cells.
+@return Shifted
+Map containing shifted values.
+@param Values
+The value map.
+@param x-shift
+The east-west shifting (positive means east).
+@param y-shift
+The North-South shifting (positive means North).
+@param filler
+Value used to fill any missing values that are created.
+
+#AccufluxLim
+Accumulates some spatial source values over a network.
+Transfer is limited by a specified value
+The source value is per unit area, as with for example precipitation.
+@return Accumulated
+Accumulated flux values
+@param LDD
+The drainage network, can be calculated using $DrainageNetwork.
+@param Source
+Source value, in amount per unit area.
+@param Limit
+Transfer limit, in amount per unit area.
+
+#Accuflux 
+Accumulates some spatial source values over a network.
+The source value is per unit area, as with for example precipitation.
+Example: 
+Accuflux(Elevation model,1.0) will provide a drainage area,
+as 1*the surface area of the cell is accumulated
+@return Accumulated
+Accumulated flux values
+@param LDD
+The drainage network, can be calculated using $DrainageNetwork.
+@param Source
+Source value, in amount per unit area.
+
+#WindowVariance
+Replaces each value in a raster with the variance from the surrounding area.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return Variance
+WindowVariance values
+@param Input value
+This map contains the input values.
+@param Variance Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#WindowMajority
+Replaces each value in a raster with the majority from the surrounding area.
+The map is converted to integer in this process.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return Majority
+WindowMajority values
+@param Input value
+This map contains the input values.
+@param Majority Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#WindowDiversity
+Replaces each value in a raster with the count of unique values from the surrounding area.
+The map is converted to integere in this process.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return Diversity
+WindowDiversity values
+@param Input value
+This map contains the input values.
+@param Diversity Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#Erode
+At the edges between true and false cells in a boolean map, changes the true cells with false neighbors to false.
+This is done through a specified number of iterations.
+@return Eroded
+Eroded values 
+@param Input value
+Boolean input map (non-MV and !< 0.5)
+@param Iterations
+Number of iterations, how often erode is applied.
+
+#Dilute
+At the edges between true and false cells in a boolean map, changes the false cells with true neighbors to true.
+This is done through a specified number of iterations.
+@return Diluted
+Diluted values 
+@param Input value
+Boolean input map (non-MV and !< 0.5)
+@param Iterations
+Number of iterations, how often dilute is applied.
+
+#RasterSubSection
+Cuts out a part of the input map. If the extens contains cells outside of the input map, these are given a MV value.
+@return SubSection
+A spatial subsection of the input map.
+@param Input value
+Input value map
+@param Row Start
+First row.
+@param Column Start
+First column.
+@param Row Count
+Number of rows.
+@param Column Count
+Number of columns.
+
+#SuperResolutionSISR
+Creates an upsampled version of the input image. This method applies machine learning to match sub-sampled image patches as new local detail. This works well when the image has textures with a fractal-like nature (when zoomin in the image patterns are similar).
+@return Resampled
+An up-sampled version of the input map.
+@param Input value
+Input value map.
+@param Scale
+Any value above 1.0. Output resolution is input resolution multiplied with this factor.
+@param Iterations
+Number of iterations to approach the upscaling. When doing large upscaling, can be set as log2(Scale)
+@param Tilesize
+The size of the tiles on which the learning is done.
+@param PatchSize
+Size of image patches used for learning.
+@param PatchOverlap
+The overlap of image patches used for learning.
+@param Lambda
+Final convergenge goal.
+@param NeighborhoodSize
+Size of neighborhood in learning.
+@param NeighborhoodWeight
+Weight of neighborhood.
+@param Wavelet 
+If true, method uses a wavelet transformed image for supersampling learning.
+
+#Random
+Provides a random number from, and including, Min to, and including, Max. All values have equal probability. 
+@return Random
+Random number.
+@param Min
+Lower boundary of the output range.
+@param Max
+Upper boundary of the output range.
+
+#RandomNormal
+Provides a random number from a normal distribution. 
+@return Random
+Random number.
+@param Mean
+The mean of the normal distribution.
+@param Sigma
+The standar deviation of the normal distribution.
+
+#RandomMap
+Provides a random number from, and including, Min to, and including, Max. All values have equal probability. 
+@return Random
+Map with random numbers.
+@parma Mask
+Random value placed for each non-MV cell.
+@param Min
+Lower boundary of the output range.
+@param Max
+Upper boundary of the output range.
+
+#RandomNormalMap
+Provides a random number from a normal distribution. 
+@return Random
+Map with random numbers.
+@parma Mask
+Random value placed for each non-MV cell.
+@param Mean
+The mean of the normal distribution.
+@param Sigma
+The standar deviation of the normal distribution.
+
+#RandomAreaMap
+For each area, provides a random number from, and including, Min to, and including, Max. All values have equal probability. 
+@return Random
+Map with random numbers. 
+@parma Mask
+Random value placed for each non-MV cell. from, and including, Min to, and including, Max. All values have equal probability. 
+@param Mean
+The mean of the normal distribution.
+@param Sigma
+The standar deviation of the normal distribution.
+
+#RandomNormalAreaMap
+For each area, provides a random number from a normal distribution. 
+@return Random
+Map with random numbers.
+@parma Mask
+Random value placed for each non-MV cell. Map is converted to integer value to get classes.
+@param Mean
+The mean of the normal distribution.
+@param Sigma
+The standar deviation of the normal distribution.
+
+#RandomPerlinNoise
+Perlin nois of specified period (in pixels).
+@return PerlinNoise
+The noise map.
+@param mask
+For each non-MV map, a noise value is provided.
+@param period
+The period of the noise.
+
+#cos
+Cosine trigonometric function
+@return cos
+Cosine
+@param angle
+Value (in radians)
+
+#sin
+Sine trigonometric function
+@return sin
+Sine
+@param Value
+Value (in radians)
+
+#tan
+Tangent trigonometric function
+@return tan
+Tangent
+@param Value
+Value (in radians)
+
+#sinh
+Hyperbolic Sine function
+@return sinh
+SinH
+@param Value
+Value (in radians)
+
+#cosh
+Hyperbolic Cosine function
+@return cosh
+CosH
+@param Value
+Value (in radians)
+
+#tanh
+Hyperbolic Tangent function
+@return tanh
+Tanh
+@param Value
+Value (in radians)
+
+#asin
+ArcSine function
+@return asin
+ArcSine
+@param Value
+Value (in radians)
+
+#acos
+ArcCosine function
+@return acos
+ArcCosine
+@param Value
+Value (in radians)
+
+#atan
+ArcTangent function
+@return atan
+ArcTangent
+@param Value
+Value (in radians)
+
+#atan2
+ArcTangent function (return atan(dy/dx)).
+@return atan2
+ArcTangent
+@param dx
+Value in x direction
+@param dy
+Value in y direction
+
+#abs
+Absolute function, returns positive number with identical magnitude.
+@return abs
+Absolute
+@param x
+Value
+
+#min
+Minimum function, returns lower of two values.
+@return min
+Minimum
+@param x
+Value
+@param y
+Value
+
+#max
+Maximum function, returns higher of two values.
+@return max
+Maximum
+@param x
+Value
+@param y
+Value
+
+#exp
+Exponential function, returns e^x
+@return exp
+Exponential
+@param x
+Value
+
+#pow
+Power function, returns x^y
+@return pow
+Power
+@param x
+Value
+@param y
+Value
+
+#sqrt
+Square root function, returns x^0.5
+@return sqrt
+Square Root
+@param x
+Value
+
+#log
+Natural logarithm function, returns log_e(x)
+@return log
+Natural logarithm
+@param x
+Value
+
+#log10
+Natural logarithm function, returns log_10(x)
+@return log
+Natural logarithm
+@param x
+Value
+
+#ceil
+Round to nearest upper integer.
+@return ceil
+Ceiling
+@param x
+Value
+
+#floor
+Round to nearest lower integer.
+@return floor
+Floor
+@param x
+Value
+
+#fraction
+return decimal part of rational number. (x - floor(x))
+@return fraction
+Decimal fraction
+@param x
+Value
+
+#IsMV
+Return 0 if cell is not a missing value, 1 otherwise.
+@return IsMV
+Is a cell missing value?
+@param vals
+Value input map.
+
+#GetMVVal
+Returns missing value number.
+@return MV
+Missing Value
+
+#IsMVVal
+Returns true if value is missing value number, false otherwise.
+@return MV
+Missing Value
+@param x
+Input number
+
+#MapTotal
+Returns sum of all cells within map
+@return Total
+Total of input Map.
+@param x
+Input value map.
+
+#MapTotalRed
+Returns sum of all cells within map
+@return Total
+Total of input Map.
+@param x
+Input value map.
+
+#MapAverage
+Returns average of all cells within map
+@return Average
+Average of input Map.
+@param x
+Input value map.
+
+#MapAverageRed
+Returns average of all cells within map
+@return Average
+Total of input Map.
+@param x
+Input value map.
+
+#MapMinimum
+Returns minumum of all cells within map
+@return Minimum
+Minumum of input Map.
+@param x
+Input value map.
+
+#MapMinimumRed
+Returns minimum of all cells within map
+@return Minimum
+Total of input Map.
+@param x
+Input value map.
+
+#MapMaximum
+Returns maximum of all cells within map
+@return Maximum
+Maximum of input Map.
+@param x
+Input value map.
+
+#MapMaximumRed
+Returns maximum of all cells within map
+@return Maximum
+Maximum of input Map.
+@param x
+Input value map.
+
+#KuwaharaFilter
+An edge-preserving smoothing filter based on four quadrants around each pixel. For each quadrant, which includes the cell itself, the variance is estimated.
+The pixel is assigned the average value of the quadrant with least variance.
+@return Filtered
+The filtered map
+@param Input value
+Input value map.
+@param Window Size
+The size of the window used in filtering.
+
+#InpaintRFSR
+Image inpainting using Rapid Frequency Selective Reconstruction (RFSR). Fills in missing value (MV) cells. Using available data, a local fourier approximation of the image is made. This is inverted to reconstruct actual image data beyond known locations.
+Fills in missing value (MV) cells.
+@param Input value
+Input value map.
+
+#InpaintNS
+Image inpainting using a navier-stokes style flow algorithm. Fills in missing value (MV) cells. Values are extended from the known pixels using a flow algorithm that parallels the navier-stokes equations.
+@return Inpainted
+Inpainted map.
+@param Input value
+Input value map.
+@param Radius
+The extent (in pixels) for which the algorithm runs.
+
+#InpaintTELEA
+Image inpainting using a Fast-Marching Method that produces level sets. Fills in missing value (MV) cells.
+@return Inpainted
+Inpainted map.
+@param Input value
+Input value map.
+@param Radius
+The extent (in pixels) for which the algorithm runs.
+
+#WindowAverage
+Replaces each value in a raster with the average from the surrounding area.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return 
+WindowAverage values
+@param Input value
+This map contains the input values.
+@param Averaging Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#WindowMinimum
+Replaces each value in a raster with the minimum from the surrounding area.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return 
+WindowMinimum values
+@param Input value
+This map contains the input values.
+@param Averaging Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#WindowMaximum
+Replaces each value in a raster with the maximum from the surrounding area.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored.
+@return 
+WindowMaximum values
+@param Input value
+This map contains the input values.
+@param Averaging Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#WindowTotal
+Replaces each value in a raster with the total from the surrounding area.
+The window is square, and the output will contain an average of all the values within the square window.
+Missing values are ignored (effectively taken as 0 for calculations).
+@return 
+WindowTotal values
+@param Input value
+This map contains the input values.
+@param Averaging Window Size
+This input (can be non-spatial) contains the window size for the operation (units identical to the Input CRS).
+
+#Slope
+Replaces each value in a raster with the local slope.
+The calculation is done using a 3x3 kernel that estimates the slope in the direction of steepest ascent.
+The result is expressed as a gradient (dy/dx). To calculate an angle, use $atan(Slope())
+Output units are identical to input units.
+This calculation requires projected input.
+@return Slope
+Local slope gradient
+@param Elevation
+This input map contains elevation data.
+
+#AreaArea
+For each gridcell, calculates the total area of the class to which a gridcell belongs.
+Class input should be integer. If non-integer values are found, rounding takes place to the nearest integer.
+Missing value cells remain missing value.
+@return Class Area
+The area of the class that a cell belongs to (units identical to those of input CRS).
+@param Class
+This input map contains classes to which gridcells belong.
+
+#AreaTotal
+For each gridcell, calculates the total value for cells of the class to which a gridcell belongs.
+Class input should be integer. If non-integer values are found, rounding takes place to the nearest integer.
+Missing value cells in either input are set as missing value in the output.
+@return Class Area
+The area of the class that a cell belongs to (units identical to those of input CRS).
+@param Class
+This input map contains classes to which gridcells belong.
+@param Values
+This input map contains values.
+
+#AreaMinimum
+For each gridcell, calculates the minimum value for cells of the class to which a gridcell belongs.
+Class input should be integer. If non-integer values are found, rounding takes place to the nearest integer.
+Missing value cells in either input are set as missing value in the output.
+@return Class Area
+The area of the class that a cell belongs to (units identical to those of input CRS).
+@param Class
+This input map contains classes to which gridcells belong.
+@param Values
+This input map contains values.
+
+#AreaMaximum
+For each gridcell, calculates the maximum value for cells of the class to which a gridcell belongs.
+Class input should be integer. If non-integer values are found, rounding takes place to the nearest integer.
+Missing value cells in either input are set as missing value in the output.
+@return Class Area
+The area of the class that a cell belongs to (units identical to those of input CRS).
+@param Class
+This input map contains classes to which gridcells belong.
+@param Values
+This input map contains values.
+
+#AreaAverage
+For each gridcell, calculates the average value for cells of the class to which a gridcell belongs.
+Class input should be integer. If non-integer values are found, rounding takes place to the nearest integer.
+Missing value cells in either input are set as missing value in the output.
+@return Class Area
+The area of the class that a cell belongs to (units identical to those of input CRS).
+@param Class
+This input map contains classes to which gridcells belong.
+@param Values
+This input map contains values.
+
+#UniqueCellID
+Provides a unique integer number for each non-MV cell within a map.
+@return UniqueID
+Unique ID.
+@param Input
+Input mask map.
+
+#GaussianDistribute
+Each non-mv cell within input map has weighted influence on neighboring pixels. The weight is calculated using a gaussian distribution function with specified standard deviation.
+@return GaussianDistributed
+Gaussian distributed map.
+@param Input
+Input value map
+@param WindowSize
+Size of the window for gaussian distributing.
+@param StandardDeviation
+Standard deviation used for gaussian distribution function.
+
+#RasterDeconvolve
+Lucy Richardson deconvolution algirithm. By estimating the standard deviation of the kernel, a deconvoluted image is automatically approximated.
+@return Deconvolved
+Deconvolved map.
+@param Input
+Input value map
+@param Iterations
+Number of iterations in deconvolution process.
+@param Sigma
+Standard deviation of blurring kernel used to blur input map.
+
+#FlowDiffusiveMax
+Diffusive wave flow algorithm with maximum potential discharge.
+@return HNew
+New water height.
+@param DEM
+Elevation map (meters).
+@param H
+Initial water height on surface (meters).
+@param Iterations
+Maximum number of iterations in flow simulation.
+@param Courant
+Courant factor for simulation.
+
+#FlowDiffusiveMaxCG
+Diffusive wave flow algorithm with maximum potential discharge. A hydrodynamic consistency criterion is applied whereby the top water flow surface must descend in its flow direction.
+@return Deconvolved
+Deconvolved map.
+@param DEM
+Elevation map (meters).
+@param H
+Initial water height on surface (meters).
+@param DEMSlope
+Elevation map used for hydraulic consistency criterion (meters).
+@param Iterations
+Maximum number of iterations in flow simulation.
+@param Courant
+Courant factor for simulation.
+
+#FlowDynamic
+Dynamic flow algorithm based on Saint-Venant depth-averaged flow equations. Uses HLL Riemann-Solver, Darcy-Weisbach friction law, automatic internal timestep based on courant factor.
+@return HNVXNVYN
+List of new water height, x-velocity, y-velocity
+@param DEM
+Elevation map (meters).
+@param N
+Mannings surface roughness coefficient in metric units (must be larger then 0).
+@param H
+Initial water height on surface (meters).
+@param VX
+Initial water height on surface (meters/second).
+@param VY
+Initial water height on surface (meters/second).
+@param Timestep
+Total timestep to take (seconds).
+@param Courant
+Courant factor for simulation.
+
+#FlowBoussinesq
+Dynamic flow algorithm based on Saint-Venant depth-averaged flow equations. Uses HLL Riemann-Solver, Darcy-Weisbach friction law, automatic internal timestep based on courant factor.
+@return HNVXNVYN
+List of new water height, x-velocity, y-velocity
+@param DEM
+Elevation map (meters).
+@param N
+Mannings surface roughness coefficient in metric units (must be larger then 0).
+@param H
+Initial water height on surface (meters).
+@param VX
+Initial water height on surface (meters/second).
+@param VY
+Initial water height on surface (meters/second).
+@param Timestep
+Total timestep to take (seconds).
+@param Courant
+Courant factor for simulation.
+
+#FlowSteady
+Iterative algorithm to get steady-state flow solution. For a given water height, velocity is estimated using Mannings flow equation.
+@return H
+Steady-State water height.
+@param DEM
+Elevation map (meters).
+@param N
+Mannings surface roughness coefficient in metric units (must be larger then 0).
+@param Source
+Water source (meters per second).
+@param Sink
+Water sing (meters per second).
+@param iterations
+Number of iterations to do. Good estimate is max(rows,cols)/2 of input maps.
+@param Courant
+Courant factor for simulation.
+
+#FlowTsunami
+Tsunami large-scale flow algorithm.
+@return HNVXNVYN
+List of new water height, x-velocity, y-velocity
+@param DEM
+Elevation map (meters).
+@param H
+Initial water height on surface (meters).
+@param VX
+Initial water height on surface (meters/second).
+@param VY
+Initial water height on surface (meters/second).
+@param N
+Mannings surface roughness coefficient in metric units (must be larger then 0).
+@param Timestep
+Total timestep to take (seconds).
+
+#FlowNavierStokes
+Two-dimensional Navier-Stokes algorithm. Uses the stable back-tracking algortihm by Jos Stam.
+@return HNVXNVYN
+List of new water height, x-velocity, y-velocity
+@param Density
+Density map.
+@param VX
+Initial water height on surface (meters/second).
+@param VY
+Initial water height on surface (meters/second).
+@param Viscosity
+Dynamic Viscosisty of the fluid (Pascal second).
+@param Diffusion
+Diffusion scaling for viscous fluid.
+@param Timestep
+Total timestep to take (seconds).
+@param Courant
+Courant factor for simulation.
+
+#FlowTransient
+Transient flow algorithm, for example for ground water movements, where pressure-velocity relationship is linear.
+@return H
+Water height
+@param Elevation
+Elevation map (meters).
+@param Soil depth.
+Depth of the soil layer (meters).
+@param KSAT
+Saturated Hydraulic Conductivity (meters/second).
+@param Porosity
+Fractional pore space within soil (between 0 and 1).
+@param GWH
+Ground water height (meters), must be less than soil depth.
+@param Timestep
+Total timestep to take (seconds).
+@param inflowlimit
+Limit flow based on soil depth.
+
+#AccuFlux2D
+Accuflux algorithm in full two-dimensional solution without network.
+@return Accumulated
+2D Accumulated flow.
+@param Elevation
+Elevation map.
+@param Source
+Material source
+@param Iterations
+Number of iterations to do. Good estimate is max(rows,cols)/2 of input maps.
+
+#SteadyStateSoil
+Steady state solution for soil depth. Iteratively finds soil depth with equal soil production (linear dependence on soil depth) and soil movement (cubic dependence).
+@return SoilDepth
+Soil depth (meters).
+@param Elevation
+Elevation map.
+@param Source
+Weathering constant for soil production.
+@param QS
+Soil movement coefficient.
+@param Iterations
+Number of iterations. Good estimate is max(rows,cols)/2 of input maps.
+
+#GradientX
+Gradient in X-direction using 3-cell average slope.
+@return GradientX
+GradientX
+@param Value
+Input value map.
+
+#GradientY
+Gradient in Y-direction using 3-cell average slope.
+@return GradientY
+GradientY
+@param Value
+Input value map.
+
+#GradientXX
+Gradient in XX-direction using 5-cell approximated second derivative.
+@return GradientXX
+GradientXX
+@param Value
+Input value map.
+
+#GradientYY
+Gradient in YY-direction using 5-cell approximated second derivative.
+@return GradientYY
+GradientYY
+@param Value
+Input value map.
+
+#CurvPlanar
+Calculates the planar curvature (second spatial derivative in direction perpendicular to steepest slope).
+@return PlanCurv
+Planar Curvature
+@param Value
+Input value map.
+
+#CurvProfile
+Calculates the profile curvature (second spatial derivative in direction of steepest slope).
+@return ProfCurv
+Profile Curvature
+@param Value
+Input value map.
+
+#SetCellSize
+Set the grid cell size of a map.
+@return Map
+Map
+@param x
+X-size
+@param y
+Y-size (typically negative for projected maps).
+
+#CellSize
+Returns the grid cell size of a map.
+@return Cellsize
+Grid cells size {x-size,y-size}
+@param Value
+Input value map.
+
+#SetULC
+Set the upper left corner coordinate of a map.
+@return Map
+Map
+@param x
+X-coordinate of upper left corner
+@param y
+Y-coordinate of upper left corner
+
+#ULC
+Returns coordinates of upper left corner of map.
+@return ULC
+Upper left corner
+@param Value
+Input value map.
+
+#ClassRegularize
+Regularizes classification map. Within radius, values are merged together if areas are small.
+@return Regularized
+Regularized map.
+@param Value
+Input value map.
+@param Radius
+Radius for regularization. Determines shape of the final class areas.
+Input value map.
+
+#ViewShed
+Returns a map indicating wether a location on terrain can be viewed from a specified location.
+@return Viewshed
+Viewshed.
+@param Elevation
+Input elevation map.
+@param X
+X-Coordinate of viewer.
+@param Y
+Y-Coordinate of viewer.
+
+#ViewCriticalAngle
+Returns a map indicating the critical angle (in radians) on terrain that can be viewed from a specified location.
+@return Viewshed
+Viewshed.
+@param Elevation
+Input elevation map.
+@param X
+X-Coordinate of viewer.
+@param Y
+Y-Coordinate of viewer.
+
+#SlopeLength
+Spread Function working from edge of watershed downstream.
+@return Spreaded
+Spreaded value
+@param LDD
+Local drainage network
+@param FrictionSource
+Friction Source
+@param Friction
+Friction value
+@param Y
+If true, both upstream and downstream spreading occurs, otherwise only downstream spreading occurs.
+
+#SpreadNetwork
+Spread function that operates over a local drainage network.
+@return Spreaded
+Spreaded value
+@param LDD
+Local drainage network
+@param Points
+Source points, where spreading originates.
+@param FrictionSource
+Friction Source
+@param Friction
+Friction value
+
+#SpreadNetworkZone
+SpreadZone function that operates over a local drainage network.
+@return SpreadZone
+Spreaded zone
+@param LDD
+Local drainage network
+@param Points
+Source points, where spreading originates.
+@param FrictionSource
+Friction Source
+@param Friction
+Friction value
+
+#GetAppTime
+Function that provides the time in seconds since the application was started.
+@return Time
+Time in seconds since app start.
+
+#Sleep
+Function that lets the code wait for the specified time.
+@return void
+Void
+@param Time
+Duration of the wait in seconds.
+
+#SetCRS
+Set the coordinate reference system of a map to the specified CRS.
+@return Map
+Map
+@param Input
+Input value map.
+@param CRS
+Coordinate Reference System.
+
+#NormalizeMap
+Re-scales the input map between 0 and 1.
+@return Normalized
+Normalized
+@param Input
+Input value map.
+
+#MapLogisticRegression
+Logistic regression of a list of covariates to a ground truth label map. Output model described relationsip with normalized covariates.
+@return Model
+Statistical Model
+@param Covariates
+List of covariate maps.
+@param labels
+Class labels, either true or false.
+
+#MapLogisticRegression
+Linear regression of a list of covariates to a ground truth label map. Output model described relationsip with non-normalized covariates.
+@return Model
+Statistical Model
+@param Covariates
+List of covariate maps.
+@param labels
+Value labels, can be any rational number.
+
+#MapLogisticRegression
+Logistic regression of a list of covariates to a ground truth label map. Output model described relationsip with normalized covariates.
+@return Model
+Statistical Model
+@param Covariates
+List of covariate maps.
+@param labels
+Class labels, either true or false.
+
+#NoiseFilterFrost
+Noise removal filter bases on Frost method. Reconstruct value by minimizing mean square error. Takes weighted sum of all estimates in window.
+@return Filtered
+Filtered map.
+@param Value
+Input value map.
+@param Radius
+Radius (in pixels) of filter.
+@param Deramp
+Deramp coefficient.
+
+#NoiseFilterLee
+Noise removal filter bases on Lee method. Reconstruct value by minimizing mean square error.
+@return Filtered
+Filtered map.
+@param Value
+Input value map.
+@param Radius
+Radius (in pixels) of filter.
+@param Looks
+Number of looks within filter.
+
+#NoiseFilterGamma
+Noise removal filter bases on Gamma method. Method assumed data follows Gamma distribution.
+@return Filtered
+Filtered map.
+@param Value
+Input value map.
+@param Radius
+Radius (in pixels) of filter.
+@param Looks
+Number of looks within filter.
+
+#NoiseFilterKuan
+Noise removal filter bases on Kuan method. Reconstruct value by minimizing mean square error, but assumes non stationary mean and variance.
+@return Filtered
+Filtered map.
+@param Value
+Input value map.
+@param Radius
+Radius (in pixels) of filter.
+@param Looks
+Number of looks within filter.
+
+#SegmentizeMS
+Mean shift segmentation method, which joins together areas in an image based on moving-window color averaging.
+@return Segmentized.
+Segmentized image, classes are given unique integer values.
+@param Input
+Input image (either single band or multi-band).
+@param SpatialRadius
+Spatial radius of mean-shifting in pixels.
+@param RangeRadius
+Value radius in mean-shifting.
+@param MinimumRegionSize
+Minimum size for classified regions.
+@param MaxIterations
+Maximum number of iterations
+@param Threshold
+Threshold value used to distinct between objects.
+
+#SegmentizeWS
+Watershed segmentation method, that joins together areas in an image based on similar color values. 
+@return Segmentized.
+Segmentized image, classes are given unique integer values.
+@param Input
+Input image (either single band or multi-band).
+@param Threshold
+Threshold value used to distinct between objects.
+@param Level
+Flood level for merging smaller objects (between 0 and 1).
+
+#SlopeMagnitude
+Multi-dimensional slope function. Works well for object and edge detection purposes.
+@return Slope
+Slope magnitude.
+
+#AnisotropicFilter
+Edge preserving smoothing filter. Solves a gradient-dependent diffusion filter.
+@return Filtered
+Filtered image.
+@param Image
+Image input (either single band or list of bands).
+@param Iterations
+Number of iterations used.
+@param Conductance
+How easily values converge spatially.
+@param Timestep
+Timestep used to solve equations.
+
+#SupervisedClassify
+Supervised image classification using Support Vector Machine.
+@return Classes
+Map containing classified pixels
+@param Image
+Input image, either single or multi-band.
+@param Training
+Training image. All non-mv are converted to integer and used as training data.
+
+#UnSupervisedClassify
+Un-supervised image classificaiton using K-Means classification method.
+@return Classes
+Map containing classified pixels
+@param Image
+Input image, either single or multi-band.
+@param Count
+Number of final classes within image.
+
+#ClassToRGB
+Maps a class value to a color.
+@return Color
+RGB triplets for each pixel, as a band list.
+@param Classes
+Input image containing classes. Converted to integer before calculations.
+
+#PearsonCorrelation
+Pearson correlation index. 
+Bivariate correlation index indicating to what extent the variability of vector Y is explained by the variability of its associated X values. 
+@return Correlation
+Single correlation value.
+@param Table
+A table with two columns of equal length, containing vectors X and Y, where {xi,yi} are associated pairs.
+
+#SpearmanCorrelation
+Spearman correlation index. This is a rank-order coefficient. Vectors X and Y are sorted and given an index. Then the Pearson correlation of the ranked indices is calculated. 
+The final value is independent of the shape of the correlation. Describes how well the relationship between the two functions can be described with a monotinic function.
+@return correlation
+Single correlation value.
+@param Table
+A table with two columns of equal length, containing vectors X and Y, where {xi,yi} are associated pairs.
+
+#LineSegmentDetect
+Detect line segments within raster data. Results can be improved when first taking the Slope (or SlopeMagnitude) of an image.
+@return Lines
+Shapefile containing lines.
+@param Value
+Input value map.
+
+#CircleDetect
+Detects circular shapes within an image. Data is first converted to 8-bit data (normalized to integers between 0 and 255). Then, Hough transforms are used to detect the centres of circular objects.
+@return Circles
+A shapefile with points at circle centers. Radius of points is set to circle radius.
+@param Value
+Input value map.
+@param MinRadius
+Minimum radius in pixels.
+@param MaxRadius
+Maximum radius in pixels.
+@param Threshold
+Value threshold (in 8-bit scale).
+@param Subdivide
+Spatial subdivision for hough transform
+
+#DrainageNetworkToShapes
+Converts a drainage network to a simple non-linked shapefile.
+@return Shapes
+A shapefile containing single line segments for each section of the local drainage network.
+@param LDD
+Local drainage network.
+
+#VectorRasterSample
+Sample raster values at the location of each feature in a Shapefile.
+@return Table
+A table containing the sampled raster values.
+@param Value
+Input value map.
+@param Shapes
+Input shapes. If the shapes are not points, centroids are used for sampling.
+
+#SemiVariogram
+Estimate a gaussian relationship between data variance and spatial distance. Relationship is of type: C0(1.0-exp(-x^2/C1)) , where coefficients C0 and C1 are found based on the map data.
+@return SemiVariogram
+A mathematical expression equal to the gaussian relationship.
+@param Input
+Input value map.
+@param MaxDistance
+Maximum distance considered in fitting relationship.
+@param MaxPoints
+Maximum number of points considered in fitting relationship.
+
+#Kriging
+Kriging code which automatically assumes a Gaussian semi-variogram with specified distance scaling.
+@return Kriged
+Kriged results
+@param Input
+Input value map.
+@param MaxDistance
+Maximum distance for points in kriging system, and scaling distance for semi-variogram.
+
+#KrigingGaussian
+Kriging code using specified gaussian semi-variogram.
+@return Kriged
+Kriged results
+@param Input
+Input value map.
+@param MaxDistance
+@param c0
+First parameter from gaussian semi-variogram (See SemiVariogram).
+@param c1
+Second parameter from gaussian semi-variogram (See SemiVariogram).
+
+#PointCloudToDEM
+Converts a point cloud to an elevation model by means of delaunay triangulation.
+@return DEM
+Elevation map over the extent of the point cloud.
+@param Input
+Point cloud.
+@param Resolution
+The size of the grid cells in the elevation map.
+
+#RasterRegister
+Perform registration on a geospatial image by providing control points. These points associate image pixels with geo-spatial coordinates. A polynomial approximating warping function is constructed to transform the image and minimize error between control points.
+@return Registered
+Registered image.
+@param PixelPositions
+A list of pixel position in the image.
+@param WorldPositions
+A list of geospatial coordinates.
+
+#RasterSpectralUnmix
+@return Unmixed
+Abundunce of different endmembers. Three unmixing methods are available: "UCLS" Unconstrained Least Square, "ISRA" Image Space Reconstruction Algorithm and "MDMDNMF" Minimum Dispersion Constrained Non Negative Matrix Factorization.
+@param Input
+Image
+@param Spectra
+Endmember spectra
+@param Method
+Unmixing method "UCLS", "ISRA", "MDMD-NMF"
+
+#RasterEstimateEndmemberCount
+Estimates the number of endmembers in an image. Two methods are available: "HFC-VD" Virtual Dimensionailty, or "ELM" Eigenvalue Likelihood Maximization.
+@return Count
+Number of endmembers estimated to be present in image.
+@param Input
+Multi-band image.
+@param Method
+Estimation method for endmember count "HFC-VD" or "ELM"
+
+#RasterVCA
+Vertex Component Analysis. Estimates endmembers from a multi-spectral image.
+@return Enmembers
+List of spectra.
+@param Input
+Multi-band image.
+@param Count
+Number of endmembers
+
+#PanSharpenLMVM
+Estimates a high-resolution multi-band image from low resolution data and a high-resolution panchromatic band. Method uses Local Mean and Variance Matching (LMVM).
+@return Pansharpened.
+Multi-band image in high resolution.
+@param Pan
+Image containing total intensity of image in high resolution.
+@param Input 
+Multi-Band Image in low resolution.
+
+#PanSharpenBayesian
+Estimates a high-resolution multi-band image from low resolution data and a high-resolution panchromatic band. Method uses Bayesian fusion.
+@return Pansharpened.
+Multi-band image in high resolution.
+@param Pan
+Image containing total intensity of image in high resolution.
+@param Input 
+Multi-Band Image in low resolution.
+@param Lambda
+Weighting value. 
+@param S
+S coefficient.
+
+#PanSharpenRCS
+Estimates a high-resolution multi-band image from low resolution data and a high-resolution panchromatic band.
+@return Pansharpened.
+Multi-band image in high resolution.
+@param Pan
+Image containing total intensity of image in high resolution.
+@param Input 
+Multi-Band Image in low resolution.
+
+#RegionSimilarityMerge
+Merges classified regions based on the similarity of all provided attributes.
+@return Merged
+Merged classification map.
+@param Classes
+Input class map.
+@param Similarity
+List of attributes that determine similarity.
+@param MinArea
+Minimum area of class.
+
+#RegionMerge
+Merges classified regions based on minimum area threshold.
+@return Merged
+Merged classification map.
+@param Classes
+Input class map.
+@param MinArea
+Minimum area of class.
+
+#NLMeans
+Non-local means filter. Noise filter that not only takes the local mean, but the mean of all similar areas in an image to fill in noisy data.
+@return Filtered
+Filtered map.
+@param Input
+Inpute value map.
+@param Window
+Window size for filter in pixels.
+@param cutoff
+Cutoff distance for finding similar areas.
+
+#OpticalFlow
+Optical flow algorithm. Estimates dense optical flow in image-space. Method is Two-Frame Motion Estimation Based on Polynomial Expansion by Gunner Farneback, as implemented by OpenCV. Works best if the two input images are slightly different.
+@return OpticalFlow
+List of: X-direction Flow and Y-Direction Flow
+@param left
+First image.
+@param right
+Second image.
+@param windowsize
+WindowSize used to find matching features.
+
+#Disparity
+Stereo-image disparity calculation using block-matching.
+@return Disparity
+Disparity map.
+@param Left
+First image.
+@param Right
+Second image.
+@param windowsize
+Window size used to define matching metric.
+@param maxdisparity
+Maximum disparity (in pixels)
+
+#DisparityFine
+Stereo-image disparity calculation using block-matching. This method has multiple metric options and performs a finer sub-pixel estimation.
+@return Disparity
+Disparity map.
+@param Left
+First image.
+@param Right
+Second image.
+@param method
+Options for metric are "SSDDivMean" Sum of squared distances divided by mean of block, "NCC" Normalized cross correlation,"SSD" Sum of squared distances, and "LP" Lp psuedo-norm.
+@param windowsize
+Window size used to define matching metric.
+@param mindisparity
+Minimum disparity (in pixels)
+@param maxdisparity
+Maximum disparity (in pixels)
+
+#ResampleLinear
+Up or downscale map using linear resampling (when upscaling) or averaging (when downscaling). Ouput map size is input map size mutiplied by resampling scale.
+@return Resampled
+Resampled map.
+@param Input
+Input value map.
+@param Scale
+Scale for resampling.
+
+Resampled map.
+#ResampleNearest
+Up or downscale map using nearest neighbor sampling.
+@return Resampled
+Resampled map.
+@param Input
+Input value map.
+@param Scale
+Scale for resampling.
+
+#ReasmpleSparse
+Resample map using sparse sampling. The original pixels are copied onto the new map at their exact cell origin. All other in-between pixels become Missing Value.
+@return Resampled
+Resampled map.
+@param Input
+Input value map.
+@param Scale
+Scale for resampling.
+
+#ResampleCubic
+Up or downscale map using cubic resampling (when upscaling) or averaging (when downscaling). Ouput map size is input map size mutiplied by resampling scale.
+@return Resampled
+Resampled map.
+@param Input
+Input value map.
+@param Scale
+Scale for resampling.
+
+#VectorToPoints
+Replace each shape with a single point. Uses centroids by defeault.
+@return Points
+Points for each sape.
+@param Shapes
+Shapes to convert.
+@param Centroid
+Use centroids or add all vertices of a shape.
+
+#Vonoroi
+Create vonoroi diagram using line-sweep algorithm. 
+@return Polygons
+Polygons for the vonoroi diagram.
+@param Shapes
+Shapes to convert. If these are not points, they are converted to points.
+@param Centroid
+Use centroids or add all vertices of a shape.
+
+#ValueCorrect
+Correct map values based on a sparse truth map. An error map is estimated by linearly interpolating the error at locations where true values are known.
+Finally, the error is substracted from the provided map.
+@return Corrected
+Corrected map.
+@param Reference
+Ground truth values. Missing Value cells are considered unknown.
+@param Input
+Input value map.
+@param WindowSize
+Size of the window used to search for groun-truth values.
+
+#IDFCurves
+Create IDF Curves based on precipitation data. Calculates estimate of precipitation intensity for various durations and return periods.
+@return IDFCurves
+IDF Curves in a table. Columns are the provided return periods, rows are the precipitation intensity during the durations. First column is the actual durations.
+@param Precipitation
+The precipitation data.
+@param Timestep
+Timestep in hours
+@param Intensities
+If true, precipitation is in intensity (mm/hour), otherwise it is taken as total amount (mm).
+@param DurationCount
+Number of durations (all multiples of timestep) for which to estimate the design precipiation.
+@param ReturnPeriods
+List of return period for which to do the IDF analysis.
+
+#ABHyetograph
+Creates alternating block design storms (hyetograph), which is a representation of a storm with defined return period. 
+@return Hyetographs
+Hyetographs. First column is time, other columns are return period design storms.
+@param IDF
+IDF curves, can be created with IDFCurves.
+
+#Vectorize
+Convert rasterized data to a shapefile containing polygons.
+@return Shapes
+Shapefile
+@param Input
+Input value map.
+@param AttributeName
+Name of the attribute to place the map values for each shape.
+@param Diagonal
+Allow for diagonal lines, or keep axis-aligned lines along cell boundaries.
+
+#VectorizePoints
+Convert rasterized data to a shapefile containing points.
+@return Shapes
+Shapefile
+@param Input
+Input value map.
+@param AttributeName
+Name of the attribute to place the map values for each shape.
+
+#Simplify
+Simplifies a vector file by removing vertices that have little influence on the overall shapes. The maximum distance is an indicator of the final detail of the shapes.
+@return Simplified
+Simplified shapes.
+@param Shapes
+Shapefile with polygons or lines. Points will remain identical.
+@param MaxDistance
+Maximum distance (in spatial units)
+
+#Segmentize
+Cuts larger shapes into smaller pieces based on a maximum size. 
+@return Segmentized
+Segmentized shapefile.
+@param Shapes
+Shapefile containing lines. Polygons and points will remain identical.
+@param MaxDistance
+Maximum distance (in spatial units).
+
+#RasterProject
+Re-project a map to another coordinate reference system.
+@return Projected
+Reprojected map.
+@param Input
+Input value map.
+@param CRS
+Coordinate Reference System.
+@param Interpolation
+Interpolation method, can be "nearest", "bilinear" or "cubic".
+
+#AddViewLayer
+Add a geo-object to the map viewer, returns a layer identifier which can be used to replace the layer or change its appearence.
+@return UILayer
+Unique layer identifier
+@param GeoObject
+Either map, shapefile or pointcloud.
+@param Name
+Name of the layer.
+
+#ReplaceViewLayer
+Replaces the contents of a UI Layer, but keeps styling identical.
+@return void
+@param UILayer
+Unique layer identifier
+@param GeoObject
+Object to replace current layer content.
+ 
+#RasterOrthoRectify
+Orthorectification using ground control points and a DEM.
+@return Orthorectified
+Orthorectified image.
+@param Input
+Multi-band input image, containing Ground Control Points in meta-data.
+@param DEM
+Digital elevation model to be used in orthorectifications.
+
+#Print
+Converts the argument to text and prints it in the scripting output window.
+@return void
+Void
+@param Input
+Input value.
+
+#ToString
+Converts the argument to text. Uses maximal precision.
+@return Text
+String representing argument
+@param Value
+A variety of types is supported, such as numbers, boolean or vectors.
+
+#Restart
+Will restart the application. Note that this will stop any running script, and you will lose unsaved date. This function does not ask twice.
+@return void
+Void (or even worse, nothing, as the script will stop executing).
+
+#SetPlatformPreference
+Sets the platform preference for OpenCL computations. Can be "NVidia", "AMD", "INTEL" or "MESA"
+@return void
+Void
+@param Platform
+String representing platform.
+
+#TToString 
+Convert Table to String type
+@return Table
+Table with Text Data.
+@param Input
+Input table of any type.
+
+#TToDouble
+Convert Table to Double (Number) type
+@return Table
+Table with double Data.
+@param Input
+Input table of any type.
+
+#TToInt
+Convert Table to Integer type
+@return Table
+Table with Int Data.
+@param Input
+Input table of any type.
+
+#SortByColumn
+Sort table by specified column. The re-order operations performed on column are also applied to all other columns. Text is sorted based on alphabetical order. Numbers are sorted based on numeric order.
+@return Table 
+Sorted table.
+@param Input
+Input table.
+@param Column
+Column index for sorting.
+@param descending
+Wether or not to sort in descending instead of ascending order.
+
+#SortColumn
+Sort single column within table.
+@return Table 
+Sorted table.
+@param Input
+Input table.
+@param Column
+Column index for sorting.
+@param descending
+Wether or not to sort in descending instead of ascending order.
+
+#GetColumn
+Get a copy of a specified column from a table.
+@return Table 
+Selected column.
+@param Input
+Input table.
+@param Column
+Column to get.
+
+#DropColumn
+Return copy of table without specified column.
+@return Table 
+Selected column.
+@param Input
+Input table.
+@param Column
+Column to drop.
+
+#DropRow
+Return copy of table without specified row.
+@return Table 
+Selected column.
+@param Input
+Input table.
+@param Column
+Row to drop.
+
+#VectorOffset
+Creates a new shapefile where the boundary of the shape lies a specified distance from the initial boundary. Doing so either grows or shrinks the shapes.
+@return Offset
+Offset shapes.
+@param Shapes
+Shapefile with any type of shape.
+@param Offset
+
+#MapFunction
+Apply a function to a map. The function can be a script function or a mathematical expression based on user-provided text. This type of application is significantly slower then using regular map calculations.
+@return Map
+Output map.
+@param Value
+Input value map.
+@param Expression
+Mathematical expression to apply to map.
+
+#FormatInt
+Convert integer to text.
+@return text
+Text representation of number.
+@param value
+Number value.
+@param options
+Options are 'l' Left Justify, '0' pad with zeros, '+' always sign, ' ' space on sign, 'h' hex small, 'H' hex big.
+@param width
+Number size
+
+#FormatUInt
+Convert unsigned integer to text.
+@return text
+Text representation of number.
+@param value
+Number value.
+@param options
+Options are 'l' Left Justify, '0' pad with zeros, '+' always sign, ' ' space on sign, 'h' hex small, 'H' hex big.
+@param width
+Number size
+@param precision
+Decimal size
+
+#FormatFloat
+Convert float to text.
+@return text
+Text representation of number.
+@param value
+Number value.
+@param options
+Options are 'l' Left Justify, '0' pad with zeros, '+' always sign, ' ' space on sign, 'e' exponent small, 'E' exponent big.
+@param width
+Number size
+@param precision
+Decimal size
+
+#ParseInt
+Convert text to an integer.
+@param val
+The text value.
+@param base
+Can be 10 or 16.
+@param out_byteCount
+The bytecount of the number.
+
+#ParseUInt
+Convert text to an unsigned integer.
+@param val
+The text value.
+@param base
+Can be 10 or 16.
+@param out_byteCount
+The bytecount of the number.
+
+#ParseFloat
+Convert text to float
+@param val
+The text value.
+@param out_byteCount
+The bytecount of the number.
+
+#WindowPointShift
+Shift points in a map towards closeby points in another map.
+@return Shifted
+Shifted points.
+@param Input
+Input value map.
+@param Points
+Input points to shift towards,
+@param Window
+Size of the window (in spatial units) to look for points.
+
+#closeTo
+Compare two floating point numbers for have a difference less then the epsilon (minimal numeric difference representation)  for its type.
+@return Equal
+Are the numbers approximately equal.
+@param Number1
+The first number.
+@param Number2
+The second number.
+
+#RasterFromTableValues
+Fill a map with values from a table. This function attempts to find the row and column value in the table headers.
+@return Map
+Map dirived from table.
+@param Table
+Input table.
+@param Row
+Row value (converted to integer)
+@param Column
+Column value (converted to integer)
+
+#RasterFromTable
+Fill a map with values from a table.
+@return Map
+Map dirived from table.
+@param Table
+Input table.
+@param Row
+Row index (can be from 0 to rows -1)
+@param Column
+Column index (can be from 0 to columns -1)
+
+#RasterClasses
+Get table containing all unique raster class values.
+@return Classes
+List of classes
+@param Input
+Input value map (converted to integer).
+
+#RasterTableAverage
+Get a table containing the classes, and associated average map values.
+@return Average
+List of classes and associated average values.
+@param Class
+Map with class-values.
+@param Value
+Input value map.
+
+#RasterTableMinimum
+Get a table containing the classes, and associated minumum map values.
+@return Minimum
+List of classes and associated minimum values.
+@param Class
+Map with class-values.
+@param Value
+Input value map.
+
+#RasterTableMaximum
+Get a table containing the classes, and associated maximum map values.
+@return Average
+List of classes and associated maximum values.
+@param Class
+Map with class-values.
+@param Value
+Input value map.
+
+#RasterTableTotal
+Get a table containing the classes, and associated total map values.
+@return Total
+List of classes and associated total values.
+@param Class
+Map with class-values.
+@param Value
+Input value map.
+
+#GetDir
+Get current working directory.
+@return Directory
+Working directory
+
+#GetDirOrg
+Get working directory that was present when starting script.
+@return Directory
+Working directory
+
+#RunModel(string,RigidModel,string)
+Run the OpenLISEM Physically-based Multi-Hazard model.
+@return void
+Void.
+@param runfile
+Runfile name within the current working directory.
+@param RigidModel
+A rigid-physics world to merge into the multi-hazard model.
+@param options
+Additional options (see runfile for option names) seperated by |
+
+#RunModel(string,string)
+Run the OpenLISEM Physically-based Multi-Hazard model.
+@return void
+Void.
+@param runfile
+Runfile name within the current working directory
+@param options
+Additional options (see runfile for option names) seperated by |
+
+#LoadTable
+Load table object from file. Type is automatically detected from extension.
+@return Table
+Table object
+@param Name
+Name of the file.
+
+#LoadTableAbsPath
+Load table object from file. Type is automatically detected from extension.
+@return Table
+Table object
+@param Name
+Name of the file. Must be a full path including directories.
+
+#LoadVector
+Load shapes object from file. Type is automatically detected from extension.
+@return Shapes
+Shapes object
+@param Name
+Name of the file.
+
+#LoadVectorAbsPath
+Load Shapes object from file. Type is automatically detected from extension.
+@return Shapes
+Shapes object
+@param Name
+Name of the file. Must be a full path including directories.
+
+#LoadMap
+Load map object from file. Type is automatically detected from extension.
+@return Map
+Map object
+@param Name
+Name of the file.
+
+#LoadMapAbsPath
+Load map object from file. Type is automatically detected from extension.
+@return Map
+Map object
+@param Name
+Name of the file. Must be a full path including directories.
+
+#LoadPointCloud
+Load Point Cloud object from file. Type is automatically detected from extension.
+@return PointCloud
+PointCloud object
+@param Name
+Name of the file.
+
+#LoadPointCloudAbsPath
+Load PointCloud object from file. Type is automatically detected from extension.
+@return PointCloud
+PointCloud object
+@param Name
+Name of the file. Must be a full path including directories.
+
+#SaveVector
+Save Shapes object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param Shapes
+Shapes object to save.
+@param Name
+Name of the file to create. 
+
+#SaveVectorAbsPath
+Save Shapes object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param Shapes
+Shapes object to save.
+@param Name
+Name of the file to create. Must be a full path including directories.
+
+#SaveTable
+Save Table object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param Table
+Table object to save.
+@param Name
+Name of the file to create.
+
+#SaveTableAbsPath
+Save Table object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param Table
+Table object to save.
+@param Name
+Name of the file to create. Must be a full path including directories.
+
+#SaveMap
+Save Map object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param Map
+Map object to save.
+@param Name
+Name of the file to create.
+
+#SaveMapAbsPath
+Save Map object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param Map
+Map object to save.
+@param Name
+Name of the file to create. Must be a full path including directories.
+
+#SavePointCloud
+Save PointCloud object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param PointCloud
+PointCloud object to save.
+@param Name
+Name of the file to create.
+
+#SavePointCloudAbsPath
+Save PointCloud object to file. Will overwrite existing file. Type is automatically detected from extension.
+@return Void
+Void.
+@param PointCloud
+PointCloud object to save.
+@param Name
+Name of the file to create. Must be a full path including directories.
+
+#SetWorkDir
+Set the working directory for the remainder of the script.
+@return Void
+Void
+@param Directory
+Directory path.
+
+#RestoreWorkDir
+Restore original working directory, which was set when the script was started.
+@return Void
+Void
+
+#CopyFile(string,string,string,string)
+Copy a file.
+@return Void
+@param filename1
+Filename of source.
+@param dir1
+Directory of source.
+@param filename2
+Filename of target
+@param dir2
+Directory of target
+
+#CopyFile(string,string)
+Copy a file.
+@return Void
+@param filename1
+Filename of source.
+@param filename2
+Filename of target
+
+#GetFileName
+Get the name of the file, without director or extension.
+@return FileName
+File Name.
+@param Path
+Full path to file.
+
+#GetFileExt
+Get the extension of the file, without filename or directory.
+@return FileExtension
+File Extension.
+@param Path
+Full path to file.
+
+#GetFileDir
+Get the directory of the file, without extension of filename.
+@return FileDir
+File Directory.
+@param Path
+Full path to file.
+
+#ValuesToXMLPost
+Convert a list of names and values into an XML post object for attaching to a download request.
+@return XMLString
+XML String
+@param XMLName
+XML Object Name
+@param NameList
+List of variable names.
+@param ValueList
+List of variable values.
+
+#OSMExtentToXMLPost
+Convert a geo-region into an XML post object for attaching to a download request to OSM Servers.
+@return XMLString
+XML string
+@param Region
+Bounding box indicating what data should be downloaded. Must be in WGS 84.
+
+#GetFilesInDir
+Provides a list of all files in directory. Filter follows typical OS conventions ("*.txt" searches for all text files).
+@return FileList
+List of files
+@param Directory
+Directory to search in (relative to current working directory).
+@param Filter
+Searching filter. "*ab*;*ac*" searches for file names with either ab or ac in it.
+
+#GetMapListNames
+Provides a list of strings that can be used to save and load lists of maps. if name is "a.map", the list will for example be "a_1.map,a_2.map,a_3.map,...".
+@return NameList
+List of file names
+@param Name
+Base file name
+@param Count
+Number if names to make.
+@param Start
+Starting index.
+@param between
+Text to place inbetween file name and number.
+
+#LoadMapBandList
+Load the bands from a map file to a list of maps.
+@return BandList
+List of maps
+@param File
+File or list of files.
+
+#SARCalibrate
+Automatic sar-calibration based on sensor details included in meta-data. Supports sentinel-1.
+@param Input
+Input map list (complex radar data).
+@param lut
+Wether to use a built-in look up table (if supported by file format).
+@param Noise
+Wether to remove noise (if supported by file format).
+
+#MapMetaData
+Get all meta-data from a map file, and store in a list of strings.
+@return MetaData
+List of MetaData
+@param file
+File location.
+@param band
+Map band.
+
+#MapMetaDataAbsPath
+Get all meta-data from a map file, and store in a list of strings.
+@return MetaData
+List of MetaData
+@param file
+File location. Must be absolute path including full directories.
+@param band
+Map band.
+
+#FlowNavierStokes3D
+Three-dimensional solver for the full navier-stokes equations. Based on te Jos Stam solver with virtocity confinement. The input state must be a list of maps {Density1,XVelocity1,YVelocity1,ZVelocity1,Density2,...}. 
+Each layer represents a horizontal slice of the model domain. Ouput returns same state at tn = t + dt. When the density layer contains Missing Value cells, these are considered flow obstacles (either terrain or something else), where flow is blocked and friction is applied.
+@return NewState
+The final state of the simulation.
+@param State
+The initial state of the simulation.
+@param ZMin
+Elevation of the first layer.
+@param ZMax
+Elevation of the last layer.
+@param Viscosity
+Dynamic Viscosity of the fluid (Pascal Second)
+@param Diffusion
+Diffusion coefficient.
+@param Timestep
+Timestep (seconds)
+@param Courant
+Courant Factor (between 0.05 and 0.3 generally gives stable simulation results).
+
+#FlowKinematic
+Kinematic wave flow algorithm. A one-dimensional mannings flow scheme is combined with a local drainage direction network to approximate overland flow.
+@return H
+New flow height (meter)
+@param LDD
+Local drainage network
+@param Slope
+Slope (meter/meter)
+@param Width
+Flow width (meter).
+@param N
+Mannings surface roughness coefficient in metric units.
+@param H
+Flow height (meter).
+
+#VoxelMaskDem
+Set all cells below the DEM as missing value.
+@return MaskedData
+Masked data
+@param State
+List of maps describing a 3D volume. from bottom slice to top.
+@param ZMin
+Elevation of first layer.
+@param ZMax
+Elevation of final layer.
+@param DEM
+Elevation model.
+
+#ClassExtent
+Get the geographic extent whithin which all cells of a specified value exist. Returns a {0,0,0,0} extent if class is not found.
+@return ClassExtent
+The extent that contains a class.
+@param ClassesMap
+Input class map (converted to integer)
+@param Classes
+The class to find
+
+#ClassCellExtent
+Get the image (pixel index) extent whithin which all cells of a specified value exist. Returns minimum and maximum row as y-range and minumum and maxmimum column as x-range. Returns a {0,0,0,0} extent if class is not found.
+@return ClassExtent
+The extent that contains a class.
+@param ClassesMap
+Input class map (converted to integer)
+@param Classes
+The class to find
+
+#RigidObjectBox
+Get rigid object with box shape.
+@return RigidObject
+Rigid Object
+@param size
+@param density
+@param position
+@param rotation
+@param velocity
+@param rotvelocity
+@param friction
+@param compliance
+@param complianceT
+@param dampingF
+@param family
+@param static
+
+#RigidObjectCilinder
+Get a rigid object with cilinder shape (Defeault orientation is vertical).
+@return RigidObject
+Rigid Object
+@param radius
+@param length
+@param density
+@param position
+@param rotation
+@param velocity
+@param rotvelocity
+@param friction
+@param compliance
+@param complianceT
+@param dampingF
+@param family
+@param static
+
+
+#PhotogrammetryListPrepare
+Work In Progress
+#PhotogrammetryFeatureCompute
+Work In Progress
+#PhotogrammetryFeatureMatch
+Work In Progress
+#PhotogrammetryStructureCompute
+Work In Progress
+#PhotogrammetryRegister
+Work In Progress
+#PhotogrammetryDensify
+Work In Progress
+#PhotogrammetryMesh
+Work In Progress
+#PhotogrammetryMeshRefine
+Work In Progress
+
+
+

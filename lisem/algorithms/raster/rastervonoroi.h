@@ -1,0 +1,4 @@
+#ifndef RASTERVONOROI_H
+#define RASTERVONOROI_H
+
+#endif // RASTERVONOROI_H

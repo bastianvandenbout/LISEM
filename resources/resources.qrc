@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fileopen.png</file>
+        <file>logo.png</file>
+        <file>pause2.png</file>
+        <file>start1.png</file>
+        <file>stop1.png</file>
+        <file>onewfile.png</file>
+        <file>deletereport4.png</file>
+        <file>filesave.png</file>
+        <file>filesaveas.png</file>
+        <file>diropen.png</file>
+    </qresource>
+    <qresource prefix="/new/prefix1">
+        <file>sphazard.ico</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,4 @@
+#ifndef RASTERUNWRAP_H
+#define RASTERUNWRAP_H
+
+#endif // RASTERUNWRAP_H

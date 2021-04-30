@@ -1,0 +1,10 @@
+#ifndef UILOCATIONEDITOR_H
+#define UILOCATIONEDITOR_H
+
+
+
+
+
+
+
+#endif // UILOCATIONEDITOR_H
