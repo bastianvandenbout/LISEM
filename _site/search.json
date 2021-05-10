@@ -4,22 +4,8 @@
     
     
     {
-      "title": "Welcome",
-      "url": "/LISEM/docs/home/"
-    },
-  
-    
-    
-    {
-      "title": "Themes",
-      "url": "/LISEM/docs/themes/"
-    },
-  
-    
-    
-    {
-      "title": "Customization",
-      "url": "/LISEM/docs/customization/"
+      "title": "Getting Started",
+      "url": "/LISEM/docs/gettingstarted/"
     },
   
 
@@ -27,22 +13,8 @@
     
     
     {
-      "title": "Markdown Cheatsheet",
-      "url": "/LISEM/docs/cheatsheet/"
-    },
-  
-    
-    
-    {
-      "title": "Font Awesome Icon List",
-      "url": "/LISEM/docs/font-awesome/"
-    },
-  
-    
-    
-    {
-      "title": "Bootstrap Features",
-      "url": "/LISEM/docs/bootstrap/"
+      "title": "",
+      "url": ""
     },
   
 
