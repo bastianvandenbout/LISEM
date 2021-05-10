@@ -6,8 +6,8 @@ description: >
   providing documentation and blog post pages.
 lang: en-US
 
-baseurl: "/jekyll-doc-theme" # the subpath of your site, e.g. /blog/
-url: https://aksakalli.github.io/jekyll-doc-theme # the base hostname & protocol for your site
+baseurl: "/LISEM" # the subpath of your site, e.g. /blog/
+url: https://bastianvandenbout.github.io/ # the base hostname & protocol for your site
 git_address: https://github.com/aksakalli/jekyll-doc-theme
 git_edit_address: https://github.com/aksakalli/jekyll-doc-theme/blob/gh-pages
 
@@ -31,6 +31,16 @@ exclude:
   - .idea/
   - .gitignore
   - README.md
+  - third_party/
+  - scripts/
+  - resources/
+  - lisem/
+  - cmakeFindModules/
+  - CMakeLists.txt
+  - lisem.ico
+  - lisem.rc
+  - NSIS.template.in
+  - pylisem_script/
 timezone: Europe/Berlin
 defaults:
 - scope:
