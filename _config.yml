@@ -70,11 +70,25 @@ defaults:
     seo:
       type: "WebPage"
 
+- scope:
+    path: _showcases
+    type: showcases
+  values:
+    search: true
+    layout: showcase
+    sectionid: showcases
+    seo:
+      type: "WebPage"
+      
+      
 collections:
   docs:
     permalink: /:collection/:path/
     output: true
   pages:
+    permalink: /:collection/:path/
+    output: true
+  showcases:
     permalink: /:collection/:path/
     output: true
   posts:
