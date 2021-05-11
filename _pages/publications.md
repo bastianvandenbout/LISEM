@@ -5,7 +5,7 @@ permalink: /docs/publications/
 
 Below you will find an overview of study sites in scientific literature that has used current or previous versions of the LISEM model.
 
-![Research Locations](/assets/img/map.png)
+![Research Locations](/LISEM/assets/img/map.png)
 
 For more details, please see the list of literature below.
 For each entry, the study site location (country) is stated, together with the processes that were part of research.
