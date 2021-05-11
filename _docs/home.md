@@ -1,6 +1,6 @@
 ---
-title: Getting Started
-permalink: /docs/gettingstarted/
+title: Docs
+permalink: /docs/home/
 redirect_from: /docs/index.html
 ---
 

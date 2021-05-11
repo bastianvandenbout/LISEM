@@ -53,13 +53,28 @@ defaults:
     path: _docs
     type: docs
   values:
+    search: true
     layout: docs
     sectionid: docs
+    seo:
+      type: "WebPage"
+      
+      
+- scope:
+    path: _pages
+    type: pages
+  values:
+    search: true
+    layout: page
+    sectionid: pages
     seo:
       type: "WebPage"
 
 collections:
   docs:
+    permalink: /:collection/:path/
+    output: true
+  pages:
     permalink: /:collection/:path/
     output: true
   posts:
