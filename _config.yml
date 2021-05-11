@@ -65,7 +65,7 @@ defaults:
     type: pages
   values:
     search: true
-    layout: page
+    layout: docs2
     sectionid: pages
     seo:
       type: "WebPage"
