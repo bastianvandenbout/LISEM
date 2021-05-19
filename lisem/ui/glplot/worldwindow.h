@@ -1,5 +1,7 @@
 #ifndef WORLD2DWINDOW_H
 #define WORLD2DWINDOW_H
+#include "model.h"
+
 #include "defines.h"
 #include "openglclmanager.h"
 #include "qcolor.h"

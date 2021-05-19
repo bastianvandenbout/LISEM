@@ -1,6 +1,13 @@
 #ifndef RASTERPCA_H
 #define RASTERPCA_H
 
+#ifdef FORWARD
+#error "forward already declared"
+#endif
+#ifdef INVERSE
+#error "inverse already declared"
+#endif
+
 #include "geo/raster/map.h"
 #include "otbVcaImageFilter.h"
 #include "otbSOMImageClassificationFilter.h"

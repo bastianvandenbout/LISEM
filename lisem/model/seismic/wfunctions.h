@@ -41,6 +41,7 @@ static void
 	         xseed[2] = (unsigned short)accu;
 }
 
+#ifdef WIN32
 static double erand48(unsigned short xseed[3])
 {
          _dorand48(xseed);
@@ -52,7 +53,6 @@ static double erand48(unsigned short xseed[3])
 static double drand48(){
 	return erand48(_rand48_seed);
 }
-
 static void srand48(long seed){
 	_rand48_seed[0] = RAND48_SEED_0;
 	_rand48_seed[1] = (unsigned short)seed;
@@ -64,6 +64,7 @@ static void srand48(long seed){
 }
 
 
+#endif
 
 /* Emulate fsync on platforms that lack it, primarily Windows and
    cross-compilers like MinGW.
@@ -142,6 +143,7 @@ fsync (int fd)
 
 #else /* !Windows */
 
-# error "This platform lacks fsync function, and Gnulib doesn't provide a replacement. This is a bug in Gnulib."
+#include <unistd.h>
+//# error "This platform lacks fsync function, and Gnulib doesn't provide a replacement. This is a bug in Gnulib."
 
 #endif /* !Windows */

@@ -1,0 +1,11 @@
+set(SOURCE
+        ${SOURCE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Equation.cpp
+        PARENT_SCOPE
+        )
+set(HEADERS
+        ${HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Equation.hpp
+		${CMAKE_CURRENT_SOURCE_DIR}/Numerics.hpp
+        PARENT_SCOPE
+        )

@@ -1,7 +1,7 @@
 #ifndef FLUID2P2D_H
 #define FLUID2P2D_H
 
-
+#include "defines.h"
 #include "geo/raster/map.h"
 
 #include <vector>
@@ -419,8 +419,8 @@ int n = 0; int n2 = 0;
 
     // Helper Function Used In FastMarch()
     inline bool update_distance( int i, int j, float pos[2], float &dist ) {
-        float x = i/(FLOAT)(gx-1);
-        float y = j/(FLOAT)(gy-1);
+        float x = i/(LSMFLOAT)(gx-1);
+        float y = j/(LSMFLOAT)(gy-1);
         dist = 1.0;
         bool updated = false;
 
@@ -493,8 +493,8 @@ int n = 0; int n2 = 0;
                 int qj = query[q][1];
                 if( qi>=0 && qi<gx && qj>=0 && qj<gy ) {
                     if( ! grids[qi][qj].estimated && ! grids[qi][qj].known ) {
-                        FLOAT pos[2];
-                        FLOAT dist;
+                        LSMFLOAT pos[2];
+                        LSMFLOAT dist;
                         if( update_distance(qi,qj,pos,dist)) {
                             if( fabs(dist) < tolerance ) {
                                 grids[qi][qj].dist = dist;
@@ -1426,11 +1426,11 @@ int n = 0; int n2 = 0;
 
     inline void setMaxDistOfLevelSet() {
     #if 0
-        FLOAT max_vel = 0.0;
+        LSMFLOAT max_vel = 0.0;
         FOR_EVERY_CELL(gn) {
-            FLOAT xv = (u[0][i][j]+u[0][i+1][j])*0.5;
-            FLOAT xu = (u[1][i][j]+u[1][i+1][j])*0.5;
-            FLOAT vel = hypotf(xv,xu);
+            LSMFLOAT xv = (u[0][i][j]+u[0][i+1][j])*0.5;
+            LSMFLOAT xu = (u[1][i][j]+u[1][i+1][j])*0.5;
+            LSMFLOAT vel = hypotf(xv,xu);
             if( vel > max_vel ) max_vel = vel;
         } END_FOR;
         maxdist = fmax(DIST, 1.5*DT*max_vel);

@@ -10,8 +10,9 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_scripting_cpp ${REMOVEFILESUNITTEST})
-
+endif()
 add_library(lisem_scripting STATIC ${lisem_scripting_header} ${lisem_scripting_cpp})
 target_compile_features(lisem_scripting INTERFACE ${LISEM_CXX_FEATURES})
 set_target_properties(lisem_scripting PROPERTIES SOVERSION ${LISEM_VERSION_MAJOR} VERSION "${LISEM_VERSION_MAJOR}.${LISEM_VERSION_MINOR}")
@@ -37,6 +38,7 @@ target_include_directories(lisem_scripting
     ${CMAKE_CURRENT_SOURCE_DIR}
 
   PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party>
      ${LISEM_EXTERNAL_INCLUDE_DIRS}
      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
      $<INSTALL_INTERFACE:include>

@@ -1,0 +1,10 @@
+set(SOURCE
+        ${SOURCE}
+        PARENT_SCOPE
+        )
+set(HEADERS
+        ${HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/colors.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Helpers.hpp
+        PARENT_SCOPE
+        )

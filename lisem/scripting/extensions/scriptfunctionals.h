@@ -9,7 +9,7 @@
 inline void RegisterFunctionalsToScriptEngine(asIScriptEngine *engine)
 {
 
-        engine->RegisterObjectType("MathExpression", sizeof(MathFunction), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<MathFunction>());
+        engine->RegisterObjectType("MathExpression", sizeof(MathFunction), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<MathFunction>());
         engine->RegisterObjectMethod("MathExpression", "double Evaluate(array<double> &in inputs)",asMETHODPR(MathFunction,AS_Evaluate,(std::vector<double>),double),asCALL_THISCALL);
         engine->RegisterObjectMethod("MathExpression", "string GetExpression()",asMETHODPR(MathFunction,AS_GetExpression,(),QString),asCALL_THISCALL);
 

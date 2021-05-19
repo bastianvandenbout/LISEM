@@ -1,0 +1,12 @@
+set(SOURCE
+        ${SOURCE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Neighbouring.cpp
+        PARENT_SCOPE
+        )
+set(HEADERS
+        ${HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/DataReader.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Neighbouring.hpp
+        PARENT_SCOPE
+        )
+add_subdirectory(DataOutput)

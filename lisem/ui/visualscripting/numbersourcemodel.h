@@ -1072,7 +1072,7 @@ public:
         m_ValueEdit->setStyleSheet("background-color: rgba(255,255,255,185)");
         l->addWidget(m_ValueEdit);
 
-        connect(m_ValueEdit, &MapSelectWidget::OnValueChanged,this,MapSourceModel::OnValueChanged);
+        connect(m_ValueEdit, &MapSelectWidget::OnValueChanged,this,&MapSourceModel::OnValueChanged);
 
         m_ImageViewer = new pal::ImageViewer();
         m_ImageViewer->setToolBarMode(pal::ImageViewer::ToolBarMode::AutoHidden);

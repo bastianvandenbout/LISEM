@@ -1,6 +1,6 @@
 #ifndef SERIALIZATION_H
 #define SERIALIZATION_H
-
+#include "QJsonValue" 
 #include "QJsonObject"
 #include "QJsonArray"
 #include "QList"

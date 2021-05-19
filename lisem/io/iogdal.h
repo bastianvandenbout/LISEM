@@ -10,7 +10,6 @@
 #include "geo/raster/map.h"
 #include "QDebug"
 #include "error.h"
-#include "csf.h"
 #include "gdal_priv.h"
 #include "cpl_string.h"
 #include "cpl_conv.h"
@@ -21,11 +20,6 @@
 #include <QApplication>
 #include "site.h"
 
-//! Function to close a CSF MAP.
-const auto close_csf_map = [](MAP* map) { Mclose(map); };
-
-//! Auto-ptr type for CSF MAPs.
-using MapPtr = std::unique_ptr<MAP, decltype(close_csf_map)>;
 
 //! Function to close a GDAL GDALDataset.
 const auto close_gdal_dataset = [](GDALDataset* dataset) { GDALClose(dataset); };
@@ -321,9 +315,9 @@ inline QList<cTMap*> readRasterList(
 {
     //LISEM_DEBUG("load map from data " + pathName);
 
-    MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
+    //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
-    if(pcrm != NULL)
+    /*if(pcrm != NULL)
     {
         int valscale = RgetValueScale(pcrm);
         if(valscale == VS_LDD)
@@ -331,7 +325,7 @@ inline QList<cTMap*> readRasterList(
             ldd = true;
         }
         Mclose(pcrm);
-    }
+    }*/
 
     // Open raster dataset and obtain some properties.
     GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
@@ -454,9 +448,9 @@ inline cTMap readRaster(
 {
     std::cout << "load map from data " << pathName.toStdString() << " " << bandn << std::endl;
 
-    MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
+    //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
-    if(pcrm != NULL)
+    /*if(pcrm != NULL)
     {
         int valscale = RgetValueScale(pcrm);
         if(valscale == VS_LDD)
@@ -464,7 +458,7 @@ inline cTMap readRaster(
             ldd = true;
         }
         Mclose(pcrm);
-    }
+    }*/
 
     // Open raster dataset and obtain some properties.
     GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
@@ -582,9 +576,9 @@ inline RasterBandStats readRasterStats(
 
     stats.band = band;
 
-    MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
+    //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
-    if(pcrm != NULL)
+    /*if(pcrm != NULL)
     {
         int valscale = RgetValueScale(pcrm);
         if(valscale == VS_LDD)
@@ -592,7 +586,7 @@ inline RasterBandStats readRasterStats(
             ldd = true;
         }
         Mclose(pcrm);
-    }
+    }*/
 
     // Open raster dataset and obtain some properties.
     GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
@@ -685,9 +679,9 @@ inline cTMapProps readRasterProps(
     cTMapProps props;
 
 
-    MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
+    //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
-    if(pcrm != NULL)
+    /*if(pcrm != NULL)
     {
         int valscale = RgetValueScale(pcrm);
         if(valscale == VS_LDD)
@@ -695,7 +689,7 @@ inline cTMapProps readRasterProps(
             ldd = true;
         }
         Mclose(pcrm);
-    }
+    }*/
 
     // Open raster dataset and obtain some properties.
     GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
@@ -900,9 +894,9 @@ inline QList<cTMapProps> readRasterListProps(
 {
     //LISEM_DEBUG("load map from data " + pathName);
 
-    MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
+    //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
-    if(pcrm != NULL)
+    /*if(pcrm != NULL)
     {
         int valscale = RgetValueScale(pcrm);
         if(valscale == VS_LDD)
@@ -910,7 +904,7 @@ inline QList<cTMapProps> readRasterListProps(
             ldd = true;
         }
         Mclose(pcrm);
-    }
+    }*/
 
     // Open raster dataset and obtain some properties.
     GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
@@ -1023,9 +1017,9 @@ inline void readRasterPixels(QString const& pathName, cTMap * map,int px0, int p
 {
     //LISEM_DEBUG("load map from data " + pathName);
 
-    MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
+    //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
-    if(pcrm != NULL)
+    /*if(pcrm != NULL)
     {
         int valscale = RgetValueScale(pcrm);
         if(valscale == VS_LDD)
@@ -1033,7 +1027,7 @@ inline void readRasterPixels(QString const& pathName, cTMap * map,int px0, int p
             ldd = true;
         }
         Mclose(pcrm);
-    }
+    }*/
 
     // Open raster dataset and obtain some properties.
     GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
@@ -1153,7 +1147,7 @@ inline void readRasterPixels(QString const& pathName, cTMap * map,int px0, int p
 
 
 
-inline void writePCRasterRaster(
+/*inline void writePCRasterRaster(
     cTMap const& raster,
     QString pathName)
 {
@@ -1240,7 +1234,7 @@ inline void writePCRasterRaster(
 
 
     }
-}
+}*/
 
 inline void writeGDALRaster(
     QList<cTMap*> const& raster,
@@ -1338,6 +1332,12 @@ inline void writeGDALRaster(
         fi.dir().mkdir(fi.dir().path());
     }
 
+
+    CPLStringList sl;
+    sl.AddNameValue("PCRASTER_VALUESCALE","VS_SCALAR");
+
+
+
     std::cout << "write raster " << bandn << " " << pathName.toStdString() << std::endl;
     if(bandn == -1)
     {
@@ -1346,12 +1346,17 @@ inline void writeGDALRaster(
         int const nrCols{raster.nrCols()};
         int const nrBands{1};
         GDALDataset * d = driver.Create(pathName.toLatin1().constData(),
-                      nrCols, nrRows, nrBands, GDT_Float32, nullptr);
+                      nrCols, nrRows, nrBands, GDT_Float32, sl.List());
         //GDALDatasetPtr dataset{driver.Create(pathName.toLatin1().constData(),
         //    nrCols, nrRows, nrBands, GDT_Float32, nullptr), close_gdal_dataset};
 
         if(d == NULL) {
              LISEM_ERROR(QString("Dataset cannot be created.") + pathName);
+             const char * c = CPLGetLastErrorMsg();
+             if(c!=nullptr)
+             {
+                 LISEM_ERROR(QString(c));
+             }
              throw 1;
         }
 
@@ -1561,10 +1566,11 @@ inline void writeRaster(
     bool driverSupportsCreate{CSLFetchBoolean(metadata, GDAL_DCAP_CREATE,
         FALSE) != FALSE};
 
-    if(format == "PCRaster") {
+    /*if(format == "PCRaster") {
 
             writePCRasterRaster(raster, pathName);
-    }else if(driverSupportsCreate) {
+    }else */
+    if(driverSupportsCreate) {
     // All is well, write using GDAL.
     writeGDALRaster(raster, pathName, *driver,bandn);
     }else {
@@ -1632,7 +1638,7 @@ inline void writeRaster(
     bool driverSupportsCreate{CSLFetchBoolean(metadata, GDAL_DCAP_CREATE,
         FALSE) != FALSE};
 
-    if(format == "PCRaster") {
+    /*if(format == "PCRaster") {
 
         if(raster.size() > 1)
         {
@@ -1645,7 +1651,8 @@ inline void writeRaster(
             writePCRasterRaster(*raster.at(0),pathName);
         }
 
-    }else if(driverSupportsCreate) {
+    }else */
+    if(driverSupportsCreate) {
     // All is well, write using GDAL.
         writeGDALRaster(raster, pathName, *driver);
     }else {

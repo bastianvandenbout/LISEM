@@ -1,4 +1,5 @@
 
+add_subdirectory(glfwnative)
 add_subdirectory(core)
 add_subdirectory(math)
 add_subdirectory(objects)

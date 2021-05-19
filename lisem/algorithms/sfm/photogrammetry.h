@@ -135,7 +135,7 @@ using namespace openMVG::geodesy;
 using namespace openMVG::image;
 using namespace openMVG::cameras;
 using namespace openMVG::features;
-using namespace std;
+//using namespace std;
 
 
 typedef features::AKAZE_Float_Regions AKAZE_OpenCV_Regions;
@@ -1181,7 +1181,7 @@ bool computeIndexFromImageNames(
 
 #include "openMVG/sfm/sfm_data_colorization.hpp"
 
-#include "openMVG/sfm/SfMPlyHelper.hpp"
+#include "SfMPlyHelper.hpp"
 
 inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdir)
 {
@@ -1458,7 +1458,7 @@ inline void AS_Photogrammetry_Register(std::vector<LSMVector3> pos_gcp, std::vec
           }
           const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
           openMVG::Vec4 Xhomogeneous;
-          if (!TriangulateNViewAlgebraic_2(bearing_matrix, poses, &Xhomogeneous))
+          if (!TriangulateNViewAlgebraic(bearing_matrix, poses, &Xhomogeneous))
           {
             std::cout << "Invalid triangulation" << std::endl;
             LISEMS_WARNING("Control Point cannot be triangulated (not in front of the cameras)");

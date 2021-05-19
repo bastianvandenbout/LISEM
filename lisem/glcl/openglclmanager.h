@@ -7,8 +7,6 @@
 #endif
 
 #ifdef OS_LNX
-#define GLFW_EXPOSE_NATIVE_X11
-#define GLFW_EXPOSE_NATIVE_GLX
 #endif
 
 #include <ft2build.h>
@@ -65,8 +63,8 @@
 #include "QMessageBox"
 
 
-  __declspec(dllexport) extern unsigned long NvOptimusEnablement;
-  __declspec(dllexport) extern int AmdPowerXpressRequestHighPerformance;
+LISEM_API extern unsigned long NvOptimusEnablement;
+LISEM_API extern int AmdPowerXpressRequestHighPerformance;
 
 
 
@@ -207,6 +205,7 @@ public:
     cl::Context context;
     GLFWwindow* window;
     cl::CommandQueue q;
+    bool m_HasOpenCL = false;
     cl::Device m_device;
     GLFWmonitor* monitor;
 
@@ -250,6 +249,7 @@ public:
     OpenGLProgram * m_GLProgram_uiobject;
     OpenGLProgram * m_GLProgram_uiobjectinstanced;*/
 
+    OpenGLCLMSAARenderTarget * m_ScreenTarget = 0;
 
     OpenGLCLMSAARenderTarget * m_MSAATarget = 0;
 
@@ -306,8 +306,20 @@ public:
     }
     inline void CreateMSAABuffer()
     {
-
-        m_MSAATarget->Resize(m_width,m_height,1);
+        if(!m_ScreenTarget->IsCreated())
+        {
+            m_ScreenTarget->Resize(m_width,m_height,1);
+        }
+        //if(!m_MSAATarget->IsCreated())
+        {
+            if(!(m_MSAATarget->GetWidth() == m_width && m_MSAATarget->GetHeight() == m_height))
+            {
+                m_MSAATarget->Destroy();
+                m_MSAATarget= new OpenGLCLMSAARenderTarget();
+                m_MSAATarget->Resize(m_width,m_height,1);
+            }
+            //m_MSAATarget->Resize(m_width,m_height,1);
+        }
     }
 
     void GLCLLoop();
@@ -735,8 +747,7 @@ public slots:
     //this function has to be called from main thread
     inline void ProcessEvents()
     {
-        //glfwPollEvents();
-
+        std::cout << "poll events "  << std::endl;
         if(!glfwWindowShouldClose(window))
         {
 
@@ -759,7 +770,7 @@ public slots:
                 DoQTLoopCallbackPrivate();
             }
 
-            QTimer::singleShot(0,this,&OpenGLCLManager::ProcessEvents);
+            QTimer::singleShot(5,this,&OpenGLCLManager::ProcessEvents);
 
         }
     }

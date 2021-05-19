@@ -1188,7 +1188,7 @@ float gs::psnr8U(cv::Mat imageGT, cv::Mat imageRec)
 
 void gs::exportReport(Mat inputImage, Mat srImage, double upscale, int iterations, double lambda, unsigned int patchSize, unsigned int patchOverlap, unsigned int neighborhoodSize, double neighborhoodWeight)
 {
-	time_t t = time(0);
+	/*time_t t = time(0);
 	std::string basePath("../exports/");
 	basePath.append(std::to_string((long)t));
 	int err = _mkdir(basePath.c_str());
@@ -1248,12 +1248,12 @@ void gs::exportReport(Mat inputImage, Mat srImage, double upscale, int iteration
 
 	basePath.clear();
 	textPath.clear();
-	interpImage.release();
+	interpImage.release();*/
 }
 
 void gs::exportReport(Mat inputImage, Mat srImage, Mat imageGT, double upscale, int iterations, double lambda, unsigned int patchSize, unsigned int patchOverlap, unsigned int neighborhoodSize, double neighborhoodWeight)
 {
-	time_t t = time(0);
+	/*time_t t = time(0);
 	std::string basePath("../exports/");
 	basePath.append(std::to_string((long)t));
 	int err = _mkdir(basePath.c_str());
@@ -1330,12 +1330,12 @@ void gs::exportReport(Mat inputImage, Mat srImage, Mat imageGT, double upscale, 
 
 	imageInter.release();
 	basePath.clear();
-	textPath.clear();
+	textPath.clear();*/
 }
 
 void gs::exportReportWavelet(Mat inputImage, Mat srImage, double upscale, int iterations, double lambda, unsigned int patchSize, unsigned int patchOverlap, unsigned int neighborhoodSize, double neighborhoodWeight, int waveletP, int waveletQ)
 {
-	time_t t = time(0);
+	/*time_t t = time(0);
 
 	std::string basePath("../exports/");
 	basePath.append(std::to_string((long)t));
@@ -1430,12 +1430,12 @@ void gs::exportReportWavelet(Mat inputImage, Mat srImage, double upscale, int it
 	textPath.clear();
 	basePath.clear();
 	delete rwSR;
-	delete rwBC;
+	delete rwBC;*/
 }
 
 void gs::exportReportWavelet(Mat inputImage, Mat srImage, Mat imageGT, double upscale, int iterations, double lambda, unsigned int patchSize, unsigned int patchOverlap, unsigned int neighborhoodSize, double neighborhoodWeight, int waveletP, int waveletQ)
 {
-	time_t t = time(0);
+	/*time_t t = time(0);
 	
 	std::string basePath("../exports/");
 	basePath.append(std::to_string((long)t));
@@ -1581,6 +1581,6 @@ void gs::exportReportWavelet(Mat inputImage, Mat srImage, Mat imageGT, double up
 
 	delete rwBC;
 	delete rwSR;
-	delete rwGT;
+	delete rwGT;*/
 
 }

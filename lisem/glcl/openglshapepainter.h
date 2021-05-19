@@ -1,8 +1,8 @@
 #ifndef OPENGLSHAPEPAINTER_H
 #define OPENGLSHAPEPAINTER_H
 #ifdef OS_WIN
-#define GLFW_EXPOSE_NATIVE_WIN32
-#define GLFW_EXPOSE_NATIVE_WGL
+//#define GLFW_EXPOSE_NATIVE_WIN32
+//#define GLFW_EXPOSE_NATIVE_WGL
 #endif
 #include "defines.h"
 #include <glad/glad.h>

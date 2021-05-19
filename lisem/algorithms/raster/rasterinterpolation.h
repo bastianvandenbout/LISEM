@@ -2,7 +2,7 @@
 #define RASTERINTERPOLATION_H
 
 
-#include <GsTL/kriging/kriging_weights.h>
+#include "GsTL/kriging/kriging_weights.h" 
 #include <GsTL/kriging/SK_constraints.h>
 #include <GsTL/kriging/OK_constraints.h>
 #include <GsTL/kriging/KT_constraints.h>

@@ -835,11 +835,11 @@ inline static cTMap * AS_RasterStereoElevation(cTMap * left, cTMap * right, QStr
            double minElev = 0.0;
            double maxElev = 0.0;
 
-         m_MultiDisparityTo3DFilterList->SetReferenceKeywordList(inleft->GetImageKeywordlist());
+         //m_MultiDisparityTo3DFilterList->SetReferenceKeywordList(inleft->GetImageKeywordlist());
          m_MultiDisparityTo3DFilterList->SetNumberOfMovingImages(1);
          m_MultiDisparityTo3DFilterList->SetHorizontalDisparityMapInput(0, hDispOutput2);
          m_MultiDisparityTo3DFilterList->SetVerticalDisparityMapInput(0, vDispOutput2);
-         m_MultiDisparityTo3DFilterList->SetMovingKeywordList(0, inright->GetImageKeywordlist());
+         //m_MultiDisparityTo3DFilterList->SetMovingKeywordList(0, inright->GetImageKeywordlist());
          m_MultiDisparityTo3DFilterList->SetDisparityMaskInput(0, translatedMaskImage);
          m_MultiDisparityTo3DFilterList->UpdateOutputInformation();
 

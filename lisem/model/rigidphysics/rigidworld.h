@@ -2,11 +2,11 @@
 
 
 #include "defines.h"
-#include "chrono/physics/ChLinkMotorRotationSpeed.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverAPGD.h"
 #include "chrono/solver/ChSolverPSOR.h"
 #include "chrono/solver/ChSolverBB.h"
+#include "chrono/physics/ChLinkMotorRotationSpeed.h"
 
 using namespace chrono;
 

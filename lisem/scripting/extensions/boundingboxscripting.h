@@ -24,7 +24,7 @@ inline static void RegionFactory(double x1,double x2,double y1,double y2,void * 
 
 inline void RegisterGeoElementScripting(asIScriptEngine *engine)
 {
-    int r = engine->RegisterObjectType("Region", sizeof(BoundingBox), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<BoundingBox>()); assert( r >= 0 );
+    int r = engine->RegisterObjectType("Region", sizeof(BoundingBox), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS|asGetTypeTraits<BoundingBox>()); assert( r >= 0 );
 
     // Register the behaviours
     r = engine->RegisterObjectBehaviour("Region", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(RegionFactory,(void*),void), asCALL_CDECL_OBJLAST); assert( r >= 0 );

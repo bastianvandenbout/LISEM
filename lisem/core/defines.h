@@ -1,14 +1,24 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-
 #ifdef LISEM_BUILD
+#ifdef _MSC_VER
 #  define LISEM_API __declspec(dllexport)
+#elif defined(__GNUC__)
+#  define LISEM_API __attribute__((visibility("default" )))
+
+#else
+#  define LISEM_API
+#endif
 #else
 #  define LISEM_API __declspec(dllimport)
 #endif
 
+#define LSMFLOAT float
 
+#include "qmetatype.h"
+
+#define ARMA_DONT_USE_SUPERLU
 #define LISEM_PI 3.141592653589793238462643383279502884197169399375105820974944
 #define LISEM_1DIVPI 0.31830988618
 #define LISEM_PIdiv180 (LISEM_PI/180.0)

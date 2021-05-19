@@ -1,10 +1,11 @@
+#include "model.h"
 #include "stackdisplay.h"
-#include "widgets/TreeItem.h"
+#include "widgets/treeitem.h"
 
 #include <QtWidgets>
 #include "QString"
 
-#include "widgets/TreeItem.h"
+#include "widgets/treeitem.h"
 
 
 SDTreeItem::SDTreeItem(const QVector<QVariant> &data,  void * var , std::vector<std::pair<QString,std::function<void(void*)>>> actions, SDTreeItem *parent)

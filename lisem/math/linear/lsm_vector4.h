@@ -4,7 +4,7 @@
 #include "math.h"
 #include "defines.h"
 
-#include "LSM_vector3.h"
+#include "lsm_vector3.h"
 
 class LSMVector4
 {

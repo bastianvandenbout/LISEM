@@ -10,7 +10,10 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_io_cpp ${REMOVEFILESUNITTEST})
+endif()
+
 
 add_library(lisem_io ${lisem_io_header} ${lisem_io_cpp})
 target_compile_features(lisem_io INTERFACE ${LISEM_CXX_FEATURES})

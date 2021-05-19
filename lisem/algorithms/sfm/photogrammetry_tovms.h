@@ -9,7 +9,7 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 using namespace openMVG::cameras;
-using namespace std;
+//using namespace std;
 
 LISEM_API bool exportToOpenMVS(
   const SfM_Data & sfm_data,

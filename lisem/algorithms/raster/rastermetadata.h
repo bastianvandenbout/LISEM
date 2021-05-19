@@ -13,7 +13,6 @@
 #include "geo/raster/map.h"
 #include "QDebug"
 #include "error.h"
-#include "csf.h"
 #include "gdal_priv.h"
 #include "cpl_string.h"
 #include "cpl_conv.h"

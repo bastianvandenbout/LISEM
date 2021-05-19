@@ -6,7 +6,7 @@
 #include "error.h"
 
 #include "angelscript.h"
-#include "scriptstdstring.h"
+#include "extensions/scriptqstdstring.h"
 #include "scripthelper.h"
 #include "OpenCLUtil.h"
 #include "QThread"

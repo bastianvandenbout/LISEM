@@ -2,7 +2,7 @@
 
 
 #include "error.h"
-
+#include "model.h"
 #include <utility>
 
 #include <QtCore/QString>
@@ -143,8 +143,11 @@ static struct Data {
   QMutex m_ModelIsRunningMutex;
 } *d;
 
+#ifdef OS_WIN
 #include "windows.h"
 #define MAX_PATH_LSM_DLL 16000
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -155,6 +158,10 @@ static void init_pylisem_global(py::module &m)
 
     SetPrintUseStdOut(true);
 
+
+    std::string DirS;
+
+#ifdef OS_WIN
     char path[MAX_PATH_LSM_DLL];
     HMODULE hm = NULL;
 
@@ -172,10 +179,16 @@ static void init_pylisem_global(py::module &m)
         fprintf(stderr, "GetModuleFileName failed, error = %d\n", ret);
         // Return or however you want to handle an error.
     }
-
-
-    std::string DirS = std::string(path);
+    DirS = std::string(path);
     DirS.erase((DirS.size()-21),21);//32
+
+#endif
+#ifdef OS_LNX
+
+    DirS = std::string("");
+
+#endif
+
 
     QString Dir = QString(DirS.c_str());
     //std::ofstream out("C:/Data/output.txt");
@@ -198,13 +211,18 @@ static void init_pylisem_global(py::module &m)
 
     }
 
+
+#ifdef OS_WIN
+
     int e = _putenv_s("QT_PLUGIN_PATH",env_path.c_str());
     if (e) {
         exit(EXIT_FAILURE);
     }
 
+#endif
+#ifdef OS_LNX
 
-
+#endif
     d = new Data;
 
     d->app.addLibraryPath(Dir);

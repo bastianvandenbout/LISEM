@@ -1,0 +1,14 @@
+set(SOURCE
+        ${SOURCE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Stepper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Options.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.cpp
+        PARENT_SCOPE
+        )
+set(HEADERS
+        ${HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Stepper.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Options.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.hpp
+        PARENT_SCOPE
+        )

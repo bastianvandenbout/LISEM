@@ -2,7 +2,7 @@
 #define MAPOUTPUTWIDGET_H
 
 
-#include <qlabel>
+#include <QLabel>
 #include "geo/raster/map.h"
 
 

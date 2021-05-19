@@ -1,6 +1,8 @@
 #ifndef RASTEROTBCOMMON_H
 #define RASTEROTBCOMMON_H
 
+#include "vnl/vnl_config.h"
+#include "vnl/vnl_math.h"
 #include "otbFrostImageFilter.h"
 #include "otbLeeImageFilter.h"
 #include "otbGammaMAPImageFilter.h"

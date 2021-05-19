@@ -10,7 +10,10 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_app_calc_cpp ${REMOVEFILESUNITTEST})
+endif()
+
 # WIN32
 add_executable(lisem_app_calc ${lisem_app_calc_header} ${lisem_app_calc_cpp}  ${WIN_RESOURCE_FILE})
 target_compile_features(lisem_app INTERFACE ${LISEM_CXX_FEATURES})

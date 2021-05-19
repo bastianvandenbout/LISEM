@@ -10,7 +10,7 @@
 #include "geo/raster/map.h"
 
 
-using namespace std;
+//using namespace std;
 using namespace mlpack;
 using namespace mlpack::regression;
 using namespace mlpack::util;

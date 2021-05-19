@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <windows.h> // replace <pthread.h> if Unix-like system
+#ifdef OS_WIN
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 #include "dbscan.h"
 
 #define SQ(x)           ((x) * (x))

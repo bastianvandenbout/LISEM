@@ -1,4 +1,5 @@
 #include "clabel.h"
+#include "model.h" 
 #include "layerwidget.h"
 #include <iostream>
 

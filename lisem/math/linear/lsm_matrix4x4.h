@@ -2,9 +2,9 @@
 #define MATRIX4X4_H
 
 #include "math.h"
-#include "LSM_vector3.h"
+#include "lsm_vector3.h"
 #include "iostream"
-#include "LSM_vector4.h"
+#include "lsm_vector4.h"
 
 class LSMMatrix4x4
 {

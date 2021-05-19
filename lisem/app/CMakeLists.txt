@@ -10,7 +10,9 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_app_cpp ${REMOVEFILESUNITTEST})
+endif()
 # WIN32
 add_executable(lisem_app ${lisem_app_header} ${lisem_app_cpp}  ${WIN_RESOURCE_FILE})
 target_compile_features(lisem_app INTERFACE ${LISEM_CXX_FEATURES})
@@ -19,7 +21,6 @@ set_property(TARGET lisem_app PROPERTY FOLDER lisem)
 
 target_link_libraries(lisem_app
   PRIVATE
-    ${LISEM_EXTERNAL_LIBS}
     lisem_core
     lisem_math
     lisem_object
@@ -30,6 +31,8 @@ target_link_libraries(lisem_app
     lisem_scripting
     lisem_glcl
     lisem_ui
+    
+    ${LISEM_EXTERNAL_LIBS}
 
 
 )
@@ -48,4 +51,10 @@ target_include_directories(lisem_app
 
 install(TARGETS lisem_app COMPONENT app DESTINATION bin EXPORT LISEM-targets)
 
+target_compile_definitions(lisem_app PUBLIC EIGEN_MAX_ALIGN_BYTES=0)
 
+get_target_property(APPDEFINES lisem_app INTERFACE_COMPILE_DEFINITIONS)
+get_target_property(APPDEFINES2 lisem_app COMPILE_DEFINITIONS)
+
+message(${APPDEFINES})
+message(${APPDEFINES2})

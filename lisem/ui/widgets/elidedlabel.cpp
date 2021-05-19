@@ -1,4 +1,4 @@
-#include "ElidedLabel.h"
+#include "elidedlabel.h"
 
 #include <QPaintEvent>
 #include <QResizeEvent>

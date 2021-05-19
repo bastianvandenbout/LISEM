@@ -9,6 +9,8 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 SET(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
+SET(REMOVEFILESUNITTEST "")
+
 # ==============================================================================
 # get the compilation settings
 # ==============================================================================
@@ -44,18 +46,14 @@ set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin")
 include(CXX14)
 
 check_for_cxx14_compiler(CXX11_COMPILER)
-# If a C++11 compiler is available, then set the appropriate flags
+# If a C++14 compiler is available, then set the appropriate flags
 if (CXX11_COMPILER)
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 14)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
 else (CXX11_COMPILER)
   message(FATAL_ERROR "A CXX11 compiler is required.")
 endif (CXX11_COMPILER)
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -std=c++14 -Wl,--default-image-base-low -Werror=return-type -lopengl32 -fopenmp -lws2_32 -lwsock32 -lWs2_32 -fext-numeric-literals -mavx -msse4.1 -mavx2") # generate debug information#
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wl,--default-image-base-low")
 
 
 
@@ -77,15 +75,16 @@ add_definitions("-DASSETS_DIR=\"${ASSETS_DIR}\"")
 if (WIN32)
     add_definitions("-DOS_WIN")
 endif(WIN32)
-if(LINUX)
+if(UNIX)
     add_definitions("-DOS_LNX")
-endif(LINUX)
+endif(UNIX)
 
 if(UNIX)
     add_definitions(-Wall -fvisibility=hidden)
 endif()
 
-message("Compiler info: ")
+message("Co
+ler info: ")
 message("C -Compiler: " ${CMAKE_CXX_COMPILER})
 message("C++ -Compiler: " ${CMAKE_C_COMPILER})
 
@@ -121,7 +120,23 @@ add_subdirectory(third_party)
 
 set(WIN_RESOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/lisem.rc")
 
+SET(EIGEN_DONT_PARALLELIZE ON)
+
 include(externals)
+
+
+set(CMAKE_CXX_STANDARD 17)
+if(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -std=c++14 -Wl,--default-image-base-low -Werror=return-type -lopengl32 -fopenmp -lws2_32 -lwsock32 -lWs2_32 -fext-numeric-literals -mavx -msse4.1 -mavx2") # generate debug information#
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wl,--default-image-base-low")
+else()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DEIGEN_DONT_VECTORIZE -DEIGEN_MAX_ALIGN_BYTES=0 -DEIGEN_DONT_PARALLELIZE") # generate debug information#
+set(CMAKE_CXX_FLAGS "-pthread -DEIGEN_DONT_VECTORIZE -DEIGEN_MAX_ALIGN_BYTES=0 -DEIGEN_DONT_PARALLELIZE -fopenmp -w -std=c++17 -Werror=return-type -fopenmp -Wall") # generate debug information#
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
+endif()
+
+message(${CMAKE_C_FLAGS})
+message(${CMAKE_CXX_FLAGS})
 
 # ==============================================================================
 # we need to compile several modules as part of lisem itself
@@ -134,7 +149,7 @@ add_subdirectory(lisem)
 # ==============================================================================
 
 install(EXPORT LISEM-targets DESTINATION bin)
-install(EXPORT LISEM-bindings DESTINATION python)
+#install(EXPORT LISEM-bindings DESTINATION python)
 install(EXPORT LISEM-targets
   FILE LISEMTargets.cmake
   NAMESPACE LISEM::
@@ -160,15 +175,16 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/external/runtime/" DESTINATION "bin/")
 file(GLOB kernel_src "lisem/model/kernels/*.*")
 file(GLOB kernel_src "lisem/ui/shaders/*.*")
 file(GLOB resources "resources/*.*")
+if(WIN32)
 file(GLOB dllresources "third_party/dllwrap/*")
-
+endif()
 #Add additional command dependend on extra compiled libary
 #this copies all the changed kernel files to the release/assets folder
  set(copiedKernels "")
  foreach(QmlFile ${kernel_src})
    get_filename_component(nam ${QmlFile} NAME)
-   configure_file(${QmlFile} ${CMAKE_CURRENT_BINARY_DIR}/kernels/${nam} COPYONLY)
-   list(APPEND copiedKernels ${CMAKE_CURRENT_BINARY_DIR}/kernels/${nam})
+   configure_file(${QmlFile} ${CMAKE_CURRENT_BINARY_DIR}/bin/kernels/${nam} COPYONLY)
+   list(APPEND copiedKernels ${CMAKE_CURRENT_BINARY_DIR}/bin/kernels/${nam})
  endforeach()
 
 #Add additional command dependend on extra compiled libary
@@ -190,6 +206,7 @@ file(GLOB dllresources "third_party/dllwrap/*")
 
     list(APPEND copiedDLLResources ${CMAKE_CURRENT_BINARY_DIR}/python/${nam})
   endforeach()
+
 
  #Add additional command dependend on extra compiled libary
 #this copies all the changed kernel files to the release/assets folder
@@ -227,6 +244,7 @@ add_library(Kernels SHARED ${kernel_src} ${copiedKernels})
 
 add_library(Resources SHARED ${resources} ${copiedResources})
 
+
 set(copiedDLLResources "")
 foreach(QmlFile ${dllresources})
    get_filename_component(nam ${QmlFile} NAME)
@@ -242,7 +260,6 @@ foreach(QmlFile ${dllresources})
 endforeach()
 
 add_library(DLLResources SHARED ${dllresources} ${copiedDLLResources})
-
 
 # ==============================================================================
 # INSTALLER CREATION
@@ -278,6 +295,7 @@ include(CPack)
 # Python wrapper creation
 # ==============================================================================
 
+if(WIN32)
 
 if(LISEM_BUILD_PYTHON)
 
@@ -288,8 +306,10 @@ add_custom_command(OUTPUT deploylisemi
                      DEPENDS lisem_python
                      COMMENT bd1)
 
-
 add_custom_target(deploylisem DEPENDS deploylisemi)
+
+endif()
+
 
 endif()
 

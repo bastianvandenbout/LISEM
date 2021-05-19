@@ -17,7 +17,7 @@ char* loadFile(const char *fname, GLint &fSize)
     }
 
     QString fnamec = QString(fname);
-    fnamec.replace("/","\\");
+    fnamec.replace("/",QDir::separator());
     std::ifstream file (fnamec.toStdString(),std::ios::in|std::ios::binary|std::ios::ate);
     if (file.is_open())
     {

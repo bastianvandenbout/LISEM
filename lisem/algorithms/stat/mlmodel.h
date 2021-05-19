@@ -1,5 +1,6 @@
 #pragma once
 
+/*
 #include "gdal.h"
 #include "ogr_spatialref.h"
 #include "ogr_api.h"
@@ -203,13 +204,6 @@ static void AS_SpatialLogisticRegression(std::vector<cTMap*> parameters, cTMap *
 
     //get input
 
-    /*QList<cTMap *> inputmapsq;
-
-    for(int i = 0; i < parameters->GetSize(); i++)
-    {
-        inputmapsq.append((cTMap*) parameters->At(i));
-    }*/
-
     //prepare data matrices
 
 
@@ -263,4 +257,5 @@ static void test_function()
 
         model.Train(trainData, trainLabels);
     }
-}
+}*/
+

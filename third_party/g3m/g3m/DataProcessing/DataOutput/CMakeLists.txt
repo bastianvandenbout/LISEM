@@ -1,0 +1,12 @@
+set(SOURCE
+        ${SOURCE}
+        PARENT_SCOPE
+        )
+set(HEADERS
+        ${HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Converter.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/OutputManager.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/FieldCollector.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/OutputFactory.hpp
+        PARENT_SCOPE
+        )

@@ -10,7 +10,9 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_math_cpp ${REMOVEFILESUNITTEST})
+endif()
 
 add_library(lisem_math STATIC ${lisem_math_header} ${lisem_math_cpp})
 target_compile_features(lisem_math INTERFACE ${LISEM_CXX_FEATURES})

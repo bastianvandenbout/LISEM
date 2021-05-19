@@ -1,0 +1,15 @@
+add_subdirectory(Model)
+add_subdirectory(Solver)
+add_subdirectory(DataProcessing)
+add_subdirectory(Logging)
+add_subdirectory(Simulation)
+add_subdirectory(Misc)
+set(SOURCE
+   ${SOURCE}
+   PARENT_SCOPE
+)
+set(HEADERS
+   ${HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/GW_Interface.hpp
+   PARENT_SCOPE
+)

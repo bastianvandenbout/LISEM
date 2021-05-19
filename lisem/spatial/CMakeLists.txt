@@ -10,8 +10,9 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_spatial_cpp ${REMOVEFILESUNITTEST})
-
+endif()
 add_library(lisem_spatial STATIC ${lisem_spatial_header} ${lisem_spatial_cpp})
 target_compile_features(lisem_spatial INTERFACE ${LISEM_CXX_FEATURES})
 set_target_properties(lisem_spatial PROPERTIES SOVERSION ${LISEM_VERSION_MAJOR} VERSION "${LISEM_VERSION_MAJOR}.${LISEM_VERSION_MINOR}")

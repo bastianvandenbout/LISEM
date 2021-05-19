@@ -11,7 +11,10 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_glcl_cpp ${REMOVEFILESUNITTEST})
+endif()
+
 
 add_library(lisem_glcl STATIC ${lisem_glcl_header} ${lisem_glcl_cpp})
 target_compile_features(lisem_glcl INTERFACE ${LISEM_CXX_FEATURES})
@@ -25,6 +28,7 @@ target_link_libraries(lisem_glcl
     ${LISEM_EXTERNAL_LIBS}
 
     lisem_core
+    lisem_glfwnative
     lisem_math
     lisem_io
     lisem_object

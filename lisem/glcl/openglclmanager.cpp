@@ -1,5 +1,7 @@
 #include "openglclmanager.h"
 
+#include "lisem_glfw3native.h"
+
 unsigned long NvOptimusEnablement = 0x00000001;
 int AmdPowerXpressRequestHighPerformance = 1;
 
@@ -51,7 +53,7 @@ void OpenGLCLManager::DoQTLoopCallbackPrivate()
 }
 
 
-inline int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
+int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
 {
 
     GL_GLOBAL.zoom = 1.0;
@@ -211,9 +213,10 @@ void OpenGLCLManager::InitGLCL_int()
     m_GLProgram_uiterrain = GetMGLProgram(m_KernelDir + "terrain_vs.glsl", m_KernelDir + "terrain_fs.glsl", m_KernelDir + "terrain_gs.glsl", m_KernelDir + "terrain_tc.glsl", m_KernelDir + "terrain_te.glsl");
     m_GLProgram_uiterrainlayer = GetMGLProgram(m_KernelDir + "terrain_vs_layer.glsl", m_KernelDir + "terrain_fs_layer.glsl", m_KernelDir + "terrain_gs_layer.glsl", m_KernelDir + "terrain_tc_layer.glsl", m_KernelDir + "terrain_te_layer.glsl");
     m_GLProgram_uiocean = GetMGLProgram(m_KernelDir + "terrain_vs_ocean.glsl", m_KernelDir + "terrain_fs_ocean.glsl", m_KernelDir + "terrain_gs_ocean.glsl", m_KernelDir + "terrain_tc_ocean.glsl", m_KernelDir + "terrain_te_ocean.glsl");*/
+
+    m_ScreenTarget = new OpenGLCLMSAARenderTarget();
     m_MSAATarget = new OpenGLCLMSAARenderTarget();
 
-    std::cout << "post7 " << std::endl;
     CGlobalGLCLManager = this;
 
 
@@ -333,8 +336,8 @@ void OpenGLCLManager::LoadPreferredCLContext()
 
                                 #ifdef OS_LNX
                                         cl_context_properties cps[] = {
-                                            CL_GL_CONTEXT_KHR, (cl_context_properties)glfwGetGLXContext(window),
-                                            CL_GLX_DISPLAY_KHR, (cl_context_properties)glfwGetX11Display(),
+                                            CL_GL_CONTEXT_KHR, (cl_context_properties)lisem_glfwGetGLXContext(window),
+                                            CL_GLX_DISPLAY_KHR, (cl_context_properties)lisem_glfwGetX11Display(),
                                             CL_CONTEXT_PLATFORM, (cl_context_properties)lPlatform(),
                                             0
                                         };
@@ -459,8 +462,8 @@ void OpenGLCLManager::LoadPreferredCLContext()
             // Select the default platform and create a context using this platform and the GPU
             #ifdef OS_LNX
                     cl_context_properties cps[] = {
-                        CL_GL_CONTEXT_KHR, (cl_context_properties)glfwGetGLXContext(window),
-                        CL_GLX_DISPLAY_KHR, (cl_context_properties)glfwGetX11Display(),
+                        CL_GL_CONTEXT_KHR, (cl_context_properties)lisem_glfwGetGLXContext(window),
+                        CL_GLX_DISPLAY_KHR, (cl_context_properties)lisem_glfwGetX11Display(),
                         CL_CONTEXT_PLATFORM, (cl_context_properties)okPlatform(),
                         0
                     };
@@ -503,6 +506,8 @@ void OpenGLCLManager::LoadPreferredCLContext()
         std::cout << "Sucesfully created OpenCL Context" << std::endl;
         LISEM_DEBUG("Sucesfully created OpenCL Context");
         //CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR for gl/cl interop
+
+        m_HasOpenCL = true;
     } catch(cl::Error error) {
         std::cout << error.what() << "(" << error.err() << ")" << std::endl;
         std::string val = cl::Program().getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
@@ -510,12 +515,11 @@ void OpenGLCLManager::LoadPreferredCLContext()
         std::cout << "Could not create OpenCL Context" << std::endl;
         LISEM_DEBUG("Could not create OpenCL Context");
         LISEM_DEBUG(QString(error.what()) + "(" + error.err() +")" );
-        throw 1;
-
+        m_HasOpenCL = false;
     } catch(...)
     {
         LISEM_DEBUG("Could not create OpenCL Context (unknown error)");
-        throw 1;
+        m_HasOpenCL = false;
     }
 
 
@@ -525,14 +529,17 @@ void OpenGLCLManager::LoadPreferredCLContext()
 
 
 
-inline void OpenGLCLManager::GLCLLoop()
+void OpenGLCLManager::GLCLLoop()
 {
 
     LISEM_STATUS("Done initializing OpenGL and OpenCL, Starting Loop..");
 
     bool restart = false;
 
+
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
 
         m_GLOutputUIMutex.lock();
         m_GLMutex.lock();
@@ -554,13 +561,16 @@ inline void OpenGLCLManager::GLCLLoop()
         //make this thread current for opengl
         glfwMakeContextCurrent(window);
 
+
         CreateMSAABuffer();
+        std::cout << m_MSAATarget->GetFrameBuffer() << std::endl;
 
 
         glad_glBindFramebuffer(GL_FRAMEBUFFER, m_MSAATarget->GetFrameBuffer());
+
+        glad_glClearColor(0.961,0.963,0.966,1.0);
         glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glad_glDisable(GL_DEPTH_TEST);
-        glad_glClearColor(0.961,0.963,0.966,1.0);
 
         m_TexturePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
         m_TextPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
@@ -601,6 +611,11 @@ inline void OpenGLCLManager::GLCLLoop()
         glad_glBindVertexArray(m_Quad->m_vao);
         glad_glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
         glad_glBindVertexArray(0);
+
+
+        //glad_glClearColor(0.961,0.963,0.966,1.0);
+        //glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
         //swap opengl front and back buffer
         glfwSwapBuffers(window);

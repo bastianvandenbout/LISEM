@@ -1,7 +1,7 @@
 #include "model.h"
 #include <iostream>
 #include "iogdal.h"
-#include "io.h"
+//#include "io.h"
 //#include "rastermath.h"
 #include "geo/raster/map.h"
 #include "error.h"

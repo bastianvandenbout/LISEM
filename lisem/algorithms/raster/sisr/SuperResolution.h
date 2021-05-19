@@ -34,13 +34,12 @@ int. Q. wavelet dilation factor q.
 #define DEBUG_TEST 1
 #define WAVELET_THRESHOLD 0.001
 
-#include <opencv2\opencv.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
+#include "opencv2/opencv.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 #include <time.h>
 #include <stdio.h>
 #include <fstream>
 #include <stdlib.h> 
-#include <direct.h>  
 #include "defines.h"
 
 namespace gs

@@ -128,7 +128,7 @@ inline void RegisterModelScriptFunctions(asIScriptEngine *sm)
 {
     //register a structure containing some model results and properties
 
-    int r = sm->RegisterObjectType("ModelRes", sizeof(AS_MODELRESULT), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<AS_MODELRESULT>()); assert( r >= 0 );
+    int r = sm->RegisterObjectType("ModelRes", sizeof(AS_MODELRESULT), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS| asGetTypeTraits<AS_MODELRESULT>()); assert( r >= 0 );
     r = sm->RegisterObjectProperty("ModelRes", "string OutputDirectory", asOFFSET(AS_MODELRESULT,Dir_Output)); assert( r >= 0 );
     r = sm->RegisterObjectProperty("ModelRes", "string MapsDirectory", asOFFSET(AS_MODELRESULT,Dir_Maps)); assert( r >= 0 );
     r = sm->RegisterObjectProperty("ModelRes", "string TimeDirectory", asOFFSET(AS_MODELRESULT,Dir_Time)); assert( r >= 0 );

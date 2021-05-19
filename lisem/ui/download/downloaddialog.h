@@ -1,6 +1,7 @@
 #ifndef DOWNLOADDIALOG_H
 #define DOWNLOADDIALOG_H
 
+#include "model.h"
 #include "QWidget"
 #include "QDialog"
 #include "QString"

@@ -248,6 +248,8 @@ public:
     {
         if(m_FrameBufferWidth!= FrameBufferWidth || m_FrameBufferHeight != FrameBufferHeight)
         {
+            std::cout << "create msaa buffer "  <<  FrameBufferWidth << "  "  <<FrameBufferHeight<< std::endl;
+
             Destroy();
             Create(FrameBufferWidth,FrameBufferHeight,msaa,m_format,m_tformat,m_tcomponents,m_tdatatype, m_nlayersrgba8,m_nlayersr32);
         }
@@ -315,6 +317,11 @@ public:
     {
         return fb_TextureID.at(0);
 
+    }
+
+    inline bool IsCreated()
+    {
+        return m_Created;
     }
 
     inline GLuint GetFrameBuffer(int i)

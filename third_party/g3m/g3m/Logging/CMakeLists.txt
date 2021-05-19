@@ -1,0 +1,10 @@
+set(SOURCE
+        ${SOURCE}
+        PARENT_SCOPE
+        )
+set(HEADERS
+        ${HEADERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Logging.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Sinks.hpp
+        PARENT_SCOPE
+        )

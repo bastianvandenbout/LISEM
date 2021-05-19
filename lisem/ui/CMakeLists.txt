@@ -10,7 +10,9 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
+if(NOT ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM lisem_ui_cpp ${REMOVEFILESUNITTEST})
+endif()
 
 add_library(lisem_ui STATIC ${lisem_ui_header} ${lisem_ui_cpp})
 target_compile_features(lisem_ui INTERFACE ${LISEM_CXX_FEATURES})

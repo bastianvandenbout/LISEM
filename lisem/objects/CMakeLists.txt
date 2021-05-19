@@ -10,8 +10,10 @@ file(
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
-list(REMOVE_ITEM lisem_object_cpp ${REMOVEFILESUNITTEST})
 
+if(NOT ${REMOVEFILESUNITTEST})
+list(REMOVE_ITEM lisem_object_cpp ${REMOVEFILESUNITTEST})
+endif()
 add_library(lisem_object STATIC ${lisem_object_header} ${lisem_object_cpp})
 target_compile_features(lisem_object INTERFACE ${LISEM_CXX_FEATURES})
 set_target_properties(lisem_object PROPERTIES SOVERSION ${LISEM_VERSION_MAJOR} VERSION "${LISEM_VERSION_MAJOR}.${LISEM_VERSION_MINOR}")

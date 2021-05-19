@@ -1,4 +1,4 @@
-
+#include "model.h"
 #include "widgets/mapcreatedialog.h"
 #include "toolparameterwidget.h"
 

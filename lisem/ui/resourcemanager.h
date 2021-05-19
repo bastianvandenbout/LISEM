@@ -3,7 +3,7 @@
 
 #include "defines.h"
 #include "lsmio.h"
-#include "QIcon.h"
+#include "qicon.h"
 #include "QList"
 #include "site.h"
 

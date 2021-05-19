@@ -23,8 +23,8 @@
 #endif
 
 #ifdef OS_LNX
-#define GLFW_EXPOSE_NATIVE_X11
-#define GLFW_EXPOSE_NATIVE_GLX
+//#define GLFW_EXPOSE_NATIVE_X11
+//#define GLFW_EXPOSE_NATIVE_GLX
 #endif
 #include <glad/glad.h>
 

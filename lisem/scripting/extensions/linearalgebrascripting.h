@@ -18,13 +18,13 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
 
     //vec2
     int r = 1;
-    engine->RegisterObjectType("vec2", sizeof(LSMVector2), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<LSMVector2>()); assert( r >= 0 );
+    engine->RegisterObjectType("vec2", sizeof(LSMVector2), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS | asGetTypeTraits<LSMVector2>()); assert( r >= 0 );
     engine->RegisterObjectProperty("vec2", "float x", asOFFSET(LSMVector2,x)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec2", "float y", asOFFSET(LSMVector2,y)); assert( r >= 0 );
 
 
     //vec3
-    engine->RegisterObjectType("vec3", sizeof(LSMVector3), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<LSMVector3>()); assert( r >= 0 );
+    engine->RegisterObjectType("vec3", sizeof(LSMVector3), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS| asGetTypeTraits<LSMVector3>()); assert( r >= 0 );
     engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT, "void f(int &in) {float,float,float}", asMETHODPR(LSMVector3,AS_FromList, (void*),void), asCALL_THISCALL);
 
 
@@ -56,7 +56,7 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     //
 
     //vec4
-    engine->RegisterObjectType("vec4", sizeof(LSMVector4), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<LSMVector4>()); assert( r >= 0 );
+    engine->RegisterObjectType("vec4", sizeof(LSMVector4), asOBJ_VALUE | asOBJ_APP_CLASS_ALLFLOATS| asOBJ_POD| asGetTypeTraits<LSMVector4>()); assert( r >= 0 );
     engine->RegisterObjectProperty("vec4", "float x", asOFFSET(LSMVector4,x)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec4", "float y", asOFFSET(LSMVector4,y)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec4", "float z", asOFFSET(LSMVector4,z)); assert( r >= 0 );
@@ -74,7 +74,7 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     //matrix3x3
 
     //matrix4x4
-    engine->RegisterObjectType("mat4x4", sizeof(LSMMatrix4x4), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<LSMMatrix4x4>()); assert( r >= 0 );
+    engine->RegisterObjectType("mat4x4", sizeof(LSMMatrix4x4), asOBJ_VALUE| asOBJ_APP_CLASS_ALLFLOATS| asOBJ_POD| asGetTypeTraits<LSMMatrix4x4>()); assert( r >= 0 );
 
 
     //matrixnxn

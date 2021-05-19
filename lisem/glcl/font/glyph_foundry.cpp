@@ -7,7 +7,7 @@
 
 // boost
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/Point.hpp>
+#include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
 

@@ -1,5 +1,6 @@
-#include "visualscripting.h"
 
+#include "model.h"
+#include "visualscripting.h"
 
 #include <nodes/NodeData>
 #include <nodes/FlowScene>
@@ -18,7 +19,7 @@
 #include "conditionalfunctionmodel.h"
 #include "loopfunctionmodel.h"
 #include "numbersourcemodel.h"
-#include "QThread.h"
+#include "qthread.h"
 #include "site.h"
 
 using QtNodes::DataModelRegistry;

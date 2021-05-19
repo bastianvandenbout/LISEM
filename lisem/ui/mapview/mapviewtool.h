@@ -62,7 +62,7 @@ inline static MapViewTool * GetMapViewTool()
 
 
 
-class ASUILayer
+struct ASUILayer
 {
     int m_UniqueID = -1;
 public:
@@ -942,7 +942,7 @@ public:
 
         std::cout << "add viewlayer calls " << this << std::endl;
 
-        int r = sm->m_Engine->RegisterObjectType("UILayer", sizeof(ASUILayer), asOBJ_VALUE | asOBJ_POD| asGetTypeTraits<ASUILayer>());
+        int r = sm->m_Engine->RegisterObjectType("UILayer", sizeof(ASUILayer), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUILayer>());
         sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUILayerC0,(void*),void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 
         //add layer

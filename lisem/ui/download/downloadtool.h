@@ -1,6 +1,7 @@
 #ifndef DOWNLOADTOOL_H
 #define DOWNLOADTOOL_H
 
+#include "model.h"
 #include "defines.h"
 #include "QWidget"
 #include "QObject"

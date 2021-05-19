@@ -1,3 +1,4 @@
+#include "model.h"
 #include "sphsyntaxhighlighter.h"
 
 

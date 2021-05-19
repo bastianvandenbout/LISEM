@@ -1,4 +1,4 @@
-#include "LSMmesh.h"
+#include "lsmmesh.h"
 #include "error.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

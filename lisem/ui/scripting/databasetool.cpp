@@ -1,3 +1,4 @@
+#include "model.h"
 #include "databasetool.h"
 #include "QInputDialog"
 void DatabaseTool::OnNewFolder()

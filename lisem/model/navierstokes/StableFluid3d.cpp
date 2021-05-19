@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "StableFluid3d.h"
 #include "immintrin.h"
 #include <algorithm>

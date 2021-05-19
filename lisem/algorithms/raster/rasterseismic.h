@@ -94,7 +94,9 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
 }
 
 
-#include "seismic/EW.h"
+
+   //#include "seismic/EW.h"
+
 
 #include <cstring>
 #include <string>
@@ -138,9 +140,9 @@ inline static std::vector<cTMap *> AS_SeismicWave( std::vector<cTMap *> state, s
      MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
 
     // Save the source description here
-    vector<Source*> GlobalSources;
+    //vector<Source*> GlobalSources;
     // Save the time series here
-    vector<STimeSeries*> GlobalTimeSeries;
+    //vector<STimeSeries*> GlobalTimeSeries;
 
     /*EW simulation(fileName, GlobalSources, GlobalTimeSeries);
 

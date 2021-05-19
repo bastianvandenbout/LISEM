@@ -255,13 +255,13 @@ inline static cTMap * RasterSegmentizeWS(cTMap * in, float thres, float lev)
     const unsigned int Dimension = 2;
 
 
-    using PixelType      = float;
-    using LabelPixelType = unsigned long long;
 
+    using PixelType      = float;
     using ImageType      = otb::Image<PixelType, Dimension>;
 
     using FilterType = itk::WatershedImageFilter<ImageType>;//otb::WatershedSegmentationFilter<ImageType, LabelImageType>;
 
+    using LabelPixelType = FilterType::OutputImageType::PixelType;
 
     FilterType::Pointer      filter  = FilterType::New();
     filter->SetLevel(lev);
@@ -302,7 +302,7 @@ inline static cTMap * RasterSegmentizeWS(cTMap * in, float thres, float lev)
 
     filter->Update();
 
-    itk::Image<unsigned long long,2> * clusteredimage = filter->GetOutput();
+    itk::Image<LabelPixelType,2> * clusteredimage = filter->GetOutput();
     LabelPixelType * data_out = reinterpret_cast<LabelPixelType*>(clusteredimage->GetBufferPointer());
 
     for(int r = 0; r < ret->nrRows(); r++)

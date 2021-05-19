@@ -1,4 +1,4 @@
-#include "stdafx.h"
+
 #include "StableFluid2d.h"
 #include "immintrin.h"
 #include <algorithm>

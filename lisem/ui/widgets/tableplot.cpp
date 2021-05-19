@@ -5,7 +5,6 @@
 #include "iostream"
 #include "widgets/layerinfowidget.h"
 #include "QFileDialog"
-#include "QtDataVisualization/Q3DScene"
 #include "site.h"
 
 TablePlotter::TablePlotter(MatrixTable * tbl_in, bool one_x_list_in, bool has_time_slider) : QDialog()

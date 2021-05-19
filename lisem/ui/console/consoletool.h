@@ -10,13 +10,25 @@
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+
+#include "model.h"
+
 #include "scripting/codeeditor.h"
+
+
 #include "QLineEdit"
-#include "error.h"
 #include "QTimer"
+
+
+#include "error.h"
+
+
 #include "scriptmanager.h"
 
 #include "mlpack/core.hpp"
+
+
+
 
 class ConsoleTool : public QWidget
 {
