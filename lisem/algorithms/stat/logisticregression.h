@@ -115,7 +115,7 @@ static MathFunction MapLogisticRegression(std::vector<cTMap*> covariates, cTMap 
     }
 
     const double lambda = 0.0;
-    const string optimizerType = "lbfgs";
+    const std::string optimizerType = "lbfgs";
     const double tolerance =  1e-10;
     const double stepSize = 0.01;
     const size_t batchSize =  64;
@@ -329,7 +329,7 @@ static MathFunction MapLinearRegression(std::vector<cTMap *> covariatemaps, cTMa
     }
 
     const double lambda = 0.0;
-    const string optimizerType = "lbfgs";
+    const std::string optimizerType = "lbfgs";
     const double tolerance =  1e-10;
     const double stepSize = 0.01;
     const size_t batchSize =  64;
