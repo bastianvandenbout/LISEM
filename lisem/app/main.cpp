@@ -25,7 +25,6 @@ inline void DoChrono()
         m_Solver->SetMaxIterations(100);
         m_Solver->EnableWarmStart(true);
 
-        std::cout << 1 << std::endl;
         {
             std::shared_ptr<chrono::ChSolverPSOR> m_Solver;
             m_Solver = chrono_types::make_shared<chrono::ChSolverPSOR>();
@@ -33,8 +32,6 @@ inline void DoChrono()
             m_Solver->EnableWarmStart(true);
 
         }
-
-        std::cout << 2 << std::endl;
 
         {
 

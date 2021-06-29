@@ -94,6 +94,25 @@ inline QStringList GetFileStringList(QString path)
     return res;
 }
 
+inline bool OverWriteFileFromStringList(QString path, QStringList l)
+{
+    // write data
+    QFile fOut(path);
+    if (fOut.open(QFile::WriteOnly | QFile::Text)) {
+      QTextStream s(&fOut);
+      for (int i = 0; i < l.size(); ++i)
+        s << l.at(i) << '\n';
+    } else {
+
+        return false;
+    }
+    fOut.close();
+
+
+    return true;
+
+}
+
 inline QString GetFileString(QString path)
 {
     QString res;

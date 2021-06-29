@@ -157,7 +157,6 @@ void VideoCapture::Finish(bool save = true) {
             }
         }
 
-        std::cout << 2 << std::endl;
 
         av_write_trailer(ofctx);
         if (!(oformat->flags & AVFMT_NOFILE)) {

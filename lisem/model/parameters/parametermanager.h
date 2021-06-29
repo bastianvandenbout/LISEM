@@ -71,10 +71,10 @@ public:
         AddParameter(2, LISEM_PARAMETER_FLOAT, "End Time",               QList<QString>(),                                   "Ending time for the simulation (minutes)",                 100.0f,             0.0f,   0.0f,   0.0f   );
         AddParameter(2, LISEM_PARAMETER_FLOAT, "Timestep",               QList<QString>(),                                   "Timestep for the simulation (seconds)",                    10.0f,              0.0f,   0.0f,   0.0f   );
         AddParameter(2, LISEM_PARAMETER_FLOAT, "Timestep Flow",          QList<QString>(),                                   "Timestep for the flow simulation (seconds)",               1.0f,              0.0f,   0.0f,   0.0f   );
-        AddParameter(2, LISEM_PARAMETER_FLOAT, "Timestep Particle Flow",          QList<QString>(),                                   "Timestep for the flow simulation (seconds)",      0.001f,              0.0f,   0.0f,   0.0f   );
+        AddParameter(2, LISEM_PARAMETER_FLOAT, "Timestep Particle Flow",          QList<QString>(),                                   "Timestep for the flow simulation (seconds)",      0.001f,              0.0f,   0.0f,   0.0f ,false,[](ParameterManager*p){return p->GetParameterValueBool("Use Material Point Method");} );
 
         AddLabel(1,"TimeInput Directory","Folder containing temporal input");
-        AddParameter(2, LISEM_PARAMETER_DIR,   "TimeInput Directory",          QList<QString>(),                                   "",                                                         cd +"time/",        0.0f,   0.0f,   0.0f   );
+        AddParameter(2, LISEM_PARAMETER_DIR,   "TimeInput Directory",    QList<QString>(),                             "",                                                         cd +"time/",        0.0f,   0.0f,   0.0f   );
         AddLabel(1,"Map Directory","Folder containing input maps");
         AddParameter(2, LISEM_PARAMETER_DIR,   "Map Directory",          QList<QString>(),                                   "",                                                         cd +"maps/",        0.0f,   0.0f);
         AddLabel(1,"Output Directory","Folder containing output maps and files");
@@ -121,12 +121,12 @@ public:
         AddLabel(-1,"","");
         AddLabel(0,"Time Input","Temporal input describing climate and other boundary conditions");
         AddLabel(1,"Climate Input","Files containing timeseries describing weather");
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Rainfall",          QList<QString>(),                                  "",                                                         "rain",              0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Temperature",          QList<QString>(),                                  "",                                                      "temp",             0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Radiation",          QList<QString>(),                                  "",                                                        "rad",              0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Wind",          QList<QString>(),                                  "",                                                             "wind",             0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Vapor Pressure",          QList<QString>(),                                  "",                                                   "vap",              0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "ndvi",          QList<QString>(),                                  "",                                                             "ndvi",              0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Rainfall",          QList<QString>(),                                  "",                                                         "rain",              0.001f,   999.00f,  1.0,true,[](ParameterManager*p){return p->GetParameterValueBool("Include Rainfall");} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Temperature",          QList<QString>(),                                  "",                                                      "temp",             0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Radiation",          QList<QString>(),                                  "",                                                        "rad",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Wind",          QList<QString>(),                                  "",                                                             "wind",             0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Vapor Pressure",          QList<QString>(),                                  "",                                                   "vap",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "ndvi",          QList<QString>(),                                  "",                                                             "ndvi",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
 
         AddLabel(-1,"","");
         AddLabel(0,"Input Maps","Spatial input data that describes terrain, surface properties and boundary conditions");
@@ -134,47 +134,47 @@ public:
         AddParameter(2, LISEM_PARAMETER_MAP,   "DEM",                    QList<QString>({QString("Elevation Model")}),       "Elevation model (meters)",                                 "dem.map",          0.0f,   0.0f );
         AddParameter(2, LISEM_PARAMETER_MAP,   "MASK",                    QList<QString>({QString("MASK")}),       "indicates the subsection to be simulated. Only required when this option is selected. Otherwise missing values within the DEM are used for masking.",                                 "mask.map",          0.0f,   0.0f,1.0,false, [](ParameterManager*p){return p->GetParameterValueBool("Simulate Subsection");} );
         AddLabel(1,"Channels","Channels");
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel",                QList<QString>({QString("Channel Mask")}),           "Elevation model (meters)",                                "channelldd.map",          0.0f,   0.0f);
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel Width",          QList<QString>({QString("Channel Width")}),          "Channel Width (meters)",                                  "channelwidth.map",                  0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel Depth",          QList<QString>({QString("Channel Depth")}),          "Channel Depth (meters)",                                  "channeldepth.map",           0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel Slope",          QList<QString>({QString("Channel Slope")}),          "Channel Depth (meters), only used when custom channel slope is selected",                                  "channelslope.map",           0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel",                QList<QString>({QString("Channel Mask")}),           "Elevation model (meters)",                                "channelldd.map",          0.0f,   0.0f,1.0,false, [](ParameterManager*p){return p->GetParameterValueBool("Include Channel");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel Width",          QList<QString>({QString("Channel Width")}),          "Channel Width (meters)",                                  "channelwidth.map",                  0.001f,   999.00f,  1.0,true, [](ParameterManager*p){return p->GetParameterValueBool("Include Channel");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel Depth",          QList<QString>({QString("Channel Depth")}),          "Channel Depth (meters)",                                  "channeldepth.map",           0.001f,   999.00f,  1.0,true, [](ParameterManager*p){return p->GetParameterValueBool("Include Channel");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Channel Slope",          QList<QString>({QString("Channel Slope")}),          "Channel Depth (meters), only used when custom channel slope is selected",                                  "channelslope.map",           0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Channel");} );
 
         AddLabel(1,"Surface","Surface (Land use/Land Cover) description");
         AddParameter(2, LISEM_PARAMETER_MAP,   "Manning",                QList<QString>({QString("Mannings N")}),             "Mannings N (in metric units)",                                               "n.map",                     0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Building Cover",         QList<QString>({QString("Building Cover")}),         "Building Cover (fractional)",                                           "buildingcover.map",         0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Road Width",             QList<QString>({QString("Road Width")}),             "Road Width (meters, less then cell size)",                                               "buildingcover.map",         0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Vegetation Height",      QList<QString>({QString("Vegetation Canopy Height")}),       "Vegetation Canopy Height (meters)",                         "vegheight.map",              0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Vegetation Cover",       QList<QString>({QString("Vegetation Cover")}),       "Vegetation Cover (fractional)",                                         "vegcover.map",              0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "SMAX Surface",           QList<QString>({QString("Maximum Surfa. Storage")}), "Maximum Surfa. Storage (meters)",                                   "smaxsurface.map",           0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "SMAX Canopy",            QList<QString>({QString("Maximum Canopy Storage")}), "Maximum Canopy Storage (meters)",                                   "smaxcanopy.map",            0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Building Cover",         QList<QString>({QString("Building Cover")}),         "Building Cover (fractional)",                                           "buildingcover.map",         0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Road Width",             QList<QString>({QString("Road Width")}),             "Road Width (meters, less then cell size)",                                               "buildingcover.map",         0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Vegetation Height",      QList<QString>({QString("Vegetation Canopy Height")}),       "Vegetation Canopy Height (meters)",                         "vegheight.map",              0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Vegetation Cover",       QList<QString>({QString("Vegetation Cover")}),       "Vegetation Cover (fractional)",                                         "vegcover.map",              0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "SMAX Surface",           QList<QString>({QString("Maximum Surfa. Storage")}), "Maximum Surfa. Storage (meters)",                                   "smaxsurface.map",           0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "SMAX Canopy",            QList<QString>({QString("Maximum Canopy Storage")}), "Maximum Canopy Storage (meters)",                                   "smaxcanopy.map",            0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
 
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Density",              QList<QString>({QString("Tree Density")}), "Tree Density",                                   "treedens.map",            0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Length",              QList<QString>({QString("Tree Length")}), "Tree Length",                                   "treelength.map",            0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Radius",              QList<QString>({QString("Tree Radius")}), "Tree Radius",                                   "treeradius.map",            0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Count",              QList<QString>({QString("Tree Count")}), "Tree Count",                                   "treecount.map",            0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Density",              QList<QString>({QString("Tree Density")}), "Tree Density",                                   "treedens.map",            0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Tree Instancing");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Length",              QList<QString>({QString("Tree Length")}), "Tree Length",                                   "treelength.map",            0.001f,   999.00f,  1.0,true  , [](ParameterManager*p){return p->GetParameterValueBool("Tree Instancing");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Radius",              QList<QString>({QString("Tree Radius")}), "Tree Radius",                                   "treeradius.map",            0.001f,   999.00f,  1.0,true  , [](ParameterManager*p){return p->GetParameterValueBool("Tree Instancing");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Tree Count",              QList<QString>({QString("Tree Count")}), "Tree Count",                                   "treecount.map",            0.001f,   999.00f,  1.0,true  , [](ParameterManager*p){return p->GetParameterValueBool("Tree Instancing");} );
 
         AddLabel(1,"SubSurface","SubSurface description");
 
-        AddParameter(2, LISEM_PARAMETER_MAP,   "KSatSimple",             QList<QString>({QString("Simple Ksat Substraction Value")}), "Simple Ksat Substraction Value (mm/h)",            "ksatsimple.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Clay",                   QList<QString>({QString("Clay content")}),           "Clay content (fraction)",                                  "clay.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Sand",                   QList<QString>({QString("Sand content")}),           "Sand content (fraction)",                                  "sand.map",                 0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Gravel",                 QList<QString>({QString("Gravel content")}),         "Gravel content",                                           "gravel.map",               0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Organic",                QList<QString>({QString("Organic Matter")}),         "Organic Matter",                                           "om.map",                  0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Density",                QList<QString>({QString("Density")}),                "Density (kg/m3)",                                                  "density.map",             0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Soil Depth",              QList<QString>({QString("Soil Depth")}),            "Soil Depth (m)",                                           "soildepth.map",               0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Ground Water Height",    QList<QString>({QString("Ground Water Height")}),    "Ground Water Height (m)",                                      "gwh.map",                 0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Theta Initial",          QList<QString>({QString("Theta Initial")}),          "Theta Initial (fraction)",                                            "thetaieff.map",               0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Cohesion Top",           QList<QString>({QString("Cohesion Top Soil")}),      "Cohesion Top soil Layer (Pa)",                                  "cohtop.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Cohesion Channel",       QList<QString>({QString("Cohesion Channel")}),       "Cohesion Top soil Layer within Channel (Pa)",                   "cohch.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Aggregate Stability",    QList<QString>({QString("Aggregate Stability")}),    "Aggregate Stability",                                      "aggrst.map",                 0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Internal Friction Angle",QList<QString>({QString("Internal Friction Angle")}),"Internal Friction Angle (radians)",                                  "ifa.map",                    0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Cohesion Bottom",        QList<QString>({QString("Cohesion Bottom")}),        "Cohesion Bottom (Pa)",                                          "coh.map",                      0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Density Bottom",         QList<QString>({QString("Density Bottom")}),         "Density Bottom (Kg/m3)",                                           "densityb.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Rocksize",               QList<QString>({QString("Rocksize")}),               "Rocksize (meters)",                                                 "rocksize.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Depth",         QList<QString>({QString("Material Depth")}),         "Depth of saturated material on top of soil",               "materialdepth.map",               0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Internal Friction Angle",QList<QString>({QString("Material Internal Friction Angle")}),"Material Internal Friction Angle (radians)",                                  "materialifa.map",                    0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Density Bottom",         QList<QString>({QString("Material Density Bottom")}),         "Material Density Bottom (kg/m3)",                                           "materialdensity.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Rocksize",               QList<QString>({QString("Material Rocksize")}),               "Material Rocksize (meters)",                                                 "materialrocksize.map",                0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "KSatSimple",             QList<QString>({QString("Simple Ksat Substraction Value")}), "Simple Ksat Substraction Value (mm/h)",            "ksatsimple.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Infiltration") && !p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Clay",                   QList<QString>({QString("Clay content")}),           "Clay content (fraction)",                                  "clay.map",                0.001f,   999.00f,  1.0,true  , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Sand",                   QList<QString>({QString("Sand content")}),           "Sand content (fraction)",                                  "sand.map",                 0.001f,   999.00f,  1.0,true  , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Gravel",                 QList<QString>({QString("Gravel content")}),         "Gravel content",                                           "gravel.map",               0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Organic",                QList<QString>({QString("Organic Matter")}),         "Organic Matter",                                           "om.map",                  0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Density",                QList<QString>({QString("Density")}),                "Density (kg/m3)",                                                  "density.map",             0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Soil Depth",              QList<QString>({QString("Soil Depth")}),            "Soil Depth (m)",                                           "soildepth.map",               0.001f,   999.00f,  1.0,true  , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Ground Water Height",    QList<QString>({QString("Ground Water Height")}),    "Ground Water Height (m)",                                      "gwh.map",                 0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Theta Initial",          QList<QString>({QString("Theta Initial")}),          "Theta Initial (fraction)",                                            "thetaieff.map",               0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Hydrology");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Cohesion Top",           QList<QString>({QString("Cohesion Top Soil")}),      "Cohesion Top soil Layer (Pa)",                                  "cohtop.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Erosion") || p->GetParameterValueBool("Include Slope Stability");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Cohesion Channel",       QList<QString>({QString("Cohesion Channel")}),       "Cohesion Top soil Layer within Channel (Pa)",                   "cohch.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Slope Stability");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Aggregate Stability",    QList<QString>({QString("Aggregate Stability")}),    "Aggregate Stability",                                      "aggrst.map",                 0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Erosion");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Internal Friction Angle",QList<QString>({QString("Internal Friction Angle")}),"Internal Friction Angle (radians)",                                  "ifa.map",                    0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Slope Stability");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Cohesion Bottom",        QList<QString>({QString("Cohesion Bottom")}),        "Cohesion Bottom (Pa)",                                          "coh.map",                      0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Slope Stability");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Density Bottom",         QList<QString>({QString("Density Bottom")}),         "Density Bottom (Kg/m3)",                                           "densityb.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Slope Stability");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Rocksize",               QList<QString>({QString("Rocksize")}),               "Rocksize (meters)",                                                 "rocksize.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Slope Failure");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Depth",         QList<QString>({QString("Material Depth")}),         "Depth of saturated material on top of soil",               "materialdepth.map",               0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Loose Material Layer");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Internal Friction Angle",QList<QString>({QString("Material Internal Friction Angle")}),"Material Internal Friction Angle (radians)",                                  "materialifa.map",                    0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Loose Material Layer");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Density Bottom",         QList<QString>({QString("Material Density Bottom")}),         "Material Density Bottom (kg/m3)",                                           "materialdensity.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Loose Material Layer");} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Material Rocksize",               QList<QString>({QString("Material Rocksize")}),               "Material Rocksize (meters)",                                                 "materialrocksize.map",                0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Loose Material Layer");} );
         /*AddParameter(2, LISEM_PARAMETER_MAP,   "Clay2",                   QList<QString>({QString("Clay content 2nd Layer")}),    "Clay content (fraction) for second layer",             "clay.map",                0.001f,   999.00f,  1.0,true  );
         AddParameter(2, LISEM_PARAMETER_MAP,   "Sand2",                   QList<QString>({QString("Sand content 2nd Layer")}),    "Sand content (fraction) for second layer",             "sand.map",                 0.001f,   999.00f,  1.0,true  );
         AddParameter(2, LISEM_PARAMETER_MAP,   "Gravel2",                 QList<QString>({QString("Gravel content 2nd Layer")}),  "Gravel content for second layer",                      "gravel.map",               0.001f,   999.00f,  1.0,true  );
@@ -185,22 +185,22 @@ public:
 
 
         AddLabel(1,"Boundary Conditions","Boundary conditions for simulation");
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Fluid Height",   QList<QString>({QString("Initial Fluid Heigh")}),    "Initial Fluid Heigh (meters)",                                      "initialfh.map",               0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid Height",   QList<QString>({QString("Initial Solid Height")}),   "Initial Solid Height (meters)",                                     "initialsh.map",                 0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid Density",  QList<QString>({QString("Initial Solid Density")}),  "Initial Solid Density (kg/m3)",                                    "initialsd.map",                0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid IFA",      QList<QString>({QString("Initial Solid IFA")}),      "Initial Solid IFA (radians)",                                        "initialsifa.map",             0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid Rocksize", QList<QString>({QString("Initial Solid Rocksize")}), "Initial Solid Rocksize (meters)",                                   "initialsrocksize.map",          0.001f,   999.00f,  1.0,true  );
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Cohesion",       QList<QString>({QString("Initial Solid Cohesion")}), "Initial Solid Cohesion (Pa)",                                   "initialscohesion.map",          0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Fluid Height",   QList<QString>({QString("Initial Fluid Heigh")}),    "Initial Fluid Heigh (meters)",                                      "initialfh.map",               0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Initial Fluids") ;} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid Height",   QList<QString>({QString("Initial Solid Height")}),   "Initial Solid Height (meters)",                                     "initialsh.map",                 0.001f,   999.00f,  1.0,true  ,[](ParameterManager*p){return p->GetParameterValueBool("Include Initial Solids") ;} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid Density",  QList<QString>({QString("Initial Solid Density")}),  "Initial Solid Density (kg/m3)",                                    "initialsd.map",                0.001f,   999.00f,  1.0,true  ,[](ParameterManager*p){return p->GetParameterValueBool("Include Initial Solids") ;} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid IFA",      QList<QString>({QString("Initial Solid IFA")}),      "Initial Solid IFA (radians)",                                        "initialsifa.map",             0.001f,   999.00f,  1.0,true  ,[](ParameterManager*p){return p->GetParameterValueBool("Include Initial Solids") ;} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Solid Rocksize", QList<QString>({QString("Initial Solid Rocksize")}), "Initial Solid Rocksize (meters)",                                   "initialsrocksize.map",          0.001f,   999.00f,  1.0,true  ,[](ParameterManager*p){return p->GetParameterValueBool("Include Initial Solids") ;} );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Initial Cohesion",       QList<QString>({QString("Initial Solid Cohesion")}), "Initial Solid Cohesion (Pa)",                                   "initialscohesion.map",          0.001f,   999.00f,  1.0,true  ,[](ParameterManager*p){return p->GetParameterValueBool("Include Initial Solids") &&  p->GetParameterValueBool("Use Material Point Method");} );
 
         AddLabel(1,"Seismic","Boundary conditions for seismic activity");
-        AddParameter(2, LISEM_PARAMETER_MAP,   "Peak Ground Accaleration",       QList<QString>({QString("Peak Ground Accaleration (m/s2)")}), "Peak Ground Accaleration (m/s2)",                                   "pga.map",          0.001f,   999.00f,  1.0,true  );
+        AddParameter(2, LISEM_PARAMETER_MAP,   "Peak Ground Accaleration",       QList<QString>({QString("Peak Ground Accaleration (m/s2)")}), "Peak Ground Accaleration (m/s2)",                                   "pga.map",          0.001f,   999.00f,  1.0,true , [](ParameterManager*p){return p->GetParameterValueBool("Include Seismic Trigger");} );
 
         AddLabel(-1,"","");
         AddLabel(0,"Rigid Elements","Elements during the simulation that ");
         AddLabel(1,"Scene","Pre-saves scene which is imported");
         AddLabel(1,"Density Instancing","Add similar objects many times based on density");
-        AddParameter(2, LISEM_PARAMETER_BOOL,  "Tree Instancing", QList<QString>(),                                    "Automatically place trees based on tree count, tree radius and tree length input maps",        "0",        0.0f,   0.0f,   0.0f   );
-        AddParameter(2, LISEM_PARAMETER_FLOAT, "Friction Coefficient",             QList<QString>(),                     "Friction coefficient for trees",               0.005f,               0.0f,   0.0f,   0.0f   );
+        AddParameter(2, LISEM_PARAMETER_BOOL,  "Tree Instancing", QList<QString>(),                                    "Automatically place trees based on tree count, tree radius and tree length input maps",        "0",        0.0f,   0.0f,   0.0f  ,false, [](ParameterManager*p){return p->GetParameterValueBool("Include Rigid-Body Phyisics");} );
+        AddParameter(2, LISEM_PARAMETER_FLOAT, "Friction Coefficient",             QList<QString>(),                     "Friction coefficient for trees",               0.005f,               0.0f,   0.0f,   0.0f ,false, [](ParameterManager*p){return p->GetParameterValueBool("Include Rigid-Body Phyisics");} );
 
 
         AddLabel(-1,"","");
@@ -514,7 +514,7 @@ public:
     {
         for(int i= 0; i < m_Parameters.length(); i++)
         {
-            if(m_Parameters.at(i).m_Name.compare(Name) == 0)
+            if(m_Parameters.at(i).m_Name == Name)
             {
                 SPHParameter p = (m_Parameters.at(i));
                 return p.m_Value;
@@ -526,7 +526,7 @@ public:
 
     inline QString GetParameterValueString(int index)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -539,7 +539,7 @@ public:
 
     inline double GetParameterValueDouble(int index)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -551,7 +551,7 @@ public:
 
     inline float GetParameterValueFloat(int index)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -573,7 +573,7 @@ public:
     }
     inline bool GetParameterValueBool(int index)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -590,7 +590,7 @@ public:
     }
     inline int SetParameterValue(int index, QString value)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -603,7 +603,7 @@ public:
 
     inline int SetParameterValue(int index, int value)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -617,7 +617,7 @@ public:
 
     inline int SetParameterValue(int index, float value)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -631,7 +631,7 @@ public:
 
     inline int SetParameterValue(int index, double value)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 
@@ -645,7 +645,7 @@ public:
 
     inline int SetParameterValue(int index, bool value)
     {
-        if(index > 0 && index < m_Parameters.length())
+        if(index > -1 && index < m_Parameters.length())
         {
             SPHParameter p = (m_Parameters.at(index));
 

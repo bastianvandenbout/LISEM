@@ -490,8 +490,6 @@ public:
 
     inline OpenGLCLTexture * ModelGetMCLGLTexture(int width, int height, float value = 0.0, bool rendertarget = false, bool add =  true )
     {
-        static int i = 0;
-        std::cout << "Get Texture in OpenCL " << i++ << std::endl;
         OpenGLCLTexture * _T = new OpenGLCLTexture();
 
         _T->Create2DRF32(context,width,height,value,rendertarget);
@@ -747,7 +745,6 @@ public slots:
     //this function has to be called from main thread
     inline void ProcessEvents()
     {
-        std::cout << "poll events "  << std::endl;
         if(!glfwWindowShouldClose(window))
         {
 

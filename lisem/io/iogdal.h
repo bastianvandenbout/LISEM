@@ -1332,7 +1332,6 @@ inline void writeGDALRaster(
         fi.dir().mkdir(fi.dir().path());
     }
 
-
     CPLStringList sl;
     sl.AddNameValue("PCRASTER_VALUESCALE","VS_SCALAR");
 

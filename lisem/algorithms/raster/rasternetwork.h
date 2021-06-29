@@ -626,7 +626,8 @@ inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * core
                                      LDD_PITPROPERTIES pp_other = PitList.at(pi_other);
 
 
-                                     if(!pcr::isMV(DEM->data[rn][cn]) && (pp_other.pi_flowinto != i) && (catchmentsm[rn][cn] != catchmentunique) && LDD_IS_ACTUAL(map->data[rn][cn]))
+                                     if( //&& (pp_other.pi_flowinto != i)
+                                             !pcr::isMV(DEM->data[rn][cn])  && (catchmentsm[rn][cn] != catchmentunique) && LDD_IS_ACTUAL(map->data[rn][cn]))
                                      {
                                          float dem = (DEM->data[rn][cn]);
 
@@ -748,6 +749,8 @@ inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * core
                   //now we need to connect the connecting cell to the next catchment
                   map->data[pp.r_lowestnbconnect][pp.c_lowestnbconnect] = pp.connectdir;
 
+                  double lowestdem = DEM->data[pp.r_lowestnbconnect][pp.c_lowestnbconnect];
+
                   PitList[i]= pp;
 
                   fixed_pit = true;
@@ -770,7 +773,7 @@ inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * core
 
                           if(dem < pp.dem_lowestnb)
                           {
-                             demn->data[r][c] = pp.dem_lowestnb;
+                             demn->data[r][c] = lowestdem;
                           }
                           list = ListReplaceFirstByUSNB(map,list);
                       }

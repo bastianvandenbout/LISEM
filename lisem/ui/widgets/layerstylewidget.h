@@ -502,6 +502,17 @@ class LayerStyleWidget : public QDialog
      GradientComboBox * m_labelGradientdb1;
      GradientComboBox * m_labelGradientdb2;
 
+
+     QDoubleSpinBox * m_SpinMin3;
+     QDoubleSpinBox * m_SpinMax3;
+
+     QDoubleSpinBox * m_SpinMin2;
+     QDoubleSpinBox * m_SpinMax2;
+
+     QDoubleSpinBox * m_SpinMin1;
+     QDoubleSpinBox * m_SpinMax1;
+
+
 public:
     inline LayerStyleWidget(UILayer * l) : QDialog()
     {
@@ -854,38 +865,35 @@ public:
                 m_BandBox->setValue(m_Style->m_IndexB1);
                 wl->addWidget(m_BandBox);
 
-                QDoubleSpinBox * m_SpinMin;
-                QDoubleSpinBox * m_SpinMax;
+                m_SpinMax1 = new QDoubleSpinBox();
+                m_SpinMax1->setValue(m_Style->m_Intervalb1.GetMax());
+                m_SpinMax1->setDecimals(6);
+                m_SpinMax1->setMaximum(1e10);
+                m_SpinMax1->setMinimum(-1e10);
 
-                m_SpinMax = new QDoubleSpinBox();
-                m_SpinMax->setValue(m_Style->m_Intervalb1.GetMax());
-                m_SpinMax->setDecimals(6);
-                m_SpinMax->setMaximum(1e10);
-                m_SpinMax->setMinimum(-1e10);
-
-                m_SpinMin = new QDoubleSpinBox();
-                m_SpinMin->setValue(m_Style->m_Intervalb1.GetMin());
-                m_SpinMin->setDecimals(6);
-                m_SpinMin->setMaximum(1e10);
-                m_SpinMin->setMinimum(-1e10);
+                m_SpinMin1 = new QDoubleSpinBox();
+                m_SpinMin1->setValue(m_Style->m_Intervalb1.GetMin());
+                m_SpinMin1->setDecimals(6);
+                m_SpinMin1->setMaximum(1e10);
+                m_SpinMin1->setMinimum(-1e10);
 
 
                 QIcon *icon_re = new QIcon();
-                icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh_24.png"), QSize(), QIcon::Normal, QIcon::Off);
+                icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh.png"), QSize(), QIcon::Normal, QIcon::Off);
                 QToolButton * m_GetMinMaxButton;
                 m_GetMinMaxButton = new QToolButton();
                 m_GetMinMaxButton->setIcon(*icon_re);
                 m_GetMinMaxButton->setIconSize(QSize(22,22));
                 m_GetMinMaxButton->resize(22,22);
 
-                wl->addWidget(new QLabeledWidget("Minimum Value",m_SpinMin));
-                wl->addWidget(new QLabeledWidget("Maximum Value",m_SpinMax));
+                wl->addWidget(new QLabeledWidget("Minimum Value",m_SpinMin1));
+                wl->addWidget(new QLabeledWidget("Maximum Value",m_SpinMax1));
                 wl->addWidget(new QLabeledWidget("Load Min and Max from Map",m_GetMinMaxButton));
 
                 connect(m_GetMinMaxButton,SIGNAL(pressed()),this,SLOT(OnUpdateMinMax1()));
                 connect(m_BandBox,SIGNAL(valueChanged(int)),this,SLOT(OnBandChanged1(int)));
-                connect(m_SpinMin, SIGNAL(valueChanged(double)),this,SLOT(OnMinValueChanged1(double)));
-                connect(m_SpinMax, SIGNAL(valueChanged(double)),this,SLOT(OnMaxValueChanged1(double)));
+                connect(m_SpinMin1, SIGNAL(valueChanged(double)),this,SLOT(OnMinValueChanged1(double)));
+                connect(m_SpinMax1, SIGNAL(valueChanged(double)),this,SLOT(OnMaxValueChanged1(double)));
             }
 
             {
@@ -896,38 +904,35 @@ public:
                 m_BandBox->setValue(m_Style->m_IndexB2);
                 wl->addWidget(m_BandBox);
 
-                QDoubleSpinBox * m_SpinMin;
-                QDoubleSpinBox * m_SpinMax;
+                m_SpinMax2 = new QDoubleSpinBox();
+                m_SpinMax2->setValue(m_Style->m_Intervalb2.GetMax());
+                m_SpinMax2->setDecimals(6);
+                m_SpinMax2->setMaximum(1e10);
+                m_SpinMax2->setMinimum(-1e10);
 
-                m_SpinMax = new QDoubleSpinBox();
-                m_SpinMax->setValue(m_Style->m_Intervalb2.GetMax());
-                m_SpinMax->setDecimals(6);
-                m_SpinMax->setMaximum(1e10);
-                m_SpinMax->setMinimum(-1e10);
-
-                m_SpinMin = new QDoubleSpinBox();
-                m_SpinMin->setValue(m_Style->m_Intervalb2.GetMin());
-                m_SpinMin->setDecimals(6);
-                m_SpinMin->setMaximum(1e10);
-                m_SpinMin->setMinimum(-1e10);
+                m_SpinMin2 = new QDoubleSpinBox();
+                m_SpinMin2->setValue(m_Style->m_Intervalb2.GetMin());
+                m_SpinMin2->setDecimals(6);
+                m_SpinMin2->setMaximum(1e10);
+                m_SpinMin2->setMinimum(-1e10);
 
 
                 QIcon *icon_re = new QIcon();
-                icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh_24.png"), QSize(), QIcon::Normal, QIcon::Off);
+                icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh.png"), QSize(), QIcon::Normal, QIcon::Off);
                 QToolButton * m_GetMinMaxButton;
                 m_GetMinMaxButton = new QToolButton();
                 m_GetMinMaxButton->setIcon(*icon_re);
                 m_GetMinMaxButton->setIconSize(QSize(22,22));
                 m_GetMinMaxButton->resize(22,22);
 
-                wl->addWidget(new QLabeledWidget("Minimum Value",m_SpinMin));
-                wl->addWidget(new QLabeledWidget("Maximum Value",m_SpinMax));
+                wl->addWidget(new QLabeledWidget("Minimum Value",m_SpinMin2));
+                wl->addWidget(new QLabeledWidget("Maximum Value",m_SpinMax2));
                 wl->addWidget(new QLabeledWidget("Load Min and Max from Map",m_GetMinMaxButton));
 
                 connect(m_GetMinMaxButton,SIGNAL(pressed()),this,SLOT(OnUpdateMinMax2()));
                 connect(m_BandBox,SIGNAL(valueChanged(int)),this,SLOT(OnBandChanged2(int)));
-                connect(m_SpinMin, SIGNAL(valueChanged(double)),this,SLOT(OnMinValueChanged2(double)));
-                connect(m_SpinMax, SIGNAL(valueChanged(double)),this,SLOT(OnMaxValueChanged2(double)));
+                connect(m_SpinMin2, SIGNAL(valueChanged(double)),this,SLOT(OnMinValueChanged2(double)));
+                connect(m_SpinMax2, SIGNAL(valueChanged(double)),this,SLOT(OnMaxValueChanged2(double)));
             }
 
 
@@ -939,38 +944,35 @@ public:
                 m_BandBox->setValue(m_Style->m_IndexB3);
                 wl->addWidget(m_BandBox);
 
-                QDoubleSpinBox * m_SpinMin;
-                QDoubleSpinBox * m_SpinMax;
+                m_SpinMax3 = new QDoubleSpinBox();
+                m_SpinMax3->setValue(m_Style->m_Intervalb3.GetMax());
+                m_SpinMax3->setDecimals(6);
+                m_SpinMax3->setMaximum(1e10);
+                m_SpinMax3->setMinimum(-1e10);
 
-                m_SpinMax = new QDoubleSpinBox();
-                m_SpinMax->setValue(m_Style->m_Intervalb3.GetMax());
-                m_SpinMax->setDecimals(6);
-                m_SpinMax->setMaximum(1e10);
-                m_SpinMax->setMinimum(-1e10);
-
-                m_SpinMin = new QDoubleSpinBox();
-                m_SpinMin->setValue(m_Style->m_Intervalb3.GetMin());
-                m_SpinMin->setDecimals(6);
-                m_SpinMin->setMaximum(1e10);
-                m_SpinMin->setMinimum(-1e10);
+                m_SpinMin3 = new QDoubleSpinBox();
+                m_SpinMin3->setValue(m_Style->m_Intervalb3.GetMin());
+                m_SpinMin3->setDecimals(6);
+                m_SpinMin3->setMaximum(1e10);
+                m_SpinMin3->setMinimum(-1e10);
 
 
                 QIcon *icon_re = new QIcon();
-                icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh_24.png"), QSize(), QIcon::Normal, QIcon::Off);
+                icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh.png"), QSize(), QIcon::Normal, QIcon::Off);
                 QToolButton * m_GetMinMaxButton;
                 m_GetMinMaxButton = new QToolButton();
                 m_GetMinMaxButton->setIcon(*icon_re);
                 m_GetMinMaxButton->setIconSize(QSize(22,22));
                 m_GetMinMaxButton->resize(22,22);
 
-                wl->addWidget(new QLabeledWidget("Minimum Value",m_SpinMin));
-                wl->addWidget(new QLabeledWidget("Maximum Value",m_SpinMax));
+                wl->addWidget(new QLabeledWidget("Minimum Value",m_SpinMin3));
+                wl->addWidget(new QLabeledWidget("Maximum Value",m_SpinMax3));
                 wl->addWidget(new QLabeledWidget("Load Min and Max from Map",m_GetMinMaxButton));
 
                 connect(m_GetMinMaxButton,SIGNAL(pressed()),this,SLOT(OnUpdateMinMax3()));
                 connect(m_BandBox,SIGNAL(valueChanged(int)),this,SLOT(OnBandChanged3(int)));
-                connect(m_SpinMin, SIGNAL(valueChanged(double)),this,SLOT(OnMinValueChanged3(double)));
-                connect(m_SpinMax, SIGNAL(valueChanged(double)),this,SLOT(OnMaxValueChanged3(double)));
+                connect(m_SpinMin3, SIGNAL(valueChanged(double)),this,SLOT(OnMinValueChanged3(double)));
+                connect(m_SpinMax3, SIGNAL(valueChanged(double)),this,SLOT(OnMaxValueChanged3(double)));
             }
 
 
@@ -1111,6 +1113,9 @@ public slots:
     inline void OnUpdateMinMax1()
     {
 
+        m_SpinMin1->setValue(m_Layer->GetMinimumValue(m_Style->m_IndexB1));
+        m_SpinMax1->setValue(m_Layer->GetMaximumValue(m_Style->m_IndexB1));
+
     }
 
     inline void OnBandChanged1(int b)
@@ -1126,11 +1131,10 @@ public slots:
         m_Style->m_Intervalb1.SetMax(v);
     }
 
-
-
     inline void OnUpdateMinMax2()
     {
-
+        m_SpinMin2->setValue(m_Layer->GetMinimumValue(m_Style->m_IndexB2));
+        m_SpinMax2->setValue(m_Layer->GetMaximumValue(m_Style->m_IndexB2));
     }
 
     inline void OnBandChanged2(int b)
@@ -1146,10 +1150,10 @@ public slots:
         m_Style->m_Intervalb2.SetMax(v);
     }
 
-
     inline void OnUpdateMinMax3()
     {
-
+        m_SpinMin3->setValue(m_Layer->GetMinimumValue(m_Style->m_IndexB2));
+        m_SpinMax3->setValue(m_Layer->GetMaximumValue(m_Style->m_IndexB2));
     }
 
     inline void OnBandChanged3(int b)
@@ -1191,9 +1195,7 @@ public slots:
 
     inline void OnDemScaleChanged(double scale)
     {
-
         m_Style->DemScale = scale;
-
     }
 
     inline void OnHSAngle1Changed(int val)

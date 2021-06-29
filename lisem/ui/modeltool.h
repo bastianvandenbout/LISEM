@@ -49,6 +49,7 @@ class ModelTool  : public QWidget
 
     QSignalMapper *m_SignalMapper_Bool;
     QSignalMapper *m_SignalMapper_Map;
+    QSignalMapper *m_SignalMapper_Map2;
     QSignalMapper *m_SignalMapper_Dir;
     QSignalMapper *m_SignalMapper_File;
     QSignalMapper *m_SignalMapper_Float;
@@ -113,6 +114,7 @@ public:
 
         m_SignalMapper_Bool = new QSignalMapper(this);
         m_SignalMapper_Map = new QSignalMapper(this);
+        m_SignalMapper_Map2 = new QSignalMapper(this);
         m_SignalMapper_Dir = new QSignalMapper(this);
         m_SignalMapper_File = new QSignalMapper(this);
         m_SignalMapper_Float = new QSignalMapper(this);
@@ -122,6 +124,7 @@ public:
         connect(m_SignalMapper_UI,SIGNAL(mapped(QString)),this,SLOT(SignalFunction_UI(QString)));
         connect(m_SignalMapper_Dir,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Dir(int)));
         connect(m_SignalMapper_Map,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Map(int)));
+        connect(m_SignalMapper_Map2,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Map2(int)));
         connect(m_SignalMapper_File,SIGNAL(mapped(int)),this,SLOT(SignalFunction_File(int)));
         connect(m_SignalMapper_Float,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Float(int)));
         connect(m_SignalMapper_Int,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Int(int)));
@@ -215,6 +218,7 @@ public:
 
 
         mlExt->addWidget(MenuWidget);
+
 
         m_DropDown = new QComboBox();
         mlExt->addWidget(m_DropDown);
@@ -398,6 +402,7 @@ public slots:
 
     void SignalFunction_Bool(int index);
     void SignalFunction_Map(int index);
+    void SignalFunction_Map2(int index);
     void SignalFunction_Dir(int index);
     void SignalFunction_File(int index);
     void SignalFunction_Float(int index);

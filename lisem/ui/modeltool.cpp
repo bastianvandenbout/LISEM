@@ -864,14 +864,31 @@ void ModelTool::SignalFunction_Bool(int index)
 
 }
 
+void ModelTool::SignalFunction_Map2(int index)
+{
+
+
+
+}
+
 void ModelTool::SignalFunction_Map(int index)
 {
 
     ParameterWidget pw = m_ParameterWidgetList.at(index);
     SPHParameter p = m_ParameterManager->m_Parameters.at(pw.m_ParameterIndex);
 
+
     QString dir = m_ParameterManager->GetParameterValueString("Map Directory");
 
+    for(int i= 0; i < m_ParameterManager->m_Parameters.length(); i++)
+    {
+        if(m_ParameterManager->m_Parameters.at(i).m_Name == "Map Directory")
+        {
+            SPHParameter p = (m_ParameterManager->m_Parameters.at(i));
+            std::cout << "found " << p.m_Value.toStdString() << std::endl;
+        }
+    }
+    std::cout << "current map dir "<< dir.toStdString() << " | " << p.m_Value.toStdString() <<  std::endl;
     if(dir.isEmpty())
     {
         QString currentDir = GetSite()+"/";

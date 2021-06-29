@@ -27,6 +27,8 @@
 #include "QTextBlock"
 #include "QScrollBar"
 #include "site.h"
+#include "lsmio.h"
+#include "site.h"
 
 class SPHFileSystemModel : public QFileSystemModel
 {
@@ -131,7 +133,7 @@ public:
 };
 
 
-class LSMLineEdit : public QPlainTextEdit
+class LSMLineEdit : public CodeEditor
 {
         Q_OBJECT;
 public:
@@ -141,19 +143,18 @@ public:
     int m_CommandHistoryIndex = -1;
     bool m_AllowCommands = true;
 
-    ScriptManager * m_ScriptManager;
-
-    SPHScriptCompleter * m_Completer = nullptr;
-    QList<ScriptFunctionInfo> funclist;
-    QList<ScriptFunctionInfo> funcmemberlist;
-
-
     int m_CurrentToolTipIndex = 0;
 
-    inline LSMLineEdit(ScriptManager * s, QWidget * p) : QPlainTextEdit(p)
+    inline LSMLineEdit(ScriptManager * s, QWidget * p) : CodeEditor(p,s)
     {
+        //get all past commands
 
-        m_ScriptManager = s;
+        QStringList l = GetFileStringList(GetSite() + QDir::separator() + "commands.ini");
+
+        for(int i = l.size()-1; i > -1 ; i--)
+        {
+            m_CommandHistory.push_back(l.at(i));
+        }
 
         QFontMetrics metrics(font());
         int lineHeight = metrics.lineSpacing();
@@ -165,147 +166,29 @@ public:
 
         setMouseTracking(true);
 
-            connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateExtraSelection()));
-
-        if(m_ScriptManager != nullptr)
-        {
-            QStringList functionnames = m_ScriptManager->GetGlobalFunctionNames();
-
-            funclist = m_ScriptManager->m_Engine->GetGlobalFunctionList();
-            funcmemberlist = m_ScriptManager->m_Engine->GetMemberFunctionList();
-
-            m_Completer = new SPHScriptCompleter(m_ScriptManager);
-            m_Completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
-            m_Completer->setCaseSensitivity(Qt::CaseInsensitive);
-            m_Completer->setCompletionMode(QCompleter::PopupCompletion);
-            m_Completer->setWrapAround(true);
-            this->setCompleter(m_Completer);
-
-        }
-
-
         connect(this,SIGNAL(returnPressed()),this,SLOT(OnConsoleEnterPressed()));
     }
 
-    inline void setCompleter(SPHScriptCompleter *completer)
+    inline void WriteCommandFile()
     {
-        if (m_Completer)
+        QList<QString> write;
+
+        for(int i = 0; i < std::min(m_CommandHistory.size(),50); i++)
         {
-            QObject::disconnect(m_Completer, 0, this, 0);
+            write.push_back(m_CommandHistory.at(i));
         }
 
-        m_Completer = completer;
-
-        if (!m_Completer)
-            return;
-
-        m_Completer->setWidget(this);
-        m_Completer->setCompletionMode(QCompleter::PopupCompletion);
-        m_Completer->setCaseSensitivity(Qt::CaseInsensitive);
-        QObject::connect(m_Completer, QOverload<const QString &>::of(&QCompleter::activated),
-                         this, &LSMLineEdit::insertCompletion);
+        OverWriteFileFromStringList(GetSite() + QDir::separator() + "commands.ini",write);
     }
 
-    void insertCompletion(const QString& completion)
-    {
-        if (m_Completer->widget() != this)
-        {
-            return;
-        }
-
-        QTextCursor tc = textCursor();
-        int extra = completion.length() - m_Completer->completionPrefix().length();
-        tc.movePosition(QTextCursor::Left);
-        tc.movePosition(QTextCursor::EndOfWord);
-        tc.insertText(completion.right(extra));
-        setTextCursor(tc);
-    }
-
-    inline void SetDir(QString dir)
-    {
-        if(m_Completer != nullptr)
-        {
-            m_Completer->SetDirectory(dir);
-        }
-    }
-
-    QString textUnderCursor() const
-    {
-        QTextCursor tc = textCursor();
-        tc.select(QTextCursor::WordUnderCursor);
-
-        QString word = tc.selectedText();
-        int selstart =  tc.anchor();
-        tc.setPosition(selstart-1);
-        tc.setPosition(selstart, QTextCursor::MoveMode::KeepAnchor);
-
-        QString wordprev = tc.selectedText();
-        if(wordprev.trimmed() == ".")
-        {
-            word.insert(0,",");
-        }
-        return word;
-    }
-
-    QString textUnderCursor(QTextCursor tc) const
-    {
-        tc.select(QTextCursor::WordUnderCursor);
-
-        QString word = tc.selectedText();
-        int selstart =  tc.anchor();
-        tc.setPosition(selstart-1);
-        tc.setPosition(selstart, QTextCursor::MoveMode::KeepAnchor);
-
-        QString wordprev = tc.selectedText();
-        if(wordprev.trimmed() == ".")
-        {
-            word.insert(0,",");
-        }
-        return word;
-    }
 
     inline void keyPressEvent(QKeyEvent *event) override
     {
+        QKeyEvent *e = event;
 
-        if (m_Completer && m_Completer->popup()->isVisible()) {
-            // The following keys are forwarded by the completer to the widget
-           switch (event->key()) {
-           case Qt::Key_Enter:
-           case Qt::Key_Return:
-           case Qt::Key_Escape:
-           case Qt::Key_Tab:
-           case Qt::Key_Backtab:
-                event->ignore();
-                return; // let the completer do default behavior
-           default:
-               break;
-           }
-        }
-
-
-        if(QToolTip::isVisible())
-        {
-
-           if(event->key() == Qt::Key_PageUp)
-           {
-               m_CurrentToolTipIndex += 1;
-               updateExtraSelection();
-               return;
-           }
-           if(event->key() == Qt::Key_PageDown)
-           {
-               m_CurrentToolTipIndex -= 1;
-               m_CurrentToolTipIndex = std::max(m_CurrentToolTipIndex,0);
-               updateExtraSelection();
-               return;
-           }
-        }else {
-
-            m_CurrentToolTipIndex = 0;
-
-        }
-
-        bool isShortcut = ((event->modifiers() & Qt::ControlModifier) && event->key() == Qt::Key_E); // CTRL+E
+        bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E); // CTRL+E
+        bool isShortcutSearch = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_F); // CTRL+E
+        bool isShortcutSave = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_S); // CTRL+E
 
         if(!m_Completer || !isShortcut)
         {
@@ -351,590 +234,11 @@ public:
                     OnConsoleEnterPressed();
                 }else
                 {
-                    QPlainTextEdit::keyPressEvent(event);
+                    CodeEditor::keyPressEvent(event);
                 }
 
             }
         }
-
-
-
-        const bool ctrlOrShift = event->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier);
-        if (!m_Completer || (ctrlOrShift && event->text().isEmpty()))
-        {
-            return;
-        }
-
-        static QString eow("~!@#$%^&*()_+{}|:\"<>?,/;'[]\\-="); // end of word
-        bool hasModifier = (event->modifiers() != Qt::NoModifier) && !ctrlOrShift;
-        QString completionPrefix = textUnderCursor();
-
-        if (!isShortcut && (hasModifier || event->text().isEmpty()|| completionPrefix.length() < 3
-                          || eow.contains(event->text().right(1)))) {
-
-            m_Completer->popup()->hide();
-            return;
-        }
-
-
-        m_Completer->update(completionPrefix);
-        //if (completionPrefix != m_Completer->completionPrefix()) {
-
-            m_Completer->popup()->setCurrentIndex(m_Completer->completionModel()->index(0, 0));
-        //}
-        QRect cr = cursorRect();
-        cr.setWidth(m_Completer->popup()->sizeHintForColumn(0)
-                    + m_Completer->popup()->verticalScrollBar()->sizeHint().width());
-
-
-
-        m_Completer->complete(cr); // popup it up!
-
-
-        m_Completer->ShowPopup0();
-
-    }
-    QString wordUnderCursor(QTextCursor tc) const
-    {
-        tc.select(QTextCursor::WordUnderCursor);
-        return tc.selectedText();
-    }
-
-
-    QString wordUnderCursor() const
-    {
-        auto tc = textCursor();
-        tc.select(QTextCursor::WordUnderCursor);
-        return tc.selectedText();
-    }
-
-    QChar CharUnderCursor(int offset = 0) const
-    {
-        auto block = textCursor().blockNumber();
-        auto index = textCursor().positionInBlock();
-        auto text = document()->findBlockByNumber(block).text();
-
-        index += offset;
-
-        if (index < 0 || index >= text.size())
-        {
-            return {};
-        }
-
-        return text[index];
-    }
-
-    QChar CharUnderCursor(QTextCursor tc, int offset = 0) const
-    {
-        auto block = tc.blockNumber();
-        auto index = tc.positionInBlock();
-        auto text = document()->findBlockByNumber(block).text();
-
-        index += offset;
-
-        if (index < 0 || index >= text.size())
-        {
-            return {};
-        }
-
-        return text[index];
-    }
-
-    void highlightParenthesis(QList<QTextEdit::ExtraSelection>& extraSelection)
-    {
-        auto currentSymbol = CharUnderCursor();
-        auto prevSymbol = CharUnderCursor(-1);
-
-        for (auto& pair : parentheses)
-        {
-            int direction;
-
-            QChar counterSymbol;
-            QChar activeSymbol;
-            auto position = textCursor().position();
-
-            if (pair.first == currentSymbol)
-            {
-                direction = 1;
-                counterSymbol = pair.second[0];
-                activeSymbol = currentSymbol;
-            }
-            else if (pair.second == prevSymbol)
-            {
-                direction = -1;
-                counterSymbol = pair.first[0];
-                activeSymbol = prevSymbol;
-                position--;
-            }
-            else
-            {
-                continue;
-            }
-
-            auto counter = 1;
-
-            while (counter != 0 &&
-                   position > 0 &&
-                   position < (document()->characterCount() - 1))
-            {
-                // Moving position
-                position += direction;
-
-                auto character = document()->characterAt(position);
-                // Checking symbol under position
-                if (character == activeSymbol)
-                {
-                    ++counter;
-                }
-                else if (character == counterSymbol)
-                {
-                    --counter;
-                }
-            }
-
-            QTextCharFormat format = QTextCharFormat();
-            format.setBackground(Qt::yellow);
-
-            // Found
-            if (counter == 0)
-            {
-                QTextEdit::ExtraSelection selection{};
-
-                auto directionEnum =
-                     direction < 0 ?
-                     QTextCursor::MoveOperation::Left
-                     :
-                     QTextCursor::MoveOperation::Right;
-
-                selection.format = format;
-                selection.cursor = textCursor();
-                selection.cursor.clearSelection();
-                selection.cursor.movePosition(
-                    directionEnum,
-                    QTextCursor::MoveMode::MoveAnchor,
-                    std::abs(textCursor().position() - position)
-                );
-
-                selection.cursor.movePosition(
-                    QTextCursor::MoveOperation::Right,
-                    QTextCursor::MoveMode::KeepAnchor,
-                    1
-                );
-
-                extraSelection.append(selection);
-
-                selection.cursor = textCursor();
-                selection.cursor.clearSelection();
-                selection.cursor.movePosition(
-                    directionEnum,
-                    QTextCursor::MoveMode::KeepAnchor,
-                    1
-                );
-
-                extraSelection.append(selection);
-            }
-
-            break;
-        }
-    }
-
-
-    void setToolTipAtCursor(QTextCursor TextCursor, QList<QTextEdit::ExtraSelection>& extraSelection)
-    {
-        QChar currentSymbol = '(';
-        QChar prevSymbol = ')';
-
-        QChar rcurrentSymbol = CharUnderCursor(TextCursor);
-        QChar rprevSymbol = CharUnderCursor(TextCursor,-1);
-
-        bool found_start = false;
-        bool found_end = false;
-        int pos_start = -1;
-        int pos_end = -1;
-        int comma_before = 0;
-        int comma_after = 0;
-
-        for (auto& pair : parentheses)
-        {
-            for(int o = 0; o < 2; o++)
-            {
-                int direction;
-                int count_comma = 0;
-
-                QChar counterSymbol;
-                QChar activeSymbol;
-                auto position = TextCursor.position();
-
-                bool include_self = false;
-
-                if(o < 1)
-                {
-                    if (pair.first == currentSymbol)
-                    {
-                        direction = 1;
-                        counterSymbol = pair.second[0];
-                        activeSymbol = currentSymbol;
-                        if(prevSymbol == rprevSymbol)
-                        {
-                            include_self = true;
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }else
-                {
-                    if (pair.second == prevSymbol)
-                    {
-                        direction = -1;
-                        counterSymbol = pair.first[0];
-                        activeSymbol = prevSymbol;
-                        position--;
-
-                        if(currentSymbol == rcurrentSymbol)
-                        {
-                            include_self = true;
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-
-                //position += direction;
-
-                auto counter = 1;
-                bool stringliteral = false;
-
-                while (counter != 0 &&
-                       position > 0 &&
-                       position < (document()->characterCount() - 1))
-                {
-
-
-                    auto character = document()->characterAt(position);
-                    // Checking symbol under position
-                    if (character == activeSymbol)
-                    {
-                        ++counter;
-                    }
-                    else if (character == counterSymbol)
-                    {
-                        --counter;
-                    }else if(character == "\"")
-                    {
-                        stringliteral = !stringliteral;
-                    }else if(character == ',')
-                    {
-                        if(!stringliteral)
-                        {
-                            count_comma++;
-                        }
-                    }
-
-                    if(counter != 0)
-                    {
-                        // Moving position
-                        position += direction;
-                    }
-                }
-
-                QTextCharFormat format = QTextCharFormat();
-                format.setBackground(Qt::green);
-
-                // Found
-                if (counter == 0)
-                {
-                    if(o == 0)
-                    {
-                        found_end = true;
-                        pos_end = position;
-                        comma_after = count_comma;
-                    }else {
-                        found_start = true;
-                        pos_start = position;
-                        comma_before = count_comma;
-                    }
-                    QTextEdit::ExtraSelection selection{};
-
-                    auto directionEnum =
-                         direction < 0 ?
-                         QTextCursor::MoveOperation::Left
-                         :
-                         QTextCursor::MoveOperation::Right;
-
-                    selection.format = format;
-                    selection.cursor = TextCursor;
-                    selection.cursor.clearSelection();
-                    selection.cursor.movePosition(
-                        directionEnum,
-                        QTextCursor::MoveMode::MoveAnchor,
-                        std::abs(TextCursor.position() - position)
-                    );
-
-                    selection.cursor.movePosition(
-                        QTextCursor::MoveOperation::Right,
-                        QTextCursor::MoveMode::KeepAnchor,
-                        1
-                    );
-
-                    extraSelection.append(selection);
-
-                    if(include_self)
-                    {
-                        selection.cursor = TextCursor;
-                        selection.cursor.clearSelection();
-                        selection.cursor.movePosition(
-                            directionEnum,
-                            QTextCursor::MoveMode::KeepAnchor,
-                            1
-                        );
-
-                        extraSelection.append(selection);
-                    }
-                }
-            }
-            break;
-        }
-
-
-        //if we found the end and the beginning, try to get a function name
-        QTextCursor cursor =TextCursor;
-        cursor.movePosition(QTextCursor::MoveOperation::Left,QTextCursor::MoveMode::MoveAnchor,std::abs(TextCursor.position() - pos_start)+1);
-        cursor.select(QTextCursor::WordUnderCursor);
-        QString functionname = cursor.selectedText();
-        std::cout << TextCursor.position() << " " << pos_start << " "<< cursor.selectedText().toStdString() << std::endl;
-
-        QString curseractualtext = textUnderCursor(TextCursor);
-        bool found_wordmatch = false;
-        for(int i = 0; i < funclist.length(); i++)
-        {
-            ScriptFunctionInfo fi = funclist.at(i);
-            if(QString(fi.Function->GetName()).compare(curseractualtext) == 0)
-            {
-                found_wordmatch = true;
-            }
-        }
-
-        if(!(found_end && found_start) || found_wordmatch)
-        {
-            functionname = textUnderCursor(TextCursor);
-            comma_after = 0;
-            comma_before = 0;
-        }
-
-
-        QList<ScriptFunctionInfo> fmatches;
-        bool found_match = false;
-        bool found_nargs = 0;
-        //now get the best matches for a function
-        //based on argument count, tries to get all overloaded function defenitions with the closes matching number of arguments
-        for(int i = 0; i < funclist.length(); i++)
-        {
-            ScriptFunctionInfo fi = funclist.at(i);
-            if(QString(fi.Function->GetName()).compare(functionname) == 0)
-            {
-                //perfect match
-                if(fi.Parameters.length() == (comma_after+comma_before + 1))
-                {
-                    if(!found_match)
-                    {
-                        fmatches.clear();
-                    }
-                    found_match = true;
-
-                    fmatches.append(fi);
-                }else
-                {
-                    if(!found_match)
-                    {
-                        if(fmatches.length() == 0)
-                        {
-                            fmatches.append(fi);
-                            found_nargs = fi.Parameters.length();
-                        }else
-                        {
-                            ScriptFunctionInfo fi2 =fmatches.at(0);
-
-                            if(fi.Parameters.length() == fi2.Parameters.length())
-                            {
-                                fmatches.append(fi);
-                            }else if((fi.Parameters.length() >  (comma_after+comma_before + 1)) && (fi2.Parameters.length() <  (comma_after+comma_before + 1)))
-                            {
-                                fmatches.clear();
-                                fmatches.append(fi);
-                                found_nargs = fi.Parameters.length();
-                            }else
-                            {
-                                if(std::fabs(fi.Parameters.length() -  (comma_after+comma_before + 1)) < std::fabs(fi2.Parameters.length() -  (comma_after+comma_before + 1)))
-                                {
-                                    fmatches.clear();
-                                    fmatches.append(fi);
-                                    found_nargs = fi.Parameters.length();
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-
-        if(fmatches.size() > 0 && (found_end && found_start))
-        {
-
-            std::cout << "found matches and function" << std::endl;
-
-
-            int match = m_CurrentToolTipIndex % fmatches.size();
-
-            ScriptFunctionInfo fi = fmatches.at(match);
-            //set the tooltip text
-            QString tooltip = "(" +QString::number(match+1) +"/" + QString::number(fmatches.size()) + ") " + m_ScriptManager->m_Engine->GetTypeName(fi.Function->GetReturnTypeId()) + " " + fi.Function->GetName() + "(";
-
-            int plength = fi.Parameters.length();
-            if(plength == fi.Function->GetParamCount())
-            {
-                int pcurrent = std::min(comma_before,plength-1);
-                int ibegin = 0;
-                int iend = plength;
-
-                bool plimitbegin = false;
-                bool plimitend = false;
-
-                if(plength > 5)
-                {
-
-                    ibegin = pcurrent - 1;
-                    if(ibegin < 0)
-                    {
-                        ibegin = 0;
-                    }else if(ibegin > 0)
-                    {
-                        plimitbegin = true;
-                    }
-                    iend = ibegin + 3;
-                    if(iend > plength)
-                    {
-                        iend = plength;
-                    }else if(ibegin < plength)
-                    {
-                        plimitend = true;
-                    }
-                }
-
-                if(plimitbegin)
-                {
-                    tooltip += "...";
-                }
-
-                std::cout << "middle "<< ibegin << " "<< iend <<  " " << fi.ParameterTypes.length() << " " << fi.Parameters.length() <<  std::endl;
-                for(int i = ibegin; i < iend; i++)
-                {
-                    int typeId = 0;
-                    asDWORD flags = 0;
-                    const char * name;
-                    const char * def;
-                    fi.Function->GetParam(i,&typeId,&flags,&name,&def);
-                    tooltip +=  m_ScriptManager->m_Engine->GetTypeName(typeId) + " " + fi.Parameters.at(i);
-
-                    if(i != iend-1)
-                    {
-                        tooltip += ",";
-                    }
-                }
-
-                std::cout << "end "<< std::endl;
-
-                if(plimitend)
-                {
-                    tooltip += "...";
-                }
-                tooltip += ")";
-
-                QString typen;
-                if(pcurrent < fi.Function->GetParamCount())
-                {
-                    int typeId = 0;
-                    asDWORD flags = 0;
-                    const char * name;
-                    const char * def;
-                    fi.Function->GetParam(pcurrent,&typeId,&flags,&name,&def);
-
-                     typen = m_ScriptManager->m_Engine->GetTypeName(typeId);
-                }else
-                {
-                    typen = "";
-                }
-
-
-                tooltip += "\n \n";
-                tooltip += "arg. " +QString::number(pcurrent+1) + "/" + QString::number(plength) + " " + fi.Parameters.at(pcurrent) + " (" +typen + ")\n";
-
-                tooltip += fi.ParameterDescription.at(pcurrent);
-
-                //show tooltip
-                QToolTip::showText(viewport()->mapToGlobal(QPoint(cursorRect(TextCursor).right(),cursorRect(TextCursor).bottom())), QString(tooltip));
-
-            }
-
-        }else
-        {
-            if(fmatches.size() > 0)
-            {
-                int match = m_CurrentToolTipIndex % fmatches.size();
-
-
-                ScriptFunctionInfo fi = fmatches.at(match);
-                //set the tooltip text
-                QString tooltip = "(" +QString::number(match+1) +"/" + QString::number(fmatches.size()) + ") " +m_ScriptManager->m_Engine->GetTypeName(fi.Function->GetReturnTypeId()) + " " + fi.Function->GetName() + "(";
-
-                int plength = fi.Parameters.length();
-                if(plength == fi.Function->GetParamCount())
-                {
-
-                        int ibegin = 0;
-                    int iend = plength;
-
-                    bool plimitbegin = false;
-                    bool plimitend = false;
-
-                    for(int i = ibegin; i < iend; i++)
-                    {
-                        int typeId = 0;
-                        asDWORD flags = 0;
-                        const char * name;
-                        const char * def;
-                        fi.Function->GetParam(i,&typeId,&flags,&name,&def);
-
-                        tooltip += m_ScriptManager->m_Engine->GetTypeName(typeId) + " " + fi.Parameters.at(i);
-
-                        if(i != iend-1)
-                        {
-                            tooltip += ",";
-                        }
-                    }
-                    if(plimitend)
-                    {
-                        tooltip += "...";
-                    }
-                    tooltip += ")";
-                    //show tooltip
-
-
-                    QToolTip::showText(viewport()->mapToGlobal(QPoint(cursorRect(TextCursor).right(),cursorRect(TextCursor).bottom())), QString(tooltip));
-                }
-            }else
-            {
-                QToolTip::hideText();
-            }
-
-        }
-
-
-        std::cout << "done"<< std::endl;
 
     }
 
@@ -946,30 +250,12 @@ public:
 protected:
     bool event(QEvent *event) override
     {
-        if (event->type() == QEvent::ToolTip)
-        {
-            QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
-            QTextCursor cursor = cursorForPosition(helpEvent->pos());
-            QList<QTextEdit::ExtraSelection> selects;
-            cursor.select(QTextCursor::WordUnderCursor);
-            if (!cursor.selectedText().isEmpty())
-            {
-                m_CurrentToolTipIndex = 0;
-                setToolTipAtCursor(cursorForPosition(helpEvent->pos()),selects);
-            }
-            else
-            {
-                QToolTip::hideText();
-            }
-            return true;
-        }
-        return QPlainTextEdit::event(event);
+        return CodeEditor::event(event);
     }
 public:
 signals:
 
     void OnCommandGiven(QString c);
-
 
 public slots:
 
@@ -990,23 +276,16 @@ public slots:
     {
         if(m_AllowCommands)
         {
-
             QString command = this->document()->toRawText();
-
             if(!command.isEmpty())
             {
-
                 m_CommandHistory.prepend(command);
                 m_CommandHistoryIndex = -1;
                 OnCommandGiven(command);
-
+                WriteCommandFile();
             }
         }
-
     }
-
-
-
 };
 
 
@@ -1351,7 +630,7 @@ public:
 
                      m_DirLabel->setText(S);
                      m_FileEditor->SetHomeDir(S);
-                     m_FileConsoleLineEdit->SetDir(S);
+                     m_FileConsoleLineEdit->SetHomeDir(S);
                  }
              }
          }
@@ -1579,7 +858,7 @@ public slots:
         ExportOpenLoc();
 
         m_FileEditor->SetHomeDir(model->filePath(m_BrowseTree->currentIndex()));
-        m_FileConsoleLineEdit->SetDir(model->filePath(m_BrowseTree->currentIndex()));
+        m_FileConsoleLineEdit->SetHomeDir(model->filePath(m_BrowseTree->currentIndex()));
 
     }
 

@@ -77,7 +77,7 @@ public:
 
     void setCompleter(SPHScriptCompleter *m_Completer);
     QCompleter *completer() const;
-private:
+
     ScriptManager * m_ScriptManager;
 
     int getIndentationSpaces();
@@ -89,7 +89,7 @@ protected:
     void mousePressEvent ( QMouseEvent * event )  override;
     void keyPressEvent(QKeyEvent *e) override;
     void focusInEvent(QFocusEvent *e) override;
-private:
+public:
     QString textUnderCursor() const
     {
         QTextCursor tc = textCursor();
@@ -339,7 +339,7 @@ protected:
         return QPlainTextEdit::event(event);
     }
 
-private slots:
+public slots:
 
     void updateLineNumberAreaWidth(int newBlockCount);
     void highlightErrorLine(QList<QTextEdit::ExtraSelection>& extraSelection);

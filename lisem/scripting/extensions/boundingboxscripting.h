@@ -62,7 +62,7 @@ inline void RegisterGeometryScripting(asIScriptEngine *engine)
 
     // Register the behaviours
     r = engine->RegisterObjectBehaviour("Point", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(PointFactory,(void*),void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Point", asBEHAVE_CONSTRUCT, "void CSF0(double,double,double,double)", asFUNCTIONPR(PointFactory,(double,double,void*),void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Point", asBEHAVE_CONSTRUCT, "void CSF0(double,double)", asFUNCTIONPR(PointFactory,(double,double,void*),void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 
     r = engine->RegisterObjectMethod("Point", "double X()", asMETHOD(LSMPoint,GetX), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Point", "double Y()", asMETHOD(LSMPoint,GetY), asCALL_THISCALL); assert( r >= 0 );

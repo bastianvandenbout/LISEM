@@ -476,12 +476,8 @@ inline cTMap * AS_Mapmax(cTMap * Other,cTMap * Other2)
 }
 inline cTMap * AS_Mapmin(cTMap * Other,cTMap * Other2)
 {
-    std::cout << "max"<< Other->AS_IsSingleValue << Other2->AS_IsSingleValue << std::endl;
-
     if((Other->AS_IsSingleValue &&  Other2->AS_IsSingleValue) ||(!(Other->AS_IsSingleValue) && !( Other2->AS_IsSingleValue)))
     {
-        std::cout << "1"<< std::endl;
-
         if(!(Other->data.nr_rows() ==  Other2->data.nr_rows() && Other->data.nr_cols() ==  Other2->data.nr_cols()))
         {
             LISEMS_ERROR("Numbers of rows and column do not match");
@@ -511,7 +507,6 @@ inline cTMap * AS_Mapmin(cTMap * Other,cTMap * Other2)
 
     }else
     {
-        std::cout << "2"<< std::endl;
 
 
         cTMap * map1 = Other;

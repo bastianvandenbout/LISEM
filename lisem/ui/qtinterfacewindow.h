@@ -120,6 +120,7 @@ public:
 
     QSignalMapper *m_SignalMapper_Bool;
     QSignalMapper *m_SignalMapper_Map;
+    QSignalMapper *m_SignalMapper_Map2;
     QSignalMapper *m_SignalMapper_Dir;
     QSignalMapper *m_SignalMapper_File;
     QSignalMapper *m_SignalMapper_Float;

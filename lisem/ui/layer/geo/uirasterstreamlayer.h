@@ -269,7 +269,7 @@ public:
 
     inline void Initialize(RasterDataProvider * map,QString name,bool file = false, QString filepath = "", bool native = false)
     {
-        std::cout << "rasterstreamlayer "<< map->GetTimes().length() << std::endl;
+
         m_RequiresCRSGLTransform = true;
         m_Style.m_HasDuoBand = false;
         m_Style.m_HasTripleBand = false;
@@ -332,6 +332,17 @@ public:
             m_Style.m_HasSingleBand = false;
             m_Style.m_StyleSimpleGradient = false;
             m_Style.m_StyleSimpleRange = false;
+
+            m_Style.m_IndexB1 = 0;
+            m_Style.m_IndexB2 = 1;
+            if(map->GetBandCount() >2)
+            {
+                m_Style.m_IndexB3 = 2;
+            }else
+            {
+                m_Style.m_IndexB3 = 1;
+            }
+
         }
 
         if(map->HasTime())
@@ -875,8 +886,6 @@ public:
                     //create new buffer object
 
 
-                    std::cout << "create new rsb "<< std::endl;
-
                     rsb = new RasterStreamBuffer(m,state.scr_pixwidth,state.scr_pixheight,bfinal,GetProjection(),band);
                     rsb->SetFutureFrom(bfinal,GetProjection(),band);
                     Buffers.prepend(rsb);
@@ -884,7 +893,6 @@ public:
                 }else {
 
 
-                    std::cout << "redo old rsb "<< std::endl;
                     rsb->SetFutureFrom(bfinal,GetProjection(),band);
                 }
 
@@ -895,8 +903,6 @@ public:
                 {
 
 
-                    std::cout << "starting thread "<< std::endl;
-
                     rsb->rRead_Started = true;
                     rsb->tRead = std::thread([bfinal,band,this,rsb]()
                     {
@@ -904,7 +910,6 @@ public:
                         rsb->write_done = false;
 
                         rsb->m_SignMutex->unlock();
-                        std::cout << "data read start " << band <<  std::endl;
                         m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex);
                         rsb->m_SignMutex->lock();
 
@@ -912,7 +917,6 @@ public:
                         rsb->write_done = true;
                         rsb->update_gpu = true;
                         rsb->m_SignMutex->unlock();
-                        std::cout << "data read end " << std::endl;
                     });
 
                     rsb->m_SignMutex->unlock();
@@ -929,12 +933,10 @@ public:
 
             rsb->m_SignMutex->unlock();
 
-            std::cout << "return best rsb " << std::endl;
             return rsb;
         }
 
 
-        std::cout << "return null rsb " << std::endl;
         return nullptr;
     }
 
@@ -942,8 +944,6 @@ public:
     void Draw_Raster(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm,bool raw_value, float zscale = 1.0f)
     {
 
-
-        std::cout << "rasterlayer draw"<< std::endl;
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
         LSMStyle s = GetStyle();
         BoundingBox bb = GetBoundingBox();
@@ -2163,7 +2163,6 @@ public:
 
 
 
-        std::cout << "drawing done" << std::endl;
 
     }
 
@@ -2397,8 +2396,6 @@ public:
         {
             RasterStreamBuffer * rsb_i =  list.at(i);
 
-            //std::cout << "check usage" << i <<  std::endl;
-
             //this buffer has not been used, and we have repeatedly used another, so this must be obsolete
             if(rsb_i->bufferused == false)
             {
@@ -2406,13 +2403,11 @@ public:
                 rsb_i->m_SignMutex->lock();
 
 
-                std::cout << "check delete" <<  std::endl;
 
                 //destroy and remove buffer
                 if(rsb_i->write_done == true && !rsb_i->rRead_Started && !rsb_i->update_gpu)
                 {
 
-                    std::cout << "destroy buffer " << std::endl;
                     rsb_i->m_MapMutex->lock();
                     rsb_i->m_MapMutex->unlock();
                     rsb_i->Destroy(m);
@@ -2425,7 +2420,6 @@ public:
                     rsb_i->m_SignMutex->unlock();
                 }
 
-                std::cout << "end check"<< std::endl;
 
             }else {
                 rsb_i->bufferused = false;
@@ -2519,7 +2513,6 @@ public:
                     m_CreatedTextures = true;
                 }
             }else {
-                std::cout << "create native textures " << std::endl;
                     m_Textures.clear();
 
                     for(int i = 0; i < m_RDP->GetBandCount(); i++)
@@ -2535,7 +2528,6 @@ public:
 
     inline void OnPrepare(OpenGLCLManager * m,GeoWindowState s) override
     {
-        std::cout << "rasterlayer preapre"<< std::endl;
         CreateGLTextures(m,s);
 
         m_TextureI1= new OpenGLCLTexture();
@@ -2550,7 +2542,6 @@ public:
 
         m_IsPrepared = true;
 
-        std::cout << "rasterlayer preapre done"<< std::endl;
     }
 
     inline float MinimumLegendHeight(OpenGLCLManager * m, GeoWindowState s) override
@@ -2589,7 +2580,6 @@ public:
 
     inline virtual void OnDrawLegend(OpenGLCLManager * m, GeoWindowState s, float posy_start = 0.0, float posy_end = 0.0)
     {
-        std::cout << "draw legend " << posy_start << " " << posy_end << std::endl;
         if(s.legendindex < s.legendtotal)
         {
             if((m_RDP->IsDuoMap()))
@@ -3061,9 +3051,6 @@ public:
             //get required point count
             int count = m_RDP->GetLineWithinRasterExtent(pos1,pos2,posf1,posf2);
 
-
-            std::cout << "pos1 : " << pos1.x << " " << pos1.y << " pos2: " << pos2.x << " " << pos2.y << std::endl;
-            std::cout << "count " << pcount<< std::endl;
             pcount += count;
         }
 

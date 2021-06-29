@@ -623,6 +623,8 @@ public:
     virtual void SetStyle(LSMStyle s, bool OverWriteAll = false)
     {
 
+        int n_bands = m_Style.m_Bands;
+
         if(OverWriteAll)
         {
             LSMStyle s_old = m_Style;
@@ -635,6 +637,7 @@ public:
         {
              m_Style.CopyFrom(s);
         }
+        m_Style.m_Bands = n_bands;
 
     }
 

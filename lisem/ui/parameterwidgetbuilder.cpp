@@ -327,6 +327,19 @@ void QTInterfaceWindow::CreateParameterWidgets()
                 QIcon icon;
                 icon.addFile((m_Dir + LISEM_FOLDER_ASSETS + "fileopen.png"), QSize(), QIcon::Normal, QIcon::Off);
 
+                QIcon icon2;
+                icon2.addFile((m_Dir + LISEM_FOLDER_ASSETS + "map.png"), QSize(), QIcon::Normal, QIcon::Off);
+
+                QToolButton *addviewButton = new QToolButton(this);
+                addviewButton->setIcon(icon2);
+                addviewButton->setIconSize(QSize(22,22));
+                addviewButton->resize(22,22);
+                addviewButton->setEnabled(true);
+
+                connect(addviewButton,SIGNAL(pressed()),m_SignalMapper_Map2,SLOT(map()));
+                m_SignalMapper_Map2->setMapping(addviewButton,pwindex);
+
+
                 QToolButton *addButton = new QToolButton(this);
                 addButton->setIcon(icon);
                 addButton->setIconSize(QSize(22,22));
@@ -340,6 +353,12 @@ void QTInterfaceWindow::CreateParameterWidgets()
                 addButton->setStyleSheet(buttonStyle);
                 addButton->setMinimumSize(22,22);
                 addButton->setMaximumSize(22,22);
+                addviewButton->setStyleSheet(buttonStyle);
+                addviewButton->setMinimumSize(22,22);
+                addviewButton->setMaximumSize(22,22);
+
+                templayout->addWidget(addviewButton);
+
                 templayout->addWidget(addButton);
 
                 currentparent->addWidget(hw);

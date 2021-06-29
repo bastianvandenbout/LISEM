@@ -563,14 +563,12 @@ public slots:
 
         inline void OnLayerSave()
         {
-            std::cout << 1 << std::endl;
             QList<QString> exts =m_maplayer->GetSaveExtHint();
             QString name =  m_maplayer->GetSaveNameHint();
             QString dir = m_maplayer->GetSaveDirHint();
 
             //get file name from user
 
-            std::cout << 2 << std::endl;
 
             QString extss;
             for(int i = 0; i < exts.length(); i++)
@@ -582,13 +580,11 @@ public slots:
                 }
             }
 
-            std::cout << 3 << std::endl;
 
             exts += ";*.*";
             QString path = QFileDialog::getOpenFileName(this,QString("Select a save file"),
                                                         m_maplayer->GetFilePath(),extss);
 
-            std::cout << 4 << std::endl;
 
             if(!path.isEmpty())
             {
@@ -603,8 +599,6 @@ public slots:
                     msgBox.exec();
                 }
             }
-
-            std::cout << 5 << std::endl;
 
         }
 

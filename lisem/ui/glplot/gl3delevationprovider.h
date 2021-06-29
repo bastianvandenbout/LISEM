@@ -109,7 +109,7 @@ public:
 
         }
     }
-    inline void GetClosestTerrain(LSMVector3 Position)
+    inline void GetClosestDistanceToObject(LSMVector3 Position)
     {
 
     }

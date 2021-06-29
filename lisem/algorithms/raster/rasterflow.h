@@ -1519,7 +1519,7 @@ inline std::vector<cTMap *> AS_AccuFluxDiffusive(cTMap * DEMIn, cTMap * source, 
         }
     }
 
-    float N = 0.1;
+    float N = 0.005;
     double _dx = std::fabs(DEM->cellSizeX());
     float dt = _dx * 0.01;
 
@@ -1598,21 +1598,21 @@ inline std::vector<cTMap *> AS_AccuFluxDiffusive(cTMap * DEMIn, cTMap * source, 
                     double qm = 1.0 *flowwidth * Hm * std::sqrt(std::fabs(S->Drc + 0.001))*(1.0/N) *std::pow((Hm),2.0/3.0);
 
                     q = std::min(q,courant * h);
-                    QT->data[r][c] += q;
                     double V = h > 0? std::sqrt(HL) * std::sqrt(std::fabs(S->data[r][c] + 0.001))*(1.0/N) *std::pow((HL*_dx)/(2.0 * HL + _dx),2.0/3.0) : 0.0;
 
                     double qx = (demhx1 < demhx2? -1.0:1.0) * (std::fabs(SX->Drc)/S->Drc) * q;
                     double qy = (demhy1 < demhy2? -1.0:1.0) * (std::fabs(SY->Drc)/S->Drc) * q;
 
+                    QT->data[r][c] += std::fabs(qx) + std::fabs(qy);
                     QX1->Drc = qx < 0? qx :0.0;
                     QX2->Drc = qx > 0? qx :0.0;
                     QY1->Drc = qy < 0? qy :0.0;
                     QY2->Drc = qy > 0? qy :0.0;
 
-                    QTX1->Drc = QX1->Drc;
-                    QTX2->Drc = QX2->Drc;
-                    QTY1->Drc = QY1->Drc;
-                    QTY2->Drc = QY2->Drc;
+                    QTX1->Drc += QX1->Drc;
+                    QTX2->Drc += QX2->Drc;
+                    QTY1->Drc += QY1->Drc;
+                    QTY2->Drc += QY2->Drc;
                 }
 
             }
@@ -1724,23 +1724,24 @@ inline std::vector<cTMap *> AS_AccuFluxDiffusive(cTMap * DEMIn, cTMap * source, 
 
                 if(!pcr::isMV(DEM->data[r][c]))
                 {
-                    float QT = QTX1->data[r][c] + QTX2->data[r][c] + QTY1->data[r][c] + QTY2->data[r][c];
 
-                    if(QT > 0.0)
-                    {
 
-                        float qxa1 = HA->data[r][c] * (QTX1->data[r][c]/QT);
-                        float qxa2 = HA->data[r][c] * (QTX2->data[r][c]/QT);
-                        float qya1 = HA->data[r][c] * (QTY1->data[r][c]/QT);
-                        float qya2 = HA->data[r][c] * (QTY2->data[r][c]/QT);
+                        float qxa = (QTX2->data[r][c]-QTX1->data[r][c]);
+                        float qya = (QTY2->data[r][c]-QTY1->data[r][c]);
 
-                        //Distribute outflow
-                        QAX->data[r][c] = qxa2-qxa1;
-                        QAY->data[r][c] = qya2-qya1;
-                    }else {
-                        QAX->data[r][c] = 0.0;
-                        QAY->data[r][c] = 0.0;
-                    }
+                        float QT = std::fabs(qxa) + std::fabs(qya);
+
+                        if(QT > 0.0)
+                        {
+                            //Distribute outflow
+                            QAX->data[r][c] =HA->data[r][c] * (qxa/QT);
+                            QAY->data[r][c] =HA->data[r][c] * (qya/QT);
+                        }else {
+                            QAX->data[r][c] = 0.0;
+                            QAY->data[r][c] = 0.0;
+                        }
+
+
                 }
             }
         }
@@ -1799,15 +1800,12 @@ inline std::vector<cTMap *> AS_AccuFluxDiffusive(cTMap * DEMIn, cTMap * source, 
 
     delete SX;
     delete SY;
-    delete QAX;
-    delete QAY;
-    delete HA;
     delete QTX1;
     delete QTX2;
     delete QTY1;
     delete QTY2;
 
-    return {H,QT,S};
+    return {H,QT,S,HA,QAX,QAY};
 }
 
 //this approacht to 2d accuflux doesnt seem to work well, you need some kind of physical process to get the drainage right

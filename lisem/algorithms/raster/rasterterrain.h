@@ -77,10 +77,10 @@ inline static cTMap * AS_LandscapeErode(cTMap * DEM,float p_erode, float p_depos
                 {
                     double dem = DEMN->Drc;
 
-                            double demx1 = !OUTORMV(DEMN,r,c-1)? DEMN->data[r][c-1] : dem;
-                            double demx2 = !OUTORMV(DEMN,r,c+1)? DEMN->data[r][c+1] : dem;
-                            double demy1 = !OUTORMV(DEMN,r-1,c)? DEMN->data[r-1][c] : dem;
-                            double demy2 = !OUTORMV(DEMN,r+1,c)? DEMN->data[r+1][c] : dem;
+                            double demx1 = !OUTORMV(DEMN,r,c-1)? DEM->data[r][c-1] : dem;
+                            double demx2 = !OUTORMV(DEMN,r,c+1)? DEM->data[r][c+1] : dem;
+                            double demy1 = !OUTORMV(DEMN,r-1,c)? DEM->data[r-1][c] : dem;
+                            double demy2 = !OUTORMV(DEMN,r+1,c)? DEM->data[r+1][c] : dem;
 
                             double Sx1 = (demx1 - (dem))/(dx);
                             double Sx2 = ((dem)- (demx2))/(dx);
@@ -134,8 +134,8 @@ inline static cTMap * AS_LandscapeErode(cTMap * DEM,float p_erode, float p_depos
                             PUX->data[r][c] = PUX->data[r][c] * p_inertia;
                             PUY->data[r][c] = PUY->data[r][c] * p_inertia;
 
-                            PX->data[r][c] += PUX->data[r][c];
-                            PY->data[r][c] += PUY->data[r][c];
+                            PX->data[r][c] -= PUX->data[r][c];
+                            PY->data[r][c] -= PUY->data[r][c];
 
                             float z = DEMN->SampleLinear(x,y);
 
@@ -159,7 +159,7 @@ inline static cTMap * AS_LandscapeErode(cTMap * DEM,float p_erode, float p_depos
                                 continue;
                             }
 
-                            float zn = DEMN->SampleLinear(xn,yn);
+                            float zn = DEM->SampleLinear(xn,yn);
 
                             float vel = std::sqrt(PUX->data[r][c]*PUX->data[r][c] +PUY->data[r][c]*PUY->data[r][c]);
                             float capacity =  vel * PW->data[r][c] * p_tc;
@@ -195,6 +195,8 @@ inline static cTMap * AS_LandscapeErode(cTMap * DEM,float p_erode, float p_depos
                                     if(weight > 0.0)
                                     {
                                         weight_total += weight;
+
+                                        //DEMN->data[r2][c2] += weight;
                                     }
                                 }
                             }
@@ -221,8 +223,8 @@ inline static cTMap * AS_LandscapeErode(cTMap * DEM,float p_erode, float p_depos
                                         if(weight > 0.0)
                                         {
                                             //std::cout << "doing erosion " << erosion << std::endl;
-                                            DEMN->data[r2][c2] += (weight/weight_total)*1.0;//deposition;
-                                            DEMN->data[r2][c2] -= (weight/weight_total)*0.0;//erosion;
+                                            DEMN->data[r2][c2] += (weight/weight_total)*deposition;
+                                            DEMN->data[r2][c2] -= (weight/weight_total)*erosion;
                                         }
                                     }
                                 }
