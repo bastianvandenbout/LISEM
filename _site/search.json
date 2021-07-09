@@ -8,6 +8,41 @@
       "url": "/LISEM/docs/gettingstarted/"
     },
   
+    
+    
+    {
+      "title": "Mapviewer",
+      "url": "/LISEM/docs/mapviewer/"
+    },
+  
+    
+    
+    {
+      "title": "Data Manipulation",
+      "url": "/LISEM/docs/datamanipulation/"
+    },
+  
+    
+    
+    {
+      "title": "Scripting",
+      "url": "/LISEM/docs/usingscripting/"
+    },
+  
+    
+    
+    {
+      "title": "Using with Python",
+      "url": "/LISEM/docs/usingpython/"
+    },
+  
+    
+    
+    {
+      "title": "Using the model",
+      "url": "/LISEM/docs/usingmodel/"
+    },
+  
 
   
     
@@ -17,8 +52,71 @@
       "url": "/LISEM/docs/elevationdata/"
     },
   
+    
+    
+    {
+      "title": "Warping",
+      "url": "/LISEM/docs/warping/"
+    },
+  
+    
+    
+    {
+      "title": "Distances",
+      "url": "/LISEM/docs/distances/"
+    },
+  
+    
+    
+    {
+      "title": "Classification",
+      "url": "/LISEM/docs/classification/"
+    },
+  
+    
+    
+    {
+      "title": "Filters",
+      "url": "/LISEM/docs/filters/"
+    },
+  
+    
+    
+    {
+      "title": "Calibration",
+      "url": "/LISEM/docs/calibration/"
+    },
+  
+    
+    
+    {
+      "title": "Web Data",
+      "url": "/LISEM/docs/webdata/"
+    },
+  
+    
+    
+    {
+      "title": "Dynamic Models",
+      "url": "/LISEM/docs/dynamicmodels/"
+    },
+  
+
+  
+    
+    
+    {
+      "title": "Lisem Classic",
+      "url": "/LISEM/docs/lisemclassic/"
+    },
+  
 
 
+  
+  {
+  "title": "Alpha release of the new LISEM!",
+  "url": "/LISEM/blog/2020/07/09/Alpha-Release/"
+  },
   
   {
   "title": "The new LISEM website is under development!",

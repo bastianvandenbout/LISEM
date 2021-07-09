@@ -357,9 +357,8 @@ void QTInterfaceWindow::CreateParameterWidgets()
                 addviewButton->setMinimumSize(22,22);
                 addviewButton->setMaximumSize(22,22);
 
-                templayout->addWidget(addviewButton);
-
                 templayout->addWidget(addButton);
+
 
                 currentparent->addWidget(hw);
 

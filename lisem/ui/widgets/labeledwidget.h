@@ -20,12 +20,17 @@ class LISEM_API QWidgetHDuo : public QWidget
     public:
 
     QHBoxLayout * m_Layout;
-    inline QWidgetHDuo(QWidget * w1, QWidget * w2) : QWidget()
+    inline QWidgetHDuo(QWidget * w1, QWidget * w2, bool no_margin = false) : QWidget()
     {
 
         m_Layout = new QHBoxLayout();
         this->setLayout(m_Layout);
 
+        if(no_margin)
+        {
+            m_Layout->setMargin(0);
+            m_Layout->setSpacing(0);
+        }
         m_Layout->addWidget(w1);
         m_Layout->addWidget(w2);
     }

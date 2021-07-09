@@ -274,7 +274,15 @@ public:
     inline OGRSpatialReference ToGDALRef()
     {
         OGRSpatialReference oSRS;
-        oSRS.importFromWkt(this->GetWKT().toStdString().c_str());
+
+        if(!m_IsGeneric)
+        {
+            oSRS.importFromWkt(this->GetWKT().toStdString().c_str());
+        }else
+        {
+
+        }
+
         return oSRS;
     }
 

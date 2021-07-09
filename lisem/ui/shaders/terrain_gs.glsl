@@ -52,10 +52,14 @@ vec4 GetColor(vec4 wpos)
 }
 highp float GetElevation(highp vec4 wpos)
 {
-
-    highp vec2 texcoord = GetTexCoords(wpos);
-
-    return ZScale * texture(TextureD,texcoord).r;
+ highp vec2 texcoord = GetTexCoords(wpos);
+	float elev = ZScale * texture(TextureD,texcoord).r;
+	//if(elev > -1e20f && elev < 1e20f)
+	//{
+		return elev;
+	//}else{
+	//return 0.0f;
+	//}
 }
 
 out vec3 texcoords;
@@ -66,7 +70,48 @@ void main() {
     vec4 position0 = In[0].worldPosition;
     vec4 position1 = In[1].worldPosition;
     vec4 position2 = In[2].worldPosition;
+	position0.y = GetElevation(position0);
+	position1.y = GetElevation(position1);
+	position2.y = GetElevation(position2);
 
+	if(position0.y > -1e20f || position1.y >  -1e20f || position2.y >  -1e20f )
+    {
+		float elev = 0.0f;
+		float nelev = 0.0f;
+		if(position0.y > -1e20f)
+		{
+			elev += position0.y;
+			nelev += 1.0f;
+		}
+		if(position1.y > -1e20f)
+		{
+			elev += position1.y;
+			nelev += 1.0f;
+		}
+		if(position2.y > -1e20f)
+		{
+			elev += position2.y;
+			nelev += 1.0f;
+		}
+		
+		if(nelev > 0.5f)
+		{
+			if(position0.y < -1e20f)
+			{
+				position0.y = elev/nelev;
+			}
+			if(position1.y < -1e20f)
+			{
+				position1.y = elev/nelev;
+			}
+			if(position2.y < -1e20f)
+			{
+				position2.y = elev/nelev;
+			}
+		}
+		
+	}
+	
     if(position0.y > -1e20f && position1.y >  -1e20f && position2.y >  -1e20f )
     {
         Out.worldPosition = position0;

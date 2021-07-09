@@ -16,7 +16,7 @@ using namespace mlpack::regression;
 using namespace mlpack::util;
 
 
-static MathFunction MapLogisticRegression(std::vector<cTMap*> covariates, cTMap * data)
+inline static MathFunction MapLogisticRegression(std::vector<cTMap*> covariates, cTMap * data)
 {
 
     //get map list
@@ -183,7 +183,7 @@ static MathFunction MapLogisticRegression(std::vector<cTMap*> covariates, cTMap 
     return f;
 }
 
-arma::rowvec TrainLinear(const arma::mat& predictors,
+inline arma::rowvec TrainLinear(const arma::mat& predictors,
                                const arma::rowvec& responses,
                                const arma::rowvec& weights,
                                double lambda,

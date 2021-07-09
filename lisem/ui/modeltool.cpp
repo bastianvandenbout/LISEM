@@ -651,12 +651,25 @@ void ModelTool::CreateParameterWidgets()
                 QIcon icon;
                 icon.addFile((m_Dir + LISEM_FOLDER_ASSETS + "fileopen.png"), QSize(), QIcon::Normal, QIcon::Off);
 
+                QIcon icon2;
+                icon2.addFile((m_Dir + LISEM_FOLDER_ASSETS + "map.png"), QSize(), QIcon::Normal, QIcon::Off);
+
+                QToolButton *addviewButton = new QToolButton(this);
+                addviewButton->setIcon(icon2);
+                addviewButton->setIconSize(QSize(22,22));
+                addviewButton->resize(22,22);
+                addviewButton->setEnabled(true);
+
+                connect(addviewButton,SIGNAL(pressed()),m_SignalMapper_Map2,SLOT(map()));
+                m_SignalMapper_Map2->setMapping(addviewButton,pwindex);
+
+
                 QToolButton *addButton = new QToolButton(this);
                 addButton->setIcon(icon);
                 addButton->setIconSize(QSize(22,22));
                 addButton->resize(22,22);
                 addButton->setEnabled(true);
-
+                addButton->setToolTip("Load file for this map");
                 connect(addButton,SIGNAL(pressed()),m_SignalMapper_Map,SLOT(map()));
                 m_SignalMapper_Map->setMapping(addButton,pwindex);
 
@@ -664,7 +677,12 @@ void ModelTool::CreateParameterWidgets()
                 addButton->setStyleSheet(buttonStyle);
                 addButton->setMinimumSize(22,22);
                 addButton->setMaximumSize(22,22);
-                templayout->addWidget(addButton);
+                addviewButton->setStyleSheet(buttonStyle);
+                addviewButton->setMinimumSize(22,22);
+                addviewButton->setMaximumSize(22,22);
+                addviewButton->setToolTip("Open this file in map viewer");
+
+                templayout->addWidget(new QWidgetHDuo(addviewButton,addButton,true));
 
                 currentparent->addWidget(hw);
 
@@ -776,6 +794,68 @@ void ModelTool::CreateParameterWidgets()
         QVBoxLayout * l = TabWidgetLayouts.at(i);
         l->addStretch();
     }
+
+    this->UpdateParameters();
+
+    bool changed = false;
+
+    for(int i =0; i< m_ParameterWidgetList.length(); i++)
+    {
+        ParameterWidget pw = m_ParameterWidgetList.at(i);
+        bool active = m_ParameterManager->GetParameterShouldBeActive(pw.m_ParameterIndex);
+
+        if(pw.m_SpinBox != 0)
+        {
+            if(active != pw.m_SpinBox->isEnabled())
+            {
+                pw.m_SpinBox->setEnabled(active);
+            }
+        }else if(pw.m_LineEdit != 0)
+        {
+            if(active != pw.m_LineEdit->isEnabled())
+            {
+                pw.m_LineEdit->setEnabled(active);
+            }
+        }else if(pw.m_CheckBox != 0)
+        {
+            if(active != pw.m_CheckBox->isEnabled())
+            {
+                pw.m_CheckBox->setEnabled(active);
+                if(pw.m_CheckBox->isChecked())
+                {
+
+                    pw.m_CheckBox->setChecked(false);
+                     changed = true;
+                }
+            }
+        }else if(pw.m_RadioButtons.length() > 0)
+        {
+            for(int k = 0; k < pw.m_RadioButtons.length(); k++)
+            {
+                if(active != pw.m_RadioButtons.at(k)->isEnabled())
+                {
+                    pw.m_RadioButtons.at(k)->setEnabled(active);
+                     changed = true;
+                }
+            }
+
+        }
+
+        if(pw.m_DSpinBox != 0)
+        {
+            if(active != pw.m_DSpinBox->isEnabled())
+            {
+                pw.m_DSpinBox->setEnabled(active);
+            }
+        }
+
+        changed = changed && m_ParameterManager->DoParameterActivity(pw.m_ParameterIndex);
+    }
+
+    if(changed)
+    {
+        this->UpdateInterface();
+    }
 }
 
 void ModelTool::UpdateParameters()
@@ -867,8 +947,24 @@ void ModelTool::SignalFunction_Bool(int index)
 void ModelTool::SignalFunction_Map2(int index)
 {
 
+    ParameterWidget pw = m_ParameterWidgetList.at(index);
+    SPHParameter p = m_ParameterManager->m_Parameters.at(pw.m_ParameterIndex);
 
+    QString dir = m_ParameterManager->GetParameterValueString("Map Directory");
 
+    for(int i= 0; i < m_ParameterManager->m_Parameters.length(); i++)
+    {
+        if(m_ParameterManager->m_Parameters.at(i).m_Name == "Map Directory")
+        {
+            SPHParameter p = (m_ParameterManager->m_Parameters.at(i));
+            dir = p.m_Value;
+        }
+    }
+
+    QString file = dir + p.m_Value;
+
+    m_MapViewTool->AddLayerFromFile(file);
+    std::cout << "open file "<< file.toStdString() << std::endl;
 }
 
 void ModelTool::SignalFunction_Map(int index)
@@ -885,7 +981,7 @@ void ModelTool::SignalFunction_Map(int index)
         if(m_ParameterManager->m_Parameters.at(i).m_Name == "Map Directory")
         {
             SPHParameter p = (m_ParameterManager->m_Parameters.at(i));
-            std::cout << "found " << p.m_Value.toStdString() << std::endl;
+            dir = p.m_Value;
         }
     }
     std::cout << "current map dir "<< dir.toStdString() << " | " << p.m_Value.toStdString() <<  std::endl;

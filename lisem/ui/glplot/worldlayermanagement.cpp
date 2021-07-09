@@ -368,6 +368,7 @@ UILayer * WorldWindow::GetUIObjectLayerFromFile(QString path)
        return nullptr;
     }
 
+    _M->GetAndCalcBoundingBox();
     UI3DObjectLayer *HS = new UI3DObjectLayer(_M,filename,true,path);
     HS->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_POINTCLOUDUI),true);
 
@@ -712,6 +713,7 @@ void WorldWindow::LookAt(BoundingBox b, bool auto_3d )
         m_Camera3D->PlaceAndLookAtAuto(m_Camera2D->GetBoundingBox());
     }
 
+    std::cout << b.GetMinX() << " "<< b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
     //get screen dim (min 1)
     float scw = std::max(1.0f,((float)(m_OpenGLCLManager->GL_GLOBAL.Width)));
     float sch = std::max(1.0f,(float)( m_OpenGLCLManager->GL_GLOBAL.Height));

@@ -32,7 +32,7 @@ using GDALDatasetPtr = std::unique_ptr<GDALDataset, decltype(
 inline static void GDALERROR(CPLErr er, CPLErrorNum ernum, const char* message)
 {
 
-    std::cout << "error from gdal " << message << std::endl;
+    std::cout << "error from gdal (" << ernum << ") " << message << std::endl;
 
 }
 
@@ -357,6 +357,29 @@ inline QList<cTMap*> readRasterList(
 
     QList<cTMap*> ret;
 
+    bool is_ldd = false;
+
+    {
+        char ** argv = dataset->GetMetadata();
+        if(argv != nullptr)
+        {
+            while ( *argv )
+            {
+                QString arg = QString(*argv);
+
+
+                std::cout << arg.toStdString() << std::endl;
+                if((arg).startsWith(QString("PCRASTER_VALUESCALE=VS_LDD")))
+                {
+                    is_ldd = true;
+                }
+                argv++;
+            }
+        }
+
+    }
+
+    std::cout << "is_ldd " << is_ldd << std::endl;
     for(int i = 0; i < nr_bands; i++)
     {
         // Read the first raster band.
@@ -374,6 +397,9 @@ inline QList<cTMap*> readRasterList(
             while ( *argv )
             {
                 QString arg = QString(*argv);
+
+                std::cout << arg.toStdString() << std::endl;
+
                 if((arg).startsWith(QString("scale_factor")))
                 {
                     QStringList split = arg.split("=");
@@ -400,7 +426,12 @@ inline QList<cTMap*> readRasterList(
                             offset = val;
                         }
                     }
+                }else if((arg).startsWith(QString("PCRASTER_VALUESCALE=VS_LDD")))
+                {
+                    is_ldd = true;
                 }
+
+
                 argv++;
             }
         }
@@ -436,7 +467,8 @@ inline QList<cTMap*> readRasterList(
             raster_data.offsetscale(scale,offset);
         }
 
-        ret.append(new cTMap(std::move(raster_data), projection, pathName,ldd));
+        cTMap * add = new cTMap(std::move(raster_data), projection, pathName,is_ldd);
+        ret.append(add);
     }
     return ret;
 }
@@ -466,6 +498,27 @@ inline cTMap readRaster(
     if(!dataset) {
         LISEM_ERROR(QString("Map %1 cannot be opened.").arg(pathName));
         throw 1;
+    }
+
+    bool is_ldd;
+
+    {
+        char ** argv = dataset->GetMetadata();
+        if(argv != nullptr)
+        {
+            while ( *argv )
+            {
+                QString arg = QString(*argv);
+
+
+                if((arg).startsWith(QString("PCRASTER_VALUESCALE=VS_LDD")))
+                {
+                    is_ldd = true;
+                }
+                argv++;
+            }
+        }
+
     }
 
     int nr_bands = dataset->GetRasterCount();
@@ -563,7 +616,7 @@ inline cTMap readRaster(
 
     //LISEM_DEBUG("Map found, create map from data.");
 
-    return cTMap(std::move(raster_data), projection, pathName,ldd);
+    return cTMap(std::move(raster_data), projection, pathName,is_ldd);
 
 }
 
@@ -1333,19 +1386,34 @@ inline void writeGDALRaster(
     }
 
     CPLStringList sl;
-    sl.AddNameValue("PCRASTER_VALUESCALE","VS_SCALAR");
-
+    if(raster.AS_IsLDD)
+    {
+        sl.AddNameValue("PCRASTER_VALUESCALE","VS_LDD");
+    }else
+    {
+        sl.AddNameValue("PCRASTER_VALUESCALE","VS_SCALAR");
+    }
 
 
     std::cout << "write raster " << bandn << " " << pathName.toStdString() << std::endl;
     if(bandn == -1)
     {
+        std::cout << "write single-band "<< std::endl;
         // Create new dataset.
         int const nrRows{raster.nrRows()};
         int const nrCols{raster.nrCols()};
         int const nrBands{1};
-        GDALDataset * d = driver.Create(pathName.toLatin1().constData(),
+        GDALDataset * d;
+        if(raster.AS_IsLDD)
+        {
+            d = driver.Create(pathName.toLatin1().constData(),
+                      nrCols, nrRows, nrBands, GDT_Byte, sl.List());
+        }else
+        {
+            d = driver.Create(pathName.toLatin1().constData(),
                       nrCols, nrRows, nrBands, GDT_Float32, sl.List());
+
+        }
         //GDALDatasetPtr dataset{driver.Create(pathName.toLatin1().constData(),
         //    nrCols, nrRows, nrBands, GDT_Float32, nullptr), close_gdal_dataset};
 
@@ -1398,14 +1466,32 @@ inline void writeGDALRaster(
 
         band->SetNoDataValue(-FLT_MAX);
 
+        if(raster.AS_IsLDD)
+        {
+            MaskedRaster<int32_t> data = MaskedRaster<int32_t>(raster_data.nr_rows(),raster_data.nr_cols(),0.0,0.0,1.0,1.0);
+            for(int r = 0; r < data.nr_rows(); r ++)
+            {
+                for(int c = 0; c < data.nr_cols(); c ++)
+                {
 
-        if(band->RasterIO(GF_Write, 0, 0, nrCols, nrRows,
-                const_cast<float*>(&raster_data.cell(0)),
-                nrCols, nrRows, GDT_Float32, 0, 0) != CE_None) {
-            LISEM_ERROR(QString("Raster band %1 cannot be written.").arg(pathName));
-            throw 1;
+                    data[r][c] = (int32_t) raster_data[r][c];
+                }
+            }
+            if(band->RasterIO(GF_Write, 0, 0, nrCols, nrRows,
+                    const_cast<int32_t*>(&data.cell(0)),
+                    nrCols, nrRows, GDT_Int32, 0, 0) != CE_None) {
+                LISEM_ERROR(QString("Raster band %1 cannot be written.").arg(pathName));
+                throw 1;
+            }
+        }else
+        {
+            if(band->RasterIO(GF_Write, 0, 0, nrCols, nrRows,
+                    const_cast<float*>(&raster_data.cell(0)),
+                    nrCols, nrRows, GDT_Float32, 0, 0) != CE_None) {
+                LISEM_ERROR(QString("Raster band %1 cannot be written.").arg(pathName));
+                throw 1;
+            }
         }
-
 
         GDALClose( (GDALDataset*) d );
 
@@ -1538,9 +1624,17 @@ inline void writeGDALRaster(
 inline void writeRaster(
     cTMap const& raster,
     QString const& pathName,
-    QString const& format = "PCRaster",
+    QString format = "PCRaster",
     int bandn = -1)
 {
+
+    {
+        if(raster.AS_IsLDD)
+        {
+            format = "GTIFF";
+        }
+    }
+
     if(raster.nrRows() == 0 || raster.nrCols() == 0) {
         return;
     }
@@ -1606,8 +1700,15 @@ inline bool CheckAllRastersInListSameSize(QList<cTMap*> const& rasters)
 inline void writeRaster(
     QList<cTMap*> const& raster,
     QString const& pathName,
-    QString const& format = "PCRaster")
+    QString format = "PCRaster")
 {
+    if(raster.length() == 1)
+    {
+        if(raster.at(0)->AS_IsLDD)
+        {
+            format = "GTIFF";
+        }
+    }
     if(!CheckAllRastersInListSameSize(raster)) {
         return;
     }

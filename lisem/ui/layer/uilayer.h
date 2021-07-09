@@ -9,6 +9,7 @@
 #include "layer/uilayereditor.h"
 #include "layerparameters.h"
 #include "geo/shapes/shapefile.h"
+#include "boundingbox.h"
 
 class UILayerEditor;
 //class LayerParameters;
@@ -60,7 +61,7 @@ typedef struct LayerProbeResult
 
 
 
-class UILayer
+class UILayer : public UIDistanceEstimator
 {
     //private members
 protected:

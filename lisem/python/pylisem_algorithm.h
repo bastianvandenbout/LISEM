@@ -52,6 +52,7 @@
 #include "raster/rasterclassified.h"
 #include "raster/rastersoil.h"
 #include "raster/rasterseismic.h"
+#include "extensions/scriptoptimization.h"
 
 namespace py = pybind11;
 
@@ -375,21 +376,40 @@ inline void init_pylisem_algorithm(py::module &m)
     m.def("FlowTsunami",&AS_TsunamiFlow,py::arg("Elevation"),py::arg("Height"),py::arg("VX"), py::arg("VY"),py::arg("Manning"),py::arg("Timestep") = 0.1);
     m.def("FlowNavierStokes",&AS_NavierStokesWave,py::arg("Density"),py::arg("VX"),py::arg("VY"),py::arg("visc"),py::arg("diff"),py::arg("Timestep")=0.1,py::arg("Courant")=0.25);
     m.def("FlowKinematic",&AS_FlowKinematic,py::arg("LDD"),py::arg("Slope"),py::arg("Width"),py::arg("Manning"),py::arg("Height"),py::arg("Timestep"));
-    //m.def("")
+
+    m.def("OptimizeCustom",py::overload_cast<std::vector<double>,std::function<double(std::vector<double>)>,double,double,int>(&OptimizeCustom2),py::arg("Initial"),py::arg("Function"),py::arg("step"),py::arg("gradientstep"),py::arg("maxiterations"));
+    m.def("OptimizeCustom",py::overload_cast<std::vector<double>,std::vector<bool>,std::function<double(std::vector<double>)>,double,double,int>(&OptimizeCustom2),py::arg("Initial"),py::arg("positive"),py::arg("Function"),py::arg("step"),py::arg("gradientstep"),py::arg("maxiterations"));
+
+    m.def("SteadyStateSoil",&AS_SteadyStateSoil,py::arg("DEM"),py::arg("Source"),py::arg("QS"), py::arg("iter"));
+    m.def("Accuflux2D",&AS_AccuFluxDiffusive,py::arg("DEM"),py::arg("Source"),py::arg("FlowSource"),py::arg("Iterations"),py::arg("Courant"),py::arg("Scale"));
+
+
+    /*sm->RegisterGlobalFunction("Table @IDFCurves(array<double> & in precipitation, double timestep, bool is_intensities, int n_durations, array<double> & in return_periods)",asFUNCTIONPR(CreateIDF,(CScriptArray*, double , bool, int, CScriptArray* ),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );
+    sm->RegisterGlobalFunction("Table @ABHyetograph(Table & in idf)",asFUNCTIONPR(CreateAlternatingBlockHyetograph,(MatrixTable*),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );
+
+    sm->RegisterGlobalFunction("array<double> @FitGumbel(array<double> & in x, array<double> & in y, double guess_c1 , double guess_c2)",asFUNCTIONPR(OptimizeGumbel,(CScriptArray*,CScriptArray*,double,double),CScriptArray*),asCALL_CDECL);
+
+    sm->RegisterGlobalFunction("array<double> @FitGumbel(array<double> & in x, array<double> & in y)",asFUNCTIONPR(OptimizeGumbel,(CScriptArray*,CScriptArray*),CScriptArray*),asCALL_CDECL);
+
+
+
+    r = engine->RegisterGlobalFunction("Map @FlowTransient(const Map &in DEM, const Map &in HSoil, const Map &in KSAT, const Map &in Porosity, const Map &in gwh, float dt, bool inflowlimit = true)", asFUNCTIONPR(    AS_TransientFlow,(cTMap *,cTMap *,cTMap*,cTMap *, cTMap*,float,bool),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
+    r = engine->RegisterGlobalFunction("array<Map> @FlowIncompressible(const Map &in M, const Map &in U, const Map &in U, const Map &in P, const Map &in LS, const Map &in Block,const Map &in BlockU,const Map &in BlockV, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", asFUNCTIONPR(    AS_IncompressibleWave,(cTMap *,cTMap *,cTMap*,cTMap *,cTMap *,cTMap *, cTMap *,cTMap *,float,float, float,float),std::vector<cTMap*>),  asCALL_CDECL); assert( r >= 0 );;
+    r = engine->RegisterGlobalFunction("Map @MVMap(const Map &in M)", asFUNCTIONPR(    AS_MVMap,(cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Table @VectorRasterSample(const Map &in raster, Shapes &in shapes)", asFUNCTIONPR( AS_VectorRasterSample,(cTMap *,ShapeFile *),MatrixTable*),  asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Shapes @DrainageNetworkToShapes(const Map &in ldd)", asFUNCTIONPR( AS_DrainageNetworkToShapes,(cTMap *),ShapeFile*),  asCALL_CDECL);
+    */
+
+
+
+
 
     /*
              *
-    r = engine->RegisterGlobalFunction("Table @VectorRasterSample(const Map &in raster, Shapes &in shapes)", asFUNCTIONPR( AS_VectorRasterSample,(cTMap *,ShapeFile *),MatrixTable*),  asCALL_CDECL);
-    r = engine->RegisterGlobalFunction("Shapes @DrainageNetworkToShapes(const Map &in ldd)", asFUNCTIONPR( AS_DrainageNetworkToShapes,(cTMap *),ShapeFile*),  asCALL_CDECL);
 
    r = engine->RegisterGlobalFunction("array<Map> @VoxelMaskDem(array<Map> &in state, float zmin, float zmax, const Map &in elevation)", asFUNCTIONPR(    AS_VoxelMaskDem,(std::vector<cTMap*>,float,float,cTMap*),std::vector<cTMap*>),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalFunction("array<Map> @FlowNavierStokes3D(array<Map> &in state, float zmin, float zmax, float visc, float diff, float timestep = 0.1, float courant = 0.25)", asFUNCTIONPR(    AS_NavierStokesWave3D,(std::vector<cTMap*>,float,float,float,float,float,float),std::vector<cTMap*>),  asCALL_CDECL); assert( r >= 0 );;
 
-    r = engine->RegisterGlobalFunction("array<Map> @Accuflux2D(const Map &in DEM, const Map &in Source, const Map &in FlowSource, int iter = 100, float courant = 0.2,float scale =1.0 )", asFUNCTIONPR(    AS_AccuFluxDiffusive,(cTMap *,cTMap *,cTMap*,int,float, float),std::vector<cTMap*>),  asCALL_CDECL); assert( r >= 0 );;
-    r = engine->RegisterGlobalFunction("Map @SteadyStateSoil(const Map &in DEM, const Map &in Source, const Map &in QS, int iter = 100)", asFUNCTIONPR(    AS_SteadyStateSoil,(cTMap *,cTMap *,cTMap*,int),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
-    r = engine->RegisterGlobalFunction("Map @FlowTransient(const Map &in DEM, const Map &in HSoil, const Map &in KSAT, const Map &in Porosity, const Map &in gwh, float dt, bool inflowlimit = true)", asFUNCTIONPR(    AS_TransientFlow,(cTMap *,cTMap *,cTMap*,cTMap *, cTMap*,float,bool),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
-    r = engine->RegisterGlobalFunction("array<Map> @FlowIncompressible(const Map &in M, const Map &in U, const Map &in U, const Map &in P, const Map &in LS, const Map &in Block,const Map &in BlockU,const Map &in BlockV, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", asFUNCTIONPR(    AS_IncompressibleWave,(cTMap *,cTMap *,cTMap*,cTMap *,cTMap *,cTMap *, cTMap *,cTMap *,float,float, float,float),std::vector<cTMap*>),  asCALL_CDECL); assert( r >= 0 );;
-    r = engine->RegisterGlobalFunction("Map @MVMap(const Map &in M)", asFUNCTIONPR(    AS_MVMap,(cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
     r = engine->RegisterGlobalFunction("array<Map> @FlowIncompressible3D(array<Map> &in state, array<Map> &in Block,array<Map> &in BlockU,array<Map> &in BlockV,array<Map> &in BlockW, float csz, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", asFUNCTIONPR(    AS_IncompressibleFlow3D,(std::vector<cTMap*>,std::vector<cTMap*>,std::vector<cTMap*>,std::vector<cTMap*>,std::vector<cTMap*>,float,float,float, float,float),std::vector<cTMap*>),  asCALL_CDECL); assert( r >= 0 );;
 
@@ -450,17 +470,6 @@ inline void init_pylisem_algorithm(py::module &m)
     engine->RegisterGlobalFunction("array<Map> @SlopeStabilityRES(const Map & in elevation, const array<Map> &in SoilDepth, const array<Map> &in Cohesion, const array<Map> &in InternalFrictionAngle, const array<Map> &in Density, const array<Map> &in Saturation, const Map&in WaterHeight, float sample_density, float h_min, float h_max, float size_min, float size_max, float size_lat_min, float size_lat_max, float size_vert_min, float size_vert_max, float rot_min, float rot_max, float rot_lat_min, float rot_lat_max, float vol_min)",asFUNCTION( AS_SlopeStabilityRES),  asCALL_CDECL);
 
     engine->RegisterGlobalFunction("Map @TerrainErode(const Map &in DEM, float p_erode, float p_deposit, float p_gravity, float p_tc, float p_evapo, float p_intertia, float p_minslope, float radius)", asFUNCTION(AS_LandscapeErode),asCALL_CDECL);
-
-
-    int r = sm->RegisterGlobalFunction("Table @IDFCurves(array<double> & in precipitation, double timestep, bool is_intensities, int n_durations, array<double> & in return_periods)",asFUNCTIONPR(CreateIDF,(CScriptArray*, double , bool, int, CScriptArray* ),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );
-    sm->RegisterGlobalFunction("Table @ABHyetograph(Table & in idf)",asFUNCTIONPR(CreateAlternatingBlockHyetograph,(MatrixTable*),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );
-
-    sm->RegisterGlobalFunction("array<double> @FitGumbel(array<double> & in x, array<double> & in y, double guess_c1 , double guess_c2)",asFUNCTIONPR(OptimizeGumbel,(CScriptArray*,CScriptArray*,double,double),CScriptArray*),asCALL_CDECL);
-
-    sm->RegisterGlobalFunction("array<double> @FitGumbel(array<double> & in x, array<double> & in y)",asFUNCTIONPR(OptimizeGumbel,(CScriptArray*,CScriptArray*),CScriptArray*),asCALL_CDECL);
-
-    sm->RegisterGlobalFunction("array<double> @OptimizeCustom(array<double> & in params,CALLBACKDFDL @callbfunc, double finitestep = 0.001, double max_step = 1.0)",asFUNCTIONPR(OptimizeCustom,(CScriptArray*, asIScriptFunction *,double,double),CScriptArray*),asCALL_CDECL);
-    sm->RegisterGlobalFunction("array<double> @OptimizeCustom(array<double> & in params,array<bool> & in positive , CALLBACKDFDL @callbfunc, double finitestep = 0.001, double max_step = 1.0)",asFUNCTIONPR(OptimizeCustom,(CScriptArray*,CScriptArray*, asIScriptFunction *, double,double),CScriptArray*),asCALL_CDECL);
 
 
 

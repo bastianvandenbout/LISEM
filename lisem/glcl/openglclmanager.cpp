@@ -130,8 +130,6 @@ void OpenGLCLManager::InitGLCL_int()
     if(!suc) {
         LISEM_ERROR("gladLoadGL failed!");
         LISEM_ERROR("Error Code " + QString::number(suc));
-
-        std::cout << 4 << std::endl;
         return;
     }
 
@@ -171,33 +169,24 @@ void OpenGLCLManager::InitGLCL_int()
 
     //init basic shader programs
 
-    std::cout << shader_texcopy_vert << std::endl;
-    std::cout << shader_texcopy_frag << std::endl;
-    std::cout << "pre" << std::endl;
     m_GLProgram_CopyText = new OpenGLProgram();
     m_GLProgram_CopyText->LoadProgramFromStrings(shader_texcopy_vert,shader_texcopy_frag);
-    std::cout << "post " << std::endl;
+
     m_Quad = new OpenGLGeometry();
     m_Quad->CreateUnitQuad();
 
-    std::cout << "post2 " << std::endl;
     m_GeometryPlane = new GL3DGeometry();
     m_GeometryPlane->CreateFromRegularUnitGrid(25);
 
-    std::cout << "post3 " << std::endl;
     m_TextPainter = new OpenGLTextPainter();
     m_TextPainter->LoadDefaultFontsAndShaders();
-
-    std::cout << "post4 " << std::endl;
 
     m_ShapePainter = new OpenGLShapePainter();
     m_ShapePainter->LoadShaders();
 
-    std::cout << "post5 " << std::endl;
     m_TexturePainter = new OpenGLTexturePainter();
     m_TexturePainter->LoadShaders();
 
-    std::cout << "post6 " << std::endl;
     /*m_GLProgram_uimap = GetMGLProgram(m_KernelDir+ "UIMapDraw.vert", m_KernelDir+ "UIMapDraw.frag");
     m_GLProgram_uiobject = GetMGLProgram(m_KernelDir+ "UIObjectDraw.vert", m_KernelDir+ "UIObjectDraw.frag");
     m_GLProgram_uiobjectinstanced = GetMGLProgram(m_KernelDir+ "UIObjectDrawInstanced.vert", m_KernelDir+ "UIObjectDrawInstanced.frag");
@@ -383,18 +372,14 @@ void OpenGLCLManager::LoadPreferredCLContext()
 
                                 try
                                 {
-                                            std::cout << 6 << std::endl;
-                                    cl::Context context_tmp = cl::Context(devices[d], cps);
-                                    std::cout << 7 << std::endl;
+                                   cl::Context context_tmp = cl::Context(devices[d], cps);
 
                                 } catch(cl::Error error)
                                 {
-                                            std::cout << 8 << std::endl;
                                     can_create_nogl = false;
                                 } catch(...)
                                 {
-                                            std::cout << 9 << std::endl;
-                                    can_create_nogl = false;
+                                   can_create_nogl = false;
                                 }
                                 if(can_create_nogl)
                                 {
@@ -563,8 +548,6 @@ void OpenGLCLManager::GLCLLoop()
 
 
         CreateMSAABuffer();
-        std::cout << m_MSAATarget->GetFrameBuffer() << std::endl;
-
 
         glad_glBindFramebuffer(GL_FRAMEBUFFER, m_MSAATarget->GetFrameBuffer());
 

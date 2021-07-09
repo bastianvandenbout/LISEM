@@ -5,7 +5,7 @@ permalink: /docs/about/
 
 The LISEM model is an open-source geospatial modelling tool focused on simulation of physical processes on and in the Earth's surface.
 
-###History
+### History
 The first publication of the LISEM model was done by De Roo et al. (1994), and the further development was described by De Roo, Offermans & Ritsema (1996) and De Roo, Wesseling & Ritsema (1996). 
 These early versions made use of Local Drainage Direction (LDD) functionality to simulate a kinematic wave for overland flow. 
 Linked with this flow simulation were erosive and depositional processes, together with expanding descriptings of catchment-scale hydrology.
@@ -17,14 +17,18 @@ Starting in 2014, a focus on natural hazard was brought to the model, starting w
 The move towards two-phase equations was made in 2017, and integrated slope stability was added.
 Finally, the development of the integrated spatial modelling tool LISEM, as it is now available here, was initiated in 2020.
 
-###Authors
+### Authors
 The main authors of the LISEM model are:
 
+
 Victor Jetten - v.g.jetten@utwente.nl
+
 Bastian van den Bout - b.vandenbout@utwente.nl
+
 
 For specific questions related to the classic version, please contact V. Jetten.
 For specific questions related to the new version, please contact B. van den Bout.
+
 
 If you plan to use this work in scientific research, a citation to a recent article on the development of LISEM would be appreciated.
 

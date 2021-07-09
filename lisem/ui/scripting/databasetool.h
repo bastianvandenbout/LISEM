@@ -229,7 +229,7 @@ public:
 
             }else {
 
-                if( (event->key() == Qt::Key_Enter) || (event->key() == Qt::Key_Return))
+                if( (!m_Completer->popup()->isVisible()) && ((event->key() == Qt::Key_Enter) || (event->key() == Qt::Key_Return)))
                 {
                     OnConsoleEnterPressed();
                 }else

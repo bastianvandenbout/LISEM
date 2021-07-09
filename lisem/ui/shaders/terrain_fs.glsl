@@ -71,6 +71,10 @@ void main() {
 
     float elevation = GetElevation(VIN.worldPosition);
 
+	if(elevation < -1e20)
+	{
+		discard;
+	}
     float grayscale = elevation/1000.0;
     //frag_colour = vec4(grayscale,grayscale,grayscale,1.0);
     vec3 color = texture(TextureC,texcoord).rgb;

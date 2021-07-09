@@ -1,7 +1,23 @@
 - title: Getting Started
   docs:
   - gettingstarted
+  - mapviewer
+  - datamanipulation
+  - usingscripting
+  - usingpython
+  - usingmodel
 
 - title: Examples
   docs:
   - elevationdata
+  - warping
+  - distances
+  - classification
+  - filters
+  - calibration
+  - webdata
+  - dynamicmodels
+  
+- title: Lisem Classic
+  docs:
+  - lisemclassic

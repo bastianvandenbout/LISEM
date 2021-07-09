@@ -786,7 +786,10 @@ inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * core
 
     }
 
-
+    if(demn != nullptr)
+    {
+        demn->AS_IsLDD = false;
+    }
 
     map->AS_IsLDD = true;
     return map;

@@ -122,6 +122,8 @@ public:
             }
 
         }
+        m_BoundingBox = bf;
+        std::cout << "get bounding box "<< bf.GetMinX() << " " << bf.GetMaxX() << " " << bf.GetMinZ() << "  " << bf.GetMaxZ() <<  std::endl;
         return m_BoundingBox;
     }
 

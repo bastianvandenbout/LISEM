@@ -318,7 +318,7 @@ struct FunctionalFunctionError
 
 
 //this is much slower as it has to call a function within the scripting environment many times
-inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,CScriptArray * data_positive, asIScriptFunction *cb, double step, double max_step)
+inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,CScriptArray * data_positive, asIScriptFunction *cb, double step, double max_step, int max_nsteps = 200)
 {
 
 
@@ -381,7 +381,7 @@ inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,CScri
 
     // Set number of iterations as stop criterion.
     // Set it to 0 or negative for infinite iterations (default is 0).
-    optimizer.setMaxIterations(200);
+    optimizer.setMaxIterations(std::max(1,max_nsteps));
 
     // Set the minimum length of the gradient.
     // The optimizer stops minimizing if the gradient length falls below this
@@ -455,14 +455,14 @@ inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,CScri
 }
 
 
-inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,asIScriptFunction *cb, double step, double max_step)
+inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,asIScriptFunction *cb, double step, double max_step, int max_nsteps = 200)
 {
-    return OptimizeCustom(data_parameters,nullptr,cb,step, max_step);
+    return OptimizeCustom(data_parameters,nullptr,cb,step, max_step, max_nsteps);
 
 }
 
 
-inline static std::vector<double> OptimizeCustom2(std::vector<double> data_parameters, std::vector<bool> positive,std::function<double(std::vector<double>)> func, double step, double max_step)
+inline static std::vector<double> OptimizeCustom2(std::vector<double> data_parameters, std::vector<bool> positive,std::function<double(std::vector<double>)> func, double step, double max_step, int max_nsteps = 200)
 {
 
 
@@ -524,7 +524,7 @@ inline static std::vector<double> OptimizeCustom2(std::vector<double> data_param
 
     // Set number of iterations as stop criterion.
     // Set it to 0 or negative for infinite iterations (default is 0).
-    optimizer.setMaxIterations(200);
+    optimizer.setMaxIterations(std::max(1,max_nsteps));
 
     // Set the minimum length of the gradient.
     // The optimizer stops minimizing if the gradient length falls below this
@@ -587,10 +587,10 @@ inline static std::vector<double> OptimizeCustom2(std::vector<double> data_param
 
 }
 
-inline static std::vector<double> OptimizeCustom2(std::vector<double> data_parameters, std::function<double(std::vector<double>)> func, double step, double max_step)
+inline static std::vector<double> OptimizeCustom2(std::vector<double> data_parameters, std::function<double(std::vector<double>)> func, double step, double max_step, int max_nsteps = 200)
 {
 
-    return OptimizeCustom2(data_parameters,std::vector<bool>(),func,step,max_step);
+    return OptimizeCustom2(data_parameters,std::vector<bool>(),func,step,max_step, max_nsteps);
 }
 
 inline static void RegisterLeastSquaresToScriptEngine(LSMScriptEngine * sm)
@@ -600,8 +600,8 @@ inline static void RegisterLeastSquaresToScriptEngine(LSMScriptEngine * sm)
 
     sm->RegisterGlobalFunction("array<double> @FitGumbel(array<double> & in x, array<double> & in y)",asFUNCTIONPR(OptimizeGumbel,(CScriptArray*,CScriptArray*),CScriptArray*),asCALL_CDECL);
 
-    sm->RegisterGlobalFunction("array<double> @OptimizeCustom(array<double> & in params,CALLBACKDFDL @callbfunc, double finitestep = 0.001, double max_step = 1.0)",asFUNCTIONPR(OptimizeCustom,(CScriptArray*, asIScriptFunction *,double,double),CScriptArray*),asCALL_CDECL);
-    sm->RegisterGlobalFunction("array<double> @OptimizeCustom(array<double> & in params,array<bool> & in positive , CALLBACKDFDL @callbfunc, double finitestep = 0.001, double max_step = 1.0)",asFUNCTIONPR(OptimizeCustom,(CScriptArray*,CScriptArray*, asIScriptFunction *, double,double),CScriptArray*),asCALL_CDECL);
+    sm->RegisterGlobalFunction("array<double> @OptimizeCustom(array<double> & in params,CALLBACKDFDL @callbfunc, double finitestep = 0.001, double max_step = 1.0, int maxnumsteps = 200)",asFUNCTIONPR(OptimizeCustom,(CScriptArray*, asIScriptFunction *,double,double,int),CScriptArray*),asCALL_CDECL);
+    sm->RegisterGlobalFunction("array<double> @OptimizeCustom(array<double> & in params,array<bool> & in positive , CALLBACKDFDL @callbfunc, double finitestep = 0.001, double max_step = 1.0, int maxnumsteps = 200)",asFUNCTIONPR(OptimizeCustom,(CScriptArray*,CScriptArray*, asIScriptFunction *, double,double,int),CScriptArray*),asCALL_CDECL);
 
 
 }

@@ -380,7 +380,7 @@ struct ModelTexture
     bool m_IsCLOnly = false;
     OpenGLCLTexture * m_TextureGPU;
     OpenCLTexture * m_TextureGPUCL;
-    MaskedRaster<float> * m_TextureCPU;
+    MaskedRaster<float> * m_TextureCPU = nullptr;
 
 };
 

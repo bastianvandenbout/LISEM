@@ -285,6 +285,8 @@ void LISEMModel::DestroyMaps()
         SAFE_DELETENS(m_MapList.at(i));
     }
     m_MapList.clear();
+
+
 }
 
 

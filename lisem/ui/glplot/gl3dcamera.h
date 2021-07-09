@@ -154,13 +154,13 @@ public:
         float cx = GetPosition().x;
         float cy = GetPosition().z;
 
-        float elevation = p->GetElevationAtCenter(cx,cy);
+        float elevation = p->GetElevationAtCenter(cx,cy) * p->GetZMult();
         if(elevation < -1e25 || !std::isfinite(elevation))
         {
             elevation  = 0.0;
         }
-        float sizex = std::max(elevation + 0.01f,(float)GetPosition().y)- elevation;
-        float sizey = std::max(elevation + 0.01f,(float)GetPosition().y) -elevation;
+        float sizex = std::fabs((float)GetPosition().y - elevation);
+        float sizey = std::fabs((float)GetPosition().y - elevation);
 
         BoundingBox a;
         a.Set(cx - 0.5 * sizex,cx + 0.5 * sizex,cy - 0.5 * sizey, cy + 0.5 * sizey);

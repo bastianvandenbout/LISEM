@@ -1124,6 +1124,8 @@ void LISEMModel::SetUIMaps()
         m_UIMapNums.append(18);
         m_UIMapNames.append("Density");
         m_UIMapNums.append(19);
+        m_UIMapNames.append("DragC.");
+        m_UIMapNums.append(40);
     }
 
     if(m_DoParticleSolids)

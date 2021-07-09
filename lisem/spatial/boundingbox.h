@@ -13,12 +13,26 @@
 
 class UIDistanceEstimator
 {
-
-    inline LSMVector3 GetDistance(LSMVector3 p)
+public:
+    virtual double GetNormalizedSmoothVertWeight(LSMVector3 p)
     {
 
-        return LSMVector3();
+        return 0.0;
     }
+
+
+    virtual double GetNormalizedSmoothSize(LSMVector3 p)
+    {
+
+        return 1e31;
+    }
+
+    virtual double GetNormalizedSmoothDistance(LSMVector3 p)
+    {
+
+        return 1e31;
+    }
+
 };
 
 

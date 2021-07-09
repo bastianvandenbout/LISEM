@@ -42,7 +42,6 @@ inline ShapeFile* RasterContour(cTMap * m,float interval,float start = 0.0, QStr
         return new ShapeFile();
     }
 
-
     poDriver = GetGDALDriverManager()->GetDriverByName(
         "MEM");
     if( poDriver == NULL )
@@ -58,10 +57,19 @@ inline ShapeFile* RasterContour(cTMap * m,float interval,float start = 0.0, QStr
                   nrCols, nrRows, nrBands, GDT_Float32, nullptr);
 
     ToGDALDataset(d,m);
-
+    std::cout << "rcontour 0 " << std::endl;
     OGRSpatialReference * ref = new OGRSpatialReference(m->GetProjection().ToGDALRef());
-    OGRLayer * l = poDS->CreateLayer("Vectorize",ref,wkbLineString,nullptr);
+    std::cout << "rcontour 1 " << ref << " " <<  poDS <<  std::endl;
 
+    if(m->GetProjection().IsGeneric())
+    {
+        std::cout << "projection is generic" << std::endl;
+        ref = nullptr;
+    }
+    std::cout << "can create layer "<< poDS->TestCapability(ODsCCreateLayer) << std::endl;
+    OGRLayer * l = poDS->CreateLayer("Vectorize",nullptr,wkbUnknown,nullptr);
+
+    std::cout << "rcontour 1 " << std::endl;
     if(d->GetRasterBand(1) != nullptr)
     {
         GDALContourGenerate(d->GetRasterBand(1)->ToHandle(d->GetRasterBand(1)),interval,0,0,nullptr,0,0,l->ToHandle(l),0,1,nullptr,nullptr);
@@ -69,8 +77,10 @@ inline ShapeFile* RasterContour(cTMap * m,float interval,float start = 0.0, QStr
         LISEMS_ERROR("No rasterband to create contours from");
     }
 
+    std::cout << "rcontour 2 " << std::endl;
     ShapeFile * res = FromGDALDataset(poDS);
 
+    std::cout << "rcontour 4 " << std::endl;
     delete ref;
     GDALClose( (GDALDataset*) d );
     GDALClose( (GDALDataset*) poDS);

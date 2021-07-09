@@ -216,6 +216,9 @@ For usage with the multi-hazard model, a value of 0.01 is adviced.
 The gradient descent step used in estimating the new parameter values.
 For usage with the multi-hazard model, a value of 0.05 is adviced.
 For more stable, smooth and linearized error function, a higher value (with 1 as maximum) can be used.
+@param NSteps
+The number of iterations used in the gradient descent algorithm
+
 
 #OptimizeCustom
 Find a set of parameter values for which a custom error function returns its lowest value. 
@@ -237,6 +240,8 @@ For usage with the multi-hazard model, a value of 0.01 is adviced.
 The gradient descent step used in estimating the new parameter values.
 For usage with the multi-hazard model, a value of 0.05 is adviced.
 For more stable, smooth and linearized error function, a higher value (with 1 as maximum) can be used.
+@param NSteps
+The number of iterations used in the gradient descent algorithm
 
 #MapIf
 Can be used to make if,else statements with maps. e.g. MapIf(mapa >> mapb, a,b);

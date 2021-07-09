@@ -270,7 +270,14 @@ void WorldWindow::Draw()
         UILayer * l = m_UILayerList.at(i);
         if(l->IsGeo())
         {
-            dlist.push_back((UIDistanceEstimator*)l);
+            UIDistanceEstimator* ld= dynamic_cast<UIDistanceEstimator*>(l);
+            if(ld != nullptr)
+            {
+                dlist.push_back(ld);
+            }else
+            {
+                std::cout << "conversion failed " << std::endl;
+            }
         }
     }
 
@@ -453,6 +460,7 @@ void WorldWindow::SetCurrentProjection(GeoProjection p, bool forceupdate)
 
         m_CRSChanged =true;
         m_CurrentProjection = p;
+        m_ElevationProvider->SetZMult(p.GetUnitZMultiplier());
 
         m_FocusMutex.lock();
         m_FocusSquare.clear();

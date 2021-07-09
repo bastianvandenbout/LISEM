@@ -15,17 +15,17 @@
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="Elevation data" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="This example page will contain some kind of explenation about working with LISEM." />
-<meta property="og:description" content="This example page will contain some kind of explenation about working with LISEM." />
+<meta name="description" content="Lisem can do various types of analysis with elevation data. Elevation derivatives" />
+<meta property="og:description" content="Lisem can do various types of analysis with elevation data. Elevation derivatives" />
 <link rel="canonical" href="http://localhost:4000/LISEM/docs/elevationdata/" />
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/elevationdata/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-05-12T22:34:00+02:00" />
+<meta property="article:published_time" content="2021-07-09T23:24:17+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Elevation data" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Elevation data","dateModified":"2021-05-12T22:34:00+02:00","datePublished":"2021-05-12T22:34:00+02:00","url":"http://localhost:4000/LISEM/docs/elevationdata/","description":"This example page will contain some kind of explenation about working with LISEM.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Elevation data","dateModified":"2021-07-09T23:24:17+02:00","datePublished":"2021-07-09T23:24:17+02:00","url":"http://localhost:4000/LISEM/docs/elevationdata/","description":"Lisem can do various types of analysis with elevation data. Elevation derivatives","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -55,7 +55,7 @@
 				<li ><a href="/LISEM/docs/publications/">Publications</a></li>
 				<li ><a href="/LISEM/docs/showcase/">Showcases</a></li>
 				<li ><a href="/LISEM/docs/about/">About</a></li>
-				<li ><a href="/LISEM/blog/2020/05/10/Under-Development/">Blog</a></li>
+				<li ><a href="/LISEM/blog/2020/07/09/Alpha-Release/">Blog</a></li>
             </ul>
             <div class="navbar-right">
                 <form class="navbar-form navbar-left">
@@ -66,6 +66,9 @@
                 </form>
                 <ul class="nav navbar-nav">
                     <li><a href="https://github.com/bastianvandenbout/LISEM"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+				<ul class="nav navbar-nav">
+                    <li><a href="https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
                 </ul>
             </div>
         </div>
@@ -103,6 +106,26 @@
             
             <a class="list-group-item " href="/LISEM/docs/gettingstarted/">Getting Started</a>
           
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/mapviewer/">Mapviewer</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/datamanipulation/">Data Manipulation</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingscripting/">Scripting</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingpython/">Using with Python</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingmodel/">Using the model</a>
+          
         </div>
       </div>
     </div>
@@ -124,6 +147,55 @@
             
             <a class="list-group-item active" href="/LISEM/docs/elevationdata/">Elevation data</a>
           
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/warping/">Warping</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/distances/">Distances</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/classification/">Classification</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/filters/">Filters</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/calibration/">Calibration</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/webdata/">Web Data</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/dynamicmodels/">Dynamic Models</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+            Lisem Classic
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/lisemclassic/">Lisem Classic</a>
+          
         </div>
       </div>
     </div>
@@ -134,7 +206,62 @@
 
         <div class="col-md-8">
             <h1>Elevation data</h1>
-            <div id="markdown-content-container"><p>This example page will contain some kind of explenation about working with LISEM.</p>
+            <div id="markdown-content-container"><p>Lisem can do various types of analysis with elevation data.
+<img src="/LISEM/assets/img/calc_1.png" alt="Elevation manipulation" /></p>
+<h3 id="elevation-derivatives">Elevation derivatives</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>slope.tif = Slope(dem.tif)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_2.png" alt="Elevation manipulation" /></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hillshade.tif = HillShade(dem.tif)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_4.png" alt="Elevation manipulation" /></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>aspect.tif = Aspect(dem.tif)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_3.png" alt="Elevation manipulation" /></p>
+<h3 id="drainage">Drainage</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ldd.tif = DrainageNetwork(dem.tif,1e4,1e4,1e4,1e4)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_5.png" alt="Elevation manipulation" /></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux.tif = Accuflux(ldd.tif,1.0)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_6.png" alt="Elevation manipulation" /></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux2d.tif = Accuflux2D(dem.map,dem.map * 0.0 + 1.0,dem.map * 0.0,0.3,1.0)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+<h3 id="channels">Channels</h3>
+<p>We can select an estimate of channel locations by using a threshold on the accuflux data.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channel.tif = MapIf(accuflux.tif &gt;&gt; 1000.0,1.0,0.0)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+
+<p>We can use global relationships from Frasson et al., 2019 (global average analysis) to predict the depth and width of the channel.
+These functions take the accuflux in square kilometers, while our original map has a cellsize in meters, so we need to convert to kilometer.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelwidth.tif = 9.68*(accuflux.tif/1e6)**0.32
+channeldepth.tif = 11.3*(accuflux.tif/1e6)**0.083
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+
+<h3 id="fixing-local-depressions">Fixing local depressions</h3>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_fix.tif = DrainageNetworkDEM(dem.tif,1e4,1e4,1e4,1e4)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dif.tif = dem_fix.tif - dem.tif
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_fix.tif = BilateralFilter(dem.tif,0.2,0.2)
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+
+<h3 id="contour-lines">Contour Lines</h3>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>contour.shp = RasterContour(dem.tif,50.0)
+</code></pre></div></div>
+
+<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+
 </div>
             <div style="clear:both;">
               <p class="text-center">
@@ -156,20 +283,37 @@
 
   
   
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
     <ul class="pager">
       
         
         
         <li class="previous">
-          <a href="/LISEM/docs/gettingstarted/">
+          <a href="/LISEM/docs/usingmodel/">
             <span aria-hidden="true">&larr;</span> Previous
           </a>
         </li>
       
 
       
-        <li class="next disabled">
-          <a>
+        
+        
+        <li class="next">
+          <a href="/LISEM/docs/warping/">
             Next <span aria-hidden="true">&rarr;</span>
           </a>
         </li>

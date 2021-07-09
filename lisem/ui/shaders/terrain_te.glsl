@@ -46,9 +46,14 @@ vec4 GetColor(vec4 wpos)
 }
 highp float GetElevation(highp vec4 wpos)
 {
-    highp vec2 texcoord = GetTexCoords(wpos);
-
-    return ZScale * texture(TextureD,texcoord).r;
+   highp vec2 texcoord = GetTexCoords(wpos);
+	float elev = ZScale * texture(TextureD,texcoord).r;
+	if(elev > -1e20f && elev < 1e20f)
+	{
+		return elev;
+	}else{
+	return 0.0f;
+	}
 }
 
 

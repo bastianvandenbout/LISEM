@@ -8,6 +8,7 @@ lang: en-US
 baseurl: "/LISEM" # the subpath of your site, e.g. /blog/
 url: "https://bastianvandenbout.github.io" # the base hostname & protocol for your site
 git_address: https://github.com/bastianvandenbout/LISEM
+youtube_address: https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA
 git_edit_address: https://github.com/bastianvandenbout/LISEM
 
 # theme options from https://bootswatch.com/3/

@@ -1327,6 +1327,19 @@ void LISEMModel::ModelRunDeleteData()
 
     m_OpenGLCLManager->DeleteMGLCLModelObjects();
 
+
+    for(int i = 0;i < m_ModelTextureList.size(); i++)
+    {
+        if(m_ModelTextureList.at(i)->m_TextureCPU != nullptr)
+        {
+            delete m_ModelTextureList.at(i)->m_TextureCPU;
+        }
+
+        delete m_ModelTextureList.at(i);
+    }
+
+    m_ModelTextureList.clear();
+
     //delete all particle buffers
 
 

@@ -280,8 +280,24 @@ void WorldWindow::DrawColoredTerrain3D(GeoWindowState *s)
         m_ElevationProvider->SetDetailedElevationAtCenter(false,0.0);
     }
 
-
     BoundingBox lookbb = m_Camera3D->Get2DViewEquivalent(m_ElevationProvider);
+
+    bool has_elevation = m_ElevationProvider->HasElevation(m_Camera3D->GetPosition().x,m_Camera3D->GetPosition().z);
+
+    double o_size = m_ElevationProvider->GetClosestDistanceToObjectSize((m_Camera3D->GetPosition()));
+    double o_distance = m_ElevationProvider->GetClosestDistanceToObject((m_Camera3D->GetPosition()));
+
+    //not above a dem, but something exists
+    if(has_elevation == false && (o_size < 1e30) && (o_distance < 1e30))
+    {
+        double size_now = std::max(lookbb.GetSizeX(), lookbb.GetSizeY());
+        if(size_now < (o_size + o_distance) && (size_now > 0.0))
+        {
+            lookbb = BoundingBox(m_Camera3D->GetPosition().x - 0.2 * (o_size + o_distance),m_Camera3D->GetPosition().x + 0.2 * (o_size + o_distance),m_Camera3D->GetPosition().z - 0.2 * (o_size + o_distance),m_Camera3D->GetPosition().z + 0.2 * (o_size + o_distance));
+
+        }
+
+    }
 
     for(int i = 0; i < m_2D3DRenderTargetScales.length(); i++)
     {
@@ -304,6 +320,18 @@ void WorldWindow::DrawColoredTerrain3D(GeoWindowState *s)
 
         float sxn = sx * TargetScale;
         float syn = sy * TargetScale;
+
+        //we are above a dem, make sure the largest target scale covers a significant portion of the full dataset
+        if((i == m_2D3DRenderTargetScales.length() -1) && (has_elevation == true) && (o_size < 1e30) && (o_distance < 1e30))
+        {
+            if(std::max(syn,sxn) < (o_size))
+            {
+                TargetScale = o_size/sx;
+
+                sxn = sx * TargetScale;
+                syn = sy * TargetScale;
+            }
+        }
 
         sxn = std::max(sxn,syn);
         syn = sxn;

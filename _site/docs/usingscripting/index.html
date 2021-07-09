@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/LISEM/assets/css/main.css">
+    <link rel="stylesheet" href="/LISEM/assets/css/font-awesome.min.css">
+
+    <link rel="shortcut icon" href="/LISEM/favicon.ico?1">
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Scripting | LISEM</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Scripting" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The scripting environment not only provides a command-line, but also features a full script editor." />
+<meta property="og:description" content="The scripting environment not only provides a command-line, but also features a full script editor." />
+<link rel="canonical" href="http://localhost:4000/LISEM/docs/usingscripting/" />
+<meta property="og:url" content="http://localhost:4000/LISEM/docs/usingscripting/" />
+<meta property="og:site_name" content="LISEM" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-07-09T23:24:17+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Scripting" />
+<script type="application/ld+json">
+{"@type":"WebPage","headline":"Scripting","dateModified":"2021-07-09T23:24:17+02:00","datePublished":"2021-07-09T23:24:17+02:00","url":"http://localhost:4000/LISEM/docs/usingscripting/","description":"The scripting environment not only provides a command-line, but also features a full script editor.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="alternate" type="application/rss+xml" title="LISEM" href="http://localhost:4000/LISEM/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+            <a class="navbar-brand" href="/LISEM/">
+                <span><img src="/LISEM/assets/img/logonav.png" alt="Logo"></span> LISEM
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li  class="active" ><a href="/LISEM/docs/home/">Docs</a></li>
+                <li ><a href="/LISEM/docs/downloads/">Download</a></li>
+				<li ><a href="/LISEM/docs/publications/">Publications</a></li>
+				<li ><a href="/LISEM/docs/showcase/">Showcases</a></li>
+				<li ><a href="/LISEM/docs/about/">About</a></li>
+				<li ><a href="/LISEM/blog/2020/07/09/Alpha-Release/">Blog</a></li>
+            </ul>
+            <div class="navbar-right">
+                <form class="navbar-form navbar-left">
+                    <div class="form-group has-feedback">
+                        <input id="search-box" type="search" class="form-control" placeholder="Search...">
+                        <i class="fa fa-search form-control-feedback"></i>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/bastianvandenbout/LISEM"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+				<ul class="nav navbar-nav">
+                    <li><a href="https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <div class="container">
+    <div class="row">
+	<p class="text-center">
+                &nbsp;
+				&nbsp;
+				&nbsp;
+              </p>
+			  
+        <div class="col-md-4">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+            Getting Started
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse" id="collapse-1" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/gettingstarted/">Getting Started</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/mapviewer/">Mapviewer</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/datamanipulation/">Data Manipulation</a>
+          
+            
+            
+            <a class="list-group-item active" href="/LISEM/docs/usingscripting/">Scripting</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingpython/">Using with Python</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingmodel/">Using the model</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
+            Examples
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/elevationdata/">Elevation data</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/warping/">Warping</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/distances/">Distances</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/classification/">Classification</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/filters/">Filters</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/calibration/">Calibration</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/webdata/">Web Data</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/dynamicmodels/">Dynamic Models</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+            Lisem Classic
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/lisemclassic/">Lisem Classic</a>
+          
+        </div>
+      </div>
+    </div>
+  
+</div>
+
+        </div>
+
+        <div class="col-md-8">
+            <h1>Scripting</h1>
+            <div id="markdown-content-container"><p>The scripting environment not only provides a command-line, but also features a full script editor.</p>
+
+<p><img src="/LISEM/assets/img/explain_scripttool.png" alt="ScriptTool" /></p>
+
+<p>The script editor provides a more full scripting environment based on a customized version of the angelscript languge. 
+The angelscript language is a compiled, statically-types c-style language that features various advanced language features.
+Provided functions link directly to compiled c++ code without performence loss, and often utilizing all available cores. 
+Here, the in-line references to files are still valid, but can be avoided if desired.
+A script always starts with a void main() function. This function is the entry point, and if it is not found, the script can not be run.
+A simple script might combine map calculations and avoid nearly all of the technicalities of the scripting language:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+	a.tif = b.tif + 2.0;
+	slope.tif = Slope(dem.tif);
+	angle.tif = Sin(Atan(Slope(dem.tif)));
+	
+	a.map = MapMaximum(angle.tif)
+}
+</code></pre></div></div>
+
+<p>Files in such a script are found in the selected working directory.
+However, the scripting langue features many more functionalities, as demonstrated below:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//this is a comment
+//here the main() function is defined
+//the entry point
+void main()
+{
+	a.map = b.map;
+	Map a = a.map;
+
+              //Load… functions take a path relative to the working directory
+	Map b = LoadMap(“b.map”)
+
+              //The Load.. functions have a variant that takes an absolute path
+	Shapes s = LoadShapesAbsPath(“C:/s.shp”)
+
+	//this loop runs for 100 iterations
+	for(int i = 0; i &lt; 100; i++)
+	{	
+        b = AddToB(b);
+    }
+}
+
+//define another function call AddToB, it takes 1 argument of type Map
+Map AddToB(Map b)
+{
+	b += c.map;
+	return b;
+}
+</code></pre></div></div>
+
+<h3 id="data-types">Data types</h3>
+<p>There are various basic data types available:</p>
+
+<ol>
+  <li>bool</li>
+  <li>int</li>
+  <li>uint</li>
+  <li>float</li>
+  <li>double</li>
+  <li>string</li>
+  <li>int and unsigned int types of various sizes (int16, uint16, etc..)</li>
+</ol>
+
+<p>Besides these, several geospatial datatypes are defined by LISEM</p>
+
+<ol>
+  <li>Map</li>
+  <li>Shapes</li>
+  <li>PointCloud</li>
+  <li>Object</li>
+  <li>Table</li>
+  <li>GeoProjection</li>
+  <li>MathExpression</li>
+</ol>
+
+<p>Linear algebra types are available based on common names in computer graphics.</p>
+
+<ol>
+  <li>vector types vec2, vec3 and vec4</li>
+  <li>matrix types mat2x2, mat3x3 and mat4x4.</li>
+</ol>
+
+<p>Text can be represented with the string type. 
+Quotations between brackets (“…”) are automatically of type string. Basic datatypes can be converted to string using the ToString() function. Strings can be manipulated just as other types by using the operators. (+ to join strings).</p>
+
+<p>Lists of data can be defined and used with the Array type. 
+You can load a list of bands from a geotiff file.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Array&lt;Map&gt; bands = LoadMapBandList(spectral.tif)
+</code></pre></div></div>
+
+<p>Array is a templated type. This means that there is a special template argument between angled brackets (&lt;..&gt;). This is the type that is stored in the list. You can make lists of any type (Array&lt;Array<string>&gt; can represent a matrix of text).</string></p>
+
+<h3 id="operators">Operators</h3>
+
+<p>Most of the datatypes, both basic, geospatial and otherwise, support manipulation through operators.
+Supported operators are + (addition),- (substraction),/ (division),* (multiplication),** (power),% (modulus),&lt; (less than),&gt; (greater than),== (equal to),» (right shift),« (left shift),&amp; (and),| (or), ^ (xor), [] (list indexing).
+Because of some limitations of the language, the &lt;, &gt; and == operators can not be overloaded.
+Instead, the non-basic types support «, » and .eq as the less than, greater than and equal to operators.
+So, for rasters:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Conditional.tif = MapIf( (a.map &gt;&gt; b.map) &amp; (c.tif.eq(d.tif)), iftrue.tif, iffalse.tif)
+</code></pre></div></div>
+
+<h3 id="conditional">Conditional</h3>
+<p>There is support for if/else statements</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+	if(true)
+	{
+		Print("This is printed")
+	}else
+	{
+		Print("This is not printed")
+	}
+}
+</code></pre></div></div>
+
+<h3 id="functions">Functions</h3>
+<p>Functions follow a c-style format. Of course, when the return type is void (nothing), no return statement is required.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>returntype FunctionName(argumenttype argumentname)
+{
+	returntype returnvariable;
+	
+	//calculations
+	return returnvariable;
+}
+</code></pre></div></div>
+
+<p>or, as example</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int fibonacci(int n)
+{
+	if(n &lt;= 1)
+	{
+		return n;
+	}else
+	{
+		return fibonacci(n-1) + fibonacci(n-2);
+	}
+}
+</code></pre></div></div>
+
+<h3 id="classes">Classes</h3>
+<p>Classes can be defined using a c-style syntax. Inheritence is possible, allowing for base classes or interfaces.
+Classes can have member functions and member variables, which are unique for each instance of that class.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// The class declaration
+class MyClass
+{
+// A class method
+void DoSomething()
+{
+  // The class properties can be accessed directly
+  a *= 2;
+  // The declaration of a local variable may hide class properties
+  int b = 42;
+  // In this case the class property have to be accessed explicitly
+  this.b = b;
+}
+// Class properties
+int a;
+int b;
+}
+</code></pre></div></div>
+
+<h3 id="templates">Templates</h3>
+<p>Templated types are class objects that take a template parameter to determine the full type.
+For example, the array type is templated, meaning that it is not possible to have a simple array.
+Instead, the type of the object contained within must be specified: <code class="language-plaintext highlighter-rouge">array&lt;double&gt;</code> represents a list of numbers. This can be nested as: <code class="language-plaintext highlighter-rouge">array&lt;array&lt;double&gt;&gt;</code>. This would represent a matrix of numbers.</p>
+
+<h3 id="debugging">Debugging</h3>
+<p>A simple debugger and stack view is present in the script tool. 
+By clicking on a line number, a breakpoint can be added.
+Once the script encounters a breakpoint, it will be paused, and you can inspect all the variables currently in memory.</p>
+
+<p><img src="/LISEM/assets/img/script_breakpoint.png" alt="ScriptTool" /></p>
+
+<p>The debug window can be openend and closed using the debug button on the top.
+The top window shows that stack. This is a list of all the nested function calls. In the image, the stack is 1 level deep, as we are in <code class="language-plaintext highlighter-rouge">main()</code>, and no further function call has been made.
+The variables are shown, with a short description. A copy of Map objects can be added to the map viewer, or the statistics (size, average, minimum, maximum and standard deviation) can be shown.
+<img src="/LISEM/assets/img/script_debug.png" alt="ScriptTool" /></p>
+
+<h3 id="file-shortcut-support">File shortcut support</h3>
+
+<p>Angelscript does not natively support the usage of files as variables in a script. The extension here works by automatically finding occurrences of files within the script by looking for file extensions. Common file extensions for rasters, vector files, tables and 3d models are supported. If such a file exists in your current working directory, the script is changed to call the appropriate function.
+So, for slope.map = Slope(dem.map), the script is converted to:
+void main()
+{
+SaveThisMapAs(“slope.map”) = Slope(LoadMap(“dem.map”));
+}
+Where SaveThisMapAs, returns a special object that is written to file upon assignment.</p>
+</div>
+            <div style="clear:both;">
+              <p class="text-center">
+                <br />
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/_docs/usingscripting.md" class="btn btn-default" role="button">
+                  <i class="fa fa-pencil fa-lg"></i> Improve this page
+                </a>
+              </p>
+            </div>
+            <hr>
+            
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/LISEM/docs/datamanipulation/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
+
+      
+        
+        
+        <li class="next">
+          <a href="/LISEM/docs/usingpython/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+      </ul>
+    <div class="clear"></div>
+    
+
+        </div>
+
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="container">
+
+        <p class="text-center">
+            LISEM 2021 |
+            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University
+        </p>
+        <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+    </div>
+</footer>
+
+    <script>
+  var baseurl = '/LISEM'
+</script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="/LISEM/assets/js/bootstrap.min.js "></script>
+<script src="/LISEM/assets/js/typeahead.bundle.min.js "></script>
+
+<script src="/LISEM/assets/js/main.js "></script>
+
+</body>
+
+</html>

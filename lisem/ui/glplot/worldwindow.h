@@ -201,6 +201,9 @@ public:
         m_OpenGLCLManager = glclm;
         m_OpenGLCLManager->AddListener(this);
 
+
+        m_ElevationProvider = new GL3DElevationProvider();
+
         m_TransformManager = new WorldGLTransformManager(glclm);
         AddUILayer(new UIMapEdgeLayer());
         //AddUILayer(new UISkyBoxLayer());
@@ -210,7 +213,6 @@ public:
         p.SetGeneric();
         SetCurrentProjection(p,true);
 
-        m_ElevationProvider = new GL3DElevationProvider();
 
         m_Camera3D = new GL3DCamera();
         m_Camera3DController = new GL3DCameraController(m_Camera3D,m_ElevationProvider);

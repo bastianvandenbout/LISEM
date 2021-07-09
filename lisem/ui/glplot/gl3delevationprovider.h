@@ -16,6 +16,8 @@ private:
     QList<cTMap *> m_ElevationMaps;
     QList<BoundingBox> m_MapExtents;
 
+    double m_ZMult = 1.0;
+
     std::vector<UIDistanceEstimator*> m_Dlist;
 
     double m_ElevationCenter = 0.0;
@@ -27,6 +29,15 @@ public:
 
     }
 
+    inline void SetZMult(double zm)
+    {
+        m_ZMult = zm;
+    }
+
+    inline double GetZMult()
+    {
+        return m_ZMult;
+    }
     inline void AddElevationModel(int x, int y)
     {
         MaskedRaster<float> raster_data(y, x,0.0,0.0,1.0);
@@ -57,6 +68,37 @@ public:
     {
 
         return LSMVector3(0.0,0.0,0.0);
+
+    }
+
+    inline bool HasElevation(float x, float z)
+    {
+        if(m_HasElevationCenter)
+        {
+            return true;
+        }
+        for(int i =0; i < m_MapExtents.length(); i++)
+        {
+            if(m_MapExtents.at(i).Contains(x,z))
+            {
+                float frac_x = (x - m_MapExtents.at(i).GetMinX())/m_MapExtents.at(i).GetSizeX();
+                float frac_z = (z - m_MapExtents.at(i).GetMinY())/m_MapExtents.at(i).GetSizeY();
+
+                int r = (float)(frac_z) * m_ElevationMaps.at(i)->nrRows();
+                int c = (float)(frac_x) * m_ElevationMaps.at(i)->nrCols();
+
+                if(r > -1 && r < m_ElevationMaps.at(i)->nrRows() && c > -1 && c < m_ElevationMaps.at(i)->nrCols() )
+                {
+                    if(!pcr::isMV(m_ElevationMaps.at(i)->data[r][c]))
+                    {
+                        return true;
+                    }
+                }
+
+            }
+        }
+
+        return false;
 
     }
     inline double GetElevation(float x, float z)
@@ -109,8 +151,52 @@ public:
 
         }
     }
-    inline void GetClosestDistanceToObject(LSMVector3 Position)
+
+    inline double GetClosestDistanceToObjectVertWeight(LSMVector3 Position)
     {
+        double size = 1e31;
+        double dist_min = 1e31;
+        for(int i = 0; i < m_Dlist.size(); i++)
+        {
+            double distance = m_Dlist.at(i)->GetNormalizedSmoothDistance(Position);
+            if(distance < dist_min)
+            {
+                size = m_Dlist.at(i)->GetNormalizedSmoothVertWeight(Position);
+            }
+
+            dist_min = std::min(distance,dist_min);
+        }
+
+        return size;
+    }
+    inline double GetClosestDistanceToObjectSize(LSMVector3 Position)
+    {
+        double size = 1e31;
+        double dist_min = 1e31;
+        for(int i = 0; i < m_Dlist.size(); i++)
+        {
+            double distance = m_Dlist.at(i)->GetNormalizedSmoothDistance(Position);
+            if(distance < dist_min)
+            {
+                size = m_Dlist.at(i)->GetNormalizedSmoothSize(Position);
+            }
+
+            dist_min = std::min(distance,dist_min);
+        }
+
+        return size;
+    }
+
+    inline double GetClosestDistanceToObject(LSMVector3 Position)
+    {
+        double dist_min = 1e31;
+        for(int i = 0; i < m_Dlist.size(); i++)
+        {
+            double distance = m_Dlist.at(i)->GetNormalizedSmoothDistance(Position);
+            dist_min = std::min(distance,dist_min);
+        }
+
+        return dist_min;
 
     }
 

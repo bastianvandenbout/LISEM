@@ -134,7 +134,7 @@ public:
             icon_delete->addFile((m_Dir + LISEM_FOLDER_ASSETS + "deletereport4.png"), QSize(), QIcon::Normal, QIcon::Off);
 
             QIcon *icon_re = new QIcon();
-            icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh_24.png"), QSize(), QIcon::Normal, QIcon::Off);
+            icon_re->addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh.png"), QSize(), QIcon::Normal, QIcon::Off);
 
 
             DelButton = new QToolButton();

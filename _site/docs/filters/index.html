@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/LISEM/assets/css/main.css">
+    <link rel="stylesheet" href="/LISEM/assets/css/font-awesome.min.css">
+
+    <link rel="shortcut icon" href="/LISEM/favicon.ico?1">
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Filters | LISEM</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Filters" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="WindowAverage" />
+<meta property="og:description" content="WindowAverage" />
+<link rel="canonical" href="http://localhost:4000/LISEM/docs/filters/" />
+<meta property="og:url" content="http://localhost:4000/LISEM/docs/filters/" />
+<meta property="og:site_name" content="LISEM" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-07-09T23:24:17+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Filters" />
+<script type="application/ld+json">
+{"@type":"WebPage","headline":"Filters","dateModified":"2021-07-09T23:24:17+02:00","datePublished":"2021-07-09T23:24:17+02:00","url":"http://localhost:4000/LISEM/docs/filters/","description":"WindowAverage","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="alternate" type="application/rss+xml" title="LISEM" href="http://localhost:4000/LISEM/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+            <a class="navbar-brand" href="/LISEM/">
+                <span><img src="/LISEM/assets/img/logonav.png" alt="Logo"></span> LISEM
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li  class="active" ><a href="/LISEM/docs/home/">Docs</a></li>
+                <li ><a href="/LISEM/docs/downloads/">Download</a></li>
+				<li ><a href="/LISEM/docs/publications/">Publications</a></li>
+				<li ><a href="/LISEM/docs/showcase/">Showcases</a></li>
+				<li ><a href="/LISEM/docs/about/">About</a></li>
+				<li ><a href="/LISEM/blog/2020/07/09/Alpha-Release/">Blog</a></li>
+            </ul>
+            <div class="navbar-right">
+                <form class="navbar-form navbar-left">
+                    <div class="form-group has-feedback">
+                        <input id="search-box" type="search" class="form-control" placeholder="Search...">
+                        <i class="fa fa-search form-control-feedback"></i>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/bastianvandenbout/LISEM"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+				<ul class="nav navbar-nav">
+                    <li><a href="https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <div class="container">
+    <div class="row">
+	<p class="text-center">
+                &nbsp;
+				&nbsp;
+				&nbsp;
+              </p>
+			  
+        <div class="col-md-4">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+            Getting Started
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-1" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/gettingstarted/">Getting Started</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/mapviewer/">Mapviewer</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/datamanipulation/">Data Manipulation</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingscripting/">Scripting</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingpython/">Using with Python</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/usingmodel/">Using the model</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
+            Examples
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/elevationdata/">Elevation data</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/warping/">Warping</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/distances/">Distances</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/classification/">Classification</a>
+          
+            
+            
+            <a class="list-group-item active" href="/LISEM/docs/filters/">Filters</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/calibration/">Calibration</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/webdata/">Web Data</a>
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/dynamicmodels/">Dynamic Models</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+            Lisem Classic
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/LISEM/docs/lisemclassic/">Lisem Classic</a>
+          
+        </div>
+      </div>
+    </div>
+  
+</div>
+
+        </div>
+
+        <div class="col-md-8">
+            <h1>Filters</h1>
+            <div id="markdown-content-container"><p>WindowAverage</p>
+
+<p>AnisotropicFilter</p>
+
+<p>BilateralFilter</p>
+
+<p>FrostFilter</p>
+
+<p>LeeFilter</p>
+
+<p>Erode</p>
+
+<p>Dilute</p>
+
+</div>
+            <div style="clear:both;">
+              <p class="text-center">
+                <br />
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/_docs/examples/filters.md" class="btn btn-default" role="button">
+                  <i class="fa fa-pencil fa-lg"></i> Improve this page
+                </a>
+              </p>
+            </div>
+            <hr>
+            
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/LISEM/docs/classification/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
+
+      
+        
+        
+        <li class="next">
+          <a href="/LISEM/docs/calibration/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+      </ul>
+    <div class="clear"></div>
+    
+
+        </div>
+
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="container">
+
+        <p class="text-center">
+            LISEM 2021 |
+            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University
+        </p>
+        <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+    </div>
+</footer>
+
+    <script>
+  var baseurl = '/LISEM'
+</script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="/LISEM/assets/js/bootstrap.min.js "></script>
+<script src="/LISEM/assets/js/typeahead.bundle.min.js "></script>
+
+<script src="/LISEM/assets/js/main.js "></script>
+
+</body>
+
+</html>

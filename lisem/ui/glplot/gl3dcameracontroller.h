@@ -36,16 +36,30 @@ public:
         //when inside an object, elevation might exist.
         //finetune the velocity based on that (but also based in distance inside of the object)
 
-         double elevation = m_ElevationProvider->GetElevation(m_Camera->GetPosition().x,m_Camera->GetPosition().z);
+         double distance = m_ElevationProvider->GetClosestDistanceToObject(m_Camera->GetPosition());
+
+         if(!(distance < 1e30))
+         {
+             distance = 1.0;
+         }
+
+         double size = m_ElevationProvider->GetClosestDistanceToObjectSize(m_Camera->GetPosition());
+
+         double vertweight = m_ElevationProvider->GetClosestDistanceToObjectVertWeight(m_Camera->GetPosition());
+
+         double elevation = m_ElevationProvider->GetElevation(m_Camera->GetPosition().x,m_Camera->GetPosition().z) * m_ElevationProvider->GetZMult();
+
+         bool use_elev = true;
          if(elevation < -1e25 || !std::isfinite(elevation))
          {
+             use_elev = false;
              elevation  = 0.0;
          }
 
-         if(m_Camera->GetPosition().Y() < elevation + 0.0001f)
-         {
-            m_Camera->SetPosition(m_Camera->GetPosition().x,elevation + 0.0001f,m_Camera->GetPosition().z);
-         }
+         //if(m_Camera->GetPosition().Y() < elevation + 0.0001f)
+         //{
+         //   m_Camera->SetPosition(m_Camera->GetPosition().x,elevation + 0.0001f,m_Camera->GetPosition().z);
+         //}
 
          float c_above = std::max(0.001f,(float)(m_Camera->GetPosition().Y() -elevation));
 
@@ -53,10 +67,21 @@ public:
          float m_ZFar = std::max(100.0f,std::min(1e9f,c_above * 1000.0f));
 
 
-         m_Camera->SetZNear(m_ZNear);
-         m_Camera->SetZFar(m_ZFar);
 
-         double speed = std::max(0.01f,(float)(0.3f * (m_Camera->GetPosition().Y()-elevation)));
+         double disty = 1.0;
+
+         if(use_elev && size < 1e30)
+         {
+             disty = std::min(1.0,10.0*std::fabs(m_Camera->GetPosition().Y()-elevation)/size);
+         }else
+         {
+
+         }
+
+         double speed = 0.2 * distance * (disty * vertweight  + 1.0 * (1.0-vertweight));
+
+         m_Camera->SetZNear(speed * 0.1f);
+         m_Camera->SetZFar(speed * 1000.0f);
 
         if(glfwGetKey(w,GLFW_KEY_LEFT_CONTROL) ==GLFW_PRESS)
         {

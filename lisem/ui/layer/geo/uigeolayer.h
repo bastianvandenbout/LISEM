@@ -23,7 +23,7 @@
 ///
 /// @see UILayer
 ///
-class UIGeoLayer : public UILayer,UIDistanceEstimator
+class UIGeoLayer : public UILayer
 {
 private:
 
@@ -120,12 +120,42 @@ public:
         m_IsCRSChanged = false;
     }
 
-    inline LSMVector3 GetDistance(LSMVector3 p)
+    inline double GetNormalizedSmoothSize(LSMVector3 p) override
     {
+        BoundingBox b = GetBoundingBox();
+
         //by defeault, get distance to bounding box
 
-        return LSMVector3();
+        return  std::sqrt(0.25 *b.GetSizeX() *b.GetSizeX() +0.25 *b.GetSizeY() *b.GetSizeY());
+
     }
+
+    inline double GetNormalizedSmoothVertWeight(LSMVector3 p) override
+    {
+        BoundingBox b = GetBoundingBox();
+
+        //by defeault, get distance to bounding box
+        float dx = std::max(0.0,std::fabs(p.x - b.GetCenterX()));
+        float dy = std::max(0.0,std::fabs(p.z - b.GetCenterY()));
+
+        float rmin = std::sqrt(0.5 *b.GetSizeX() *b.GetSizeX() +0.5 *b.GetSizeY() *b.GetSizeY());
+        return 1.0 - std::max(0.0,std::min(1.0,((std::sqrt(dx*dx + dy*dy)/rmin)-0.9) * 10.0));
+    }
+
+
+    inline double GetNormalizedSmoothDistance(LSMVector3 p) override
+    {
+        BoundingBox b = GetBoundingBox();
+        float dx = std::max(0.0,std::fabs(p.x - b.GetCenterX()) - 0.5 *  b.GetSizeX());
+        float dy = std::max(0.0,std::fabs(p.z - b.GetCenterY()) - 0.5 *  b.GetSizeY());
+
+        double rmin = std::sqrt(0.5 *b.GetSizeX() *b.GetSizeX() +0.5 *b.GetSizeY() *b.GetSizeY());
+
+
+        return std::max(1e-10,rmin + std::sqrt(dx*dx + dy*dy));
+
+    }
+
 
     inline void UpdatePositionInfo(OpenGLCLManager * m) override
     {

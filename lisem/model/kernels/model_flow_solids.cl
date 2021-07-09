@@ -584,7 +584,7 @@ nonkernel float GetVNSX(float v,float hn, float dt, float dx, float n,
     vn = (float)((vn/(1.0f+nsq)));
 	
     float vn_ifa = vn > 0.0f? max(0.0f,(float)(vn - sf * dt *GRAV * tan(ifa))) : min(0.0f,(float)(vn + sf * dt * GRAV * tan(ifa)));
-    float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
+    float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)))/tan(ifa)));// + ((sf_dev *density)/(1000.0f))*tan(ifa)
     vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn;
 
     return vn;
@@ -672,7 +672,7 @@ nonkernel float GetVNSY(float v,float hn, float dt, float dx, float n,
         vn = (float)((vn/(1.0f+nsq)));
 	
         float vn_ifa = vn > 0? max(0.0f,(float)(vn - sf * dt *GRAV * tan(ifa))) : min(0.0f,(float)(vn + sf * dt * GRAV * tan(ifa)));
-        float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
+        float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)))/tan(ifa)));// + ((sf_dev *density)/(1000.0f))*tan(ifa)
         vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn;
 	return vn;
 }
@@ -967,6 +967,11 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
                                vy_x1y1, vy_x1y2, vy_x2y1, vy_x2y2,
                                sifa, srocksize, sdensity, dragmult);
 
+            float ff_dev_dc = max(0.001f,h/max(0.001f,(h + hs)));
+            float sf_dev_dc = max(0.001f,hs/max(0.001f,(h + hs)));
+
+            float dc = dragmult * ff_dev_dc * sf_dev_dc * (1.0f/(max(0.0001f,srocksize)))* max(0.0f,sdensity-1000.0f)/max(0.1f,1000.0f);
+
             float3 hll_x1 = z_x1 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2FS(max(0.0f,h_x1 -max(0.0f,z - z_x1)),max(0.0f,hs_x1 -max(0.0f,z - z_x1)),vx_x1,vy_x1,max(0.0f,h -max(0.0f,z_x1-z)) ,max(0.0f,hs -max(0.0f,z_x1-z)),vx,vy,sifa, srocksize, sdensity, dragmult);
             float3 hll_x2 = z_x2 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2FS(max(0.0f,h -max(0.0f,z_x2 - z)),max(0.0f,hs -max(0.0f,z_x2 - z)),vx,vy,max(0.0f,h_x2 -max(0.0f,z - z_x2)),max(0.0f,hs_x2 -max(0.0f,z - z_x2)),vx_x2,vy_x2,sifa, srocksize, sdensity, dragmult);
             float3 hll_y1 = z_y1 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2FS(max(0.0f,h_y1 -max(0.0f,z - z_y1)),max(0.0f,hs_y1 -max(0.0f,z - z_y1)),vy_y1,vx_y1,max(0.0f,h -max(0.0f,z_y1 - z)),max(0.0f,hs -max(0.0f,z_y1 - z)),vy,vx,sifa, srocksize, sdensity, dragmult);
@@ -1118,6 +1123,14 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
             }else if(ui_image == 19)
             {
                     ui = sdensity;
+                    write_imagef(OUTPUT_UI, int2(gx,gy), ui);
+            }else if(ui_image == 19)
+            {
+                    ui = sdensity;
+                    write_imagef(OUTPUT_UI, int2(gx,gy), ui);
+            }else if(ui_image == 40)
+            {
+                    ui = dc;
                     write_imagef(OUTPUT_UI, int2(gx,gy), ui);
             }
 

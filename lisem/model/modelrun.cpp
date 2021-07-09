@@ -859,6 +859,8 @@ void LISEMModel::DoModelRun()
 
                     }
 
+                    std::cout << "slope fail " << slopefailvol << " " << m_DoInitialStability << std::endl;
+
                     double slopefailvol_i = slopefailvol - slopefailvolold;
 
                     //if no significant failure, exit loop
