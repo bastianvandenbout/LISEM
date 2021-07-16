@@ -109,11 +109,11 @@ inline void Rasterize(cTMap * m,ShapeFile * f,QString attribute, bool burn = fal
     GDALDatasetH output = GDALRasterize(nullptr,raster_out,vector_in,psOptions,&error);
 
 
-    if(output == nullptr)
+    /*(if(output == nullptr)
     {
         LISEMS_DEBUG("Error during rasterization process " + QString::number(error));
         throw 1;
-    }
+    }*/
 
     auto band = d->GetRasterBand(1);
     band->SetNoDataValue(-FLT_MAX);

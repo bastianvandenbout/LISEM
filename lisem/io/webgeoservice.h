@@ -324,11 +324,19 @@ inline static QString GetOWSOperationValues()
 }*/
 
 
-//request for capabilities, returns xml file
-//http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=1.1.0&REQUEST=GetCapabilities
-
 //request for data in geotiff format
 //http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&coverage=MostProbable&CRS=EPSG:3978&BBOX=-2200000,-712631,3072800,3840000&WIDTH=3199&HEIGHT=2833&FORMAT=GTiff
+
+//
+//http://geoport.whoi.edu/thredds/wcs/bathy/srtm30plus_v6?request=GetCoverage&version=1.0.0&service=WCS&format=geotiff&coverage=topo&BBOX=0,50,10,55
+
+//onegeology WCS
+//http://ogc.bgs.ac.uk/fcgi-bin/exemplars/BGS_Bedrock_and_Superficial_Geology/wms?version=1.1.1&
+
+
+
+//request for capabilities, returns xml file
+//http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=1.1.0&REQUEST=GetCapabilities
 
 //request for data in png format
 //http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Arenosols&STYLES=&SRS=EPSG:4326&BBOX=-173.537,35.8775,-11.9603,83.8009&WIDTH=1400&HEIGHT=1300&FORMAT=image/png
@@ -340,14 +348,11 @@ inline static QString GetOWSOperationValues()
 //sentinel data?
 //https://sentineldata.vito.be/wmts?service=WMTS&request=GetCapabilities
 
-//
-//http://geoport.whoi.edu/thredds/wcs/bathy/srtm30plus_v6?request=GetCoverage&version=1.0.0&service=WCS&format=geotiff&coverage=topo&BBOX=0,50,10,55
 
 //nasa SRTM data
 //https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/S02E010.SRTMGL1.hgt.zip
 
-//onegeology WCS
-//http://ogc.bgs.ac.uk/fcgi-bin/exemplars/BGS_Bedrock_and_Superficial_Geology/wms?version=1.1.1&
+
 
 
 

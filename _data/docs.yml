@@ -10,6 +10,7 @@
 - title: Examples
   docs:
   - elevationdata
+  - interpolation
   - warping
   - distances
   - classification

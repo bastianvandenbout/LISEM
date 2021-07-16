@@ -15,17 +15,17 @@
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="Warping" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="void main() { array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;}); Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06)); array&lt;Map&gt; bands; for(int i = 0; i &lt; names.length(); i++) { bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06)))); } test.tif = bands; }" />
-<meta property="og:description" content="void main() { array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;}); Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06)); array&lt;Map&gt; bands; for(int i = 0; i &lt; names.length(); i++) { bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06)))); } test.tif = bands; }" />
+<meta name="description" content="Warping raster can be done in various ways: You can get and set Coordinate Reference Systems (CRS) for layers using: ``` test.tif = SetCRS(tes.tif,GetCRS(test2.tif)); //get CRS from other file test.tif = SetCRS(tes.tif,GeoProjectionFromWGS84UTM(30,true)); //use WGS84 UTM 30 N test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4326)" />
+<meta property="og:description" content="Warping raster can be done in various ways: You can get and set Coordinate Reference Systems (CRS) for layers using: ``` test.tif = SetCRS(tes.tif,GetCRS(test2.tif)); //get CRS from other file test.tif = SetCRS(tes.tif,GeoProjectionFromWGS84UTM(30,true)); //use WGS84 UTM 30 N test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4326)" />
 <link rel="canonical" href="http://localhost:4000/LISEM/docs/warping/" />
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/warping/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-14T14:42:33+02:00" />
+<meta property="article:published_time" content="2021-07-16T20:17:29+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Warping" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Warping","dateModified":"2021-07-14T14:42:33+02:00","datePublished":"2021-07-14T14:42:33+02:00","url":"http://localhost:4000/LISEM/docs/warping/","description":"void main() { array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;}); Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06)); array&lt;Map&gt; bands; for(int i = 0; i &lt; names.length(); i++) { bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06)))); } test.tif = bands; }","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Warping","dateModified":"2021-07-16T20:17:29+02:00","datePublished":"2021-07-16T20:17:29+02:00","url":"http://localhost:4000/LISEM/docs/warping/","description":"Warping raster can be done in various ways: You can get and set Coordinate Reference Systems (CRS) for layers using: ``` test.tif = SetCRS(tes.tif,GetCRS(test2.tif)); //get CRS from other file test.tif = SetCRS(tes.tif,GeoProjectionFromWGS84UTM(30,true)); //use WGS84 UTM 30 N test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4326)","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -149,6 +149,10 @@
           
             
             
+            <a class="list-group-item " href="/LISEM/docs/interpolation/">Interpolation</a>
+          
+            
+            
             <a class="list-group-item active" href="/LISEM/docs/warping/">Warping</a>
           
             
@@ -206,31 +210,46 @@
 
         <div class="col-md-8">
             <h1>Warping</h1>
-            <div id="markdown-content-container"><div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
-{
-    
-    array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{"B01","B02","B03","B04","B05","B06","B07","B08"});
-    
-    Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06));
-    array&lt;Map&gt; bands;
-    for(int i = 0; i &lt; names.length(); i++)
-    {
-        bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06))));
-    }
-    test.tif = bands;
-}
+            <div id="markdown-content-container"><p>Warping raster can be done in various ways:
+You can get and set Coordinate Reference Systems (CRS) for layers using:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>test.tif = SetCRS(tes.tif,GetCRS(test2.tif)); //get CRS from other file
+test.tif = SetCRS(tes.tif,GeoProjectionFromWGS84UTM(30,true)); //use WGS84 UTM 30 N
+test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4326)
+
 </code></pre></div></div>
 
-<p>RasterWarp</p>
+<p>The SetCRS function does not do any warping to the data. If you wish to re-project the data, use the following code:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>warped.tif = RasterProject(dem.tif,GeoProjectionFromWGS84UTM(30,true));
+warped.shp = VectorWarp(rivers.shp,GeoProjectionFromWGS84UTM(30,true));
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/warp_calc1.png" alt="Warping" /></p>
 
-<p>RasterCut</p>
+<p><img src="/LISEM/assets/img/warp_calc2.png" alt="Warping" /></p>
 
-<p>RasterToVector</p>
+<p>If you have a target raster (existing file with extent, crs and cell sizes), you can directly warp to this.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>warped.tif = RasterWarp(target.tif,GeoProjectionFromWGS84UTM(30,true));
+</code></pre></div></div>
 
-<p>VectorToRaster</p>
+<p>In order to select a subset of a raster dataset, use the <code class="language-plaintext highlighter-rouge">RasterCut</code> function.
+This function takes either a <code class="language-plaintext highlighter-rouge">Region</code>, or a pixel index.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>section_custom.tif = RasterCut(dem.tif,Region(0,1.0,0.0,1.0));
+section.tif = RasterCut(dem.tif,GetRegion(shape.shp));
+</code></pre></div></div>
+<p><img src="/LISEM/assets/img/warp_calc3.png" alt="Warping" /></p>
 
-<p>PointCloudToDem</p>
+<p>You can convert a raster dataset to a vector dataset using the <code class="language-plaintext highlighter-rouge">Vectorize</code> function.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rivers.shp = Vectorize(channelwidth.map,"width");
+</code></pre></div></div>
 
+<p><img src="/LISEM/assets/img/warp_calc4.png" alt="Warping" /></p>
+
+<p>You can also convert from vector to raster by using the <code class="language-plaintext highlighter-rouge">Rasterize</code> function.
+Depending on the options, this will rasterize an attribute of the vector dataset, or burn a specified value.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelwidth.tif = Rasterize(target.map,rivers.shp,"width"); //put attribute value of "width"
+channelwidth_burn.tif = Rasterize(target.map,rivers.shp,"",true,1.0); //burn value 1.0
+</code></pre></div></div>
+
+<p><img src="/LISEM/assets/img/warp_calc5.png" alt="Warping" /></p>
 </div>
             <div style="clear:both;">
               <p class="text-center">
@@ -270,12 +289,15 @@
 
   
   
+
+  
+  
     <ul class="pager">
       
         
         
         <li class="previous">
-          <a href="/LISEM/docs/elevationdata/">
+          <a href="/LISEM/docs/interpolation/">
             <span aria-hidden="true">&larr;</span> Previous
           </a>
         </li>

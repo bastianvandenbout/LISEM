@@ -89,7 +89,7 @@ inline cTMap * AS_InverseDistance(cTMap * mask, cTMap * points,cTMap * power)
     }
 
 
-    float dx = map->cellSize();
+    float csx = map->cellSize();
 
     for(int r = 0; r < map->data.nr_rows();r++)
     {
@@ -103,13 +103,17 @@ inline cTMap * AS_InverseDistance(cTMap * mask, cTMap * points,cTMap * power)
                 for(int i = 0; i < pointlist.size(); i++)
                 {
                     IDI_Point p = pointlist.at(i);
-                    float dx = (r-p.r) * dx;
-                    float dy = (c-p.c) * dx;
+                    float dx = (r-p.r) * csx;
+                    float dy = (c-p.c) * csx;
+
+                    //std::cout << r << " " << c << "  " << dx << " " << r << "  " << p.r << " " << dx << std::endl;
                     double distancew = std::pow(dx*dx + dy*dy,-0.5f * (power->AS_IsSingleValue? power->data[0][0]:power->data[r][c]));
                     val_total += p.val * distancew;
                     w_total += distancew;
 
                 }
+
+                //std::cout << r << "  " << c << "  " << w_total << "  " << val_total << " " << std::endl;
 
                 if(w_total > 0.0f)
                 {

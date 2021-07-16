@@ -15,17 +15,17 @@
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="Dynamic Models" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Writing a time loop" />
-<meta property="og:description" content="Writing a time loop" />
+<meta name="description" content="With the functionality available in the scripting language, it is possible to write full, fast geo-spatial models. Several convenience functions have been provided for this. Additionally, some usefull physicall processes, such as water flow, have pre-made functions that do most of the work for you." />
+<meta property="og:description" content="With the functionality available in the scripting language, it is possible to write full, fast geo-spatial models. Several convenience functions have been provided for this. Additionally, some usefull physicall processes, such as water flow, have pre-made functions that do most of the work for you." />
 <link rel="canonical" href="http://localhost:4000/LISEM/docs/dynamicmodels/" />
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/dynamicmodels/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-14T14:42:33+02:00" />
+<meta property="article:published_time" content="2021-07-16T20:17:29+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Dynamic Models" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Dynamic Models","dateModified":"2021-07-14T14:42:33+02:00","datePublished":"2021-07-14T14:42:33+02:00","url":"http://localhost:4000/LISEM/docs/dynamicmodels/","description":"Writing a time loop","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Dynamic Models","dateModified":"2021-07-16T20:17:29+02:00","datePublished":"2021-07-16T20:17:29+02:00","url":"http://localhost:4000/LISEM/docs/dynamicmodels/","description":"With the functionality available in the scripting language, it is possible to write full, fast geo-spatial models. Several convenience functions have been provided for this. Additionally, some usefull physicall processes, such as water flow, have pre-made functions that do most of the work for you.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -149,6 +149,10 @@
           
             
             
+            <a class="list-group-item " href="/LISEM/docs/interpolation/">Interpolation</a>
+          
+            
+            
             <a class="list-group-item " href="/LISEM/docs/warping/">Warping</a>
           
             
@@ -206,15 +210,146 @@
 
         <div class="col-md-8">
             <h1>Dynamic Models</h1>
-            <div id="markdown-content-container"><p>Writing a time loop</p>
+            <div id="markdown-content-container"><p>With the functionality available in the scripting language, it is possible to write full, fast geo-spatial models.
+Several convenience functions have been provided for this. Additionally, some usefull physicall processes, such as water flow, have pre-made functions that do most of the work for you.</p>
 
-<p>Simulating water flow</p>
+<p>First, let us make a script where we load an elevation model.</p>
 
-<p>Visualization of results</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+	Map dem = dem.tif;
+}
 
-<p>Adding boundary conditions</p>
+</code></pre></div></div>
 
-<p>Simulation terrain evolution</p>
+<p>Now, to simulat water flow, we have to make timesteps.
+We can add a loop that goes through the desired simulation period.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+	Map dem = dem.tif;
+	
+	//we will simulate 1 hour, with timesteps of 6 seconds.
+	int n_steps = 60 *60/6; //nunmber of timesteps
+	float t = 0.0; //time in seconds
+	float dt = 6.0; //timestep in seconds
+	
+	for(int i = 0; i &lt; n_steps; i++)
+	{
+		t = t + 6;
+		
+		//message the user if we are finished another minute
+		if( floor(t)%60 == 0)
+		{
+			Print("We are now at minute : " + ToString(t/60));
+		}
+	}
+}
+</code></pre></div></div>
+
+<p>When you run this script, you should see a message for each minute that passes in the simulation.
+However, no work is being done yet.
+To simulate water flow, we will keep track of rainfall.
+We will simulate a rainfall intensity of 50 mm/hour for the first half hour.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+	Map dem = dem.tif;
+	
+	//use the elevation model to create an empty map of identical size.
+	//this will be the water height, flow velocity in x and y direction
+	array&lt;Map&gt; flow = {dem * 0.0,dem * 0.0,dem * 0.0};
+	
+	
+	//we will simulate 1 hour, with timesteps of 6 seconds.
+	int n_steps = 60 *60/6; //nunmber of timesteps
+	float t = 0.0; //time in seconds
+	float dt = 6.0; //timestep in seconds
+	for(int i = 0; i &lt; n_steps; i++)
+	{
+		t = t + dt;
+		
+		if(t &lt; 30*60)
+		{
+			//convert to meter/hour
+			flow[0] += 50 * dt * 0.001 / (60*60);
+		}
+        
+        //make a timestep of 6 second with the dynamic flow approximation
+        //the resutls overwrites the old data
+        flow = FlowDynamic(dem,dem*0.0 + 0.1,flow[0],flow[1],flow[2],6,0.2);
+		
+		//message the user if we are finished another minute
+		if( floor(t)%60 == 0)
+		{
+			Print("We are now at minute : " + ToString(t/60));
+		}
+        
+        //save the model results
+	    h_final.tif = flow[0];
+    
+	}
+	
+}
+</code></pre></div></div>
+
+<p>We can also visualize the result while the model is running.
+Before the time loop, we add a hillshade map as a background and the initial water height.
+Then, during the simulation, we keep updating the flow heights.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+	Map dem = dem.tif;
+	
+	//use the elevation model to create an empty map of identical size.
+	//this will be the water height, flow velocity in x and y direction
+	array&lt;Map&gt; flow = {dem * 0.0,dem * 0.0,dem * 0.0};
+	
+    //add view layers
+    AddViewLayer(HillShade(dem),"hillshade");
+    UILayer hlay = AddViewLayer(flow[0],"flow height (m)");
+	
+	//we will simulate 1 hour, with timesteps of 6 seconds.
+	int n_steps = 60 *60/6; //nunmber of timesteps
+	float t = 0.0; //time in seconds
+	float dt = 6.0; //timestep in seconds
+	for(int i = 0; i &lt; n_steps; i++)
+	{
+		t = t + dt;
+		
+		if(t &lt; 30*60)
+		{
+			//convert to meter/hour
+			flow[0] += 50 * dt * 0.001 / (60*60);
+		}
+        
+        //make a timestep of 6 second with the dynamic flow approximation
+        //the resutls overwrites the old data
+        flow = FlowDynamic(dem,dem*0.0 + 0.1,flow[0],flow[1],flow[2],6,0.2);
+		
+		//message the user if we are finished another minute
+		if( floor(t)%60 == 0)
+		{
+			Print("We are now at minute : " + ToString(t/60));
+		}
+        
+        //update map viewer
+        ReplaceViewLayer(hlay,flow[0]);
+        
+        //save the model results
+	    h_final.tif = flow[0];
+    
+	}
+	
+}
+
+</code></pre></div></div>
+
+<p>The output to the map viewer can now be seen:</p>
+
+<p><img src="/LISEM/assets/img/dynamic_calc1.png" alt="Warping" /></p>
+
+<p>Scripts like these can be easily extended to have specific boundary conditions (incoming waves) or feature additional processes (infiltration, either static or a model such as Green and Ampt).</p>
 
 </div>
             <div style="clear:both;">
@@ -231,6 +366,9 @@
 
 
 
+
+  
+  
 
   
   
