@@ -620,7 +620,8 @@ void WorldWindow::RemoveNativeUILayers(int channel)
         {
             if(m_UILayerList.at(i)->GetChannel()==channel)
             {
-                m_UILayerList.removeAt(i);
+
+                m_UILayerList.at(i)->SetRemove();
             }
         }
     }

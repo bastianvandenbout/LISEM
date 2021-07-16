@@ -2026,6 +2026,227 @@ inline cTMap * AS_AccuFlux2D(cTMap * DEM, cTMap * Source, int iter_max, float he
 }
 
 
+inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int iter_max)
+{
+    if(!(DEM->data.nr_rows() == QS->data.nr_rows() && DEM->data.nr_cols() == QS->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for N");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == Accuflux->data.nr_rows() && DEM->data.nr_cols() == Accuflux->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for N");
+       throw -1;
+    }
+
+    if(iter_max < 1)
+    {
+        LISEMS_ERROR("Can not run steady state flow without iterations");
+        throw 1;
+    }
+
+    MaskedRaster<float> raster_data(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *H = new cTMap(std::move(raster_data),DEM->projection(),"");
+
+    //create temporary maps
+
+
+    float courant = 0.25;
+
+    MaskedRaster<float> raster_data2(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *HN = new cTMap(std::move(raster_data2),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data3(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QX1 = new cTMap(std::move(raster_data3),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data4(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QX2 = new cTMap(std::move(raster_data4),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data5(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QY1 = new cTMap(std::move(raster_data5),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data6(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QY2 = new cTMap(std::move(raster_data6),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data7(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SX = new cTMap(std::move(raster_data7),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data8(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SY = new cTMap(std::move(raster_data8),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data9(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *S = new cTMap(std::move(raster_data9),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data10(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SD = new cTMap(std::move(raster_data10),DEM->projection(),"");
+    MaskedRaster<float> raster_data11(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SDN = new cTMap(std::move(raster_data11),DEM->projection(),"");
+
+    double _dx = std::fabs(DEM->cellSizeX());
+    double hnmax = 0.0;
+    double sdmax = 0.0;
+    //do the loop
+
+    hnmax = 0.0;
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < DEM->data.nr_rows();r++)
+    {
+        for(int c = 0; c < DEM->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(Accuflux->data[r][c]))
+            {
+                Accuflux->data[r][c] = std::log(Accuflux->data[r][c]);
+            }
+        }
+    }
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < DEM->data.nr_rows();r++)
+    {
+        for(int c = 0; c < DEM->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(Accuflux->data[r][c]))
+            {
+                hnmax = std::max(hnmax,(double)Accuflux->data[r][c]);
+
+            }
+        }
+    }
+
+    if(hnmax > 0.0)
+    {
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(Accuflux->data[r][c]))
+                {
+                    H->data[r][c] = Accuflux->data[r][c]/hnmax;
+
+                }
+            }
+        }
+    }
+
+
+
+    //do the loop
+    for(int i = 0; i < iter_max; i++)
+    {
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+
+                    double dem = DEM->Drc;
+                    double demh =DEM->data[r][c]+H->data[r][c];
+                    bool outlet = false;
+                    if(OUTORMV(DEM,r,c-1) || OUTORMV(DEM,r,c+1) || OUTORMV(DEM,r-1,c) || OUTORMV(DEM,r+1,c))
+                    {
+                        outlet = 1.0;
+                    }
+
+                    double demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                    double demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                    double demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                    double demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                    double pit = std::min(std::max(0.0,demx1 - dem),std::min(std::max(0.0,demx2 - dem),std::min(std::max(0.0,demy1 - dem),std::max(0.0,demy2 - dem))));
+
+                    dem = dem + pit;
+                    demh = demh + pit;
+
+                    double sd = std::max(0.0f,SD->data[r][c]);
+
+                    double shx1 = !OUTORMV(DEM,r,c-1)? SD->data[r][c-1] : sd;
+                    double shx2 = !OUTORMV(DEM,r,c+1)? SD->data[r][c+1] : sd;
+                    double shy1 = !OUTORMV(DEM,r-1,c)? SD->data[r-1][c] : sd;
+                    double shy2 = !OUTORMV(DEM,r+1,c)? SD->data[r+1][c] : sd;
+
+
+                    double Sx1 = std::max(0.0,((dem)- (demx1))/(_dx));
+                    double Sx2 = std::max(0.0,((dem)- (demx2))/(_dx));
+                    double Sy1 = std::max(0.0,((dem)- (demy1))/(_dx));
+                    double Sy2 = std::max(0.0,((dem)- (demy2))/(_dx));
+
+                    double St =Sx1 + Sx2 + Sy1 + Sy2;
+
+                    double flowwidth = _dx;
+                    double sd3 = sd*sd*sd;
+                    double qx1 = Sx1 * shx1 * shx1 * Sx1;
+                    double qx2 = Sx2 * shx2 * shx2 * Sx2;
+                    double qy1 = Sy1 * shy1 * shy1 * Sy1;
+                    double qy2 = Sy2 * shy2 * shy2 * Sy2;
+
+                    Sx1 = std::max(0.0,-((dem)- (demx1))/(_dx));
+                    Sx2 = std::max(0.0,-((dem)- (demx2))/(_dx));
+                    Sy1 = std::max(0.0,-((dem)- (demy1))/(_dx));
+                    Sy2 = std::max(0.0,-((dem)- (demy2))/(_dx));
+
+                    double qxo1 = Sx1 * shx1 * shx1 * Sx1;
+                    double qxo2 = Sx2 * shx2 * shx2 * Sx2;
+                    double qyo1 = Sy1 * shy1 * shy1 * Sy1;
+                    double qyo2 = Sy2 * shy2 * shy2 * Sy2;
+
+                    double wsum = -(-qx1 + qxo1 - qy1 + qyo1 -qx2 + qxo2 - qy2 + qyo2);
+                    H->data[r][c] = std::max(0.01f,H->data[r][c]);
+                    SDN->data[r][c] = 1.0 * (std::max(0.01,std::log(std::max(1.0,_dx*_dx/(( std::log(Accuflux->data[r][c]) * wsum  + QS->data[r][c] * _dx*_dx*_dx * H->data[r][c] ))))));
+                }
+            }
+        }
+
+
+        sdmax = 0.0;
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(SDN->data[r][c]))
+                {
+
+                    SD->data[r][c] = SDN->data[r][c];
+                    sdmax = std::max(sdmax,(double) SDN->data[r][c]);
+                }
+            }
+        }
+    }
+
+    if(sdmax > 0.0)
+    {
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(SD->data[r][c]))
+                {
+
+                    SD->data[r][c] = sdmax - SDN->data[r][c];
+                }
+            }
+        }
+    }
+
+    //delete temporary map
+
+    delete HN;
+    delete QX1;
+    delete QX2;
+    delete QY1;
+    delete QY2;
+    delete SDN;
+    delete S;
+    delete SX;
+    delete SY;
+
+    return SD;
+}
 
 
 

@@ -639,6 +639,7 @@ public:
 
     RasterStreamBuffer *  Fill_RasterStreamBuffers(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm, QList<RasterStreamBuffer*> &Buffers, int band)
     {
+        std::cout << "fill raster buffers " << band <<  std::endl;
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
 
         BoundingBox b;
@@ -882,7 +883,7 @@ public:
                 //make new one
                 if(rsb == nullptr)
                 {
-                    //std::cout << "create  buffer " << std::endl;
+                    std::cout << "create  buffer " << std::endl;
                     //create new buffer object
 
 
@@ -890,9 +891,11 @@ public:
                     rsb->SetFutureFrom(bfinal,GetProjection(),band);
                     Buffers.prepend(rsb);
 
+                    std::cout << "created " << std::endl;
                 }else {
 
 
+                    std::cout << "set future from " << std::endl;
                     rsb->SetFutureFrom(bfinal,GetProjection(),band);
                 }
 
@@ -909,9 +912,13 @@ public:
                         rsb->m_SignMutex->lock();
                         rsb->write_done = false;
 
+                        std::cout << "read values pre " << std::endl;
                         rsb->m_SignMutex->unlock();
                         m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex);
                         rsb->m_SignMutex->lock();
+
+                        std::cout << "read values post " << std::endl;
+
 
                         rsb->rRead_Started = false;
                         rsb->write_done = true;
@@ -933,9 +940,15 @@ public:
 
             rsb->m_SignMutex->unlock();
 
+            std::cout << "fill raster buffers done " << band <<  std::endl;
+
+
             return rsb;
         }
 
+
+
+        std::cout << "fill raster buffers done " << band <<  std::endl;
 
         return nullptr;
     }

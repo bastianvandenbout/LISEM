@@ -21,6 +21,10 @@
 #include "OpenCLUtil.h"
 #include "cl.hpp"
 
+#include <condition_variable>
+#include <thread>
+#include <chrono>
+
 #include "openglclmanager.h"
 #include "openclprogram.h"
 #include "openglprogram.h"
@@ -132,11 +136,8 @@ typedef struct AS_MODELRESULT
 #include "boost/any.hpp"
 
 
-
-
-class LISEM_API LISEMModel : public QThread
+class LISEM_API LISEMModel
 {
-    Q_OBJECT
 
 public:
     LISEMModel(OpenGLCLManager * in_OpenGLCLManager, ParameterManager * pm);
@@ -155,6 +156,7 @@ public:
     void CopyToUI();
     void GetOutput(float t, float dt);
     void ReportOutputToDisk();
+    void ReportOutputToDiskAct();
     void ReportOutputToInterface(float t, float dt);
     void ModelRunInitialize();
     void ModelRunLoadData();
@@ -376,7 +378,7 @@ public:
     }
 
 
-    void run() override;
+    void run();
     void DoModelRun();
 
 
@@ -766,6 +768,62 @@ public:
     TimeSeries m_Vapr;
     TimeSeries m_NDVI;
 
+
+
+
+    std::thread m_StarterThread;
+    inline void start()
+    {
+        std::cout << "start "<< std::endl;
+        m_StarterThread = std::thread(&(LISEMModel::ModelStarterThread), this);
+        m_ReportThread = std::thread(&(LISEMModel::ModelReportThread), this);
+
+    }
+
+    std::mutex m_StarterQuitCondition;
+    bool m_StarterQuitRequested = false;
+    std::mutex m_StarterStartCondition;
+    bool m_StarterStartRequested = false;
+    std::condition_variable m_StarterStartRequestedCondition;
+    inline void ModelStarterThread()
+    {
+        while(true)
+        {
+            std::cout << "try wait "<< std::endl;
+            std::unique_lock<std::mutex> lock(m_StarterStartCondition);
+            std::cout << "try wait_2 " << std::endl;
+            m_StarterStartRequestedCondition.wait(lock);
+
+             std::cout << "test quit"<< std::endl;
+             m_StarterQuitCondition.lock();
+             if(m_StarterQuitRequested)
+             {
+                return;
+             }
+             m_StarterQuitCondition.unlock();
+
+             std::cout << "run"<< std::endl;
+             if(m_StarterStartRequested)
+             {
+                 lock.unlock();
+                 m_StarterStartRequested = false;
+                 this->run();
+             }
+        }
+    }
+
+
+
+    std::thread m_ReportThread;
+
+    std::mutex m_ReportFinish;
+    std::condition_variable m_ReportFinishCondition;
+    std::mutex m_ReportQuitCondition;
+    bool m_ReportQuitRequested = false;
+    std::mutex m_ReportStartCondition;
+    bool m_ReportStartRequested = false;
+    std::condition_variable m_ReportStartRequestedCondition;
+    void ModelReportThread();
 
 };
 

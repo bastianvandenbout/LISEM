@@ -11,21 +11,21 @@
 
     <link rel="shortcut icon" href="/LISEM/favicon.ico?1">
     <!-- Begin Jekyll SEO tag v2.7.1 -->
-<title>Calibration | LISEM</title>
+<title>Interpolation | LISEM</title>
 <meta name="generator" content="Jekyll v3.9.0" />
-<meta property="og:title" content="Calibration" />
+<meta property="og:title" content="Interpolation" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Calibration Script ``` double Calibrate(array params) {​​​" />
-<meta property="og:description" content="Calibration Script ``` double Calibrate(array params) {​​​" />
-<link rel="canonical" href="http://localhost:4000/LISEM/docs/calibration/" />
-<meta property="og:url" content="http://localhost:4000/LISEM/docs/calibration/" />
+<meta name="description" content="Linear Cubuc Sparse" />
+<meta property="og:description" content="Linear Cubuc Sparse" />
+<link rel="canonical" href="http://localhost:4000/LISEM/docs/interpolation/" />
+<meta property="og:url" content="http://localhost:4000/LISEM/docs/interpolation/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2021-07-14T14:42:33+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Calibration" />
+<meta property="twitter:title" content="Interpolation" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Calibration","dateModified":"2021-07-14T14:42:33+02:00","datePublished":"2021-07-14T14:42:33+02:00","url":"http://localhost:4000/LISEM/docs/calibration/","description":"Calibration Script ``` double Calibrate(array params) {​​​","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Interpolation","dateModified":"2021-07-14T14:42:33+02:00","datePublished":"2021-07-14T14:42:33+02:00","url":"http://localhost:4000/LISEM/docs/interpolation/","description":"Linear Cubuc Sparse","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -140,7 +140,7 @@
       </div>
       
       
-      <div class="panel-collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+      <div class="panel-collapse collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
         <div class="list-group">
           
             
@@ -165,7 +165,7 @@
           
             
             
-            <a class="list-group-item active" href="/LISEM/docs/calibration/">Calibration</a>
+            <a class="list-group-item " href="/LISEM/docs/calibration/">Calibration</a>
           
             
             
@@ -205,43 +205,22 @@
         </div>
 
         <div class="col-md-8">
-            <h1>Calibration</h1>
-            <div id="markdown-content-container"><p>Calibration Script</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>double Calibrate(array&lt;double&gt; params)
-{​​​
+            <h1>Interpolation</h1>
+            <div id="markdown-content-container"><p>Linear
+Cubuc
+Sparse</p>
 
+<p>InverseDistance</p>
 
-RunModel("run/Couli_AutoCalib.run","Internal Friction Angle_cal_mult="+ToString(params[0])+"|" + "Cohesion Bottom_cal_mult="+ToString(params[1]));
+<p>Kriging</p>
 
-Map impact = LoadMap("res/safetyfactor.map");
-Map inventory = 1.0-LoadMap("maps/inventory.tif");
-double errorval = MapContinuousCohensKappa(inventory,impact,1.0);
+<p>SuperResolution</p>
 
-Print("Running model with ifa= " + ToString(params[0]) +"&amp; coh= " + ToString(params[1]) + " score = " + ToString(1.0-errorval));
-
-return (1.0-errorval);
-}​​​
-
-
-void main()
-{​​​
-OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05);
-}​​​
-</code></pre></div></div>
-
-<p>ContinuousCohensKappa</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>double errorval = MapContinuousCohensKappa(inventory,impact,1.0);
-</code></pre></div></div>
-
-<p>Gradient Descent</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05); 
-</code></pre></div></div>
 </div>
             <div style="clear:both;">
               <p class="text-center">
                 <br />
-                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/_docs/examples/calibration.md" class="btn btn-default" role="button">
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/_docs/examples/interpolation.md" class="btn btn-default" role="button">
                   <i class="fa fa-pencil fa-lg"></i> Improve this page
                 </a>
               </p>
@@ -288,29 +267,16 @@ OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibr
 
   
   
-    <ul class="pager">
-      
-        
-        
-        <li class="previous">
-          <a href="/LISEM/docs/filters/">
-            <span aria-hidden="true">&larr;</span> Previous
-          </a>
-        </li>
-      
 
-      
-        
-        
-        <li class="next">
-          <a href="/LISEM/docs/webdata/">
-            Next <span aria-hidden="true">&rarr;</span>
-          </a>
-        </li>
-      
-      </ul>
-    <div class="clear"></div>
-    
+  
+  
+
+  
+  
+
+  
+  
+
 
         </div>
 

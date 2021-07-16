@@ -77,6 +77,7 @@ inline void init_pylisem_io(py::module &m)
     m.def("GetMapListNames",&GetMapBandListStrings,py::arg("name"),py::arg("count"),py::arg("start"),py::arg("between") = QString("_"));
     m.def("GetMapListName",&GetMapBandListString,py::arg("name"),py::arg("index"),py::arg("between") = QString("_"));
     m.def("GetFilesInDir",&AS_GetFilesInDir,py::arg("Dir"),py::arg("Filter"));
+    m.def("GetItemsContaining",&AS_GetItemsContaining,py::arg("Items"),py::arg("Filter"), py::arg("AllowDouble") = false);
 
 
     py::class_<AS_ByteArray>(m,"ByteArray")

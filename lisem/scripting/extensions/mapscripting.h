@@ -34,7 +34,7 @@
 #include "raster/rasterpainting.h"
 #include "raster/rasterincompressibleflow.h"
 #include "scriptarrayhelpers.h"
-
+#include "stat/mlsupersampling.h"
 
 
 inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
@@ -509,6 +509,8 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
 
     //table interactions
+
+    r = engine->RegisterGlobalFunction("Table @RasterConfusionMatrix(Map &real, Map&model)", asFUNCTIONPR( AS_RasterConfusionTable,(cTMap*,cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @RasterFromTableValues(Table &table,Map &RowValue, Map &ColumnValue)", asFUNCTIONPR( AS_RasterFromTableHeader,(MatrixTable *,cTMap*,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @RasterFromTable(Table &table,Map &Row, Map &Column)", asFUNCTIONPR( AS_RasterFromTable,(MatrixTable *,cTMap*,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Table @RasterClasses(Map &m)", asFUNCTIONPR( AS_RasterTableClasses,(cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );
@@ -535,6 +537,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D(const Map &in DEM, const Map &in Source, const Map &in FlowSource, int iter = 100, float courant = 0.2,float scale =1.0 )", GetFuncConvert( AS_AccuFluxDiffusive));
     r = engine->RegisterGlobalFunction("Map @SteadyStateSoil(const Map &in DEM, const Map &in Source, const Map &in QS, int iter = 100)", asFUNCTIONPR(    AS_SteadyStateSoil,(cTMap *,cTMap *,cTMap*,int),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
+    r = engine->RegisterGlobalFunction("Map @AccufluxSoil(const Map &in DEM, const Map &in Accuflux, const Map &in QS, int iter = 100)", asFUNCTIONPR(    AS_AccufluxSoil,(cTMap *,cTMap *,cTMap*,int),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalFunction("Map @FlowTransient(const Map &in DEM, const Map &in HSoil, const Map &in KSAT, const Map &in Porosity, const Map &in gwh, float dt, bool inflowlimit = true)", asFUNCTIONPR(    AS_TransientFlow,(cTMap *,cTMap *,cTMap*,cTMap *, cTMap*,float,bool),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowIncompressible(const Map &in M, const Map &in U, const Map &in U, const Map &in P, const Map &in LS, const Map &in Block,const Map &in BlockU,const Map &in BlockV, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(AS_IncompressibleWave));
     r = engine->RegisterGlobalFunction("Map @MVMap(const Map &in M)", asFUNCTIONPR(    AS_MVMap,(cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
@@ -581,6 +584,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("Map @RandomGaborNoise(const Map &in mask, float dirx, float diry, float scalex, float scaley)", asFUNCTIONPR( AS_GaborNoise,(cTMap*,float,float,float,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     engine->RegisterGlobalFunction("Map @RandomVoronoise(const Map &in mask, float scalex, float scaley, int pointn = 1)", asFUNCTIONPR( AS_Voronoise,(cTMap*,float,float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
+    engine->RegisterGlobalSTDFunction("array<Map> @ApplyMLModel(array<Map> &in image, string modelpath, int pathsize_x, int patchsize_y , array<int> &in inputbasis = {0,1,2,3},bool fill = false)",GetFuncConvert(ApplyMLBModel));
 
 }
 

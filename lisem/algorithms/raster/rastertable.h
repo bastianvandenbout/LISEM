@@ -3,6 +3,137 @@
 
 #include "matrixtable.h"
 #include "geo/raster/map.h"
+inline MatrixTable * AS_RasterConfusionTable(cTMap * Real,cTMap * Model)
+{
+    if(!(Real->nrCols() == Model->nrCols() && Real->nrRows() == Model->nrRows() ))
+
+    MatrixTable * ret = new MatrixTable();
+
+    std::vector<int> classes;
+    std::vector<int> mclasses;
+
+    float cellarea = std::fabs(Real->cellSizeX() * Real->cellSizeY());
+
+    //we need to find averages for each class
+    //first, we find all the classes
+    for(int r = 0; r < Real->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Real->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(Real->data[r][c]))
+            {
+                bool found = false;
+                int class_current = (int)Real->data[r][c];
+                int i;
+                for(i= 0; i < classes.size(); i++)
+                {
+                    if(class_current == classes.at(i))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(found)
+                {
+                }else
+                {
+                    i = classes.size();
+                    classes.push_back(class_current);
+                }
+            }
+
+        }
+    }
+
+
+    for(int r = 0; r < Model->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Model->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(Model->data[r][c]))
+            {
+                bool found = false;
+                int class_current = (int)Model->data[r][c];
+                int i;
+                for(i= 0; i < mclasses.size(); i++)
+                {
+                    if(class_current == mclasses.at(i))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(found)
+                {
+                }else
+                {
+                    i = mclasses.size();
+                    mclasses.push_back(class_current);
+                }
+            }
+
+        }
+    }
+
+    std::vector<std::vector<int>> m_counts;
+
+    for(int i = 0; i < classes.size() ; i++)
+    {
+        std::vector<int> m_countsinner;
+
+        for(int j = 0; j  < mclasses.size() ; j++)
+        {
+            m_countsinner.push_back(0);
+        }
+        m_counts.push_back(m_countsinner);
+    }
+    for(int r = 0; r < Model->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Model->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(Model->data[r][c]))
+            {
+                bool found = false;
+                int class_m = (int)Model->data[r][c];
+                int class_r = (int)Real->data[r][c];
+
+                bool dobreak = false;
+                for(int i = 0; i < classes.size(); i++)
+                {
+                    if(dobreak)
+                    {
+                        break;
+                    }
+                    for(int j = 0; j  < mclasses.size() ; j++)
+                    {
+                        if(classes.at(i) == class_m && mclasses.at(j) == class_r)
+                        {
+                            m_counts.at(i).at(j) += 1;
+                            dobreak= true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    MatrixTable * ret = new MatrixTable();
+    ret->SetSize(classes.size(),mclasses.size());
+    for(int i = 0; i < classes.size(); i++)
+    {
+        for(int j = 0; j  < mclasses.size() ; j++)
+        {
+            ret->SetValue(i,j,m_counts.at(i).at(j));
+        }
+    }
+
+    return ret;
+}
+
 
 inline MatrixTable * AS_RasterTableClasses(cTMap * Other)
 {

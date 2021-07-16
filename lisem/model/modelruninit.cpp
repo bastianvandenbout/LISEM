@@ -258,8 +258,6 @@ void LISEMModel::ModelRunLoadData()
     m_ElasticModulus = GetOptionDouble("Elastic Modulus");
     m_ShearModulus = GetOptionDouble("Shear Modulus");
 
-    std::cout << "moduli " << m_ShearModulus<<  "  " <<m_ElasticModulus <<  std::endl;
-
     m_DragMult = GetOptionDouble("Drag coefficient multiplier");
     m_ReynolldsMult = GetOptionDouble("Reynolds Number Multiplier");
     m_InitialStabMargin = GetOptionDouble( "Initial Stability Margin");
@@ -404,16 +402,7 @@ void LISEMModel::ModelRunLoadData()
 
         D50 = GetMap(0.0);
         D90 = GetMap(0.0);
-        /*SED = GetMap(0.0);
-        CHSED = GetMap(0.0);
-        DETTOT = GetMap(0.0);
-        DEPTOT = GetMap(0.0);
-        SEDN = GetMap(0.0);
-        CHSEDN = GetMap(0.0);
-        DETTOTN = GetMap(0.0);
-        DEPTOTN = GetMap(0.0);
-        QSEDOUT = GetMap(0.0);
-        QSEDOUTN = GetMap(0.0);*/
+
         Y = GetMap(0.0);
         HARDCOVER = GetMap(0.0);
 
@@ -548,6 +537,17 @@ void LISEMModel::ModelRunLoadData()
         m_BlockX = GetMap(0.0);
         m_BlockY = GetMap(0.0);
     }
+
+    /*SED = GetMap(0.0);
+    CHSED = GetMap(0.0);
+    DETTOT = GetMap(0.0);
+    DEPTOT = GetMap(0.0);
+    SEDN = GetMap(0.0);
+    CHSEDN = GetMap(0.0);
+    DETTOTN = GetMap(0.0);
+    DEPTOTN = GetMap(0.0);
+    QSEDOUT = GetMap(0.0);
+    QSEDOUTN = GetMap(0.0);*/
 
 }
 
@@ -1448,6 +1448,37 @@ void LISEMModel::ModelRunDeleteData()
         SAFE_DELETE(m_DataPropsPhysical);
     }
 
+
+    /*SAFE_DELETE(m_CLProgram_Particles);
+    SAFE_DELETE(m_CLProgram_Particles2);
+    SAFE_DELETE(m_CLProgram_ParticlesToMaps);
+    SAFE_DELETE(m_CLProgram_ParticlesFromMaps);
+    SAFE_DELETE(m_CLProgram_Flow);
+    SAFE_DELETE(m_CLProgram_Flow2);
+    SAFE_DELETE(m_CLProgram_Infiltration);
+    SAFE_DELETE(m_CLProgram_Infiltration2);
+    SAFE_DELETE(m_CLProgram_Hydrology);
+    SAFE_DELETE(m_CLProgram_Hydrology2);
+    SAFE_DELETE(m_CLProgram_Erosion);
+    SAFE_DELETE(m_CLProgram_Erosion2);
+    SAFE_DELETE(m_CLProgram_Rigid);
+    SAFE_DELETE(m_CLProgram_Rigid2);
+    SAFE_DELETE(m_CLProgram_GroundWaterFlow);
+    SAFE_DELETE(m_CLProgram_GroundWaterFlow2);
+    SAFE_DELETE(m_CLProgram_SlopeStability);
+    SAFE_DELETE(m_CLProgram_SlopeStabilityE);
+    SAFE_DELETE(m_CLProgram_SlopeFailure);
+    SAFE_DELETE(m_CLProgram_SlopeFailureE);
+    SAFE_DELETE(m_CLProgram_SlopeFailure2);
+    SAFE_DELETE(m_CLProgram_SlopeFailureP2);
+    SAFE_DELETE(m_CLProgram_SubSurfaceForce1);
+    SAFE_DELETE(m_CLProgram_SubSurfaceForce2);
+    SAFE_DELETE(m_CLProgram_FlowSolids);
+    SAFE_DELETE(m_CLProgram_FlowSolids2);
+    SAFE_DELETE(m_CLProgram_FlowSolidsParticle);
+    SAFE_DELETE(m_CLProgram_FlowSolidsParticle2);
+    SAFE_DELETE(m_CLProgram_Sort);
+    SAFE_DELETE(m_CLProgram_StoreIndices);*/
 
     LISEM_STATUS("Finished deleting all model related memory objects");
 

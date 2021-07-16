@@ -218,9 +218,54 @@ void LISEMModel::GetOutput(float t, float dt)
 }
 
 
+
+void LISEMModel::ModelReportThread()
+{
+    while(true)
+    {
+        std::cout << "tryr wait "<< std::endl;
+        std::unique_lock<std::mutex> lock(m_ReportStartCondition);
+        std::cout << "tryr wait_2 " << std::endl;
+        m_ReportStartRequestedCondition.wait(lock);
+
+         std::cout << "testr quit"<< std::endl;
+         m_ReportQuitCondition.lock();
+         if(m_ReportQuitRequested)
+         {
+            return;
+         }
+         m_ReportQuitCondition.unlock();
+
+         std::cout << "runr"<< std::endl;
+         if(m_ReportStartRequested)
+         {
+             lock.unlock();
+             m_ReportStartRequested = false;
+             this->ReportOutputToDiskAct();
+
+             m_ReportFinishCondition.notify_all();
+         }
+
+
+    }
+}
+
+void LISEMModel::ReportOutputToDisk()
+{
+    std::unique_lock<std::mutex> lock(m_ReportFinish);
+
+    //let the report thread do its thing
+    m_ReportStartRequested = true;
+    this->m_ReportStartRequestedCondition.notify_all();
+
+    //now wait for it to finish
+
+    m_ReportFinishCondition.wait(lock);
+}
+
 //this function is called from a seperate thread that is restarted after each timestep.
 //the maps meant for output can be safely written in GetOutput(), and further only be used during this function
-void LISEMModel::ReportOutputToDisk()
+void LISEMModel::ReportOutputToDiskAct()
 {
 
     QString ext = m_DoOutputTiff? ".tif" : ".map";

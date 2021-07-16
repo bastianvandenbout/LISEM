@@ -19,6 +19,7 @@ LISEMModel::LISEMModel(OpenGLCLManager * in_OpenGLCLManager, ParameterManager * 
 void LISEMModel::InitModel()
 {
      m_KernelDir = GetSite() +LISEM_FOLDER_KERNELS;
+     start();
 
 }
 
@@ -44,7 +45,8 @@ void LISEMModel::OnStep()
         {
             m_Paused = false;
             m_Started = true;
-            this->start();
+            m_StarterStartRequested = true;
+            this->m_StarterStartRequestedCondition.notify_all();
         }
     }
 
@@ -167,13 +169,17 @@ cTMap *LISEMModel::GetMapSubSection(cTMap * m)
 
 cTMap *LISEMModel::GetBaseMap(QString path)
 {
-
     m_BaseMap = GetMapSubSection(new cTMap(readRaster(path)));
 
     m_BaseWidth = m_BaseMap->nrCols();
     m_BaseHeight = m_BaseMap->nrRows();
 
     _dx = m_BaseMap->cellSize();
+
+    if(m_BaseMap)
+    {
+        m_MapList.append(m_BaseMap);
+    }
 
     return m_BaseMap;
 }
@@ -267,7 +273,6 @@ cTMap *LISEMModel::GetMap(QString path)
 
 void LISEMModel::DestroyMaps()
 {
-    delete m_BaseMap;
     m_BaseMap = NULL;
     if(m_MaskMap != nullptr)
     {
@@ -393,12 +398,12 @@ bool LISEMModel::IsRunning()
 void LISEMModel::Destroy()
 {
 
-    if(this->isRunning())
+    if(this->IsRunning())
     {
         this->RequestStop();
 
         //this->terminate();
-        this->wait();
+        //this->wait();
 
         //while these are set for formality, there can be no new work done with this class as long as the mutex object are not reset.
         //since we quit the thread (possibly mid-execution) we could have left mutex objects locked leading to unpredictible behavior.
@@ -423,9 +428,18 @@ void LISEMModel::Destroy()
 
 
     }
+    this->m_StarterQuitCondition.lock();
+    this->m_StarterQuitRequested = true;
+    this->m_StarterQuitCondition.unlock();
 
 
+    this->m_StarterStartRequestedCondition.notify_all();
 
+    if(this->m_StarterThread.joinable())
+    {
+        std::cout << "try to join start thread" << std::endl;
+        this->m_StarterThread.join();
+    }
 
 }
 

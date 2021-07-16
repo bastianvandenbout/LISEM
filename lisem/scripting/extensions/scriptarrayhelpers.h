@@ -235,6 +235,23 @@ public:
 
 
 template<>
+class asbindc_convert<CScriptArray*, std::vector<int>>
+{
+
+public:
+
+    inline static std::vector<int> asbind_convert(CScriptArray* x)
+    {
+        std::vector<int> ret = x->ToSTDList<int>();
+        return ret;
+    }
+
+
+};
+
+
+
+template<>
 class asbindc_convert<CScriptArray*, std::vector<LSMVector2>>
 {
 
@@ -283,7 +300,41 @@ public:
 
 };
 
+template<>
+class asbindc_convert<std::vector<QString>,CScriptArray*>
+{
 
+public:
+
+    inline static CScriptArray * asbind_convert(std::vector<QString> x)
+    {
+        std::cout << "convert output qstringlist " << x.size() << std::endl;
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        if(ctx != nullptr)
+        {
+            asIScriptEngine *engine = ctx->GetEngine();
+            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<string>");
+
+            // Create the array object
+            CScriptArray *array = CScriptArray::Create(arrayType);
+
+            array->Resize(x.size());
+
+            for(int i = 0; i < x.size(); ++i)
+            {
+                array->SetValue(i,(void*)(new QString(x.at(i))),false);
+            }
+
+            std::cout << "return list "<< array->GetSize() <<  std::endl;
+            return array;
+
+        }
+        LISEMS_ERROR("Could not convert list to std::vector");
+        throw 1;
+    }
+
+};
 
 template<>
 class asbindc_convert<std::vector<float>,CScriptArray*>

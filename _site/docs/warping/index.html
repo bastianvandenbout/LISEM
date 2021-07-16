@@ -15,17 +15,17 @@
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="Warping" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="RasterWarp" />
-<meta property="og:description" content="RasterWarp" />
+<meta name="description" content="void main() { array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;}); Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06)); array&lt;Map&gt; bands; for(int i = 0; i &lt; names.length(); i++) { bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06)))); } test.tif = bands; }" />
+<meta property="og:description" content="void main() { array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;}); Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06)); array&lt;Map&gt; bands; for(int i = 0; i &lt; names.length(); i++) { bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06)))); } test.tif = bands; }" />
 <link rel="canonical" href="http://localhost:4000/LISEM/docs/warping/" />
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/warping/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-09T23:24:17+02:00" />
+<meta property="article:published_time" content="2021-07-14T14:42:33+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Warping" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Warping","dateModified":"2021-07-09T23:24:17+02:00","datePublished":"2021-07-09T23:24:17+02:00","url":"http://localhost:4000/LISEM/docs/warping/","description":"RasterWarp","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Warping","dateModified":"2021-07-14T14:42:33+02:00","datePublished":"2021-07-14T14:42:33+02:00","url":"http://localhost:4000/LISEM/docs/warping/","description":"void main() { array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;}); Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06)); array&lt;Map&gt; bands; for(int i = 0; i &lt; names.length(); i++) { bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06)))); } test.tif = bands; }","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -206,7 +206,22 @@
 
         <div class="col-md-8">
             <h1>Warping</h1>
-            <div id="markdown-content-container"><p>RasterWarp</p>
+            <div id="markdown-content-container"><div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{
+    
+    array&lt;string&gt; names = GetItemsContaining(GetFilesInDir(),{"B01","B02","B03","B04","B05","B06","B07","B08"});
+    
+    Map mask = RasterCut(LoadMap(names[1]),Region(301575,334651,5.72216e+06,5.75079e+06));
+    array&lt;Map&gt; bands;
+    for(int i = 0; i &lt; names.length(); i++)
+    {
+        bands.Append(RasterWarp(mask,RasterCut(LoadMap(names[i]),Region(301575,334651,5.72216e+06,5.75079e+06))));
+    }
+    test.tif = bands;
+}
+</code></pre></div></div>
+
+<p>RasterWarp</p>
 
 <p>RasterCut</p>
 

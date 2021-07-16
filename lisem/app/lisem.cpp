@@ -126,7 +126,7 @@ int SPHazard::execute(int argc, char *argv[])
         m_OpenGLCLManager = new OpenGLCLManager();
         m_ParameterManager = new ParameterManager();
         m_model = new LISEMModel(m_OpenGLCLManager,m_ParameterManager);
-        m_model->InitModel();
+        //m_model->InitModel();
         SetGlobalModel(m_model);
         m_InterfaceWindow = new QTInterfaceWindow();
 

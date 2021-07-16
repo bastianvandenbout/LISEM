@@ -829,7 +829,49 @@ inline static std::vector<cTMap *> LoadMapBandListFromStrings(std::vector<QStrin
     return array;
 }
 
-inline static std::vector<QString> AS_GetFilesInDir(QString &dir, QString filter)
+inline static std::vector<QString> AS_GetItemsContaining(std::vector<QString> items, std::vector<QString> select, bool allow_double = false)
+{
+
+    std::vector<QString> res;
+
+    for(int i = 0; i < select.size() ; i++)
+    {
+
+        for(int j=0; j < items.size(); j++)
+        {
+
+            if(items.at(j).contains(select.at(i)))
+            {
+                if(allow_double)
+                {
+                    res.push_back(items.at(j));
+                }else
+                {
+                    bool found = false;
+                    for(int k = 0; k < res.size(); k++)
+                    {
+                        if(res.at(k) == items.at(j))
+                        {
+                            found = true;
+                            break;
+
+                        }
+                    }
+
+                    if(!found)
+                    {
+                        res.push_back(items.at(j));
+                    }
+
+                }
+            }
+        }
+    }
+    return res;
+}
+
+
+inline static std::vector<QString> AS_GetFilesInDir(QString dir, QString filter)
 {
     QDir d(AS_DIR + dir);
 
@@ -847,8 +889,10 @@ inline static std::vector<QString> AS_GetFilesInDir(QString &dir, QString filter
         array.push_back(QString(rel +"/" + files.at(i)));
     }
 
+
     return array;
 }
+
 inline static QString GetMapBandListString(const QString & name, int count, QString between)
 {
 

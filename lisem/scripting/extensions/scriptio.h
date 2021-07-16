@@ -3,8 +3,9 @@
 
 #include "scriptmanager.h"
 #include "lsmio.h"
+#include "scriptarrayhelpers.h"
 
-inline static void RegisterScriptFunctionsIO(asIScriptEngine * sm)
+inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
 {
    sm->RegisterGlobalFunction("Table @LoadTable(const string &in s)", asFUNCTION( AS_LoadTableFromFile), asCALL_CDECL);
    sm->RegisterGlobalFunction("void SaveTable(Table &in sh, const string &in s)", asFUNCTION( AS_SaveTableToFile), asCALL_CDECL);
@@ -32,11 +33,12 @@ inline static void RegisterScriptFunctionsIO(asIScriptEngine * sm)
    sm->RegisterGlobalFunction("string GetFileDir(string s)", asFUNCTION( AS_GetFileDir),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetFileName(string s)", asFUNCTION( AS_GetFileName),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetFileExt(string s)", asFUNCTION( AS_GetFileExt),  asCALL_CDECL);
-   sm->RegisterGlobalFunction("array<Map>@ LoadMapBandList(string s)", asFUNCTION( LoadMapBandList),  asCALL_CDECL);
-   sm->RegisterGlobalFunction("array<Map>@ LoadMapBandList(array<string> &in s)", asFUNCTION( LoadMapBandListFromStrings),  asCALL_CDECL);
-   sm->RegisterGlobalFunction("array<string>@ GetMapListNames(string & in name, int count, int start = 0, string between = \"_\")", asFUNCTION( GetMapBandListStrings),  asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("array<Map>@ LoadMapBandList(string s)", ( GetFuncConvert(LoadMapBandList)),  asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("array<Map>@ LoadMapBandList(array<string> &in s)", ( GetFuncConvert(LoadMapBandListFromStrings)),  asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("array<string>@ GetMapListNames(string & in name, int count, int start = 0, string between = \"_\")", ( GetFuncConvert(GetMapBandListStrings)),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetMapListNames(string & in name, int index_file, string between = \"_\")", asFUNCTION( GetMapBandListString),  asCALL_CDECL);
-   sm->RegisterGlobalFunction("array<string>@ GetFilesInDir(string dir = \"\", string filter =  \"\")",asFUNCTION(AS_GetFilesInDir),asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("array<string>@ GetFilesInDir(string dir = \"\", string filter =  \"\")",(GetFuncConvert(AS_GetFilesInDir)),asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("array<string>@ GetItemsContaining(array<string> &in items, array<string> &in filter, bool allow_copy=false)",(GetFuncConvert(AS_GetItemsContaining)),asCALL_CDECL);
 
    sm->RegisterGlobalFunction("PointCloud @LoadPointCloudAbsPath(const string &in s)", asFUNCTION( AS_LoadPointCloudFromFileAbsPath), asCALL_CDECL);
    sm->RegisterGlobalFunction("PointCloud @LoadPointCloud(const string &in s)", asFUNCTION( AS_LoadPointCloudFromFile), asCALL_CDECL);

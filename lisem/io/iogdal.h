@@ -473,12 +473,18 @@ inline QList<cTMap*> readRasterList(
     return ret;
 }
 
-
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include <mutex>
 
 inline cTMap readRaster(
     QString const& pathName, int bandn = 0)
 {
-    std::cout << "load map from data " << pathName.toStdString() << " " << bandn << std::endl;
+
+     std::thread::id this_id = std::this_thread::get_id();
+
+    std::cout << "load map from data " << pathName.toStdString() << " " << bandn << "  " << this_id << std::endl;
 
     //MAP *pcrm = Mopen(pathName.toStdString().c_str(),M_READ);
     bool ldd = false;
@@ -493,14 +499,14 @@ inline cTMap readRaster(
     }*/
 
     // Open raster dataset and obtain some properties.
-    GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
-        pathName.toLatin1().constData(), GA_ReadOnly)), close_gdal_dataset);
+    GDALDataset* dataset = static_cast<GDALDataset*>(GDALOpen(
+        pathName.toLatin1().constData(), GA_ReadOnly));
     if(!dataset) {
         LISEM_ERROR(QString("Map %1 cannot be opened.").arg(pathName));
         throw 1;
     }
 
-    bool is_ldd;
+    bool is_ldd = false;
 
     {
         char ** argv = dataset->GetMetadata();
@@ -510,9 +516,11 @@ inline cTMap readRaster(
             {
                 QString arg = QString(*argv);
 
+                std::cout << "arg " << arg.toStdString() << std::endl;
 
                 if((arg).startsWith(QString("PCRASTER_VALUESCALE=VS_LDD")))
                 {
+                    std::cout << "is_ldd " << std::endl;
                     is_ldd = true;
                 }
                 argv++;
@@ -616,8 +624,9 @@ inline cTMap readRaster(
 
     //LISEM_DEBUG("Map found, create map from data.");
 
-    return cTMap(std::move(raster_data), projection, pathName,is_ldd);
+    GDALClose((GDALDatasetH) dataset);
 
+    return cTMap(std::move(raster_data), projection, pathName,is_ldd);
 }
 
 inline RasterBandStats readRasterStats(
