@@ -90,6 +90,13 @@
     
     
     {
+      "title": "Soils",
+      "url": "/LISEM/docs/soils/"
+    },
+  
+    
+    
+    {
       "title": "Calibration",
       "url": "/LISEM/docs/calibration/"
     },
@@ -106,6 +113,13 @@
     {
       "title": "Dynamic Models",
       "url": "/LISEM/docs/dynamicmodels/"
+    },
+  
+    
+    
+    {
+      "title": "GPU",
+      "url": "/LISEM/docs/gpu/"
     },
   
 

@@ -15,9 +15,11 @@
   - distances
   - classification
   - filters
+  - soils
   - calibration
   - webdata
   - dynamicmodels
+  - gpu
   
 - title: Lisem Classic
   docs:

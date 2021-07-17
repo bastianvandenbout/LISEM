@@ -2026,7 +2026,7 @@ inline cTMap * AS_AccuFlux2D(cTMap * DEM, cTMap * Source, int iter_max, float he
 }
 
 
-inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int iter_max)
+inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, float k, float power, int iter_max, float courant)
 {
     if(!(DEM->data.nr_rows() == QS->data.nr_rows() && DEM->data.nr_cols() == QS->data.nr_cols()))
     {
@@ -2050,8 +2050,6 @@ inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int it
 
     //create temporary maps
 
-
-    float courant = 0.25;
 
     MaskedRaster<float> raster_data2(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
     cTMap *HN = new cTMap(std::move(raster_data2),DEM->projection(),"");
@@ -2089,6 +2087,8 @@ inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int it
 
     hnmax = 0.0;
 
+    double accmax = 0.0;
+
     #pragma omp parallel for collapse(2)
     for(int r = 0; r < DEM->data.nr_rows();r++)
     {
@@ -2123,7 +2123,7 @@ inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int it
             {
                 if(!pcr::isMV(Accuflux->data[r][c]))
                 {
-                    H->data[r][c] = Accuflux->data[r][c]/hnmax;
+                    H->data[r][c] = std::pow(Accuflux->data[r][c]/hnmax, power);
 
                 }
             }
@@ -2193,9 +2193,9 @@ inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int it
                     double qyo1 = Sy1 * shy1 * shy1 * Sy1;
                     double qyo2 = Sy2 * shy2 * shy2 * Sy2;
 
-                    double wsum = -(-qx1 + qxo1 - qy1 + qyo1 -qx2 + qxo2 - qy2 + qyo2);
+                    double wsum = std::max(0.01,(-qx1 + qxo1 - qy1 + qyo1 -qx2 + qxo2 - qy2 + qyo2));
                     H->data[r][c] = std::max(0.01f,H->data[r][c]);
-                    SDN->data[r][c] = 1.0 * (std::max(0.01,std::log(std::max(1.0,_dx*_dx/(( std::log(Accuflux->data[r][c]) * wsum  + QS->data[r][c] * _dx*_dx*_dx * H->data[r][c] ))))));
+                    SDN->data[r][c] = (1.0-courant) * SD->data[r][c] + courant * 1.0 * (std::max(0.01,std::log(std::max(1.0,_dx*_dx/(( k * wsum + QS->data[r][c] * H->data[r][c] ))))));
                 }
             }
         }
@@ -2228,6 +2228,9 @@ inline cTMap * AS_AccufluxSoil(cTMap * DEM, cTMap * Accuflux, cTMap * QS, int it
                 {
 
                     SD->data[r][c] = sdmax - SDN->data[r][c];
+                }else
+                {
+                    pcr::setMV(SD->data[r][c]);
                 }
             }
         }

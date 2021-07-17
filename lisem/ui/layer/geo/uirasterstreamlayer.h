@@ -639,7 +639,7 @@ public:
 
     RasterStreamBuffer *  Fill_RasterStreamBuffers(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm, QList<RasterStreamBuffer*> &Buffers, int band)
     {
-        std::cout << "fill raster buffers " << band <<  std::endl;
+        //std::cout << "fill raster buffers " << band <<  std::endl;
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
 
         BoundingBox b;
@@ -656,7 +656,7 @@ public:
             b = GetBoundingBox();
         }
 
-
+        //std::cout << "search box " << b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
 
         for(int i = 0; i < Buffers.length(); i++)
         {
@@ -681,7 +681,7 @@ public:
                         rsb->tRead.join();
                     }
 
-                    std::cout << "data upload"<< std::endl;
+                    //std::cout << "data upload"<< std::endl;
 
                     rsb->update_gpu = false;
                     rsb->SetFromFuture();
@@ -704,15 +704,18 @@ public:
         {
             BoundingBox bz = GetBoundingBox();
 
-            float pixy = std::max(10,(int)(state.scr_pixwidth * 1.2));
-            float pixx = std::max(10,(int)(state.scr_pixheight * 1.2));
+            float pixy = std::max(10,(int)(state.scr_pixwidth * 0.25));
+            float pixx = std::max(10,(int)(state.scr_pixheight * 0.25));
 
             float ratiox = (b.GetSizeX()/pixx)/(std::fabs(m_RDP->GetCellSizeX(band)));
             float ratioy = (b.GetSizeY()/pixy)/(std::fabs(m_RDP->GetCellSizeY(band)));
 
-            if(ratiox < 1.0 || ratioy < 1.0)
+
+            //std::cout << b.GetSizeX() << " " << b.GetSizeY() << " " << pixx << " "<< pixy << " " << m_RDP->GetCellSizeX(band) << " " << m_RDP->GetCellSizeY(band) <<std::endl;
+
+            if(ratiox < 0.25 || ratioy < 0.25)
             {
-                if(ratiox < ratioy)
+                if(ratiox > ratioy)
                 {
                     b.ScaleX(1.0/std::max(0.00001f,ratiox));
                     b.ScaleY(1.0/std::max(0.00001f,ratiox));
@@ -723,6 +726,10 @@ public:
 
                 }
             }
+
+            //std::cout << pixx << " " << pixy << " " << ratiox << " " << ratioy << std::endl;
+            //std::cout << "search box " << b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
+
 
             //limit box of view for the map to the map extent
 
@@ -735,7 +742,7 @@ public:
 
 
 
-            std::cout << "search box " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
+            //std::cout << "search box " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
 
             //check if the stream buffer is available for this geowindowstate
             RasterStreamBuffer * rsb = nullptr;
@@ -759,16 +766,16 @@ public:
 
                     }else if(!rsb_i->bufferused && band == rsb_i->band)
                     {
-                        std::cout << "check " << i << std::endl;
+                        //std::cout << "check " << i << std::endl;
                         if(rsb_i->sizex >= std::max(10,(int)(0.95 * state.scr_pixwidth)) && rsb_i->sizey >= std::max(10,(int)(0.95 * state.scr_pixheight)) )
                         {
 
-                            std::cout << "check2 " << i << std::endl;
+                            //std::cout << "check2 " << i << std::endl;
 
                             if(rsb_i->sizex <= std::max(10,(int)(1.35 * state.scr_pixwidth)) && rsb_i->sizey <= std::max(10,(int)(1.35 * state.scr_pixheight)) )
                             {
 
-                                std::cout << "check3 " << std::endl;
+                                //std::cout << "check3 " << std::endl;
                                 BoundingBox b1 = bfinal;
                                 BoundingBox b2 = BoundingBox(rsb_i->tlx,rsb_i->brx, rsb_i->tly ,rsb_i->bry);
                                 BoundingBox b3 = b1;
@@ -786,13 +793,13 @@ public:
                                     if((b3.GetArea() / b1.GetArea()) > 0.995)
                                     {
 
-                                        std::cout << "check4 " <<  std::endl;
+                                        //std::cout << "check4 " <<  std::endl;
 
                                         //does it cover at least 90 percent
                                         if(bfinal.GetSizeX() > 0.75*rsb_i->width && bfinal.GetSizeY() > 0.75*rsb_i->height)
                                         {
 
-                                            std::cout << "found " <<  std::endl;
+                                            //std::cout << "found " <<  std::endl;
 
                                            //std::cout << "found buffer" << std::endl;
                                             rsb = rsb_i;
@@ -839,7 +846,7 @@ public:
                     }
                 }
 
-                std::cout << "return best score rsb since unloaded exists" << std::endl;
+                //std::cout << "return best score rsb since unloaded exists" << std::endl;
                 return rsb;
             }
 
@@ -847,7 +854,7 @@ public:
             if(rsb == nullptr)
             {
 
-                std::cout << "rsb is not found "<< std::endl;
+                //std::cout << "rsb is not found "<< std::endl;
                 bfinal.Scale(1.2);
                 bfinal.And(GetBoundingBox());
 
@@ -883,7 +890,7 @@ public:
                 //make new one
                 if(rsb == nullptr)
                 {
-                    std::cout << "create  buffer " << std::endl;
+                    //std::cout << "create  buffer " << std::endl;
                     //create new buffer object
 
 
@@ -891,11 +898,11 @@ public:
                     rsb->SetFutureFrom(bfinal,GetProjection(),band);
                     Buffers.prepend(rsb);
 
-                    std::cout << "created " << std::endl;
+                    //std::cout << "created " << std::endl;
                 }else {
 
 
-                    std::cout << "set future from " << std::endl;
+                    //std::cout << "set future from " << std::endl;
                     rsb->SetFutureFrom(bfinal,GetProjection(),band);
                 }
 
@@ -912,12 +919,12 @@ public:
                         rsb->m_SignMutex->lock();
                         rsb->write_done = false;
 
-                        std::cout << "read values pre " << std::endl;
+                        //std::cout << "read values pre " << std::endl;
                         rsb->m_SignMutex->unlock();
                         m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex);
                         rsb->m_SignMutex->lock();
 
-                        std::cout << "read values post " << std::endl;
+                        //std::cout << "read values post " << std::endl;
 
 
                         rsb->rRead_Started = false;
@@ -940,7 +947,7 @@ public:
 
             rsb->m_SignMutex->unlock();
 
-            std::cout << "fill raster buffers done " << band <<  std::endl;
+            //std::cout << "fill raster buffers done " << band <<  std::endl;
 
 
             return rsb;
@@ -948,7 +955,7 @@ public:
 
 
 
-        std::cout << "fill raster buffers done " << band <<  std::endl;
+        //std::cout << "fill raster buffers done " << band <<  std::endl;
 
         return nullptr;
     }

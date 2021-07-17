@@ -11,21 +11,21 @@
 
     <link rel="shortcut icon" href="/LISEM/favicon.ico?1">
     <!-- Begin Jekyll SEO tag v2.7.1 -->
-<title>Elevation data | LISEM</title>
+<title>GPU | LISEM</title>
 <meta name="generator" content="Jekyll v3.9.0" />
-<meta property="og:title" content="Elevation data" />
+<meta property="og:title" content="GPU" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Lisem can do various types of analysis with elevation data. Elevation derivatives" />
-<meta property="og:description" content="Lisem can do various types of analysis with elevation data. Elevation derivatives" />
-<link rel="canonical" href="http://localhost:4000/LISEM/docs/elevationdata/" />
-<meta property="og:url" content="http://localhost:4000/LISEM/docs/elevationdata/" />
+<meta name="description" content="The LISEM software can use a graphical processing unit (GPU). Supported are the majorty of simple raster calculations, and the LISEM model." />
+<meta property="og:description" content="The LISEM software can use a graphical processing unit (GPU). Supported are the majorty of simple raster calculations, and the LISEM model." />
+<link rel="canonical" href="http://localhost:4000/LISEM/docs/gpu/" />
+<meta property="og:url" content="http://localhost:4000/LISEM/docs/gpu/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2021-07-17T20:23:55+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Elevation data" />
+<meta property="twitter:title" content="GPU" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Elevation data","dateModified":"2021-07-17T20:23:55+02:00","datePublished":"2021-07-17T20:23:55+02:00","url":"http://localhost:4000/LISEM/docs/elevationdata/","description":"Lisem can do various types of analysis with elevation data. Elevation derivatives","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"GPU","dateModified":"2021-07-17T20:23:55+02:00","datePublished":"2021-07-17T20:23:55+02:00","url":"http://localhost:4000/LISEM/docs/gpu/","description":"The LISEM software can use a graphical processing unit (GPU). Supported are the majorty of simple raster calculations, and the LISEM model.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -145,7 +145,7 @@
           
             
             
-            <a class="list-group-item active" href="/LISEM/docs/elevationdata/">Elevation data</a>
+            <a class="list-group-item " href="/LISEM/docs/elevationdata/">Elevation data</a>
           
             
             
@@ -185,7 +185,7 @@
           
             
             
-            <a class="list-group-item " href="/LISEM/docs/gpu/">GPU</a>
+            <a class="list-group-item active" href="/LISEM/docs/gpu/">GPU</a>
           
         </div>
       </div>
@@ -217,72 +217,48 @@
         </div>
 
         <div class="col-md-8">
-            <h1>Elevation data</h1>
-            <div id="markdown-content-container"><p>Lisem can do various types of analysis with elevation data.
-<img src="/LISEM/assets/img/calc_1.png" alt="Elevation manipulation" /></p>
-<h3 id="elevation-derivatives">Elevation derivatives</h3>
+            <h1>GPU</h1>
+            <div id="markdown-content-container"><p>The LISEM software can use a graphical processing unit (GPU).
+Supported are the majorty of simple raster calculations, and the LISEM model.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>slope.tif = Slope(dem.tif)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_2.png" alt="Elevation manipulation" /></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hillshade.tif = HillShade(dem.tif)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_4.png" alt="Elevation manipulation" /></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>aspect.tif = Aspect(dem.tif)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_3.png" alt="Elevation manipulation" /></p>
-<h3 id="drainage">Drainage</h3>
+<p>The following code example benchmarks a simple GPU calculation.
+Note that the data needs to be uploaded and downloaded to the gpu.
+However, with larger maps, a 10x speed increase is common.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ldd.tif = DrainageNetwork(dem.tif,1e4,1e4,1e4,1e4)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_5.png" alt="Elevation manipulation" /></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux.tif = Accuflux(ldd.tif,1.0)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_6.png" alt="Elevation manipulation" /></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux2d.tif = Accuflux2D(dem.map,dem.map * 0.0 + 1.0,dem.map * 0.0,0.3,1.0)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
-<h3 id="channels">Channels</h3>
-<p>We can select an estimate of channel locations by using a threshold on the accuflux data.</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channel.tif = MapIf(accuflux.tif &gt;&gt; 1000.0,1.0,0.0)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_9.png" alt="Elevation manipulation" /></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void main()
+{	
+	//first create a temporary empty gpu map
+	//this will initialize all the gpu-side code, but this is done only once 
+	GpuMap temp = GpuMap();
+    
+	//now we do the benchmark
+    GPUMap m = ToGPU(dem_lidar_5ml.map);
+    double t = GetAppTime();
+    GPUMap m2 = pow(sqrt(sqrt(m)),2.0);
+    Print("GPU TIME " + ToString(GetAppTime() - t));
+    
+    test.map = ToCPU(m2);
+   
+    Map mc = dem_lidar_5ml.map;
+    t = GetAppTime();
+    Map mc2 = sqrt(sqrt(mc));
+    Print("CPU TIME " + ToString(GetAppTime() - t));
 
-<p>We can use global relationships from Frasson et al., 2019 (global average analysis) to predict the depth and width of the channel.
-These functions take the accuflux in square kilometers, while our original map has a cellsize in meters, so we need to convert to kilometer.</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelwidth.tif = 9.68*(accuflux.tif/1e6)**0.32
-channeldepth.tif = 11.3*(accuflux.tif/1e6)**0.083
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_10.png" alt="Elevation manipulation" /></p>
-
-<h3 id="fixing-local-depressions">Fixing local depressions</h3>
-<p>In order to fix local depression, you can use the DrainageNetworkDEM function.
-This applies all pit filling performed when creating an LDD to the DEM.
-Note that the ldd considers diagonal connection valid.</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_fix.tif = DrainageNetworkDEM(dem.tif,1e4,1e4,1e4,1e4)
-</code></pre></div></div>
-<p>Highlight the filled depressions by calculating the difference between the maps.</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dif.tif = dem_fix.tif - dem.tif
+}
 </code></pre></div></div>
 
-<p>When there is an abundance of noise in the elevation data, this can disturb flow models on flat terrain.
-Edge-preserving image filters can be a solution in these cases. 
-The bilateral filter only filters flat terrain, and keeps ridges, edges and valleys intact (depending on the input parameters).</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_fix.tif = BilateralFilter(dem.tif,0.2,0.2)
-</code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_11.png" alt="Elevation manipulation" /></p>
+<p>For the lisem model, the gpu can be toggled with the “use-gpu” option in the interface.
+You can see which gpu is active by pressing the device setting in the top right.
+Here, all found devices and their properties are listed.</p>
 
-<h3 id="contour-lines">Contour Lines</h3>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>contour.shp = RasterContour(dem.tif,50.0)
-</code></pre></div></div>
-
-<p><img src="/LISEM/assets/img/calc_9.png" alt="Elevation manipulation" /></p>
-
+<p>The model uses openGL/openCL interoperability functionality, which requires the graphics and opencl to run on the same device.
+Often, laptops start the application with the Intel Integrated graphics, which have lower performence than a possible dedicated gpu.
+If such a gpu is present, you can inform your operating system to use it with LISEM by going to either NVIDIA control panel, and setting software-specific options, or going to AMD Catalyst, and similarly going to software-specific options.</p>
 </div>
             <div style="clear:both;">
               <p class="text-center">
                 <br />
-                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/_docs/examples/elevationdata.md" class="btn btn-default" role="button">
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/_docs/examples/gpu.md" class="btn btn-default" role="button">
                   <i class="fa fa-pencil fa-lg"></i> Improve this page
                 </a>
               </p>
@@ -314,12 +290,42 @@ The bilateral filter only filters flat terrain, and keeps ridges, edges and vall
 
   
   
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
     <ul class="pager">
       
         
         
         <li class="previous">
-          <a href="/LISEM/docs/usingmodel/">
+          <a href="/LISEM/docs/dynamicmodels/">
             <span aria-hidden="true">&larr;</span> Previous
           </a>
         </li>
@@ -329,7 +335,7 @@ The bilateral filter only filters flat terrain, and keeps ridges, edges and vall
         
         
         <li class="next">
-          <a href="/LISEM/docs/interpolation/">
+          <a href="/LISEM/docs/lisemclassic/">
             Next <span aria-hidden="true">&rarr;</span>
           </a>
         </li>

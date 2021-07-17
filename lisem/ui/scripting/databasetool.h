@@ -151,7 +151,7 @@ public:
 
         QStringList l = GetFileStringList(GetSite() + QDir::separator() + "commands.ini");
 
-        for(int i = l.size()-1; i > -1 ; i--)
+        for(int i = 0; i < l.size(); i++)//l.size()-1; i > -1 ; i--)
         {
             m_CommandHistory.push_back(l.at(i));
         }
@@ -193,7 +193,7 @@ public:
         if(!m_Completer || !isShortcut)
         {
 
-            if((event->key() == Qt::Key_Up) || (event->key() == Qt::Key_Down))
+            if(((event->key() == Qt::Key_Up) || (event->key() == Qt::Key_Down)) && (!m_Completer->popup()->isVisible()))
             {
                 int m_CommandHistoryIndexO =  m_CommandHistoryIndex;
 
