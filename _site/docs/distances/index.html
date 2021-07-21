@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/distances/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-21T21:00:47+02:00" />
+<meta property="article:published_time" content="2021-07-21T21:18:48+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Distances" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Distances","dateModified":"2021-07-21T21:00:47+02:00","datePublished":"2021-07-21T21:00:47+02:00","url":"http://localhost:4000/LISEM/docs/distances/","description":"The Spread (Approximate distance transform) function provides a rapid and flexible means of estimating distances (either actual or abstract). The function actually provides the lowest friction value from each cell to a source cell. Each source cell has a source friction value. All other cells have a travel friction cost.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Distances","dateModified":"2021-07-21T21:18:48+02:00","datePublished":"2021-07-21T21:18:48+02:00","url":"http://localhost:4000/LISEM/docs/distances/","description":"The Spread (Approximate distance transform) function provides a rapid and flexible means of estimating distances (either actual or abstract). The function actually provides the lowest friction value from each cell to a source cell. Each source cell has a source friction value. All other cells have a travel friction cost.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -228,20 +228,20 @@ The function actually provides the lowest friction value from each cell to a sou
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channeldistance.map = Spread(channelmask.map,0.0,1.0)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/dist_calc1.png" alt="Warping" /></p>
+<p><img src="/assets/img/dist_calc1.png" alt="Warping" /></p>
 
 <p>A distance transform provides the actual euclidian distance to the closest source cell. Note that this function required inverted input (using the invert~ operator).</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channeldistance.map = DistanceTransform(~channelmask.map)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/dist_calc2.png" alt="Warping" /></p>
+<p><img src="/assets/img/dist_calc2.png" alt="Warping" /></p>
 
 <p>Travel effort, or travel times, can be estimated by providing a spatially varying friction map. In this case, the friction on roads is low, and higher with steeper slopes. The friction on non-roads is significantly higher.
 The final travel effort map will show patterns of roads and terrain.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>traveleffort.map = Spread(coast.map,0.0,MapIf(roadwidth.map &gt;&gt; 1,1 + slope.map,2 + 5 * slope.map))
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/dist_calc3.png" alt="Warping" /></p>
+<p><img src="/assets/img/dist_calc3.png" alt="Warping" /></p>
 
-<p><img src="/LISEM/assets/img/dist_calc4.png" alt="Warping" /></p>
+<p><img src="/assets/img/dist_calc4.png" alt="Warping" /></p>
 
 <p>When you have data on river width that exceeds the cellsize, you can distribute the channel over the neighboring cells using the spread function.
 There are some conversions going on due to the nature of the spread function. It starts with a certain source value, and spread to both sides equally.</p>
@@ -249,7 +249,7 @@ There are some conversions going on due to the nature of the spread function. It
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelwidth_new.map = max(0.0,min(-Spread(MapIf(channelwidth.map &gt;&gt; 0.0,1.0,0.0),-MapIf(channelwidth.map &lt;&lt; 10.0, channelwidth.map,10.0+ (channelwidth.map-10)/2),1.0),10))
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/dist_calc5.png" alt="Warping" /></p>
+<p><img src="/assets/img/dist_calc5.png" alt="Warping" /></p>
 </div>
             <div style="clear:both;">
               <p class="text-center">

@@ -6,7 +6,7 @@ redirect_from: /docs/index.html
 
 The map viewer tool is part of the tool window, and features various options for opening and displaying layers of geo-spatial data.
 
-![Mapview Tool](/LISEM/assets/img/explain_mapviewtool.png)
+![Mapview Tool](/assets/img/explain_mapviewtool.png)
 
 You can save your currently loaded layers and style settings using the load and save buttons. 
 The viewer supports the following types of geo-spatial data files:
@@ -23,12 +23,12 @@ warping is automatically applied.
 
 Opening a raster layer will add it to the map viewing window.
 
-![Mapview](/LISEM/assets/img/explain_mapviewer.png)
+![Mapview](/assets/img/explain_mapviewer.png)
 
 There are render to image/video options where resolution can be selected.
 Additionally, it will add a layer widget with several options for styling and coordinate refernce systems.
 
-![Mapview](/LISEM/assets/img/explain_mapviewtoolitem.png)
+![Mapview](/assets/img/explain_mapviewtoolitem.png)
 
 By setting the minimum and maximum value, more detail can be drawn out of raster data.
 The color gradient can be customized, while the visualization changes in real-time.
@@ -37,7 +37,7 @@ For vector data, attribute-dependent colorization can be selected.
 When the shift button is pressed, dragging is disabled, and data can be inspected. 
 This will highlight the exact location and current data value for the selected layer.
 
-![Mapview](/LISEM/assets/img/explain_inspect.png)
+![Mapview](/assets/img/explain_inspect.png)
 
 Other shortcuts are
 
@@ -57,7 +57,7 @@ Drag to rotate the camera, and use the w,a,s,d keys to move. When the ctrl-butto
 the movement speed is increased. 
 The inspection and editing functionality are all available in 3d mode.
 
-![Mapview](/LISEM/assets/img/explain_mapview3d.png)
+![Mapview](/assets/img/explain_mapview3d.png)
 
 Some data types (Raster and Vector) can be edited. This functionality simiarly works in 2d and 3d.
 The raster editor functions as a paint tool, with paint, multiplication, blur and liquify brushes.

@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/filters/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-21T21:00:47+02:00" />
+<meta property="article:published_time" content="2021-07-21T21:18:48+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Filters" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Filters","dateModified":"2021-07-21T21:00:47+02:00","datePublished":"2021-07-21T21:00:47+02:00","url":"http://localhost:4000/LISEM/docs/filters/","description":"The window-filters provide operations to a specified window. The WindowAverage function effectively blurs and smoothenes the data. dem_lidar_wa.map = WindowAverage(dem_lidar.map,100);","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Filters","dateModified":"2021-07-21T21:18:48+02:00","datePublished":"2021-07-21T21:18:48+02:00","url":"http://localhost:4000/LISEM/docs/filters/","description":"The window-filters provide operations to a specified window. The WindowAverage function effectively blurs and smoothenes the data. dem_lidar_wa.map = WindowAverage(dem_lidar.map,100);","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -225,22 +225,22 @@
             <div id="markdown-content-container"><p>The window-filters provide operations to a specified window. The WindowAverage function effectively blurs and smoothenes the data.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_wa.map = WindowAverage(dem_lidar.map,100);
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/filters_calc1.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc1.png" alt="Interpolation" /></p>
 
-<p><img src="/LISEM/assets/img/filters_calc2.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc2.png" alt="Interpolation" /></p>
 
 <p>Such a filter can be linearly blended according to slope to create a custom edge-preserving filter.</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_wa2.map = min(1.0,max(0.0,1.0-Slope(dem_lidar.map)))*WindowAverage(dem_lidar.map,50) + min(1.0,max(0.0,Slope(dem_lidar.map)))*dem_lidar.map;
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/filters_calc3.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc3.png" alt="Interpolation" /></p>
 
 <p>The actual BilateralFilter, which is such an edge-preserving filter, works in a similar manner.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_wa.map = BilateralFilter(dem_lidar.map,10,5,5)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/filters_calc4.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc4.png" alt="Interpolation" /></p>
 
 <p>Let us now add some random noise to the data by using the RandomMap function. 
 This function gives each pixel a uniquely drawn random value between 0 and 1.</p>
@@ -248,7 +248,7 @@ This function gives each pixel a uniquely drawn random value between 0 and 1.</p
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_noise.map = dem_lidar.map + MapIf(RandomMap(dem_lidar.map) &gt;&gt; 0.985,100.0* RandomMap(dem_lidar.map),0.0)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/filters_calc5.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc5.png" alt="Interpolation" /></p>
 
 <p>We can isolate and remove such sparse errors by using noise filters.
 Two examples are the frost and lee noise filters.</p>
@@ -256,9 +256,9 @@ Two examples are the frost and lee noise filters.</p>
 </code></pre></div></div>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_lee.map = NoiseFilterLee(dem_lidar_noise.map,3,1)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/filters_calc6.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc6.png" alt="Interpolation" /></p>
 
-<p><img src="/LISEM/assets/img/filters_calc7.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc7.png" alt="Interpolation" /></p>
 
 <p>Erosion and Dilution iteratively applies the erode and dilute operations. These operations are effectively similar to WindowMinimum(..,3<em>cellsize) and WindowMaximum(..,3</em>cellsize).
 On binary data, they shrink and grow regions.</p>
@@ -266,20 +266,20 @@ On binary data, they shrink and grow regions.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_erode.map = Erode(dem_lidar_noise.map,3)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/filters_calc8.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc8.png" alt="Interpolation" /></p>
 
 <p>Let us now apply a window-average filter to a dataset.</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_av.map = WindowAverage(dem_lidar.map,60)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/filters_calc9.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc9.png" alt="Interpolation" /></p>
 
 <p>Now, we can apply a deconvolution filter to attempt to undo the previous operation.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_lidar_deconvolve.map = RasterDeconvolve(dem_lidar.map,10,0.2)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/filters_calc10.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/filters_calc10.png" alt="Interpolation" /></p>
 </div>
             <div style="clear:both;">
               <p class="text-center">

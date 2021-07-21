@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/webdata/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-21T21:00:47+02:00" />
+<meta property="article:published_time" content="2021-07-21T21:18:48+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Web Data" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Web Data","dateModified":"2021-07-21T21:00:47+02:00","datePublished":"2021-07-21T21:00:47+02:00","url":"http://localhost:4000/LISEM/docs/webdata/","description":"You can download files within the LISEM script engine, convert them to an object or save them as a file, and open them in the map viewer. HTMl request are supported, so any webservice with WCS-service can be called upon. Note that the region specified in the url must conform to the Coordinate Reference system used by the WCS-Service. This can be checked in the url, as the EPSG code is often specified.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Web Data","dateModified":"2021-07-21T21:18:48+02:00","datePublished":"2021-07-21T21:18:48+02:00","url":"http://localhost:4000/LISEM/docs/webdata/","description":"You can download files within the LISEM script engine, convert them to an object or save them as a file, and open them in the map viewer. HTMl request are supported, so any webservice with WCS-service can be called upon. Note that the region specified in the url must conform to the Coordinate Reference system used by the WCS-Service. This can be checked in the url, as the EPSG code is often specified.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -230,13 +230,13 @@ This can be checked in the url, as the EPSG code is often specified.</p>
 <p>So, to get soil classifications from SOILGRIDS</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>soilclass.tif = ToMap(Download("http://maps.isric.org/mapserv?map=/map/wrb.map&amp;SERVICE=WCS&amp;VERSION=1.0.0&amp;REQUEST=GetCoverage&amp;coverage=MostProbable&amp;CRS=EPSG:3978&amp;BBOX=-2200000,-712631,3072800,3840000&amp;WIDTH=3199&amp;HEIGHT=2833&amp;FORMAT=GTiff"));
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/web_calc1.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/web_calc1.png" alt="Interpolation" /></p>
 
 <p>Or, to get elevation data 
 Using this function (repeatedly) leads to the following produced elevation data.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>soilclass.tif = ToMap(Download("http://maps.isric.org/mapserv?map=/map/wrb.map&amp;SERVICE=WCS&amp;VERSION=1.0.0&amp;REQUEST=GetCoverage&amp;coverage=MostProbable&amp;CRS=EPSG:3978&amp;BBOX=-2200000,-712631,3072800,3840000&amp;WIDTH=3199&amp;HEIGHT=2833&amp;FORMAT=GTiff"));
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/web_calc2.png" alt="Interpolation" /></p>
+<p><img src="/assets/img/web_calc2.png" alt="Interpolation" /></p>
 
 <p>HTML with a POST-request are also supported.
 To obtain OpenStreetMaps data you can use</p>

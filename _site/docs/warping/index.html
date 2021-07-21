@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/warping/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-21T21:00:47+02:00" />
+<meta property="article:published_time" content="2021-07-21T21:18:48+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Warping" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Warping","dateModified":"2021-07-21T21:00:47+02:00","datePublished":"2021-07-21T21:00:47+02:00","url":"http://localhost:4000/LISEM/docs/warping/","description":"Warping raster can be done in various ways: You can get and set Coordinate Reference Systems (CRS) for layers using: ``` test.tif = SetCRS(tes.tif,GetCRS(test2.tif)); //get CRS from other file test.tif = SetCRS(tes.tif,GeoProjectionFromWGS84UTM(30,true)); //use WGS84 UTM 30 N test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4326)","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Warping","dateModified":"2021-07-21T21:18:48+02:00","datePublished":"2021-07-21T21:18:48+02:00","url":"http://localhost:4000/LISEM/docs/warping/","description":"Warping raster can be done in various ways: You can get and set Coordinate Reference Systems (CRS) for layers using: ``` test.tif = SetCRS(tes.tif,GetCRS(test2.tif)); //get CRS from other file test.tif = SetCRS(tes.tif,GeoProjectionFromWGS84UTM(30,true)); //use WGS84 UTM 30 N test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4326)","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -234,9 +234,9 @@ test.tif = SetCRS(tes.tif,GeoProjectionFromEPSG(4326)); //use WGS84 (EPSG code 4
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>warped.tif = RasterProject(dem.tif,GeoProjectionFromWGS84UTM(30,true));
 warped.shp = VectorWarp(rivers.shp,GeoProjectionFromWGS84UTM(30,true));
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/warp_calc1.png" alt="Warping" /></p>
+<p><img src="/assets/img/warp_calc1.png" alt="Warping" /></p>
 
-<p><img src="/LISEM/assets/img/warp_calc2.png" alt="Warping" /></p>
+<p><img src="/assets/img/warp_calc2.png" alt="Warping" /></p>
 
 <p>If you have a target raster (existing file with extent, crs and cell sizes), you can directly warp to this.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>warped.tif = RasterWarp(target.tif,GeoProjectionFromWGS84UTM(30,true));
@@ -247,13 +247,13 @@ This function takes either a <code class="language-plaintext highlighter-rouge">
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>section_custom.tif = RasterCut(dem.tif,Region(0,1.0,0.0,1.0));
 section.tif = RasterCut(dem.tif,GetRegion(shape.shp));
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/warp_calc3.png" alt="Warping" /></p>
+<p><img src="/assets/img/warp_calc3.png" alt="Warping" /></p>
 
 <p>You can convert a raster dataset to a vector dataset using the <code class="language-plaintext highlighter-rouge">Vectorize</code> function.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rivers.shp = Vectorize(channelwidth.map,"width");
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/warp_calc4.png" alt="Warping" /></p>
+<p><img src="/assets/img/warp_calc4.png" alt="Warping" /></p>
 
 <p>You can also convert from vector to raster by using the <code class="language-plaintext highlighter-rouge">Rasterize</code> function.
 Depending on the options, this will rasterize an attribute of the vector dataset, or burn a specified value.</p>
@@ -261,7 +261,7 @@ Depending on the options, this will rasterize an attribute of the vector dataset
 channelwidth_burn.tif = Rasterize(target.map,rivers.shp,"",true,1.0); //burn value 1.0
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/warp_calc5.png" alt="Warping" /></p>
+<p><img src="/assets/img/warp_calc5.png" alt="Warping" /></p>
 </div>
             <div style="clear:both;">
               <p class="text-center">

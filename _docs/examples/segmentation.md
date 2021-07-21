@@ -8,10 +8,10 @@ LISEM includes several segmentation algorithms such as mean-shift segmentation a
 ```
 segmentation.tif = SegmentizeMS(sentinel.tif,100,500,20,200)
 ```
-![Segmentation](/LISEM/assets/img/segment_calc1.png)
+![Segmentation](/assets/img/segment_calc1.png)
 
 
-![Segmentation](/LISEM/assets/img/segment_calc2.png)
+![Segmentation](/assets/img/segment_calc2.png)
 
 
 
@@ -21,6 +21,6 @@ The final segments can be colorized using a colorization function.
 segments.tif = ClassToRGB(segmentation.tif)
 ```
 
-![Segmentation](/LISEM/assets/img/segment_calc3.png)
+![Segmentation](/assets/img/segment_calc3.png)
 
 

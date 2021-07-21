@@ -8,14 +8,14 @@ Please find below all the available packages as part of the LISEM software
 ### LISEM
 The LISEM software is now public in alpha-relase. WARNING: Contains various bugs!! 
 
-| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM/Portable/lisem.zip/download) | ![LISEM](/LISEM/assets/img/logonav.png) |
-| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM/Installer/LISEM-0.1.0-win64.exe/download) | ![LISEM](/LISEM/assets/img/logonav.png) |
-| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM/Python%20Wheel/lisem-0.1.0-py3-none-any.whl/download) | ![LISEM](/LISEM/assets/img/logonav.png) |
+| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM/Portable/lisem.zip/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM/Installer/LISEM-0.1.0-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM/Python%20Wheel/lisem-0.1.0-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
 
 ### LISEM Classic
 LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.
 
-| [Windows-64x Portable executable](https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download) | ![LISEM](/LISEM/assets/img/openLisem.png) |
+| [Windows-64x Portable executable](https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download) | ![LISEM](/assets/img/openLisem.png) |
 
 ### OpenLISEM Hazard
 The OpenLISEM Hazard model does not receive active support. It has become pretty stable, and is available here:

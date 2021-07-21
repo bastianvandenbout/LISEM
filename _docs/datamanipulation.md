@@ -6,7 +6,7 @@ redirect_from: /docs/index.html
 
 The scripting environment provides tools for manipulating geo-data.
 
-![ScriptTool](/LISEM/assets/img/explain_scripttool.png)
+![ScriptTool](/assets/img/explain_scripttool.png)
  
 The scripting language used by LISEM is specifically aimed at manipulating geodata files. It extends the language by allowing in-line references to geo-data files from your working directory. Otherwise, it is based on the c-style language Angelscript, and features classes, functions, loops, if/else, function callbacks and many other things.
 The Command line allows you to perform single-line calculations. 

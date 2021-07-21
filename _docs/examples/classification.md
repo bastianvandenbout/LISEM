@@ -5,7 +5,7 @@ permalink: /docs/classification/
 
 First we can download a sentinel-2 image, which features 12 bands as induvidual jp2 files.
 
-![Classification](/LISEM/assets/img/lu_calc1.png)
+![Classification](/assets/img/lu_calc1.png)
 
 These are automatically supported by both the map viewer as well as the scripting language.
 To cut out an extent of the dataset and store as a single-band GeoTiff file, the following script can be used:
@@ -33,7 +33,7 @@ void main()
 ```
 Viewing the result.tif file shows the following
 
-![Classification](/LISEM/assets/img/lu_calc5.png)
+![Classification](/assets/img/lu_calc5.png)
 
 Now, a supervised classification can be done.
 First, create a new empty map:
@@ -44,7 +44,7 @@ training.tif = result.tif[0] * 0.0;
 
 Then, use the raster painter, or vector-to-raster conversion to put training data into this map.
 
-![Classification](/LISEM/assets/img/lu_calc3.png)
+![Classification](/assets/img/lu_calc3.png)
 
 Finally, run a Support-Vector-Machine classification algorithm using the following code:
 
@@ -52,7 +52,7 @@ Finally, run a Support-Vector-Machine classification algorithm using the followi
 classes.tif = SupervisedClassification(result.tif, training.tif);
 ```
 
-![Classification](/LISEM/assets/img/lu_calc4.png)
+![Classification](/assets/img/lu_calc4.png)
 
 In order to remove small regions within the classification, the map can be regularized.
 This acts similar to WindowMajority, but is a bit faster.
@@ -61,7 +61,7 @@ We can regularize with a radius of 10 pixels using the following code:
 classes_reg.tif = ClassRegularize(classes.tif, 10);
 ```
 
-![Classification](/LISEM/assets/img/lu_calc7.png)
+![Classification](/assets/img/lu_calc7.png)
 
 An unsupervised classification can be made by specifying the number of classes (5 in our case).
 It can help to clip the value range of maps, and remove outliers due to clouds.
@@ -69,7 +69,7 @@ It can help to clip the value range of maps, and remove outliers due to clouds.
 classes_unsuper.tif = UnSupervisedClassification(result.tif, 5);
 ```
 
-![Classification](/LISEM/assets/img/lu_calc6.png)
+![Classification](/assets/img/lu_calc6.png)
 
 We can compare two classified maps by calculating the confusion matrix.
 This can be done to compare different methods, or compare to ground truth data.
@@ -79,7 +79,7 @@ Here, to get a confusion matrix between the supervised and unsupervised classifi
 confusionmatrix.tbl = MapConfusionMatrix(classes.tif,classes_unsuper.tif);
 ```
 
-![Classification](/LISEM/assets/img/lu_calc8.png)
+![Classification](/assets/img/lu_calc8.png)
 
 Finally, a logistic binary classification can be made, for example for landslide susceptibility.
 

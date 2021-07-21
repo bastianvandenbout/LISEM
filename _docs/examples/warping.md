@@ -17,9 +17,9 @@ The SetCRS function does not do any warping to the data. If you wish to re-proje
 warped.tif = RasterProject(dem.tif,GeoProjectionFromWGS84UTM(30,true));
 warped.shp = VectorWarp(rivers.shp,GeoProjectionFromWGS84UTM(30,true));
 ```
-![Warping](/LISEM/assets/img/warp_calc1.png)
+![Warping](/assets/img/warp_calc1.png)
 
-![Warping](/LISEM/assets/img/warp_calc2.png)
+![Warping](/assets/img/warp_calc2.png)
 
 If you have a target raster (existing file with extent, crs and cell sizes), you can directly warp to this.
 ```
@@ -32,14 +32,14 @@ This function takes either a ```Region```, or a pixel index.
 section_custom.tif = RasterCut(dem.tif,Region(0,1.0,0.0,1.0));
 section.tif = RasterCut(dem.tif,GetRegion(shape.shp));
 ```
-![Warping](/LISEM/assets/img/warp_calc3.png)
+![Warping](/assets/img/warp_calc3.png)
 
 You can convert a raster dataset to a vector dataset using the ```Vectorize``` function.
 ```
 rivers.shp = Vectorize(channelwidth.map,"width");
 ```
 
-![Warping](/LISEM/assets/img/warp_calc4.png)
+![Warping](/assets/img/warp_calc4.png)
 
 You can also convert from vector to raster by using the ```Rasterize``` function.
 Depending on the options, this will rasterize an attribute of the vector dataset, or burn a specified value.
@@ -48,4 +48,4 @@ channelwidth.tif = Rasterize(target.map,rivers.shp,"width"); //put attribute val
 channelwidth_burn.tif = Rasterize(target.map,rivers.shp,"",true,1.0); //burn value 1.0
 ```
 
-![Warping](/LISEM/assets/img/warp_calc5.png)
+![Warping](/assets/img/warp_calc5.png)

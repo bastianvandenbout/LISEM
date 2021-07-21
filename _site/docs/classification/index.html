@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/classification/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-21T21:00:47+02:00" />
+<meta property="article:published_time" content="2021-07-21T21:18:48+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Classification" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Classification","dateModified":"2021-07-21T21:00:47+02:00","datePublished":"2021-07-21T21:00:47+02:00","url":"http://localhost:4000/LISEM/docs/classification/","description":"First we can download a sentinel-2 image, which features 12 bands as induvidual jp2 files.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Classification","dateModified":"2021-07-21T21:18:48+02:00","datePublished":"2021-07-21T21:18:48+02:00","url":"http://localhost:4000/LISEM/docs/classification/","description":"First we can download a sentinel-2 image, which features 12 bands as induvidual jp2 files.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -224,7 +224,7 @@
             <h1>Classification</h1>
             <div id="markdown-content-container"><p>First we can download a sentinel-2 image, which features 12 bands as induvidual jp2 files.</p>
 
-<p><img src="/LISEM/assets/img/lu_calc1.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc1.png" alt="Classification" /></p>
 
 <p>These are automatically supported by both the map viewer as well as the scripting language.
 To cut out an extent of the dataset and store as a single-band GeoTiff file, the following script can be used:</p>
@@ -251,7 +251,7 @@ To cut out an extent of the dataset and store as a single-band GeoTiff file, the
 </code></pre></div></div>
 <p>Viewing the result.tif file shows the following</p>
 
-<p><img src="/LISEM/assets/img/lu_calc5.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc5.png" alt="Classification" /></p>
 
 <p>Now, a supervised classification can be done.
 First, create a new empty map:</p>
@@ -261,14 +261,14 @@ First, create a new empty map:</p>
 
 <p>Then, use the raster painter, or vector-to-raster conversion to put training data into this map.</p>
 
-<p><img src="/LISEM/assets/img/lu_calc3.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc3.png" alt="Classification" /></p>
 
 <p>Finally, run a Support-Vector-Machine classification algorithm using the following code:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>classes.tif = SupervisedClassification(result.tif, training.tif);
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/lu_calc4.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc4.png" alt="Classification" /></p>
 
 <p>In order to remove small regions within the classification, the map can be regularized.
 This acts similar to WindowMajority, but is a bit faster.
@@ -276,14 +276,14 @@ We can regularize with a radius of 10 pixels using the following code:</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>classes_reg.tif = ClassRegularize(classes.tif, 10);
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/lu_calc7.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc7.png" alt="Classification" /></p>
 
 <p>An unsupervised classification can be made by specifying the number of classes (5 in our case).
 It can help to clip the value range of maps, and remove outliers due to clouds.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>classes_unsuper.tif = UnSupervisedClassification(result.tif, 5);
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/lu_calc6.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc6.png" alt="Classification" /></p>
 
 <p>We can compare two classified maps by calculating the confusion matrix.
 This can be done to compare different methods, or compare to ground truth data.
@@ -292,7 +292,7 @@ Here, to get a confusion matrix between the supervised and unsupervised classifi
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>confusionmatrix.tbl = MapConfusionMatrix(classes.tif,classes_unsuper.tif);
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/lu_calc8.png" alt="Classification" /></p>
+<p><img src="/assets/img/lu_calc8.png" alt="Classification" /></p>
 
 <p>Finally, a logistic binary classification can be made, for example for landslide susceptibility.</p>
 

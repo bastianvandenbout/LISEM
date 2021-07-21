@@ -144,7 +144,7 @@ void main()
 
 The output to the map viewer can now be seen:
 
-![Warping](/LISEM/assets/img/dynamic_calc1.png)
+![Warping](/assets/img/dynamic_calc1.png)
 
 
 Scripts like these can be easily extended to have specific boundary conditions (incoming waves) or feature additional processes (infiltration, either static or a model such as Green and Ampt).

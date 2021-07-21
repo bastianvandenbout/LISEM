@@ -12,14 +12,14 @@ So, to get soil classifications from SOILGRIDS
 ```
 soilclass.tif = ToMap(Download("http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&coverage=MostProbable&CRS=EPSG:3978&BBOX=-2200000,-712631,3072800,3840000&WIDTH=3199&HEIGHT=2833&FORMAT=GTiff"));
 ```
-![Interpolation](/LISEM/assets/img/web_calc1.png)
+![Interpolation](/assets/img/web_calc1.png)
 
 Or, to get elevation data 
 Using this function (repeatedly) leads to the following produced elevation data.
 ```
 soilclass.tif = ToMap(Download("http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&coverage=MostProbable&CRS=EPSG:3978&BBOX=-2200000,-712631,3072800,3840000&WIDTH=3199&HEIGHT=2833&FORMAT=GTiff"));
 ```
-![Interpolation](/LISEM/assets/img/web_calc2.png)
+![Interpolation](/assets/img/web_calc2.png)
 
 HTML with a POST-request are also supported.
 To obtain OpenStreetMaps data you can use

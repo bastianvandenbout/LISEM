@@ -9,7 +9,7 @@ By opening the “Model”-tab, you will see the interface for the model.
 The LISEM model aims to do local to catchment-scale hydrology, flow, slope stability, slope failure flooding and mass movement runout.
 
 
-![ModelTool](/LISEM/assets/img/explain_modeltool.png)
+![ModelTool](/assets/img/explain_modeltool.png)
 
 
 When wanting to run a simulation, the following steps must usually be taken:
@@ -26,10 +26,10 @@ Output files will be overwritten so be carefull.
 When the model is running, several layers will be added to the map viewer, such as flow height, flow velocity and a hillshaded elevation model. The user-map can be altered to many more model parameters.
 
 
-![ModelTool](/LISEM/assets/img/explain_modelmapview.png)
+![ModelTool](/assets/img/explain_modelmapview.png)
 
 These maps can then be viewed to see the model results during the simulation.
 The model might be stopped at any moment. On each timestep, the output files are updated.
 
 
-![ModelTool](/LISEM/assets/img/explain_modelmaps.png)
+![ModelTool](/assets/img/explain_modelmaps.png)

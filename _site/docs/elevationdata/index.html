@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/elevationdata/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-21T21:00:47+02:00" />
+<meta property="article:published_time" content="2021-07-21T21:18:48+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Elevation data" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Elevation data","dateModified":"2021-07-21T21:00:47+02:00","datePublished":"2021-07-21T21:00:47+02:00","url":"http://localhost:4000/LISEM/docs/elevationdata/","description":"Lisem can do various types of analysis with elevation data. Elevation derivatives","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Elevation data","dateModified":"2021-07-21T21:18:48+02:00","datePublished":"2021-07-21T21:18:48+02:00","url":"http://localhost:4000/LISEM/docs/elevationdata/","description":"Lisem can do various types of analysis with elevation data. Elevation derivatives","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -223,41 +223,41 @@
         <div class="col-md-8">
             <h1>Elevation data</h1>
             <div id="markdown-content-container"><p>Lisem can do various types of analysis with elevation data.
-<img src="/LISEM/assets/img/calc_1.png" alt="Elevation manipulation" /></p>
+<img src="/assets/img/calc_1.png" alt="Elevation manipulation" /></p>
 <h3 id="elevation-derivatives">Elevation derivatives</h3>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>slope.tif = Slope(dem.tif)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_2.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_2.png" alt="Elevation manipulation" /></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hillshade.tif = HillShade(dem.tif)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_4.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_4.png" alt="Elevation manipulation" /></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>aspect.tif = Aspect(dem.tif)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_3.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_3.png" alt="Elevation manipulation" /></p>
 <h3 id="drainage">Drainage</h3>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ldd.tif = DrainageNetwork(dem.tif,1e4,1e4,1e4,1e4)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_5.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_5.png" alt="Elevation manipulation" /></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux.tif = Accuflux(ldd.tif,1.0)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_6.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_6.png" alt="Elevation manipulation" /></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux2d.tif = Accuflux2D(dem.map,dem.map * 0.0 + 1.0,dem.map * 0.0,0.3,1.0)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_7.png" alt="Elevation manipulation" /></p>
 <h3 id="channels">Channels</h3>
 <p>We can select an estimate of channel locations by using a threshold on the accuflux data.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channel.tif = MapIf(accuflux.tif &gt;&gt; 1000.0,1.0,0.0)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_9.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_9.png" alt="Elevation manipulation" /></p>
 
 <p>We can use global relationships from Frasson et al., 2019 (global average analysis) to predict the depth and width of the channel.
 These functions take the accuflux in square kilometers, while our original map has a cellsize in meters, so we need to convert to kilometer.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelwidth.tif = 9.68*(accuflux.tif/1e6)**0.32
 channeldepth.tif = 11.3*(accuflux.tif/1e6)**0.083
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_10.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_10.png" alt="Elevation manipulation" /></p>
 
 <h3 id="fixing-local-depressions">Fixing local depressions</h3>
 <p>In order to fix local depression, you can use the DrainageNetworkDEM function.
@@ -274,13 +274,13 @@ Edge-preserving image filters can be a solution in these cases.
 The bilateral filter only filters flat terrain, and keeps ridges, edges and valleys intact (depending on the input parameters).</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dem_fix.tif = BilateralFilter(dem.tif,0.2,0.2)
 </code></pre></div></div>
-<p><img src="/LISEM/assets/img/calc_11.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_11.png" alt="Elevation manipulation" /></p>
 
 <h3 id="contour-lines">Contour Lines</h3>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>contour.shp = RasterContour(dem.tif,50.0)
 </code></pre></div></div>
 
-<p><img src="/LISEM/assets/img/calc_9.png" alt="Elevation manipulation" /></p>
+<p><img src="/assets/img/calc_9.png" alt="Elevation manipulation" /></p>
 
 </div>
             <div style="clear:both;">

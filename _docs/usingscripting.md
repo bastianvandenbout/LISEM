@@ -7,7 +7,7 @@ redirect_from: /docs/index.html
 
 The scripting environment not only provides a command-line, but also features a full script editor.
 
-![ScriptTool](/LISEM/assets/img/explain_scripttool.png)
+![ScriptTool](/assets/img/explain_scripttool.png)
 
 The script editor provides a more full scripting environment based on a customized version of the angelscript languge. 
 The angelscript language is a compiled, statically-types c-style language that features various advanced language features.
@@ -192,12 +192,12 @@ A simple debugger and stack view is present in the script tool.
 By clicking on a line number, a breakpoint can be added.
 Once the script encounters a breakpoint, it will be paused, and you can inspect all the variables currently in memory.
 
-![ScriptTool](/LISEM/assets/img/script_breakpoint.png)
+![ScriptTool](/assets/img/script_breakpoint.png)
 
 The debug window can be openend and closed using the debug button on the top.
 The top window shows that stack. This is a list of all the nested function calls. In the image, the stack is 1 level deep, as we are in ```main()```, and no further function call has been made.
 The variables are shown, with a short description. A copy of Map objects can be added to the map viewer, or the statistics (size, average, minimum, maximum and standard deviation) can be shown.
-![ScriptTool](/LISEM/assets/img/script_debug.png)
+![ScriptTool](/assets/img/script_debug.png)
 
 ### File shortcut support
 
