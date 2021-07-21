@@ -5,7 +5,7 @@ description: >
   LISEM website, open-source spatial modelling software download and tutorials.
 lang: en-US
 
-baseurl: "/LISEM" # the subpath of your site, e.g. /blog/
+baseurl: "" # the subpath of your site, e.g. /blog/
 url: "https://bastianvandenbout.github.io" # the base hostname & protocol for your site
 git_address: https://github.com/bastianvandenbout/LISEM
 youtube_address: https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA

@@ -21,11 +21,11 @@
 <meta property="og:url" content="http://localhost:4000/LISEM/docs/downloads/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-07-17T20:23:55+02:00" />
+<meta property="article:published_time" content="2021-07-21T20:55:49+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Downloads" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Downloads","dateModified":"2021-07-17T20:23:55+02:00","datePublished":"2021-07-17T20:23:55+02:00","url":"http://localhost:4000/LISEM/docs/downloads/","description":"Please find below all the available packages as part of the LISEM software","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Downloads","dateModified":"2021-07-21T20:55:49+02:00","datePublished":"2021-07-21T20:55:49+02:00","url":"http://localhost:4000/LISEM/docs/downloads/","description":"Please find below all the available packages as part of the LISEM software","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -99,7 +99,15 @@
 <table>
   <tbody>
     <tr>
-      <td><a href="https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download">Windows-64x Portable executable</a></td>
+      <td><a href="https://sourceforge.net/projects/lisem/files/LISEM/Portable/lisem.zip/download">Windows-64x Portable zipped executable</a></td>
+      <td><img src="/LISEM/assets/img/logonav.png" alt="LISEM" /></td>
+    </tr>
+    <tr>
+      <td><a href="https://sourceforge.net/projects/lisem/files/LISEM/Installer/LISEM-0.1.0-win64.exe/download">Windows-64x installer</a></td>
+      <td><img src="/LISEM/assets/img/logonav.png" alt="LISEM" /></td>
+    </tr>
+    <tr>
+      <td><a href="https://sourceforge.net/projects/lisem/files/LISEM/Python%20Wheel/lisem-0.1.0-py3-none-any.whl/download">Windows-64x Python Wheel</a></td>
       <td><img src="/LISEM/assets/img/logonav.png" alt="LISEM" /></td>
     </tr>
   </tbody>
@@ -122,6 +130,34 @@
 
 <p><a href="https://sourceforge.net/projects/lisem/files/OpenLISEM%20Hazard%20%28public%20beta%29/">Windows-64x Portable executable</a></p>
 
+<h3 id="additional-files">Additional files</h3>
+
+<h4 id="machine-learning-models">Machine learning models</h4>
+<p>The following machine learning models have been made for the purpose of creating high-resolution elevation data from low-resolution source data.
+Use the following code to apply the model to an elevation file:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hr.tif = ApplyMLModel({lr.tif},"model.onnx",32,32,{0,3,1,2});
+</code></pre></div></div>
+<p>Where “model.onnx” should be replaced with the model that you want to use.</p>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/esrgan_at_dahal_model.onnx/download">Dahal-ESRGAN-Austria</a></p>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/esrgan_dm_dahal_model.onnx/download">Dahal-ESRGAN-Dominica (Best option)</a></p>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/ebrn_at_dahal_model.onnx/download">Dahal-EBRN-Austria</a></p>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/ebrn_dm_dahal_model.onnx/download">Dahal-EBRN-Dominica</a></p>
+
+<h4 id="example-dataset-for-the-lisem-model">Example dataset for the LISEM model</h4>
+
+<p>The following links provide example datasets, featuring terrain elevation, geophysical parameters, land cover, soil types and precipitation data.
+These can be used to test the physically-based model. They were originally created for the old OpenLISEM Hazard software,
+but provide enough information to run LISEM or LISEM classic.</p>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/Example%20Datasets/">Example datasets</a></p>
+
+<h4 id="additional-files-1">Additional files</h4>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/Documentation%20and%20Manual/documentation15.pdf/download">Old OpenLISEM Hazard manual</a></p>
 </div>
             <div style="clear:both;">
               <p class="text-center">
@@ -137,6 +173,9 @@
 
 
 
+
+  
+  
 
   
   
