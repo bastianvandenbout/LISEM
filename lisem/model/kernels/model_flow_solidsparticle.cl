@@ -774,7 +774,7 @@ int dim0,
                                 __read_only image2d_t QSOUT,
                                 __write_only image2d_t QSOUTN,
                                 __write_only image2d_t DTREQ,
-                                float rain,
+                                __write_only image2d_t RAIN,
                                 __read_only image2d_t SCohesion,
                                 __read_only image2d_t T_SFLUIDH,
                                 __read_only image2d_t T_SFLUIDHADD,
@@ -837,6 +837,8 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
         float qfout = read_imagef(QFOUT,sampler, int2(gx,gy)).x;
         float qsout = read_imagef(QSOUT,sampler, int2(gx,gy)).x;
+
+        float rain = read_imagef(RAIN,sampler, int2(gx_x1,gy)).x;
 
         float z_x1 = read_imagef(DEM,sampler, int2(gx_x1,gy)).x;
         float z_x2 = read_imagef(DEM,sampler, int2(gx_x2,gy)).x;
@@ -1096,7 +1098,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
         vxn = edges > 2? 0.0f:isnan(vxn)? 0.0f:vxn;
         vyn = edges > 2? 0.0f:isnan(vyn)? 0.0f:vyn;
 
-        hn = hn + rain + sfluidhadd;
+        hn = hn + rain * dt_hydro/max(1e-10f,dt) + sfluidhadd;
 
         if(sfluidhadd > 0.0f)
         {

@@ -19,6 +19,7 @@ public:
 
     inline AS_ByteArray()
     {
+        std::cout << "create byte array "<< this << std::endl;
 
     }
     int            AS_refcount          = 1;
@@ -32,6 +33,7 @@ public:
         AS_refcount = AS_refcount - 1;
         if(AS_refcount == 0)
         {
+            std::cout << "delete bytearray " << this << std::endl;
 
             delete this;
         }

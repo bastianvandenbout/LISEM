@@ -318,6 +318,8 @@ public:
 
         AS_ByteArray * ba = new AS_ByteArray();
         ba->data = task->m_Data;
+        delete task->Download;
+        delete task;
         return ba;
     }
 

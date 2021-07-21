@@ -91,8 +91,7 @@ static inline float1 read_imagef(MaskedRaster<float> *m, int, int2 p)
 #include "kernels/particles.cl"
 #include "kernels/particles_mpm.cl"
 #include "kernels/model_rigid.cl"
-/*#include "model_rotstab.cl"
-#include "model_evapotranspiration.cl"*/
+#include "kernels/model_evapotranspiration.cl"
 
 
 

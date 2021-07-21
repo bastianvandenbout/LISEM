@@ -94,10 +94,6 @@ shaders_t loadShaders(const char * vert_path, const char * frag_path) {
 
     GLint compiled;
 
-    std::cout << "shader compile " << vert_path << " " << frag_path << std::endl;
-    std::cout << vv << std::endl << std::endl;
-    std::cout << ff << std::endl << std::endl;
-
     glCompileShader(v);
     glGetShaderiv(v, GL_COMPILE_STATUS, &compiled);
     if (!compiled)
@@ -139,9 +135,6 @@ shaders_t loadShadersFromStrings(const char * vert_path, const char * frag_path)
     QString qvs = QString(vert_path);
     QString qfs = QString(frag_path);
 
-
-    std::cout << "compiling vv : " << qvs.toStdString().c_str() << std::endl;
-    std::cout << "compiling ff : " << qfs.toStdString().c_str() << std::endl;
     glShaderSource(v, 1, &vert_path,&vlen);
     glShaderSource(f, 1, &frag_path,&flen);
 

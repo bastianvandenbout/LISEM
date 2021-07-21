@@ -20,6 +20,8 @@ inline AS_ByteArray * AS_DownloadToBA(QString url, int timeout, QString username
 
     AS_ByteArray * ba = new AS_ByteArray();
     ba->data = task->m_Data;
+    delete task->Download;
+    delete task;
     return ba;
 }
 
@@ -33,6 +35,8 @@ inline AS_ByteArray * AS_DownloadToBAWithPost(QString url, QString post, int tim
 
     AS_ByteArray * ba = new AS_ByteArray();
     ba->data = task->m_Data;
+    delete task->Download;
+    delete task;
     return ba;
 }
 

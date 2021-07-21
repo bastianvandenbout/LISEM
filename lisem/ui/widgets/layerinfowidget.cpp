@@ -70,7 +70,7 @@ void LayerInfoWidget::changetitle()
             currenttitle = t->GetColumnTitleQ(column);
         }
         bool ok;
-        QString text = QInputDialog::getText(0, "OpenLISEM Hazard",
+        QString text = QInputDialog::getText(0, "LISEM",
                                                  "Title of Column:", QLineEdit::Normal,
                                                  currenttitle, &ok);
 
@@ -105,7 +105,7 @@ void LayerInfoWidget::changedatatype()
         soundList <<"Unknown"<<"Integer(32bit)" << "Integer(64bit)" <<"Float(64bit)" <<  "Boolean" <<  "String";
 
         bool ok = false;
-        QString result = QInputDialog::getItem(this,"OpenLISEM Hazard","Get Column Type",soundList,currenttype,false,&ok);
+        QString result = QInputDialog::getItem(this,"LISEM","Get Column Type",soundList,currenttype,false,&ok);
 
         if(ok)
         {

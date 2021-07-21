@@ -414,6 +414,8 @@ public:
     OpenCLProgram * m_CLProgram_Infiltration2 = NULL;
     OpenCLProgram * m_CLProgram_Hydrology = NULL;
     OpenCLProgram * m_CLProgram_Hydrology2 = NULL;
+    OpenCLProgram * m_CLProgram_Evapotranspiration = NULL;
+    OpenCLProgram * m_CLProgram_Evapotranspiration2 = NULL;
     OpenCLProgram * m_CLProgram_Erosion = NULL;
     OpenCLProgram * m_CLProgram_Erosion2 = NULL;
     OpenCLProgram * m_CLProgram_Rigid = NULL;
@@ -519,6 +521,11 @@ public:
 
     //timeseries
     cTMap * RAIN;
+    cTMap * TEMP;
+    cTMap * WIND;
+    cTMap * RAD;
+    cTMap * VAPR;
+    cTMap * NDVI;
 
     cTMap * OUTLETS;
 
@@ -542,6 +549,7 @@ public:
     cTMap * SURFACESTORAGE;
     cTMap * CANOPYSTORAGE;
     cTMap * EVAPOTRANSPIRATION;
+    cTMap * CROPF;
     cTMap * VFX;
     cTMap * VFY;
     cTMap * VSX;
@@ -607,7 +615,18 @@ public:
     ModelTexture * T_CHHN;
     ModelTexture * T_CHVXN;
 
+    ModelTexture * T_RAIN;
+    ModelTexture * T_TEMP;
+    ModelTexture * T_WIND;
+    ModelTexture * T_VAPR;
+    ModelTexture * T_NDVI;
+    ModelTexture * T_RAD;
+
+    ModelTexture * T_CROPF;
+
     ModelTexture * T_DTREQ;
+
+
 
 
     ModelTexture * T_QFX1;
@@ -680,6 +699,7 @@ public:
     ModelTexture * T_F_INFILACT;
     ModelTexture * T_KSATTOPSIMPLE;
     ModelTexture * T_F_INFILFLOWCUM;
+    ModelTexture * T_EVAPOCUM;
     ModelTexture * T_BUILDING;
     ModelTexture * T_ROAD;
     ModelTexture * T_GW_US;

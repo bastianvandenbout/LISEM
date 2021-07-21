@@ -101,7 +101,7 @@ int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    window = glfwCreateWindow(wind_width,wind_height,"OpenLISEM Hazard",NULL,NULL);
+    window = glfwCreateWindow(wind_width,wind_height,"LISEM",NULL,NULL);
     if (!window) {
 
 

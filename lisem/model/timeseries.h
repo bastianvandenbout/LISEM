@@ -8,7 +8,7 @@
 #include "QFileInfo"
 #include "QDir"
 #include "error.h"
-
+#include "iogdal.h"
 #include <iostream>
 
 struct TimeData
@@ -16,7 +16,7 @@ struct TimeData
     float t;
     QString value;
     QList<float> valuesf;
-    bool is_map;
+    bool is_map = false;
 
 };
 
@@ -222,14 +222,24 @@ public:
                 timetotal += overlap;
                 if(d.is_map)
                 {
+                    std::cout << "load map for rain "<< std::endl;
+                    //read raster
+                    cTMap * mapr = new cTMap(readRaster(folder + d.value,0));
 
                     FOR_ROW_COL_MV(fill)
                     {
 
-
-
+                        if(pcr::isMV(mapr->data[r][c]))
+                        {
+                           fill->data[r][c] = 0.0;
+                        }else
+                        {
+                            fill->data[r][c] = m_Mult*mapr->data[r][c];
+                        }
 
                     }
+
+                    delete mapr;
 
                 }else {
 

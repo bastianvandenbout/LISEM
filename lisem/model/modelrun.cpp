@@ -105,19 +105,55 @@ void LISEMModel::DoModelRun()
         if(m_Loaded)
         {
 
-                float rain = m_Rain.fillValues(t,dt);
-                rain = (float)(rain * dt/(3600.0 *1000.0));
+               std::cout << "get rain values " << std::endl;
+            //get time-input stuff and upload maps
+                m_Rain.fillValues(t,dt, RAIN);
 
                 FOR_ROW_COL_MV(DEM)
                 {
-                    RAIN->Drc=  rain;
+                    RAIN->Drc=  RAIN->Drc* dt/(3600.0 *1000.0);
                 }
+
+                std::cout << "done with rain " << std::endl;
+
+                if(m_DoEvapoTranspiration)
+                {
+                    m_Temp.fillValues(t,dt,TEMP);
+                    m_Rad.fillValues(t,dt, RAD);
+                    m_Wind.fillValues(t,dt, WIND);
+                    m_Vapr.fillValues(t,dt, VAPR);
+                    m_NDVI.fillValues(t,dt, NDVI);
+
+                }
+                m_OpenGLCLManager->m_GLOutputUIMutex.lock();
+                m_OpenGLCLManager->m_GLMutex.lock();
+
+                glfwMakeContextCurrent(m_OpenGLCLManager->window);
+
+                m_OpenGLCLManager->CopyMapToTexture(T_RAIN,&(RAIN->data));
+
+                if(m_DoEvapoTranspiration)
+                {
+                    m_OpenGLCLManager->CopyMapToTexture(T_TEMP,&(TEMP->data));
+                    m_OpenGLCLManager->CopyMapToTexture(T_WIND,&(WIND->data));
+                    m_OpenGLCLManager->CopyMapToTexture(T_VAPR,&(VAPR->data));
+                    m_OpenGLCLManager->CopyMapToTexture(T_RAD,&(RAD->data));
+                    m_OpenGLCLManager->CopyMapToTexture(T_NDVI,&(NDVI->data));
+                }
+
+                glfwMakeContextCurrent(NULL);
+                m_OpenGLCLManager->m_GLMutex.unlock();
+                m_OpenGLCLManager->m_GLOutputUIMutex.unlock();
+
+                std::cout << "done with upload " << std::endl;
+
+
 
                 if(m_DoInfiltration && !m_DoHydrology)
                 {
                     m_CLProgram_Infiltration->PlaceArgument(3, (float)(dt));
                     m_CLProgram_Infiltration->PlaceArgument(16, uimap);
-                    m_CLProgram_Infiltration->PlaceArgument(17, rain);
+                    m_CLProgram_Infiltration->PlaceArgument(17, 0.0);
 
                     m_CLProgram_Infiltration->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
                     m_CLProgram_Infiltration2->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
@@ -127,7 +163,7 @@ void LISEMModel::DoModelRun()
                 {
                     m_CLProgram_Hydrology->PlaceArgument(3, (float)(dt));
                     m_CLProgram_Hydrology->PlaceArgument(37, uimap);
-                    m_CLProgram_Hydrology->PlaceArgument(38, rain);
+                    m_CLProgram_Hydrology->PlaceArgument(38, 0.0);
 
                     //do hydrology
                     m_CLProgram_Hydrology->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
@@ -141,6 +177,16 @@ void LISEMModel::DoModelRun()
                     m_CLProgram_GroundWaterFlow->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
                     m_CLProgram_GroundWaterFlow2->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
 
+
+                }
+
+                if(m_DoEvapoTranspiration)
+                {
+                    //run evapo kernel
+                    m_CLProgram_Evapotranspiration->PlaceArgument(3, (float)(dt));
+                    m_CLProgram_Evapotranspiration->PlaceArgument(37, uimap);
+                    m_CLProgram_Evapotranspiration->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
+                    m_CLProgram_Evapotranspiration2->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
 
                 }
 
@@ -436,10 +482,10 @@ void LISEMModel::DoModelRun()
                             m_CLProgram_FlowSolids->PlaceArgument(3, (float)(dt_flow_act));
                             if(!m_DoInfiltration && !m_DoHydrology)
                             {
-                                 m_CLProgram_FlowSolids->PlaceArgument(53, rain* dt_flow_act/dt);
+                                 //m_CLProgram_FlowSolids->PlaceArgument(53, rain* dt_flow_act/dt);
                             }else
                             {
-                                m_CLProgram_FlowSolids->PlaceArgument(53, 0.0f);
+                                //m_CLProgram_FlowSolids->PlaceArgument(53, 0.0f);
                             }
 
                             m_CLProgram_FlowSolids->PlaceArgument(46, uimap);
@@ -497,7 +543,7 @@ void LISEMModel::DoModelRun()
 
                                     m_CLProgram_Erosion->PlaceArgument(3, (float)(dt_flow_act));
                                     m_CLProgram_Erosion->PlaceArgument(60, uimap);
-                                    m_CLProgram_Erosion->PlaceArgument(81, rain* dt_flow_act/dt);
+                                    m_CLProgram_Erosion->PlaceArgument(81, 0.0);
                                     m_CLProgram_Erosion2->PlaceArgument(3, (float)(dt_flow_act));
 
                                     m_CLProgram_Erosion->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
@@ -517,10 +563,10 @@ void LISEMModel::DoModelRun()
 
                             if(!m_DoInfiltration && !m_DoHydrology)
                             {
-                                 m_CLProgram_FlowSolidsParticle->PlaceArgument(53, rain * dt_flow_act/dt);
+                                 //m_CLProgram_FlowSolidsParticle->PlaceArgument(53, rain * dt_flow_act/dt);
                             }else
                             {
-                                m_CLProgram_FlowSolidsParticle->PlaceArgument(53, 0.0f);
+                                //m_CLProgram_FlowSolidsParticle->PlaceArgument(53, 0.0f);
                             }
 
                             m_CLProgram_FlowSolidsParticle->PlaceArgument(46, uimap);
@@ -603,10 +649,10 @@ void LISEMModel::DoModelRun()
                         m_CLProgram_Flow->PlaceArgument(24, uimap);
                         if(!m_DoInfiltration && !m_DoHydrology)
                         {
-                             m_CLProgram_Flow->PlaceArgument(36, rain* dt_flow_act/dt);
+                             //m_CLProgram_Flow->PlaceArgument(36, rain* dt_flow_act/dt);
                         }else
                         {
-                            m_CLProgram_Flow->PlaceArgument(36, 0.0f);
+                            //m_CLProgram_Flow->PlaceArgument(36, 0.0f);
                         }
                         m_CLProgram_Flow->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
 

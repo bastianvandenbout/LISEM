@@ -6,9 +6,9 @@
 #include "layer/geo/rasterprovider/rasterdataprovider.h"
 #include "QMutex"
 #include "gl/openglcldatamanager.h"
-
+#include "QMutex"
 #include "layer/editors/uirasterlayereditor.h"
-
+#include "QWaitCondition"
 
 class RasterStreamBuffer
 {
@@ -126,8 +126,8 @@ public:
          ftly = b2.GetMinY();
          fbry = b2.GetMaxY();
 
-         fwidth = brx - tlx;
-         fheight = bry - tly;
+         fwidth = fbrx - ftlx;
+         fheight = fbry - ftly;
          fband = in_band;
 
         m_HasFutureFrom = true;
@@ -266,9 +266,12 @@ public:
         Initialize(map,name,file,filepath,native);
 
     }
+    std::thread m_ThreadRead;
 
     inline void Initialize(RasterDataProvider * map,QString name,bool file = false, QString filepath = "", bool native = false)
     {
+
+        m_ThreadRead = std::thread((&UIStreamRasterLayer::ReadDataThread),this);
 
         m_RequiresCRSGLTransform = true;
         m_Style.m_HasDuoBand = false;
@@ -590,6 +593,42 @@ public:
     }
 
 
+    QMutex m_ReadInstructMutex;
+    QMutex m_ReadThreadStartMutex;
+    QMutex m_ReadThreadDoneMutex;
+    QWaitCondition m_ReadThreadWaitCondition;
+    QWaitCondition m_ReadThreadDoneCondition;
+    std::function<void(void)> m_ReadThreadWork;
+    bool m_ReadThreadStop = false;
+
+    inline void ReadDataThread()
+    {
+
+        while(true)
+        {
+            m_ReadThreadStartMutex.lock();
+            m_ReadThreadWaitCondition.wait(&m_ReadThreadStartMutex);
+
+            m_ReadThreadDoneMutex.lock();
+
+            if(m_ReadThreadStop)
+            {
+                m_ReadThreadDoneMutex.unlock();
+                m_ReadThreadStartMutex.unlock();
+                m_ReadThreadDoneCondition.notify_all();
+                break;
+            }
+            m_ReadThreadWork();
+
+
+            m_ReadThreadDoneMutex.unlock();
+            m_ReadThreadDoneCondition.notify_all();
+            m_ReadThreadStartMutex.unlock();
+        }
+
+    }
+
+
 
     inline void UpdateGLData()
     {
@@ -637,9 +676,8 @@ public:
         m_DataEdits.clear();
     }
 
-    RasterStreamBuffer *  Fill_RasterStreamBuffers(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm, QList<RasterStreamBuffer*> &Buffers, int band)
+    RasterStreamBuffer *  Fill_RasterStreamBuffers(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm, QList<RasterStreamBuffer*> &Buffers, int band, bool &reused, bool check_ref,RasterStreamBuffer* rsb_ref = nullptr)
     {
-        //std::cout << "fill raster buffers " << band <<  std::endl;
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
 
         BoundingBox b;
@@ -740,6 +778,10 @@ public:
 
             BoundingBox bfinal = blim;
 
+            if(check_ref)
+            {
+                bfinal = BoundingBox(rsb_ref->tlx,rsb_ref->brx, rsb_ref->tly ,rsb_ref->bry);
+            }
 
 
             //std::cout << "search box " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
@@ -780,11 +822,11 @@ public:
                                 BoundingBox b2 = BoundingBox(rsb_i->tlx,rsb_i->brx, rsb_i->tly ,rsb_i->bry);
                                 BoundingBox b3 = b1;
                                 b3.And(b2);
-                                std::cout  << std::setprecision(10) << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " "  << bfinal.GetMaxY() << std::endl;
-                                std::cout  << std::setprecision(10) << rsb_i->tlx << " " << rsb_i->brx << " " << rsb_i->tly << " "  << rsb_i->bry << std::endl;
-                                std::cout  << std::setprecision(10) << b3.GetMinX() << " " << b3.GetMaxX() << " " << b3.GetMinY() << " "  << b3.GetMaxY() << std::endl;
+                                //std::cout  << std::setprecision(10) << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " "  << bfinal.GetMaxY() << std::endl;
+                                //std::cout  << std::setprecision(10) << rsb_i->tlx << " " << rsb_i->brx << " " << rsb_i->tly << " "  << rsb_i->bry << std::endl;
+                                //std::cout  << std::setprecision(10) << b3.GetMinX() << " " << b3.GetMaxX() << " " << b3.GetMinY() << " "  << b3.GetMaxY() << std::endl;
 
-                                std::cout << b1.GetArea() << " " << b3.GetArea() << " " << !(bfinal.GetMinX() < rsb_i->tlx) << " " << (b3.GetArea() / b1.GetArea())<< std::endl;
+                                //std::cout << b1.GetArea() << " " << b3.GetArea() << " " << !(bfinal.GetMinX() < rsb_i->tlx) << " " << (b3.GetArea() / b1.GetArea())<< std::endl;
                                 //!(bfinal.GetMinX() < rsb_i->tlx) && !(bfinal.GetMinY() < rsb_i->tly) && !(bfinal.GetMaxX() > rsb_i->brx) && !(bfinal.GetMaxY() > rsb_i->bry)
 
                                 if(b1.GetArea() > 1e-12)
@@ -799,13 +841,43 @@ public:
                                         if(bfinal.GetSizeX() > 0.75*rsb_i->width && bfinal.GetSizeY() > 0.75*rsb_i->height)
                                         {
 
-                                            //std::cout << "found " <<  std::endl;
 
-                                           //std::cout << "found buffer" << std::endl;
-                                            rsb = rsb_i;
-                                            rsb_i->m_SignMutex->unlock();
+                                            std::cout << "check_ref "<<check_ref<< std::endl;
+                                            if(check_ref)
+                                            {
+                                                BoundingBox bref1 = BoundingBox(rsb_i->tlx,rsb_i->brx, rsb_i->tly ,rsb_i->bry);
+                                                BoundingBox bref2 = BoundingBox(rsb_ref->tlx,rsb_ref->brx, rsb_ref->tly ,rsb_ref->bry);
+                                                BoundingBox bref3 = bref1;
+                                                bref3.And(bref2);
 
-                                            break;
+                                                std::cout << (bref3.GetArea() / bref1.GetArea()) << " " << (bref3.GetArea() / bref1.GetArea()) <<" "<<(bref3.GetArea() / bref2.GetArea()) << "  " <<  (bref3.GetArea() / bref2.GetArea()) << std::endl;
+
+                                                if((bref3.GetArea() / bref1.GetArea()) > 0.9995 && (bref3.GetArea() / bref1.GetArea()) < 1.0005)
+                                                {
+
+                                                    if((bref3.GetArea() / bref2.GetArea()) > 0.9995 && (bref3.GetArea() / bref2.GetArea()) < 1.0005)
+                                                    {
+                                                        rsb = rsb_i;
+                                                        rsb_i->m_SignMutex->unlock();
+
+                                                        reused = true;
+
+                                                        break;
+                                                    }
+                                                }
+
+                                            }else
+                                            {
+                                                //std::cout << "found " <<  std::endl;
+
+                                               //std::cout << "found buffer" << std::endl;
+                                                rsb = rsb_i;
+                                                rsb_i->m_SignMutex->unlock();
+
+                                                reused = true;
+
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -818,6 +890,11 @@ public:
 
 
                 }
+            }
+
+            if(rsb == nullptr)
+            {
+                reused = false;
             }
 
             if(unloaded_exists && rsb == nullptr)
@@ -855,8 +932,11 @@ public:
             {
 
                 //std::cout << "rsb is not found "<< std::endl;
-                bfinal.Scale(1.2);
-                bfinal.And(GetBoundingBox());
+                if(!check_ref)
+                {
+                    bfinal.Scale(1.2);
+                    bfinal.And(GetBoundingBox());
+                }
 
 
                 //check for one with correct pixels, as to not reallocate memory
@@ -890,47 +970,70 @@ public:
                 //make new one
                 if(rsb == nullptr)
                 {
-                    //std::cout << "create  buffer " << std::endl;
+                    std::cout << "create  buffer " << std::endl;
                     //create new buffer object
 
 
                     rsb = new RasterStreamBuffer(m,state.scr_pixwidth,state.scr_pixheight,bfinal,GetProjection(),band);
-                    rsb->SetFutureFrom(bfinal,GetProjection(),band);
+                    //rsb->SetFutureFrom(bfinal,GetProjection(),band);
                     Buffers.prepend(rsb);
 
                     //std::cout << "created " << std::endl;
-                }else {
-
-
-                    //std::cout << "set future from " << std::endl;
-                    rsb->SetFutureFrom(bfinal,GetProjection(),band);
                 }
-
                 //do actual loading on a seperate thread
 
                 rsb->m_SignMutex->lock();
                 if(rsb->write_done)
                 {
 
-
                     rsb->rRead_Started = true;
+
+
+                    //rsb->m_SignMutex->lock();
+                    rsb->write_done = false;
+                    //rsb->m_SignMutex->unlock();
+
                     rsb->tRead = std::thread([bfinal,band,this,rsb]()
                     {
-                        rsb->m_SignMutex->lock();
-                        rsb->write_done = false;
 
-                        //std::cout << "read values pre " << std::endl;
-                        rsb->m_SignMutex->unlock();
-                        m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex);
-                        rsb->m_SignMutex->lock();
+                        m_ReadInstructMutex.lock();
 
-                        //std::cout << "read values post " << std::endl;
+                        m_ReadThreadStartMutex.lock();
+                        m_ReadThreadDoneMutex.lock();
+
+                        m_ReadThreadWork =  [rsb,bfinal,band,this](){
+                            rsb->m_SignMutex->lock();
+                            rsb->write_done = false;
+
+                            rsb->m_SignMutex->unlock();
 
 
-                        rsb->rRead_Started = false;
-                        rsb->write_done = true;
-                        rsb->update_gpu = true;
-                        rsb->m_SignMutex->unlock();
+                            //std::cout << "read values pre " << std::endl;
+                            m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex,[this, rsb,bfinal,band]()
+                            {
+
+                                rsb->m_SignMutex->lock();
+
+                                rsb->SetFutureFrom(bfinal,GetProjection(),band);
+
+                                //std::cout << "read values post " << std::endl;
+                                rsb->rRead_Started = false;
+                                rsb->write_done = true;
+                                rsb->update_gpu = true;
+                                rsb->m_SignMutex->unlock();
+
+                            });
+                        };
+
+                        m_ReadThreadStartMutex.unlock();
+                        m_ReadThreadWaitCondition.notify_all();
+                        m_ReadThreadDoneCondition.wait(&m_ReadThreadDoneMutex);
+                        m_ReadThreadDoneMutex.unlock();
+
+
+                        m_ReadInstructMutex.unlock();
+
+
                     });
 
                     rsb->m_SignMutex->unlock();
@@ -990,9 +1093,15 @@ public:
                 int index2 = s.m_IndexB2;
                 int index3 = s.m_IndexB3;
 
-                rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,index1);
-                rsb_g = Fill_RasterStreamBuffers(m,state,tm, m_Buffersg,index2);
-                rsb_b = Fill_RasterStreamBuffers(m,state,tm, m_Buffersb,index3);
+                bool reused;
+                bool reused2;
+                bool reused3;
+                rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,index1,reused,false,nullptr);
+                std::cout << "1 is resused?  " << reused << std::endl;
+                rsb_g = Fill_RasterStreamBuffers(m,state,tm, m_Buffersg,index2,reused2,reused,rsb_r);
+                std::cout << "2 is resused?  " << reused2 << std::endl;
+                rsb_b = Fill_RasterStreamBuffers(m,state,tm, m_Buffersb,index3,reused3,reused && reused2,rsb_r);
+                std::cout << "3 is resused?  " << reused3 << std::endl;
 
                 if(rsb_r == nullptr || rsb_g == nullptr || rsb_r == nullptr )
                 {
@@ -1000,8 +1109,10 @@ public:
                 }
             }else if(m_RDP->IsDuoMap())
             {
-                rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,0);
-                rsb_g = Fill_RasterStreamBuffers(m,state,tm, m_Buffersg,1);
+                bool reused;
+                bool reused2;
+                rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,0,reused,false,nullptr);
+                rsb_g = Fill_RasterStreamBuffers(m,state,tm, m_Buffersg,1,reused2,reused,rsb_r);
 
                 if(rsb_r == nullptr || rsb_g == nullptr  )
                 {
@@ -1009,7 +1120,8 @@ public:
                 }
             }else
             {
-                rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,0);
+                bool reused;
+                rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,0,reused,false,nullptr);
                 if(rsb_r == nullptr)
                 {
                     return;
@@ -1248,8 +1360,21 @@ public:
                         //layer geometry
                         float l_width = ((float)(rsb_r->Map->nrCols()))*rsb_r->cellsize_x;
                         float l_height = ((float)(rsb_r->Map->nrRows()))*rsb_r->cellsize_y;
+
+                        float l_width1 = ((float)(rsb_g->Map->nrCols()))*rsb_g->cellsize_x;
+                        float l_height1 = ((float)(rsb_g->Map->nrRows()))*rsb_g->cellsize_y;
+
+                        float l_width2 = ((float)(rsb_b->Map->nrCols()))*rsb_b->cellsize_x;
+                        float l_height2 = ((float)(rsb_b->Map->nrRows()))*rsb_b->cellsize_y;
+
                         float l_cx = rsb_r->tlx+ 0.5f * l_width;
                         float l_cy = rsb_r->tly+ 0.5f * l_height;
+
+                        float l_cx1 = rsb_g->tlx+ 0.5f * l_width1;
+                        float l_cy1 = rsb_g->tly+ 0.5f * l_height1;
+
+                        float l_cx2 = rsb_b->tlx+ 0.5f * l_width2;
+                        float l_cy2 = rsb_b->tly+ 0.5f * l_height2;
 
                         //set shader uniform values
                         OpenGLProgram * program = GLProgram_uimultimap;
@@ -1276,14 +1401,26 @@ public:
                         int istransformedf_loc = glad_glGetUniformLocation(program->m_program,"is_transformedf");
 
                         glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"is_ldd"),0);
+
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex"),l_width);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey"),l_height);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx"),l_cx);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy"),l_cy);
+
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex1"),l_width1);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey1"),l_height1);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx1"),l_cx1);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy1"),l_cy1);
+
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex2"),l_width2);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey2"),l_height2);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx2"),l_cx2);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy2"),l_cy2);
+
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixx"),(float)(rsb_r->Map->nrCols()));
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixy"),(float)(rsb_r->Map->nrRows()));
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixdx"),(float)(rsb_r->Map->cellSizeX()));
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixdy"),(float)(rsb_r->Map->cellSizeY()));
-                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx"),l_cx);
-                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy"),l_cy);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowpixsizex"),state.scr_pixwidth);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowpixsizey"),state.scr_pixheight);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowsizex"),state.width);
@@ -1345,6 +1482,16 @@ public:
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx"),b.GetCenterX());
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy"),b.GetCenterY());
 
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex1"),b.GetSizeX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey1"),b.GetSizeY());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx1"),b.GetCenterX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy1"),b.GetCenterY());
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex2"),b.GetSizeX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey2"),b.GetSizeY());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx2"),b.GetCenterX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy2"),b.GetCenterY());
+
                                 glad_glUniform1i(istransformed_loc,1);
                                 glad_glUniform1i(istransformedf_loc,1);
 
@@ -1356,6 +1503,17 @@ public:
                                 glad_glActiveTexture(GL_TEXTURE4);
                                 glad_glBindTexture(GL_TEXTURE_2D,gltransform->GetTextureY()->m_texgl);
                             }else {
+
+                                std::cout << l_width1/std::max(1e-10f,l_width) << " " << l_width2/std::max(1e-10f,l_width) <<  std::endl;
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relscale1"),l_width1/std::max(1e-10f,l_width));
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshiftx1"),((rsb_g->tlx +l_width1) - (rsb_r->tlx + l_width))/std::max(1e-10f,l_width));
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshifty1"),((rsb_g->tly +l_height1) - (rsb_r->tly +l_height))/std::max(1e-10f,l_height));
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relscale2"),l_width2/std::max(1e-10f,l_width));
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshiftx2"),((rsb_b->tlx +l_width2) - (rsb_r->tlx + l_width))/std::max(1e-10f,l_width));
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshifty2"),((rsb_b->tly +l_height2) - (rsb_r->tly +l_height))/std::max(1e-10f,l_height));
+
 
                                 glad_glUniform1i(istransformed_loc,0);
                                 glad_glUniform1i(istransformedf_loc,0);
@@ -1890,6 +2048,24 @@ public:
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrwidth"),state.scr_width);
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrheight"),state.scr_height);
 
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex1"),l_width);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey1"),l_height);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx1"),l_cx);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy1"),l_cy);
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex2"),l_width);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey2"),l_height);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx2"),l_cx);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy2"),l_cy);
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relscale1"),1.0);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshiftx1"),0.0);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshifty1"),0.0);
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relscale2"),1.0);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshiftx2"),0.0);
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshifty2"),0.0);
+
                                 for(int i = 0; i <LISEM_GRADIENT_NCOLORS; i++)
                                 {
                                     QString is = QString::number(i);
@@ -1940,6 +2116,18 @@ public:
                                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey"),b.GetSizeY());
                                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx"),b.GetCenterX());
                                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy"),b.GetCenterY());
+
+
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex1"),b.GetSizeX());
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey1"),b.GetSizeY());
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx1"),b.GetCenterX());
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy1"),b.GetCenterY());
+
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex2"),b.GetSizeX());
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey2"),b.GetSizeY());
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx2"),b.GetCenterX());
+                                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy2"),b.GetCenterY());
+
 
                                         glad_glUniform1i(istransformed_loc,1);
                                         glad_glUniform1i(istransformedf_loc,1);
@@ -2786,6 +2974,15 @@ public:
 
     inline void OnDestroy(OpenGLCLManager * m) override
     {
+
+        m_ReadInstructMutex.lock();
+        m_ReadThreadStartMutex.lock();
+        m_ReadThreadDoneMutex.lock();
+        m_ReadThreadStop = true;
+        m_ReadThreadStartMutex.unlock();
+        m_ReadThreadDoneMutex.unlock();
+        m_ReadThreadWaitCondition.notify_all();
+        m_ReadInstructMutex.unlock();
 
         if(m_TextureH != nullptr)
         {

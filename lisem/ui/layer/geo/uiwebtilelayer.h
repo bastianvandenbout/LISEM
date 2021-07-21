@@ -21,10 +21,10 @@ struct TileInfo
     int y;
     int z;
     bool is_done = false;
-    DownloadTask* download;
+    DownloadTask* download = nullptr;
     QPixmap * PixMap = nullptr;
     cTMap * TifMap = nullptr;
-    QImage *Image;
+    QImage *Image = nullptr;
     bool is_gl_created = false;
     bool is_used_cache = false;
     bool do_draw = false;
@@ -36,13 +36,13 @@ struct TileInfo
     float sy;
     float north;
     float west;
-    float * red;
-    float * green;
-    float * blue;
+    float * red= nullptr;
+    float * green= nullptr;
+    float * blue= nullptr;
 
-    OpenGLCLTexture * T_R;
-    OpenGLCLTexture * T_G;
-    OpenGLCLTexture * T_B;
+    OpenGLCLTexture * T_R= nullptr;
+    OpenGLCLTexture * T_G= nullptr;
+    OpenGLCLTexture * T_B= nullptr;
 };
 
 static inline bool TileInfoCompare(const TileInfo &ti1, const TileInfo &ti2)
@@ -346,6 +346,9 @@ public:
         {
             UIGeoLayer::Initialize(info.m_Projection,info.m_Box,info.m_Name,false,"",false);
 
+            m_ThreadRead = std::thread((&UIWebTileLayer::ReadDataThread),this);
+
+
             m_TileServerInfo = info;
             m_IsNative = false;
             m_RequiresCRSGLTransform = true;
@@ -427,6 +430,44 @@ public:
             return "WebTileLayer";
         }
 
+        std::thread m_ThreadRead;
+        QMutex m_ReadInstructMutex;
+        QMutex m_ReadThreadStartMutex;
+        QMutex m_ReadThreadDoneMutex;
+        QWaitCondition m_ReadThreadWaitCondition;
+        QWaitCondition m_ReadThreadDoneCondition;
+        std::function<void(void)> m_ReadThreadWork;
+        bool m_ReadThreadStop = false;
+
+        inline void ReadDataThread()
+        {
+
+            while(true)
+            {
+                m_ReadThreadStartMutex.lock();
+                m_ReadThreadWaitCondition.wait(&m_ReadThreadStartMutex);
+
+                m_ReadThreadDoneMutex.lock();
+
+                if(m_ReadThreadStop)
+                {
+                    m_ReadThreadDoneMutex.unlock();
+                    m_ReadThreadStartMutex.unlock();
+                    m_ReadThreadDoneCondition.notify_all();
+                    break;
+                }
+                m_ReadThreadWork();
+
+
+                m_ReadThreadDoneMutex.unlock();
+                m_ReadThreadDoneCondition.notify_all();
+                m_ReadThreadStartMutex.unlock();
+            }
+
+        }
+
+
+
 
         inline void OnDownloadProgress(DownloadTask * dl)
         {
@@ -450,6 +491,11 @@ public:
                     {
                         m_TileMutex.lock();
                         m_CentralDetailTile.is_done = true;
+                        if(m_CentralDetailTile.TifMap != nullptr)
+                        {
+                            delete m_CentralDetailTile.TifMap;
+                        }
+
                         m_CentralDetailTile.TifMap = new cTMap(GetRasterFromQByteArrayGTIFF(&(dl->m_Data)));
 
 
@@ -483,6 +529,11 @@ public:
 
                             if(m_TileServerInfo.m_IsTiff)
                             {
+                                if(ti.TifMap != nullptr)
+                                {
+                                    delete ti.TifMap;
+                                    ti.TifMap = nullptr;
+                                }
                                 ti.TifMap = new cTMap(GetRasterFromQByteArrayGTIFF(&(dl->m_Data)));
 
                                 ti.pixx = ti.TifMap->nrCols();
@@ -497,6 +548,18 @@ public:
                                 ti.north = zl.extentbry - float(ti.y) * zl.tilesizey;
                                 ti.west = zl.extenttlx + float(ti.x) * zl.tilesizex;
 
+                                if(ti.red != nullptr)
+                                {
+                                    delete[] ti.red;
+                                }
+                                if(ti.green != nullptr)
+                                {
+                                    delete[] ti.green;
+                                }
+                                if(ti.blue != nullptr)
+                                {
+                                    delete[] ti.blue;
+                                }
                                 ti.red = new float[ti.pixx *ti.pixy];
                                 ti.green = new float[ti.pixx *ti.pixy];
                                 ti.blue = new float[ti.pixx *ti.pixy];
@@ -516,9 +579,17 @@ public:
 
                             }else {
 
+                                if(ti.PixMap != nullptr)
+                                {
+                                    delete ti.PixMap;
+                                }
                                 ti.PixMap = new QPixmap();
                                 ti.PixMap->loadFromData(dl->m_Data);
 
+                                if(ti.Image != nullptr)
+                                {
+                                    delete ti.Image;
+                                }
                                 ti.Image = new QImage(ti.PixMap->toImage().convertToFormat(QImage::Format_ARGB32));
 
                                 ti.pixx = ti.Image->size().width();
@@ -533,11 +604,23 @@ public:
                                 ti.north = zl.extentbry - float(ti.y) * zl.tilesizey;
                                 ti.west = zl.extenttlx + float(ti.x) * zl.tilesizex;
 
+                                if(ti.red != nullptr)
+                                {
+                                    delete[] ti.red;
+                                }
+                                if(ti.green != nullptr)
+                                {
+                                    delete[] ti.green;
+                                }
+                                if(ti.blue != nullptr)
+                                {
+                                    delete[] ti.blue;
+                                }
                                 ti.red = new float[ti.pixx *ti.pixy];
                                 ti.green = new float[ti.pixx *ti.pixy];
                                 ti.blue = new float[ti.pixx *ti.pixy];
 
-                                uchar * bits = ti.Image->bits();
+                                const uchar * bits = ti.Image->bits();
 
                                 for(int r = 0; r < ti.Image->size().width(); r++)
                                 {
@@ -718,6 +801,10 @@ public:
                     url.replace("{y}",QString::number(ti.y));
                     url.replace("{z}",QString::number(ti.z));
 
+                    if(ti.download != nullptr)
+                    {
+                        delete ti.download;
+                    }
                     ti.download = new DownloadTask(url);
                     ti.download->SetCallBackStart(&UIWebTileLayer::OnDownloadStart,this);
                     ti.download->SetCallBackProgress(&UIWebTileLayer::OnDownloadProgress,this);
@@ -787,7 +874,13 @@ public:
                         delete m_CentralDetailTile.TifMap;
                         m_CentralDetailTile.TifMap = nullptr;
                     }
-                    m_CentralDetailTile.download = new DownloadTask(url);
+
+                    if(m_CentralDetailTile.download != nullptr)
+                    {
+                        delete m_CentralDetailTile.download;
+
+                    }
+                            m_CentralDetailTile.download = new DownloadTask(url);
                     m_CentralDetailTile.download->SetCallBackStart(&UIWebTileLayer::OnDownloadStart,this);
                     m_CentralDetailTile.download->SetCallBackProgress(&UIWebTileLayer::OnDownloadProgress,this);
                     m_CentralDetailTile.download->SetCallBackFinished(&UIWebTileLayer::OnDownloadFinished,this);
@@ -828,9 +921,6 @@ public:
                 {
 
                     n_create ++;
-
-
-                    std::cout << "create opengl tile" << std::endl;
 
                     n_glcreate ++;
 
@@ -888,10 +978,8 @@ public:
 
                 if(ti.is_in_current)// && z == ti.z)
                 {
-                    std::cout << j << "in_current "  << std::endl;
                     if(ti.is_done && ti.is_gl_created)
                     {
-                        std::cout << j << "done and created "  << std::endl;
 
                         ti.do_draw = true;
                         m_RequiredTilesSortedCache.replace(j,ti);
@@ -1005,6 +1093,18 @@ public:
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixdy"),(float)(ti.csy));
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx"),l_cx);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy"),l_cy);
+
+
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex1"),l_width);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey1"),l_height);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx1"),l_cx);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy1"),l_cy);
+
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizex2"),l_width);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_sizey2"),l_height);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx2"),l_cx);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy2"),l_cy);
+
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowpixsizex"),state.scr_pixwidth);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowpixsizey"),state.scr_pixheight);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowsizex"),state.width);
@@ -1014,6 +1114,15 @@ public:
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowtransy"),state.translation_y);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrwidth"),state.scr_width);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrheight"),state.scr_height);
+
+
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relscale1"),1.0);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshiftx1"),0.0);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshifty1"),0.0);
+
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relscale2"),1.0);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshiftx2"),0.0);
+                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_relshifty2"),0.0);
 
                         for(int i = 0; i <LISEM_GRADIENT_NCOLORS; i++)
                         {
@@ -1065,6 +1174,17 @@ public:
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey"),b.GetSizeY());
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx"),b.GetCenterX());
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy"),b.GetCenterY());
+
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex1"),b.GetSizeX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey1"),b.GetSizeY());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx1"),b.GetCenterX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy1"),b.GetCenterY());
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex2"),b.GetSizeX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey2"),b.GetSizeY());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx2"),b.GetCenterX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy2"),b.GetCenterY());
 
                                 glad_glUniform1i(istransformed_loc,1);
                                 glad_glUniform1i(istransformedf_loc,1);
@@ -1144,6 +1264,9 @@ public:
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixy"),(float)(ti.pixy));
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixdx"),(float)(ti.csx));
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixdy"),(float)(ti.csy));
+
+
+
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx"),l_cx);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy"),l_cy);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowpixsizex"),state.scr_pixwidth);
@@ -1155,6 +1278,8 @@ public:
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_windowtransy"),state.translation_y);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrwidth"),state.scr_width);
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrheight"),state.scr_height);
+
+
 
                         for(int i = 0; i <LISEM_GRADIENT_NCOLORS; i++)
                         {
@@ -1202,6 +1327,17 @@ public:
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx"),b.GetCenterX());
                                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy"),b.GetCenterY());
 
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex1"),b.GetSizeX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey1"),b.GetSizeY());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx1"),b.GetCenterX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy1"),b.GetCenterY());
+
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizex2"),b.GetSizeX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_sizey2"),b.GetSizeY());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transx2"),b.GetCenterX());
+                                glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"tr_transy2"),b.GetCenterY());
+
+
                                 glad_glUniform1i(istransformed_loc,1);
                                 glad_glUniform1i(istransformedf_loc,1);
 
@@ -1248,9 +1384,6 @@ public:
                     }
                 }
             }
-
-            std::cout << "Drew tiles: " << n_draw << std::endl;
-            std::cout << "Created tiles: " << n_create << std::endl;
             m_TileMutex.unlock();
         }
 
@@ -1288,11 +1421,59 @@ public:
                     //cleanup of ti
                     if(!ti.is_done)
                     {
-                        m_RequiredTiles.removeAt(i);
-                        m_RequiresTileRedraw = true;
-                        m_DownloadManager->StopDownload(ti.download);
+                        //m_RequiredTiles.removeAt(i);
+                        //m_RequiresTileRedraw = true;
+                        //m_DownloadManager->StopDownload(ti.download);
                     }else
                     {
+                        std::cout << "delete without cleanup" << std::endl;
+                        if(ti.is_done)
+                        {
+                            delete[] ti.red;
+                            delete[] ti.green;
+                            delete[] ti.blue;
+                            ti.red = nullptr;
+                            ti.green = nullptr;
+                            ti.blue = nullptr;
+                            if(this->m_TileServerInfo.m_IsTiff)
+                            {
+                                delete ti.TifMap;
+                                ti.TifMap = nullptr;
+                            }else
+                            {
+                                delete ti.PixMap;
+                                ti.PixMap = nullptr;
+                            }
+                            if(ti.Image != nullptr)
+                            {
+                                delete ti.Image;
+                                ti.Image = nullptr;
+                            }
+                            if(ti.is_gl_created)
+                            {
+                                m_TextureCache.append(ti.T_R);
+                                m_TextureCache.append(ti.T_G);
+                                m_TextureCache.append(ti.T_B);
+                                ti.T_R = nullptr;
+                                ti.T_G = nullptr;
+                                ti.T_B = nullptr;
+                            }
+                            if(ti.download != nullptr)
+                            {
+                                if(ti.download->Download != nullptr)
+                                {
+                                    ti.download->Download->deleteLater();
+                                    ti.download = nullptr;
+                                }
+                            }
+                        }else {
+                            if(ti.download->Download != nullptr)
+                            {
+                                m_DownloadManager->StopDownload(ti.download);
+                                delete ti.download;
+                                ti.download = nullptr;
+                            }
+                        }
                         m_RequiredTiles.removeAt(i);
                     }
                 }
@@ -1316,18 +1497,29 @@ public:
                     {
                         TileInfo ti = m_RequiredTiles.at(i);
 
+                        std::cout << "cleanup tile " << std::endl;
                         //cleanup of ti
                         if(ti.is_done)
                         {
                             delete[] ti.red;
                             delete[] ti.green;
                             delete[] ti.blue;
+                            ti.red = nullptr;
+                            ti.green = nullptr;
+                            ti.blue = nullptr;
                             if(this->m_TileServerInfo.m_IsTiff)
                             {
                                 delete ti.TifMap;
+                                ti.TifMap = nullptr;
                             }else
                             {
                                 delete ti.PixMap;
+                                ti.PixMap = nullptr;
+                            }
+                            if(ti.Image != nullptr)
+                            {
+                                delete ti.Image;
+                                ti.Image = nullptr;
                             }
                             if(ti.is_gl_created)
                             {
@@ -1342,14 +1534,15 @@ public:
                             {
                                 if(ti.download->Download != nullptr)
                                 {
-                                    //ti.download->Download->deleteLater();
+                                    ti.download->Download->deleteLater();
                                     ti.download = nullptr;
                                 }
                             }
                         }else {
                             if(ti.download->Download != nullptr)
                             {
-                                //m_DownloadManager->StopDownload(ti.download);
+                                m_DownloadManager->StopDownload(ti.download);
+                                delete ti.download;
                                 ti.download = nullptr;
                             }
                         }
@@ -1452,6 +1645,16 @@ public:
 
         inline void OnDestroy(OpenGLCLManager * m) override
         {
+
+            m_ReadInstructMutex.lock();
+            m_ReadThreadStartMutex.lock();
+            m_ReadThreadDoneMutex.lock();
+            m_ReadThreadStop = true;
+            m_ReadThreadStartMutex.unlock();
+            m_ReadThreadDoneMutex.unlock();
+            m_ReadThreadWaitCondition.notify_all();
+            m_ReadInstructMutex.unlock();
+
             m_TileMutex.lock();
 
             for(int i = m_RequiredTiles.length()-1; i >0; i--)
@@ -1468,13 +1671,21 @@ public:
                         delete[] ti.red;
                         delete[] ti.green;
                         delete[] ti.blue;
+
+                        ti.red = nullptr;
+                        ti.green = nullptr;
+                        ti.blue = nullptr;
+
                         if(this->m_TileServerInfo.m_IsTiff)
                         {
                             delete ti.TifMap;
+                            ti.TifMap = nullptr;
                         }else
                         {
                             delete ti.PixMap;
+                            ti.PixMap = nullptr;
                         }
+
                         if(ti.is_gl_created)
                         {
                             ti.T_R->Destroy();
@@ -1483,12 +1694,22 @@ public:
                             delete ti.T_R;
                             delete ti.T_G;
                             delete ti.T_B;
+                            ti.T_R = nullptr;
+                            ti.T_G = nullptr;
+                            ti.T_B = nullptr;
+
+                        }
+                        if(ti.Image != nullptr)
+                        {
                             delete ti.Image;
+                            ti.Image = nullptr;
                         }
                         if(ti.download != nullptr)
                         {
                             ti.download->Download->deleteLater();
                             delete ti.download;
+                            ti.download= nullptr;
+
                         }
                     }else {
                         m_DownloadManager->StopDownload(ti.download);

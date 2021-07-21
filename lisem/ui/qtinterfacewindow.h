@@ -399,7 +399,7 @@ public slots:
     inline void Info()
     {
         QMessageBox msgBox;
-        msgBox.setText("Thank you for using OpenLISEM Hazard 2.0!");
+        msgBox.setText("Thank you for using LISEM 0.1.0 alpha!");
         msgBox.setInformativeText("Info");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.setDefaultButton(QMessageBox::Ok);

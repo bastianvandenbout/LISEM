@@ -736,7 +736,7 @@ void flowsolid(
                                 __read_only image2d_t QSOUT,
                                 __write_only image2d_t QSOUTN,
                                 __write_only image2d_t DTREQ,
-                                float rain,
+                                __write_only image2d_t RAIN,
                                 __read_only image2d_t MANNING,
                                 float dragmult,
                                 __write_only image2d_t QFX1,
@@ -793,6 +793,10 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
             float qfout = read_imagef(QFOUT,sampler, int2(gx,gy)).x;
             float qsout = read_imagef(QSOUT,sampler, int2(gx,gy)).x;
+
+
+            float rain = read_imagef(RAIN,sampler, int2(gx_x1,gy)).x;
+
 
             float z_x1 = read_imagef(DEM,sampler, int2(gx_x1,gy)).x;
             float z_x2 = read_imagef(DEM,sampler, int2(gx_x2,gy)).x;
@@ -1053,7 +1057,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
             srocksizen = isnan(srocksizen)? 0.1f : srocksizen;
             sdensityn = isnan(sdensityn)? 2000.0f : sdensityn;
 
-            hn = hn + rain;
+            hn = hn + rain * dt_hydro/max(1e-10f,dt);
 
             write_imagef(InfilAct, int2(gx,gy), infilcum + infil_act);
             write_imagef(Hn, int2(gx,gy), hn);

@@ -1119,8 +1119,9 @@ public:
         return val;
     }
 
-    inline void FillValuesToRaster(BoundingBox b, cTMap * raster, QMutex * m, bool * donesign, QMutex * m2, int band = 0, int timeindex = 0)
+    inline void FillValuesToRaster(BoundingBox b, cTMap * raster, QMutex * m, bool * donesign, QMutex * m2, int band = 0, int timeindex = 0, std::function<void(void)> callback = [](){})
     {
+
 
         double tsx = GetTotalSizeX(band);
         double tsy = GetTotalSizeY(band);
@@ -1151,18 +1152,23 @@ public:
 
             if(m2 == nullptr || m == nullptr || donesign == nullptr)
             {
+
                 //do the rewriting on a thread
-                std::thread t([px0,py0,pxcount,band,pycount,path,raster,m,m2,donesign]()
+                std::thread t([callback,px0,py0,pxcount,band,pycount,path,raster,m,m2,donesign]()
                 {
+
                        m->lock();
 
-
                        readRasterPixels(path,raster,px0,py0,pxcount,pycount,band);
+
                        m->unlock();
 
                        m2->lock();
                        *donesign = true;
                        m2->unlock();
+
+
+                       callback();
                 });
 
                 t.join();
@@ -1173,6 +1179,8 @@ public:
                 {
                     *donesign = true;
                 }
+
+                callback();
             }
 
         }else {

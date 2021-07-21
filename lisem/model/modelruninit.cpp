@@ -15,9 +15,22 @@ void LISEMModel::ModelRunInitialize()
     //get timeseries
 
     m_Rain.Clear();
+    m_Temp.Clear();
+    m_Rad.Clear();
+    m_Wind.Clear();
+    m_Vapr.Clear();
+    m_NDVI.Clear();
 
     m_Rain.LoadFromFile(m_Dir_Time + GetOptionString("Rainfall"),true,true,GetMapMult("Rainfall"));
 
+    if(m_DoEvapoTranspiration)
+    {
+        m_Temp.LoadFromFile(m_Dir_Time + GetOptionString("Temperature"),true,true,GetMapMult("Temperature"));
+        m_Rad.LoadFromFile(m_Dir_Time + GetOptionString("Radiation"),true,true,GetMapMult("Radiation"));
+        m_Wind.LoadFromFile(m_Dir_Time + GetOptionString("Wind"),true,true,GetMapMult("Wind"));
+        m_Vapr.LoadFromFile(m_Dir_Time + GetOptionString("Vapor Pressure"),true,true,GetMapMult("Vapor Pressure"));
+        m_NDVI.LoadFromFile(m_Dir_Time + GetOptionString("ndvi"),true,true,GetMapMult("ndvi"));
+    }
 
     if(m_DoRigidWorld)
     {
@@ -383,6 +396,11 @@ void LISEMModel::ModelRunLoadData()
         SURFACESTORAGE = GetMap(0.0);
         CANOPYSTORAGE = GetMap(0.0);
         EVAPOTRANSPIRATION = GetMap(0.0);
+    }
+
+    if(m_DoEvapoTranspiration)
+    {
+        CROPF = GetMapWithMultByName(m_Dir_Maps,"CropF");
     }
     if(m_DoHydrology)
     {
@@ -1037,7 +1055,19 @@ void LISEMModel::CreateMapBuffers()
     T_VFMaxN = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
     T_VSMaxN = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
 
+    T_RAIN = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
     T_DTREQ = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+
+    if(m_DoEvapoTranspiration)
+    {
+        T_TEMP = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+        T_WIND = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+        T_VAPR = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+        T_NDVI = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+        T_RAD = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+        T_EVAPOCUM = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
+        T_CROPF = CreateModelTexture(CROPF);
+    }
 
     T_QFX1 = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
     T_QFX2 = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);

@@ -102,14 +102,14 @@ set(CMAKE_AUTORCC OFF)
 # ==============================================================================
 file(STRINGS "lisem/core/version.h" _LISEM_VERSION_H_CONTENTS REGEX "#define LISEM_VERSION_")
 
-foreach(v MAJOR MINOR REVISION)
+foreach(v MAJOR MINOR PATCH)
   if("${_LISEM_VERSION_H_CONTENTS}" MATCHES "#define LISEM_VERSION_${v} ([0-9]+)")
     set(LISEM_VERSION_${v} "${CMAKE_MATCH_1}")
  else()
     message(FATAL_ERROR "Failed to retrieve the LISEM version from the source code. Missing LISEM_VERSION_${v}.")
   endif()
 endforeach()
-set(LISEM_VERSION ${LISEM_VERSION_MAJOR}.${LISEM_VERSION_MINOR}.${LISEM_VERSION_REVISION})
+set(LISEM_VERSION ${LISEM_VERSION_MAJOR}.${LISEM_VERSION_MINOR}.${LISEM_VERSION_PATCH})
 
 message("Detected LISEM version: " ${LISEM_VERSION})
 
@@ -167,10 +167,13 @@ install(
 # Resource copying so we can actually run the model (shaders, libs, assets etc..)
 # ==============================================================================
 
+IF(EXISTS ${EXTERNAL_DIR})
+install(DIRECTORY "${EXTERNAL_DIR}/runtime/" DESTINATION "bin/")
+ENDIF()
 
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/model/kernels/" DESTINATION "bin/kernels")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/ui/shaders/" DESTINATION "bin/shaders")
-install(DIRECTORY "${PROJECT_SOURCE_DIR}/external/runtime/" DESTINATION "bin/")
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/dist/" DESTINATION "bin/")
 
 file(GLOB kernel_src "lisem/model/kernels/*.*")
 file(GLOB kernel_src "lisem/ui/shaders/*.*")

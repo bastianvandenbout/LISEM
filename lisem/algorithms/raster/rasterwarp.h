@@ -693,6 +693,41 @@ static std::vector<cTMap *> AS_RasterProject(std::vector<cTMap *> ins, GeoProjec
 
 
 
+inline static std::vector<cTMap *> AS_RasterlSubSection(std::vector<cTMap *> maps1, int r0, int c0, int rows, int cols)
+{
+    std::vector<cTMap *> ret;
+
+    for(int i = 0; i < maps1.size(); i++)
+    {
+        cTMap * map1 = maps1.at(i);
+        MaskedRaster<float> raster_data(rows, cols, map1->data.north() + r0 * map1->cellSizeY(), map1->data.west() + c0 * map1->cellSizeX(), map1->data.cell_sizeX(),map1->data.cell_sizeY());
+        cTMap *nmap = new cTMap(std::move(raster_data),map1->projection(),"");
+
+        nmap->setAllMV();
+
+        int rbegin = std::min(map1->nrRows() -1,std::max(0,r0));
+        int cbegin = std::min(map1->nrCols() -1,std::max(0,c0));
+        int rend = std::min(map1->nrRows() -1,std::max(0,r0 + rows));
+        int cend = std::min(map1->nrCols() -1,std::max(0,c0 + cols));
+
+        for(int r = rbegin; r < rend; r++)
+        {
+            for(int c = cbegin; c < cend; c++)
+            {
+               if(!pcr::isMV(map1->data[r][c]))
+                {
+                    nmap->data[r-r0][c-c0] = map1->data[r][c];
+                }
+            }
+        }
+
+        ret.push_back(nmap);
+    }
+
+
+        return ret;
+
+}
 
 inline static cTMap * AS_RasterSubSection(cTMap * map1, int r0, int c0, int rows, int cols)
 {
@@ -719,6 +754,85 @@ inline static cTMap * AS_RasterSubSection(cTMap * map1, int r0, int c0, int rows
     }
 
     return nmap;
+
+}
+
+inline static std::vector<cTMap *> AS_RasterSublSection(std::vector<cTMap * > maps1, BoundingBox b)
+{
+    std::vector<cTMap *> ret;
+
+    for(int i = 0; i < maps1.size(); i++)
+    {
+        cTMap *map1 = maps1.at(i);
+
+        BoundingBox b1 = map1->GetBoundingBox();
+        b1.And(b);
+
+        float dx = map1->cellSizeX();
+        float dy = map1->cellSizeY();
+
+        if(fabs(dx) < 1e-30 || fabs(dy) < 1e-30)
+        {
+            LISEMS_ERROR("GridcellSize must be larger then 0");
+            throw 1;
+        }
+        int r0 = ((b.GetMinY() - map1->north())/dy);
+        int c0 = ((b.GetMinX() - map1->west())/dx);
+
+        int r1 = ((b.GetMaxY() - map1->north())/dy);
+        int c1 = ((b.GetMaxX() - map1->west())/dx);
+
+        if(c1 < c0)
+        {
+            int temp = c0;
+            c0 = c1;
+            c1 = temp;
+        }
+        if(r1 < r0)
+        {
+            int temp = r0;
+            r0 = r1;
+            r1 = temp;
+        }
+        r0 = std::max(0,std::min(r0,map1->nrRows()-1));
+        c0 = std::max(0,std::min(c0,map1->nrCols()-1));
+        r1 = std::max(r0,std::min(r1,map1->nrRows()-1));
+        c1 = std::max(c0,std::min(c1,map1->nrCols()-1));
+        int rows = r1-r0;
+        int cols = c1-c0;
+
+        if(rows == 0 || cols == 0)
+        {
+            LISEMS_ERROR("Invalid region provided for RasterSubSection");
+            throw 1;
+        }
+
+        MaskedRaster<float> raster_data(rows, cols, map1->data.north() + r0 * map1->cellSizeY(), map1->data.west() + c0 * map1->cellSizeX(), map1->data.cell_sizeX(),map1->data.cell_sizeY());
+        cTMap *nmap = new cTMap(std::move(raster_data),map1->projection(),"");
+
+        nmap->setAllMV();
+
+        int rbegin = std::min(map1->nrRows() -1,std::max(0,r0));
+        int cbegin = std::min(map1->nrCols() -1,std::max(0,c0));
+        int rend = std::min(map1->nrRows() -1,std::max(0,r0 + rows));
+        int cend = std::min(map1->nrCols() -1,std::max(0,c0 + cols));
+
+        for(int r = rbegin; r < rend; r++)
+        {
+            for(int c = cbegin; c < cend; c++)
+            {
+                if(!pcr::isMV(map1->data[r][c]))
+                {
+                    nmap->data[r-r0][c-c0] = map1->data[r][c];
+                }
+            }
+        }
+        ret.push_back(nmap);
+    }
+
+    return ret;
+
+
 
 }
 

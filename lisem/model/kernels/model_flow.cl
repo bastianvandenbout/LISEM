@@ -168,7 +168,7 @@ void flow(
                 __write_only image2d_t QFCHX1,
                 __write_only image2d_t QFCHX2,
                 __write_only image2d_t QFCHIN,
-                float rain,
+                __write_only image2d_t RAIN,
                 __read_only image2d_t MANNING,
                 __read_only image2d_t BlockingX,
                 __read_only image2d_t BlockingY,
@@ -243,6 +243,8 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
             float vmax = 0.25 * dx/dt;
 
+
+            float rain = read_imagef(RAIN,sampler, int2(gx_x1,gy)).x;
 
             float qfout = read_imagef(QFOUT,sampler, int2(gx,gy)).x;
 
@@ -527,7 +529,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
             float infil_act = min((float)(infilpot),(float)(hn));
 
-            hn = hn - infil_act + rain;
+            hn = hn - infil_act + rain * dt_hydro/max(1e-10f,dt);
 
             hn = edges > 2? 0.0f:(isnan(hn)? 0.0:hn);
             vxn = edges > 2? 0.0f:isnan(vxn)? 0.0:vxn;

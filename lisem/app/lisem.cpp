@@ -154,7 +154,7 @@ int SPHazard::execute(int argc, char *argv[])
                 {
                     QMessageBox::warning(
                         nullptr,
-                        tr("OpenLISEM Hazard"),
+                        tr("LISEM"),
                         tr("Could not create OpenGL Context with OpenGL 4.0 support!") );
                 }
                 throw 1;

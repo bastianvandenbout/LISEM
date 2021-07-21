@@ -54,7 +54,7 @@ void LISEMModel::ModelRunCompileCode()
                     MAPARG(args[34]),
                     MAPARG(args[35]),
                     MAPARG(args[36]),
-                    FLTARG(args[37]),
+                    MAPARG(args[37]),
                     MAPARG(args[38]),
                     MAPARG(args[39]),
                     MAPARG(args[40]),
@@ -142,7 +142,7 @@ void LISEMModel::ModelRunCompileCode()
                     MAPARG(args[51]),
                     MAPARG(args[52]),
                     MAPARG(args[53]),
-                    FLTARG(args[54]),
+                    MAPARG(args[54]),
                     MAPARG(args[55]),
                     FLTARG(args[56]),
                     MAPARG(args[57]),
@@ -265,7 +265,71 @@ void LISEMModel::ModelRunCompileCode()
                     MAPARG(args[20])); return true;});
 
 
+        m_CLProgram_Evapotranspiration=new OpenCLProgram();
+        m_CLProgram_Evapotranspiration->LoadFromCPUFunction([](std::vector<void*> args){ evapotranspiration(INTARG(args[0]),INTARG(args[1]),INTARG(args[2]),FLTARG(args[3]),FLTARG(args[4]),
 
+                    MAPARG(args[5]),
+                    MAPARG(args[6]),
+                    MAPARG(args[7]),
+                    MAPARG(args[8]),
+                    MAPARG(args[9]),
+                    MAPARG(args[10]),
+                    MAPARG(args[11]),
+                    MAPARG(args[12]),
+                    MAPARG(args[13]),
+                    MAPARG(args[14]),
+                    MAPARG(args[15]),
+                    MAPARG(args[16]),
+                    MAPARG(args[17]),
+                    MAPARG(args[18]),
+                    MAPARG(args[19]),
+                    MAPARG(args[20]),
+                    MAPARG(args[21]),
+                    MAPARG(args[22]),
+                    MAPARG(args[23]),
+                    MAPARG(args[24]),
+                    MAPARG(args[25]),
+                    MAPARG(args[26]),
+                    MAPARG(args[27]),
+                    MAPARG(args[28]),
+                    MAPARG(args[29]),
+                    MAPARG(args[30]),
+                    MAPARG(args[31]),
+                    MAPARG(args[32]),
+                    MAPARG(args[33]),
+                    MAPARG(args[34]),
+                    MAPARG(args[35]),
+                    MAPARG(args[36]),
+                    MAPARG(args[37]),
+                    MAPARG(args[38]),
+                    MAPARG(args[39]),
+                    MAPARG(args[40]),
+                    MAPARG(args[41]),
+                    MAPARG(args[42]),
+                    MAPARG(args[43]),
+                    INTARG(args[43]),
+                    FLTARG(args[44])
+                    ); return true;});
+
+        m_CLProgram_Evapotranspiration2=new OpenCLProgram();
+        m_CLProgram_Evapotranspiration2->LoadFromCPUFunction([](std::vector<void*> args){ evapotranspiration2(INTARG(args[0]),INTARG(args[1]),INTARG(args[2]),FLTARG(args[3]),FLTARG(args[4]),
+
+                    MAPARG(args[5]),
+                    MAPARG(args[6]),
+                    MAPARG(args[7]),
+                    MAPARG(args[8]),
+                    MAPARG(args[9]),
+                    MAPARG(args[10]),
+                    MAPARG(args[11]),
+                    MAPARG(args[12]),
+                    MAPARG(args[13]),
+                    MAPARG(args[14]),
+                    MAPARG(args[15]),
+                    MAPARG(args[16]),
+                    MAPARG(args[17]),
+                    MAPARG(args[18]),
+                    MAPARG(args[19]),
+                    MAPARG(args[20])); return true;});
 
         m_CLProgram_Infiltration=new OpenCLProgram();
         m_CLProgram_Infiltration->LoadFromCPUFunction([](std::vector<void*> args){ InfilOnly(INTARG(args[0]),INTARG(args[1]),INTARG(args[2]),FLTARG(args[3]),FLTARG(args[4]),
@@ -352,7 +416,7 @@ void LISEMModel::ModelRunCompileCode()
                     MAPARG(args[51]),
                     MAPARG(args[52]),
                     MAPARG(args[53]),
-                    FLTARG(args[54]),
+                    MAPARG(args[54]),
                     MAPARG(args[55]),
                     MAPARG(args[56]),
                     MAPARG(args[57]),
@@ -989,6 +1053,12 @@ void LISEMModel::ModelRunCompileCode()
         m_CLProgram_Hydrology= m_OpenGLCLManager->ModelGetMCLProgram(m_KernelDir +  "model_hydrology.cl", "hydrology");
         m_CLProgram_Hydrology2= m_OpenGLCLManager->ModelGetMCLProgram(m_KernelDir +  "model_hydrology.cl", "hydrology2");
 
+        if(m_DoEvapoTranspiration)
+        {
+            m_CLProgram_Evapotranspiration= m_OpenGLCLManager->ModelGetMCLProgram(m_KernelDir +  "model_evapotranspiration.cl", "evapotranspiration");
+            m_CLProgram_Evapotranspiration2= m_OpenGLCLManager->ModelGetMCLProgram(m_KernelDir +  "model_evapotranspiration.cl", "evapotranspiration2");
+        }
+
         m_CLProgram_Erosion =m_OpenGLCLManager->ModelGetMCLProgram(m_KernelDir +  "model_sediment.cl", "sediment");
         m_CLProgram_Erosion2 = m_OpenGLCLManager->ModelGetMCLProgram(m_KernelDir +  "model_sediment.cl", "sediment2");
 
@@ -1193,7 +1263,7 @@ void LISEMModel::SetKernelInput()
         m_CLProgram_Flow->PlaceArgument(33, T_QFCHX1);
         m_CLProgram_Flow->PlaceArgument(34, T_QFCHX2);
         m_CLProgram_Flow->PlaceArgument(35, T_QFCHIN);
-        m_CLProgram_Flow->PlaceArgument(36, 0.0);
+        m_CLProgram_Flow->PlaceArgument(36, T_RAIN);
         m_CLProgram_Flow->PlaceArgument(37, T_N);
         m_CLProgram_Flow->PlaceArgument(38, T_BlockingX);
         m_CLProgram_Flow->PlaceArgument(39, T_BlockingY);
@@ -1368,6 +1438,82 @@ void LISEMModel::SetKernelInput()
             m_CLProgram_Hydrology2->PlaceArgument(17, T_GW_USN);
             m_CLProgram_Hydrology2->PlaceArgument(18, T_GW_SN);
             m_CLProgram_Hydrology2->PlaceArgument(19, T_CHHN);
+
+        }
+
+        if(m_DoEvapoTranspiration)
+        {
+            //m_CLProgram_Hydrology->SetRunDims((int)dim0, (int)dim1);
+            m_CLProgram_Evapotranspiration->SetRunDims((int)m_NCells,0,0);
+
+            m_CLProgram_Evapotranspiration->PlaceArgument(0, (int)dim0);
+            m_CLProgram_Evapotranspiration->PlaceArgument(1, (int)dim1);
+            m_CLProgram_Evapotranspiration->PlaceArgument(2, (float)(DEM->cellSize()));
+            m_CLProgram_Evapotranspiration->PlaceArgument(3, (float)(0.5));
+            m_CLProgram_Evapotranspiration->PlaceArgument(4, T_LOCR);
+            m_CLProgram_Evapotranspiration->PlaceArgument(5, T_LOCC);
+            m_CLProgram_Evapotranspiration->PlaceArgument(6, T_DEM);
+            m_CLProgram_Evapotranspiration->PlaceArgument(7, T_H);
+            m_CLProgram_Evapotranspiration->PlaceArgument(8, T_SCANOPY);
+            m_CLProgram_Evapotranspiration->PlaceArgument(9, T_SSURFACE);
+            m_CLProgram_Evapotranspiration->PlaceArgument(10, T_INFIL);
+            m_CLProgram_Evapotranspiration->PlaceArgument(11, T_F_INFILACT);
+            m_CLProgram_Evapotranspiration->PlaceArgument(12, T_GW_US);
+            m_CLProgram_Evapotranspiration->PlaceArgument(13, T_GW_S);
+            m_CLProgram_Evapotranspiration->PlaceArgument(14, T_THETAS);
+            m_CLProgram_Evapotranspiration->PlaceArgument(15, T_THETAR);
+            m_CLProgram_Evapotranspiration->PlaceArgument(16, T_SD);
+            m_CLProgram_Evapotranspiration->PlaceArgument(17, T_KSAT_T);
+            m_CLProgram_Evapotranspiration->PlaceArgument(18, T_KSAT_B);
+            m_CLProgram_Evapotranspiration->PlaceArgument(19, T_SWR_A);
+            m_CLProgram_Evapotranspiration->PlaceArgument(20, T_SWR_B);
+            m_CLProgram_Evapotranspiration->PlaceArgument(21, T_SMAX_CANOPY);
+            m_CLProgram_Evapotranspiration->PlaceArgument(22, T_SMAX_SURFACE);
+            m_CLProgram_Evapotranspiration->PlaceArgument(23, T_CHMASK);
+            m_CLProgram_Evapotranspiration->PlaceArgument(24, T_CHWIDTH);
+            m_CLProgram_Evapotranspiration->PlaceArgument(25, T_CHHEIGHT);
+            m_CLProgram_Evapotranspiration->PlaceArgument(26, T_CHH);
+            m_CLProgram_Evapotranspiration->PlaceArgument(27, T_HN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(28, T_SCANOPYN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(29, T_SSURFACEN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(30, T_F_INFILPOT);
+            m_CLProgram_Evapotranspiration->PlaceArgument(31, T_GW_WFN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(32, T_GW_USN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(33, T_GW_SN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(34, T_F_INFILFLOWCUM);
+            m_CLProgram_Evapotranspiration->PlaceArgument(35, T_CHHN);
+            m_CLProgram_Evapotranspiration->PlaceArgument(36, T_UI);
+            m_CLProgram_Evapotranspiration->PlaceArgument(37, T_TEMP);
+            m_CLProgram_Evapotranspiration->PlaceArgument(38, T_WIND);
+            m_CLProgram_Evapotranspiration->PlaceArgument(39, T_VAPR);
+            m_CLProgram_Evapotranspiration->PlaceArgument(40, T_RAD);
+            m_CLProgram_Evapotranspiration->PlaceArgument(41, T_NDVI);
+            m_CLProgram_Evapotranspiration->PlaceArgument(42, T_CROPF);
+            m_CLProgram_Evapotranspiration->PlaceArgument(43, 0);
+
+            //m_CLProgram_Evapotranspiration2->SetRunDims((int)dim0, (int)dim1);
+            m_CLProgram_Evapotranspiration2->SetRunDims((int)m_NCells,0,0);
+
+            m_CLProgram_Evapotranspiration2->PlaceArgument(0, (int)dim0);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(1, (int)dim1);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(2, (float)(DEM->cellSize()));
+            m_CLProgram_Evapotranspiration2->PlaceArgument(3, (float)(0.5));
+            m_CLProgram_Evapotranspiration2->PlaceArgument(4, T_LOCR);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(5, T_LOCC);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(6, T_H);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(7, T_SCANOPY);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(8, T_SSURFACE);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(9, T_INFIL);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(10, T_GW_US);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(11, T_GW_S);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(12, T_CHH);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(13, T_HN);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(14, T_SCANOPYN);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(15, T_SSURFACEN);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(16, T_GW_WFN);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(17, T_GW_USN);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(18, T_GW_SN);
+            m_CLProgram_Evapotranspiration2->PlaceArgument(19, T_CHHN);
 
         }
 
@@ -1856,7 +2002,7 @@ void LISEMModel::SetKernelInput()
             m_CLProgram_FlowSolids->PlaceArgument(50, T_QSOUT);
             m_CLProgram_FlowSolids->PlaceArgument(51, T_QSOUTN);
             m_CLProgram_FlowSolids->PlaceArgument(52, T_DTREQ);
-            m_CLProgram_FlowSolids->PlaceArgument(53, 0.0f);
+            m_CLProgram_FlowSolids->PlaceArgument(53, T_RAIN);
             m_CLProgram_FlowSolids->PlaceArgument(54, T_N);
             m_CLProgram_FlowSolids->PlaceArgument(55, (float)m_DragMult);
             m_CLProgram_FlowSolids->PlaceArgument(56, T_QFX1);
@@ -1978,7 +2124,7 @@ void LISEMModel::SetKernelInput()
             m_CLProgram_FlowSolidsParticle->PlaceArgument(50, T_QSOUT);
             m_CLProgram_FlowSolidsParticle->PlaceArgument(51, T_QSOUTN);
             m_CLProgram_FlowSolidsParticle->PlaceArgument(52, T_DTREQ);
-            m_CLProgram_FlowSolidsParticle->PlaceArgument(53, 0.0f);
+            m_CLProgram_FlowSolidsParticle->PlaceArgument(53, T_RAIN);
             m_CLProgram_FlowSolidsParticle->PlaceArgument(54, T_SCohesionFrac);
             m_CLProgram_FlowSolidsParticle->PlaceArgument(55, T_SFLUIDH);
             m_CLProgram_FlowSolidsParticle->PlaceArgument(56, T_SFLUIDHADD);

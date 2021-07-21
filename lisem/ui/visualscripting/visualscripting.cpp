@@ -1386,7 +1386,7 @@ void VisualScriptingTool::OnRun(bool)
     {
         QMessageBox::warning(
             this,
-            tr("OpenLISEM Hazard"),
+            tr("LISEM"),
             tr("First compile your code") );
 
         m_LineInfoMutex.unlock();
@@ -1411,7 +1411,7 @@ void VisualScriptingTool::OnRun(bool)
         {
             QMessageBox::warning(
                 this,
-                tr("OpenLISEM Hazard"),
+                tr("LISEM"),
                 tr("Still running code, wait for it to finish") );
 
             m_PauseMutex.unlock();
@@ -1585,7 +1585,7 @@ void VisualScriptingTool::OnCompile(bool)
 
         QMessageBox::warning(
             this,
-            tr("OpenLISEM Hazard"),
+            tr("LISEM"),
             tr("Still running code, wait for it to finish before compiling changes") );
 
     }else

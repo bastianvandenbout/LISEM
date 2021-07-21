@@ -85,7 +85,7 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
     //trayIcon->setIcon(QIcon(":/openLisem.ico"));
     //trayIcon->show();
 
-    setWindowTitle("OpenLISEM Hazard 1.0beta");
+    setWindowTitle("LISEM 0.1.0 alpha");
     setMinimumWidth(800);
     setMinimumHeight(600);
     setAttribute(Qt::WA_DeleteOnClose);

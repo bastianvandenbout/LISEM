@@ -506,6 +506,8 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     r = engine->RegisterGlobalFunction("Map @RasterCut(const Map &in val, int r0, int c0, int rows, int cols)", asFUNCTIONPR( AS_RasterSubSection,(cTMap*,int,int,int,int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @RasterCut(const Map &in val,Region r)", asFUNCTIONPR( AS_RasterSubSection,(cTMap*,BoundingBox),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalSTDFunction("array<Map> @RasterCut(const array<Map> &in val, int r0, int c0, int rows, int cols)", GetFuncConvert(AS_RasterSublSection)); assert( r >= 0 );
+    r = engine->RegisterGlobalSTDFunction("array<Map> @RasterCut(const array<Map> &in val,Region r)", GetFuncConvert(AS_RasterSublSection)); assert( r >= 0 );
 
 
     //table interactions
