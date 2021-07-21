@@ -39,7 +39,7 @@ Where "model.onnx" should be replaced with the model that you want to use.
 
 [Dahal-EBRN-Austria](https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/ebrn_at_dahal_model.onnx/download)
 
-[Dahal-EBRN-Dominica(https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/ebrn_dm_dahal_model.onnx/download)
+[Dahal-EBRN-Dominica](https://sourceforge.net/projects/lisem/files/LISEM/Neural%20Networks/ebrn_dm_dahal_model.onnx/download)
 
 
 #### Example dataset for the LISEM model
@@ -52,4 +52,4 @@ but provide enough information to run LISEM or LISEM classic.
 
 #### Additional files
 
-[Old OpenLISEM Hazard manual(https://sourceforge.net/projects/lisem/files/Documentation%20and%20Manual/documentation15.pdf/download)
+[Old OpenLISEM Hazard manual](https://sourceforge.net/projects/lisem/files/Documentation%20and%20Manual/documentation15.pdf/download)
