@@ -337,6 +337,40 @@ public:
 };
 
 template<>
+class asbindc_convert<std::vector<int>,CScriptArray*>
+{
+
+public:
+
+    inline static CScriptArray * asbind_convert(std::vector<int> x)
+    {
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        if(ctx != nullptr)
+        {
+            asIScriptEngine *engine = ctx->GetEngine();
+            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<int>");
+
+            // Create the array object
+            CScriptArray *array = CScriptArray::Create(arrayType);
+
+            array->Resize(x.size());
+
+            for(int i = 0; i < x.size(); ++i)
+            {
+                array->SetValue(i,(void*)(new int(x.at(i))),false);
+            }
+
+            return array;
+
+        }
+        LISEMS_ERROR("Could not convert list to std::vector");
+        throw 1;
+    }
+
+};
+
+template<>
 class asbindc_convert<std::vector<float>,CScriptArray*>
 {
 
@@ -358,7 +392,7 @@ public:
 
             for(int i = 0; i < x.size(); ++i)
             {
-                array->SetValue(i,(void*)(new double(x.at(i))),false);
+                array->SetValue(i,(void*)(new float(x.at(i))),false);
             }
 
             return array;

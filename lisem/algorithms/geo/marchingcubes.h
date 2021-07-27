@@ -45,7 +45,7 @@ typedef struct {
 
 
 
-LISEM_API int Polygonise(GRIDCELL grid,double isolevel,TRIANGLE *triangles)
+inline LISEM_API int Polygonise(GRIDCELL grid,double isolevel,TRIANGLE *triangles)
 {
    int i,ntriang;
    int cubeindex;
@@ -118,7 +118,7 @@ LISEM_API int Polygonise(GRIDCELL grid,double isolevel,TRIANGLE *triangles)
 
 }
 
-LISEM_API ModelGeometry * MarchingCubes(std::vector<cTMap*> data, float z_top, float dz, float value)
+inline LISEM_API ModelGeometry * MarchingCubes(std::vector<cTMap*> data, float z_top, float dz, float value)
 {
 
     if(data.size() < 2)

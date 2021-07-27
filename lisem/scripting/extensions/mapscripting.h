@@ -171,6 +171,7 @@ inline void RegisterMapToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterObjectMethod("Map", "float& opIndex(int, int)", asMETHOD(cTMap,Value), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Map", "Map& opAssign(const Map &in m)", asMETHODPR(cTMap,Assign,(cTMap *),cTMap*), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Map", "Map& opAssign(float v)", asMETHODPR(cTMap,Assign,(float),cTMap*), asCALL_THISCALL); assert( r >= 0 );
+
     r = engine->RegisterObjectMethod("Map", "Map@ opNeg()", asMETHODPR(cTMap,OpNeg,(void),cTMap*), asCALL_THISCALL); assert( r >= 0 );
 
     //mathematical operators

@@ -22,7 +22,7 @@ Highlighter::Highlighter(QTextDocument *parent)
         QStringLiteral("\\bvoid\\b"), QStringLiteral("\\bvolatile\\b"), QStringLiteral("\\bbool\\b"),
         QStringLiteral("\\bfloat\\b"),QStringLiteral("\\bMap\\b"),QStringLiteral("\\bTable\\b"),
         QStringLiteral("\\bShapes\\b"),QStringLiteral("\\bstring\\b"),QStringLiteral("\\barray\\b"),
-        QStringLiteral("\\bUILayer\\b"),QStringLiteral("\\bPointCloud\\b")
+        QStringLiteral("\\bUILayer\\b"),QStringLiteral("\\bPointCloud\\b"),QStringLiteral("\\bField\\b")
     };
     for (const QString &pattern : keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);

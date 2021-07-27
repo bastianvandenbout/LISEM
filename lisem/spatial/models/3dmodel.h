@@ -33,13 +33,14 @@ class LISEM_API ModelGeometry
 {
 
     BoundingBox3D m_BoundingBox;
-    std::vector<LSMMesh> meshes;
     std::vector<Texture> textures_loaded;
 
     std::vector<ModelMaterial> materials;
     QString dir = "";
     QString path = "";
 public:
+
+    std::vector<LSMMesh> meshes;
 
     inline ModelGeometry()
     {
@@ -88,7 +89,8 @@ public:
     void loadModel(QString path)
     {
         Assimp::Importer import;
-        const aiScene *scene = import.ReadFile(path.toStdString().c_str(), aiProcess_Triangulate | aiProcess_FlipUVs);
+
+        const aiScene *scene = import.ReadFile(path.toStdString().c_str(), aiProcess_CalcTangentSpace| aiProcess_GenNormals|aiProcess_JoinIdenticalVertices| aiProcess_Triangulate | aiProcess_GenUVCoords | aiProcess_FlipUVs | aiProcess_SortByPType);
 
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -330,7 +332,10 @@ public:
             aiFace face = mesh->mFaces[i];
             // retrieve all indices of the face and store them in the indices vector
             for(unsigned int j = 0; j < face.mNumIndices; j++)
+            {
                 indices.push_back(face.mIndices[j]);
+
+            }
         }
 
         ModelMaterial m;
@@ -397,7 +402,7 @@ public:
         QList<LSMMesh *> retmeshes;
         for(int i = 0; i < meshes.size(); i++)
         {
-            retmeshes.append(&(meshes.at(i)));
+            retmeshes.append(&(meshes.data()[i]));
         }
         return retmeshes;
 
@@ -405,9 +410,9 @@ public:
 
     inline LSMMesh * GetMesh(int i)
     {
-        if(i > 0 && i < meshes.size())
+        if(i > -1 && i < meshes.size())
         {
-            return (&meshes.at(i));
+            return (&(meshes.at(i)));
         }else
         {
             return nullptr;
@@ -416,7 +421,7 @@ public:
 
     inline ModelMaterial GetMaterial(int i)
     {
-        if(i > 0 && i < materials.size())
+        if(i > -1 && i < materials.size())
         {
             return materials.at(i);
         }else
@@ -478,9 +483,32 @@ inline void ModelGeometry::AS_ReleaseRef()
 
 inline ModelGeometry* ModelGeometry::AS_Assign(ModelGeometry* sh)
 {
-    //Destroy();
 
+    std::cout << "assign" << std::endl;
 
+    for(int i = 0; i < sh->meshes.size() ; i++)
+    {
+        std::cout <<  i << "  " << &(sh->meshes.data()[i]) << std::endl;
+    }
+    if(AS_writeonassign)
+    {
+        AS_writefunc(sh,AS_FileName);
+    }else
+    {
+
+        m_BoundingBox = sh->m_BoundingBox;
+        meshes = sh->meshes;
+        dir = sh->dir;
+        path = sh->path;
+        textures_loaded =sh->textures_loaded;
+
+        for(int i = 0; i <sh->textures_loaded.size(); i++)
+        {
+            textures_loaded.push_back(sh->textures_loaded.at(i));
+        }
+        textures_loaded = sh->textures_loaded;
+
+    }
     return this;
 }
 

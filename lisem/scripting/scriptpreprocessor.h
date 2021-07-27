@@ -41,6 +41,7 @@ inline static QString PreProcessScript(QString script)
     QList<QString> tableexts = GetTableExtensions();
     QList<QString> pointexts = GetPointCloudExtensions();
     QList<QString> modelexts = GetModelExtensions();
+    QList<QString> fieldexts = GetFieldExtensions();
 
     QStringList exts;
     std::vector<bool> shape;
@@ -48,6 +49,7 @@ inline static QString PreProcessScript(QString script)
     std::vector<bool> pointcloud;
     std::vector<bool> map;
     std::vector<bool> model;
+    std::vector<bool> field;
 
     for(int i = 0; i < mapexts.length(); i++)
     {
@@ -57,6 +59,7 @@ inline static QString PreProcessScript(QString script)
         pointcloud.push_back(false);
         map.push_back(true);
         model.push_back(false);
+        field.push_back(false);
     }
 
     for(int i = 0; i < shapeexts.length(); i++)
@@ -67,6 +70,7 @@ inline static QString PreProcessScript(QString script)
         pointcloud.push_back(false);
         map.push_back(false);
         model.push_back(false);
+         field.push_back(false);
     }
 
     for(int i = 0; i < pointexts.length(); i++)
@@ -77,6 +81,7 @@ inline static QString PreProcessScript(QString script)
         pointcloud.push_back(true);
         map.push_back(false);
         model.push_back(false);
+         field.push_back(false);
     }
     for(int i = 0; i < tableexts.length(); i++)
     {
@@ -86,6 +91,7 @@ inline static QString PreProcessScript(QString script)
         pointcloud.push_back(false);
         map.push_back(false);
         model.push_back(false);
+         field.push_back(false);
     }
 
 
@@ -97,8 +103,19 @@ inline static QString PreProcessScript(QString script)
         pointcloud.push_back(false);
         map.push_back(false);
         model.push_back(true);
+         field.push_back(false);
     }
 
+    for(int i = 0; i < fieldexts.length(); i++)
+    {
+        exts.append(fieldexts.at(i));
+        shape.push_back(false);
+        table.push_back(false);
+        pointcloud.push_back(false);
+        map.push_back(false);
+        model.push_back(false);
+         field.push_back(true);
+    }
 
     /*QStringList exts = {".map",".tif",".asc",".shp",".gpkg",".osm",".csv",".tbl",".las"};
     bool shape[9] = {false,false,false,true,true,true,false,false,false};
@@ -158,7 +175,7 @@ inline static QString PreProcessScript(QString script)
             bool is_pointcloud = pointcloud[i];
             bool is_map = map[i];
             bool is_model = model[i];
-
+            bool is_field = field[i];
 
             int loc = scriptline.indexOf(sstring,0);
 
@@ -292,7 +309,7 @@ inline static QString PreProcessScript(QString script)
                 if(!is_q[end-2])
                 {
                     //depending on wether there is assignment,replace
-                    if(!is_shape && !is_table && !is_pointcloud && !is_model)
+                    if(!is_shape && !is_table && !is_field && !is_pointcloud && !is_model)
                     {
                         if(is_assign)
                         {
@@ -317,6 +334,34 @@ inline static QString PreProcessScript(QString script)
                             reparg4.append(11);
                             add_search += 11 + fullname.length();
                         }
+                    }
+                    if(is_field)
+                    {
+                        if(is_assign)
+                        {
+                             QString replace = "SaveThisField(\"" + fullname + "\")";
+                             //scriptline.replace((int)begin,(int)(end-begin+1),replace);
+                             list_namessave.append(fullname);
+
+                             reparg1.append((int)begin);
+                             reparg2.append((int)(end-begin));
+                             reparg3.append(replace);
+                             reparg4.append(17);
+                             add_search += 17 + fullname.length();
+                        }else
+                        {
+                            QString replace = "LoadField(\"" + fullname + "\")";
+                            //scriptline.replace((int)begin,(int)(end-begin+1),replace);
+                            list_namesload.append(fullname);
+
+                            reparg1.append((int)begin);
+                            reparg2.append((int)(end-begin));
+                            reparg3.append(replace);
+                            reparg4.append(13);
+                            add_search += 13 + fullname.length();
+                        }
+
+
                     }if(is_shape)
                     {
                         if(is_assign)
@@ -445,6 +490,7 @@ inline static QString PreProcessScript(QString script)
 
     }
 
+    std::cout << "preprocessed:  " << output.toStdString() << std::endl;
     return output;
 }
 

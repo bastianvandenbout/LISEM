@@ -325,6 +325,29 @@ inline static QList<QString> GetPointCloudExtensions()
     return ret;
 }
 
+inline static QList<QString> GetFieldExtensions()
+{
+    QList<QString> ret;
+    ret.append(".fld");
+    return ret;
+}
+
+
+inline static bool IsFieldFile(QString file)
+{
+    QList<QString> extensions = GetFieldExtensions();
+
+    for(int i = 0; i < extensions.length(); i++)
+    {
+        if(file.endsWith(extensions.at(i)))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 inline static bool IsPointCloudFile(QString file)
 {
     QList<QString> extensions = GetPointCloudExtensions();
@@ -365,8 +388,9 @@ inline static QList<QString> GetAllExtensions()
     QList<QString> ext3 = GetTableExtensions();
     QList<QString> ext4 = GetModelExtensions();
     QList<QString> ext5 = GetPointCloudExtensions();
+    QList<QString> ext6 = GetFieldExtensions();
 
-    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5};
+    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5,ext6};
 
     QList<QString> ret;
 
@@ -391,8 +415,9 @@ inline static QList<QString> GetAllExtensionsFilter()
     QList<QString> ext3 = GetTableExtensions();
     QList<QString> ext4 = GetModelExtensions();
     QList<QString> ext5 = GetPointCloudExtensions();
+    QList<QString> ext6 = GetFieldExtensions();
 
-    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5};
+    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5,ext6};
 
     QList<QString> ret;
 

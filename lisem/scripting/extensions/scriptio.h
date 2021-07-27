@@ -42,9 +42,20 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
 
    sm->RegisterGlobalFunction("PointCloud @LoadPointCloudAbsPath(const string &in s)", asFUNCTION( AS_LoadPointCloudFromFileAbsPath), asCALL_CDECL);
    sm->RegisterGlobalFunction("PointCloud @LoadPointCloud(const string &in s)", asFUNCTION( AS_LoadPointCloudFromFile), asCALL_CDECL);
-   sm->RegisterGlobalFunction("void SavePointCloud(Shapes &in sh, const string &in s)", asFUNCTION( AS_SavePointCloudToFile), asCALL_CDECL);
-   sm->RegisterGlobalFunction("void SavePointCloudAbsPath(Shapes &in sh, const string &in s)", asFUNCTION( AS_SavePointCloudToFileAbsPath), asCALL_CDECL);
-   sm->RegisterGlobalFunction("Shapes @SaveThisPointCloud(const string &in s)", asFUNCTION( AS_SaveThisPointCloudToFile),  asCALL_CDECL);
+   sm->RegisterGlobalFunction("void SavePointCloud(PointCloud &in sh, const string &in s)", asFUNCTION( AS_SavePointCloudToFile), asCALL_CDECL);
+   sm->RegisterGlobalFunction("void SavePointCloudAbsPath(PointCloud &in sh, const string &in s)", asFUNCTION( AS_SavePointCloudToFileAbsPath), asCALL_CDECL);
+   sm->RegisterGlobalFunction("PointCloud @SaveThisPointCloud(const string &in s)", asFUNCTION( AS_SaveThisPointCloudToFile),  asCALL_CDECL);
+
+   sm->RegisterGlobalFunction("Field @LoadFieldAbsPath(const string &in s)", asFUNCTION( AS_LoadFieldFromFileAbsPath), asCALL_CDECL);
+   sm->RegisterGlobalFunction("Field @LoadField(const string &in s)", asFUNCTION( AS_LoadFieldFromFile), asCALL_CDECL);
+   sm->RegisterGlobalFunction("void SaveField(Field &in sh, const string &in s)", asFUNCTION( AS_SaveFieldToFile), asCALL_CDECL);
+   sm->RegisterGlobalFunction("void SaveFieldAbsPath(Field &in sh, const string &in s)", asFUNCTION( AS_SaveFieldToFileAbsPath), asCALL_CDECL);
+   sm->RegisterGlobalFunction("Field @SaveThisField(const string &in s)", asFUNCTION( AS_SaveThisFieldToFile),  asCALL_CDECL);
+
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetVarNames(const string&in s)",GetFuncConvert(GetVarNamesFromNetCDF));
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimNames(const string&in s)",GetFuncConvert(GetVarDimNames));
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimSizes(const string&in s)",GetFuncConvert(GetVarDimSizes));
+
    sm->RegisterGlobalFunction("string ValuesToXMLPost(string xmlname, array<string> &in namelist, array<string> &in valuelist)", asFUNCTION(AS_ValueListToXMLPost),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string OSMExtentToXMLPost(Region b)", asFUNCTION(AS_OSMToXMLPost),  asCALL_CDECL);
 

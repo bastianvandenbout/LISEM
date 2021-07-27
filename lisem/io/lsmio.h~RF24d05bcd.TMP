@@ -982,16 +982,16 @@ inline static PointCloud * AS_SaveThisPointCloudToFile(const QString & path)
 
 
 
-inline static Field * AS_LoadFieldFromFileAbsPath(const QString & name, QString variable = "")
+inline static Field * AS_LoadFielFromFileAbsPath(const QString & name)
 {
-    std::vector<Field *> ret = ReadFieldList(name,variable, true);
-    if(ret.size() == 0)
+    Field * ret = ReadField(name);
+    if(ret == nullptr)
     {
         LISEMS_ERROR("Could not read Point Cloud from file: " + name);
         LISEM_ERROR("Could not read Point Cloud from file: " + name);
         throw 1;
     }else {
-        return ret[0];
+        return ret;
     }
 }
 
@@ -1000,31 +1000,30 @@ inline static Field * AS_LoadFieldFromFile(const QString & name)
     return AS_LoadFieldFromFileAbsPath(AS_DIR + name);
 }
 
-inline static void AS_SaveFieldToFileAbsPath(Field * pc, const QString & name)
+inline static void AS_SavePointCloudToFileAbsPath(PointCloud * pc, const QString & name)
 {
 
     //call writing function for point cloud
-    WriteFieldList({pc},{0.0},name);
+    WritePointCloud(pc,name);
 
 }
-inline static void AS_SaveFieldToFile(Field * pc,const QString & name)
+inline static void AS_SavePointCloudToFile(PointCloud * pc,const QString & name)
 {
-    std::cout << "save field to file " << std::endl;
-    AS_SaveFieldToFileAbsPath(pc,AS_DIR + name);
+    AS_SavePointCloudToFileAbsPath(pc,AS_DIR + name);
 }
 
-inline static Field * AS_SaveThisFieldToFile(const QString & path)
+inline static PointCloud * AS_SaveThisPointCloudToFile(const QString & path)
 {
-    Field * _M = new Field();
+    PointCloud * _M = new PointCloud();
     _M->AS_FileName = path;
     _M->AS_writeonassign = true;
 
-    std::function<void(Field *,QString)> writecall;
-    writecall = [](Field * m, QString p){AS_SaveFieldToFile(m,p);};
+    std::function<void(PointCloud *,QString)> writecall;
+    writecall = [](PointCloud * m, QString p){AS_SavePointCloudToFile(m,p);};
     _M->AS_writefunc = writecall;
 
-    std::function<Field *(QString)> readcall;
-    readcall = [](QString p){return AS_LoadFieldFromFile(p);};
+    std::function<PointCloud *(QString)> readcall;
+    readcall = [](QString p){return AS_LoadPointCloudFromFile(p);};
     _M->AS_readfunc = readcall;
     return _M;
 }

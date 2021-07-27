@@ -38,7 +38,7 @@
 #include "raster/rastergroundwater.h"
 #include "raster/rastersoil.h"
 #include "raster/rasterseismic.h"
-
+#include "geo/marchingcubes.h"
 #include "scriptarrayhelpers.h"
 
 
@@ -215,6 +215,10 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     //wave
     engine->RegisterGlobalFunction("Map @WaveEquation(const Map&in U, const Map&in c, float dt)", asFUNCTION( AS_WaveEquation),  asCALL_CDECL); assert( r >= 0 );
 
+
+    //mesh stuff
+
+    engine->RegisterGlobalSTDFunction("Object @MarchingCubes(array<Map> @ data, float z_start, float dz, float value)", GetFuncConvert(MarchingCubes));
 
 }
 

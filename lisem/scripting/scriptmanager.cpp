@@ -36,6 +36,7 @@
 #include "lsmio.h"
 #include "extensions/scriptio.h"
 #include "site.h"
+#include "extensions/fieldscripting.h"
 
 ScriptManager * CScriptManager;
 
@@ -72,6 +73,7 @@ void ScriptManager::Initialize()
     RegisterTableToScriptEngine(m_Engine);
     RegisterMapToScriptEngine(m_Engine);
     RegisterMultiMapToScriptEngine(m_Engine);
+    RegisterFieldToScriptEngine(m_Engine);
     RegisterVectorToScriptEngine(m_Engine);
     RegisterShapesToScriptEngine(m_Engine);
     RegisterPointCloudToScriptEngine(m_Engine);
