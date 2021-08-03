@@ -201,3 +201,8 @@ Check the console to see details.
 
 If things worked, you can now see the model in the map viewer.
 ![Model](/assets/img/model_view.png)
+
+## Initial ground water
+The simulation of groundwater dynamics requires the setup of full hydrology.
+with this aspect working, more processes can be added.
+Afterwards, the groundwater process can be activated, as it does not require additional data.

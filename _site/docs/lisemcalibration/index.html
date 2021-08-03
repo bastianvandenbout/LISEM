@@ -11,21 +11,21 @@
 
     <link rel="shortcut icon" href="/favicon.ico?1">
     <!-- Begin Jekyll SEO tag v2.7.1 -->
-<title>Segmentation | LISEM</title>
+<title>LISEM Calibration | LISEM</title>
 <meta name="generator" content="Jekyll v3.9.0" />
-<meta property="og:title" content="Segmentation" />
+<meta property="og:title" content="LISEM Calibration" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="LISEM includes several segmentation algorithms such as mean-shift segmentation and watershed segmentation." />
-<meta property="og:description" content="LISEM includes several segmentation algorithms such as mean-shift segmentation and watershed segmentation." />
-<link rel="canonical" href="http://localhost:4000/docs/segmentation/" />
-<meta property="og:url" content="http://localhost:4000/docs/segmentation/" />
+<meta name="description" content="Calibration and validation is usually required when doing physically-based modelling. In particular for landslide runout and slope failures, uncertainties are many and validation or real events is required to provide the trust in the models capabilities to accurately simulate the dynamics of an event. Calibration means finding the set of input parameters that result in an optimally accurate simulations (in reference to some observed data/event). Validation means to apply a calibrated model blindly (without prior knowledge of the real event) to an event, and assess the accuracy of the prediction. As we have one event, you can carry out calibration and validation using two different locations. However, this means the two sites are highly similar in nature (terrain, geomorphology and geotechnical parameters). So validation will probably be better when compared to validation on a completely different setting." />
+<meta property="og:description" content="Calibration and validation is usually required when doing physically-based modelling. In particular for landslide runout and slope failures, uncertainties are many and validation or real events is required to provide the trust in the models capabilities to accurately simulate the dynamics of an event. Calibration means finding the set of input parameters that result in an optimally accurate simulations (in reference to some observed data/event). Validation means to apply a calibrated model blindly (without prior knowledge of the real event) to an event, and assess the accuracy of the prediction. As we have one event, you can carry out calibration and validation using two different locations. However, this means the two sites are highly similar in nature (terrain, geomorphology and geotechnical parameters). So validation will probably be better when compared to validation on a completely different setting." />
+<link rel="canonical" href="http://localhost:4000/docs/lisemcalibration/" />
+<meta property="og:url" content="http://localhost:4000/docs/lisemcalibration/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2021-08-03T16:45:07+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Segmentation" />
+<meta property="twitter:title" content="LISEM Calibration" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Segmentation","dateModified":"2021-08-03T16:45:07+02:00","datePublished":"2021-08-03T16:45:07+02:00","url":"http://localhost:4000/docs/segmentation/","description":"LISEM includes several segmentation algorithms such as mean-shift segmentation and watershed segmentation.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"LISEM Calibration","dateModified":"2021-08-03T16:45:07+02:00","datePublished":"2021-08-03T16:45:07+02:00","url":"http://localhost:4000/docs/lisemcalibration/","description":"Calibration and validation is usually required when doing physically-based modelling. In particular for landslide runout and slope failures, uncertainties are many and validation or real events is required to provide the trust in the models capabilities to accurately simulate the dynamics of an event. Calibration means finding the set of input parameters that result in an optimally accurate simulations (in reference to some observed data/event). Validation means to apply a calibrated model blindly (without prior knowledge of the real event) to an event, and assess the accuracy of the prediction. As we have one event, you can carry out calibration and validation using two different locations. However, this means the two sites are highly similar in nature (terrain, geomorphology and geotechnical parameters). So validation will probably be better when compared to validation on a completely different setting.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -140,7 +140,7 @@
       </div>
       
       
-      <div class="panel-collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+      <div class="panel-collapse collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
         <div class="list-group">
           
             
@@ -165,7 +165,7 @@
           
             
             
-            <a class="list-group-item active" href="/docs/segmentation/">Segmentation</a>
+            <a class="list-group-item " href="/docs/segmentation/">Segmentation</a>
           
             
             
@@ -205,7 +205,7 @@
       </div>
       
       
-      <div class="panel-collapse collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+      <div class="panel-collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
         <div class="list-group">
           
             
@@ -230,7 +230,7 @@
           
             
             
-            <a class="list-group-item " href="/docs/lisemcalibration/">LISEM Calibration</a>
+            <a class="list-group-item active" href="/docs/lisemcalibration/">LISEM Calibration</a>
           
         </div>
       </div>
@@ -262,22 +262,69 @@
         </div>
 
         <div class="col-md-8">
-            <h1>Segmentation</h1>
-            <div id="markdown-content-container"><p>LISEM includes several segmentation algorithms such as mean-shift segmentation and watershed segmentation.</p>
+            <h1>LISEM Calibration</h1>
+            <div id="markdown-content-container"><p>Calibration and validation is usually required when doing physically-based modelling. 
+In particular for landslide runout and slope failures, uncertainties are many and validation or real events is required to provide the trust in the models capabilities to accurately simulate the dynamics of an event. 
+Calibration means finding the set of input parameters that result in an optimally accurate simulations (in reference to some observed data/event).
+Validation means to apply a calibrated model blindly (without prior knowledge of the real event) to an event, and assess the accuracy of the prediction.
+As we have one event, you can carry out calibration and validation using two different locations. However, this means the two sites are highly similar in nature (terrain, geomorphology and geotechnical parameters). 
+So validation will probably be better when compared to validation on a completely different setting.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>segmentation.tif = SegmentizeMS(sentinel.tif,100,500,20,200)
+<p>The first thing to do when calibrating a model, is deciding on a method to calculate the accuracy of the model.
+There are many metrics designed to do this. If you are considering decimal numbers, the Root Mean Square Error (RSME) might be appropriate.
+This would work well with flood depths (if you have observed flood depth data to compare to). Other options are the pearson or spearmans correlation indices.
+In case of discharge, the Nash sutcliffe coefficient can be used.
+For landslide runout, there is often only an extent available. As such, we need to compare the binary prediction of a model (yes or no impact) with the observations (yes or no impact).
+This can be done by calculating the percentage of true positive and true negative predictions divided by the total number of pixels.
+However, this method is biased towards large areas with little landslide activity.
+Instead, the Cohens Kappa metric provides a correction for this.
+Take a look at the example <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/inventory.map/download">Inventory for Grande Bay</a> and <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialsh.map/download">Simulated flow for Grande Bay</a>.
+We can calculate the accuracy as:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>double errorval = MapContinuousCohensKappa(inventory.map,impact.map,1.0);
+Print("Error is: " + ToString(errorval));
 </code></pre></div></div>
-<p><img src="/assets/img/segment_calc1.png" alt="Segmentation" /></p>
 
-<p><img src="/assets/img/segment_calc2.png" alt="Segmentation" /></p>
+<p>The 1.0 in the code above indicates the critical threshold for defining impact. It is usually not reasonable to define all flow height above 0.0 as impact. In a simulation with hydrology and runoff, all pixels, even with 1 mm of water flow, will be impacted.
+It is good to think about what the observed data actually is. The inventory consists of mapped impact extends for debris flows and flash floods, but only those that are visible from high resolution sattelite imagery.
+In this case, we estimated that flow heights above 1.0 left a trace that was distinguishable between the general impact of a tropical cyclone.</p>
 
-<p>The final segments can be colorized using a colorization function.</p>
+<p>We already have seen how to calculate accuracy, while you could manually start changing parameters to find the optimal simulation, there is a more robust way of doing this. Two popular algorithms are: brute-force analysis, and gradient descent.
+Lets say our model provides an accuracy number, and so acts alittle bit like a function.
+k=amount of error=f(input parameters)
+Now, we want to find the input parameters, for which k is at a minimum.
+Imaging for now, we have one input parameters, cohesion. We could plot our function f, and it might look something like this:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>segments.tif = ClassToRGB(segmentation.tif)
+<p><img src="/assets/img/model_calibration.png" alt="Model" /></p>
+
+<p>Brute-force analysis attempt to run many different input parameters in a systematic manner, and find the best simulation.
+Gradient descent attempts to follow the shape of the function f, and steadily descent into a minimum error.</p>
+
+<p>When more parameters are active, gradient descent still works fine, with the exponential increase in required simulations:</p>
+
+<p><img src="/assets/img/model_calibration2.png" alt="Model" /></p>
+
+<p>Below is a script that shows how to carry out calibration for two parameters (cohesion and internal friction angle) on a simulation with LISEM. There are comments in the script that describe what each line means.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>double Calibrate(array&lt;double&gt; params)
+{​​​
+	RunModel("run/Couli_AutoCalib.run","Internal Friction Angle_cal_mult="+ToString(params[0])+"|" + "Cohesion Bottom_cal_mult="+ToString(params[1]));
+
+	Map impact = LoadMap("res/safetyfactor.map");
+	Map inventory = 1.0-LoadMap("maps/inventory.tif");
+	double errorval = MapContinuousCohensKappa(inventory,impact,1.0);
+
+	Print("Running model with ifa= " + ToString(params[0]) +"&amp; coh= " + ToString(params[1]) + " score = " + ToString(1.0-errorval));
+
+	return (1.0-errorval);
+}​​​
+
+
+void main()
+{​​​
+OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05);
+}​​​
 </code></pre></div></div>
-
-<p><img src="/assets/img/segment_calc3.png" alt="Segmentation" /></p>
-
 </div>
             <div style="clear:both;">
               <p class="text-center">
@@ -329,12 +376,48 @@
 
   
   
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
     <ul class="pager">
       
         
         
         <li class="previous">
-          <a href="/docs/classification/">
+          <a href="/docs/landslide/">
             <span aria-hidden="true">&larr;</span> Previous
           </a>
         </li>
@@ -344,7 +427,7 @@
         
         
         <li class="next">
-          <a href="/docs/filters/">
+          <a href="/docs/lisemclassic/">
             Next <span aria-hidden="true">&rarr;</span>
           </a>
         </li>
