@@ -290,12 +290,12 @@ inline static QList<QString> GetModelExtensions()
 inline static QList<QString> GetModelExtensionsFormat()
 {
     QList<QString> ret;
-    ret.append("OBJ");
-    ret.append("PLY");
+    ret.append("obj");
+    ret.append("ply");
     ret.append("");
-    ret.append("STL");
-    ret.append("3DS");
-    ret.append("DAE");
+    ret.append("stl");
+    ret.append("3ds");
+    ret.append("collada");
     return ret;
 }
 
@@ -329,6 +329,7 @@ inline static QList<QString> GetFieldExtensions()
 {
     QList<QString> ret;
     ret.append(".fld");
+    ret.append(".nc"); //netcdf - version 4, could also be a raster
     return ret;
 }
 

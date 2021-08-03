@@ -176,7 +176,7 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/ui/shaders/" DESTINATION "bin/sha
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/dist/" DESTINATION "bin/")
 
 file(GLOB kernel_src "lisem/model/kernels/*.*")
-file(GLOB kernel_src "lisem/ui/shaders/*.*")
+file(GLOB shader_src "lisem/ui/shaders/*.*")
 file(GLOB resources "resources/*.*")
 if(WIN32)
 file(GLOB dllresources "third_party/dllwrap/*")
@@ -189,6 +189,15 @@ endif()
    configure_file(${QmlFile} ${CMAKE_CURRENT_BINARY_DIR}/bin/kernels/${nam} COPYONLY)
    list(APPEND copiedKernels ${CMAKE_CURRENT_BINARY_DIR}/bin/kernels/${nam})
  endforeach()
+
+
+ set(copiedShaders "")
+ foreach(QmlFile ${shader_src})
+   get_filename_component(nam ${QmlFile} NAME)
+   configure_file(${QmlFile} ${CMAKE_CURRENT_BINARY_DIR}/bin/shaders/${nam} COPYONLY)
+   list(APPEND copiedShaders ${CMAKE_CURRENT_BINARY_DIR}/bin/shaders/${nam})
+ endforeach()
+
 
 #Add additional command dependend on extra compiled libary
 #this copies all the changed kernel files to the release/assets folder
@@ -228,6 +237,26 @@ endif()
  endforeach()
 
 add_library(Kernels SHARED ${kernel_src} ${copiedKernels})
+
+
+
+set(copiedShaders "")
+foreach(QmlFile ${shader_src})
+  get_filename_component(nam ${QmlFile} NAME)
+
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/shaders/${nam}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${QmlFile} ${CMAKE_CURRENT_BINARY_DIR}/bin/shaders/
+    DEPENDS ${QmlFile}
+    COMMENT "Copying ${QmlFile}"
+    VERBATIM
+  )
+  list(APPEND copiedKernels ${CMAKE_CURRENT_BINARY_DIR}/bin/shaders/${nam})
+endforeach()
+
+add_library(Shaders SHARED ${shader_src} ${copiedShaders})
+
+
 
 #Add additional command dependend on extra compiled libary
 #this copies all the changed kernel files to the release/assets folder

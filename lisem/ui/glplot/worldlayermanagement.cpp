@@ -6,7 +6,9 @@
 #include "layer/geo/uirigidworldlayer.h"
 #include "ioassimp.h"
 #include "layer/3d/ui3dobjectlayer.h"
-
+#include "geo/raster/field.h"
+#include "ionetcdf.h"
+#include "layer/geo/uifieldlayer.h"
 void WorldWindow::AddOceanLayer()
 {
     UILayer * ml2 = new UIOceanLayer();
@@ -349,6 +351,39 @@ UILayer * WorldWindow::GetUIVectorLayerFromFile(QString path)
     return HS;
 
 }
+
+
+UILayer * WorldWindow::GetUIFieldLayerFromFile(QString path)
+{
+
+    QFileInfo fileInfo(path);
+    QString filename(fileInfo.fileName());
+    QString filedir(fileInfo.dir().path());
+
+    Field * _M;
+
+    try
+    {
+        std::vector<Field *> ret = ReadFieldList(path,"", true);
+        if(ret.size() == 0)
+        {
+            return nullptr;
+        }else {
+            _M = ret[0];
+        }
+    }
+    catch (int e)
+    {
+       return nullptr;
+    }
+
+    UIFieldLayer *HS = new UIFieldLayer(_M,filename,true,path);
+    HS->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_RASTERWH),true);
+
+    return HS;
+
+}
+
 
 
 UILayer * WorldWindow::GetUIObjectLayerFromFile(QString path)

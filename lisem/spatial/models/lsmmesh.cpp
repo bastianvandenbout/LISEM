@@ -597,7 +597,7 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
 }
 
 
- void LSMMesh::SetAsCube(LSMVector3 size)
+ void LSMMesh::SetAsCube(LSMVector3 size, LSMVector3 center)
 {
 
     //code from Project Chrono
@@ -648,8 +648,8 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
     vertices.push_back(Vertex(LSMVector3(1, 1, 0),LSMVector3(1.0,1.0,1.0),LSMVector3(0, 1, 0),LSMVector2(0.50f, 1.000f)));
 
     for (unsigned int i = 0; i < 24; ++i) {
-        vertices[i].setPosition(LSMVector3(vertices[i].position()) - LSMVector3(0.5f, 0.5f, 0.5f));
-        vertices[i].setPosition(LSMVector3(vertices[i].position().x * size.X(),vertices[i].position().y * size.Y(),vertices[i].position().z * size.Z()));
+        //vertices[i].setPosition(LSMVector3(vertices[i].position()) );
+        vertices[i].setPosition(LSMVector3(vertices[i].position().x * size.X() - 0.5* size.X() + center.X(),vertices[i].position().y * size.Y() - 0.5* size.Y() + center.Y(),vertices[i].position().z * size.Z() - 0.5* size.Z() + center.Z()));
     }
 
 

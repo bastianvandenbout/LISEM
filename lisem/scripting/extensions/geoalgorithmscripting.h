@@ -218,7 +218,7 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     //mesh stuff
 
-    engine->RegisterGlobalSTDFunction("Object @MarchingCubes(array<Map> @ data, float z_start, float dz, float value)", GetFuncConvert(MarchingCubes));
+    engine->RegisterGlobalSTDFunction("Object @MarchingCubes(const Field &in f, float value)", GetFuncConvert(MarchingCubesF));
 
 }
 

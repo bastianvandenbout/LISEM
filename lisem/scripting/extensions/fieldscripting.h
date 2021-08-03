@@ -26,7 +26,8 @@ inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
 
     r = engine->RegisterObjectMethod("Field", "Field& opAssign(const Field &in m)", asMETHODPR(Field,Assign,(Field *),Field*), asCALL_THISCALL); assert( r >= 0 );
 
-    r = engine->RegisterGlobalSTDFunction("Field @FielFromFieldList(array<Field> &in levels, float z_start, float dz)", GetFuncConvert(FieldFromMapList));
+    r = engine->RegisterGlobalSTDFunction("Field @FieldFromMapList(array<Map> &in levels, float z_start, float dz)", GetFuncConvert(FieldFromMapList));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @GetMapList(const Field &in field)", GetFuncConvert(MapListFromField));
 
 
     r = engine->RegisterObjectMethod("Field", "Field@ opNeg()", asMETHODPR(Field,OpNeg,(void),Field*), asCALL_THISCALL); assert( r >= 0 );
@@ -147,6 +148,11 @@ inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Field @ceil(const Field &in s)", asFUNCTION( AS_Fieldceil),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Field @floor(const Field &in s)", asFUNCTION( AS_Fieldfloor),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Field @fraction(const Field &in s)", asFUNCTION( AS_Fieldfraction),  asCALL_CDECL); assert( r >= 0 );
+
+    r = engine->RegisterGlobalFunction("Field @SetMV(const Field &in s)", asFUNCTION( AS_Fieldsetmv),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @IsMV(const Field &in s)", asFUNCTION( AS_Fieldismv),  asCALL_CDECL); assert( r >= 0 );
+
+
 
 }
 

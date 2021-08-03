@@ -5,6 +5,7 @@
 #include "models/3dmodel.h"
 #include "opengl3dobject.h"
 #include "gl/openglcldatamanager.h"
+
 class UI3DObjectLayer : public UIGeoLayer
 {
 private:
@@ -144,13 +145,6 @@ public:
             glad_glBindVertexArray(0);
 
         }
-
-
-
-
-
-
-
 
     }
     inline void OnDestroy(OpenGLCLManager * m) override

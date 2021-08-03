@@ -9,6 +9,7 @@
 #include "rasterderivative.h"
 #include "navierstokes/fluid2p2d.h"
 #include "navierstokes/fluid2p3d.h"
+#include "geo/raster/field.h"
 
 
 inline std::vector<cTMap *> AS_IncompressibleWave(cTMap * M, cTMap * VX, cTMap * VY,cTMap * P, cTMap * LS, cTMap * Block, cTMap * BlockUX, cTMap * BlockUY, float visc, float _dt, float courant, float b0)
@@ -69,7 +70,7 @@ inline std::vector<cTMap *> AS_IncompressibleWave(cTMap * M, cTMap * VX, cTMap *
     cTMap * LSN = LS->GetCopy();
     Fluid2P2D f(HN->nrRows(),HN->nrCols(),std::fabs(HN->cellSizeX()),std::fabs(HN->cellSizeY()),b0);
 
-    f.InitializeFromData(M,VX,VY,P,LS, Block);
+    f.InitializeFromData(M,VX,VY,P,LS, Block, BlockUX, BlockUY);
 
     f.TimeStep(_dt);
 
@@ -91,98 +92,52 @@ inline static QList<cTMap *> CopyQML(QList<cTMap*> in)
      return out;
 }
 
-inline std::vector<cTMap *> AS_IncompressibleFlow3D(std::vector<cTMap *> maps,std::vector<cTMap *> Block, std::vector<cTMap *> Blockux,std::vector<cTMap *> Blockuy,std::vector<cTMap *> Blockuz,float csz, float visc, float diff, float _dt, float courant)
+inline std::vector<Field *> AS_IncompressibleFlow3D(std::vector<Field *> maps,Field* Block, Field* Blockux,Field* Blockuy,Field* Blockuz,float csz, float visc, float diff, float _dt, float courant)
 {
 
-    if(maps.size() < 12)
-    {
-        LISEMS_ERROR("Unable to work with less than 2 vertical layers");
-        throw -1;
-    }
 
-    if(!(maps.size() % 6 == 0))
+    if((maps.size() != 6 ))
     {
-        LISEMS_ERROR("number of maps must be multiple of 6 (dens, vx,vy,vz,p,ls, dens,vx,vy,vz,p,ls,... from bottom to top)");
+        LISEMS_ERROR("number of fields must be 6 (density, velocity-x, velocity-y, velocity-z, pressure, level-set)");
         throw -1;
     }
 
 
-    QList<cTMap*> DENS;
-    QList<cTMap*> VX;
-    QList<cTMap*> VY;
-    QList<cTMap*> VZ;
-    QList<cTMap*> P;
-    QList<cTMap*> LS;
+    std::vector<cTMap*> DENS = maps.at(0)->GetMapList();
+    std::vector<cTMap*> VX = maps.at(1)->GetMapList();
+    std::vector<cTMap*> VY = maps.at(2)->GetMapList();
+    std::vector<cTMap*> VZ = maps.at(3)->GetMapList();
+    std::vector<cTMap*> P = maps.at(4)->GetMapList();
+    std::vector<cTMap*> LS = maps.at(5)->GetMapList();
 
     for(int i = 0; i < maps.size(); i++)
     {
-        if(!(maps.at(i)->data.nr_rows() == maps.at(0)->data.nr_rows() && maps.at(i)->data.nr_cols() == maps.at(0)->data.nr_cols()))
+        if(!(maps.at(i)->nrLevels() == maps.at(0)->nrLevels() && maps.at(i)->nrRows() == maps.at(0)->nrRows() && maps.at(i)->nrCols() == maps.at(0)->nrCols()))
         {
            LISEMS_ERROR("Numbers of rows and column do not match for dem and input state");
            throw -1;
-        }
-
-        if(i % 6 == 0)
-        {
-            DENS.append(maps.at(i));
-
-        }
-        if(i % 6 == 1)
-        {
-            VX.append(maps.at(i));
-        }
-        if(i % 6 == 2)
-        {
-            VY.append(maps.at(i));
-        }
-        if(i % 6 == 3)
-        {
-            VZ.append(maps.at(i));
-        }
-        if(i % 6 == 4)
-        {
-            P.append(maps.at(i));
-        }
-        if(i % 6 == 5)
-        {
-            LS.append(maps.at(i));
         }
     }
 
     cTMap * HN =DENS.at(0);
 
-    Fluid2P3D f(HN->nrRows(),HN->nrCols(),DENS.length(),std::fabs(HN->cellSizeX()),std::fabs(HN->cellSizeY()),std::fabs(csz));
+    Fluid2P3D f(HN->nrRows(),HN->nrCols(),DENS.size(),std::fabs(HN->cellSizeX()),std::fabs(HN->cellSizeY()),std::fabs(csz));
 
-    f.InitializeFromData(DENS,VX,VY,VZ,P,LS);
+    f.InitializeFromData(DENS,VX,VY,VZ,P,LS, Block->GetMapList(), Blockux->GetMapList(), Blockuy->GetMapList(), Blockuz->GetMapList());
 
     f.TimeStep(_dt);
 
+    Field *DENSN = maps.at(0)->GetCopy();
+    Field *VXN = maps.at(1)->GetCopy();
+    Field *VYN = maps.at(2)->GetCopy();
+    Field *VZN = maps.at(3)->GetCopy();
+    Field *PN= maps.at(4)->GetCopy();
+    Field *LSN = maps.at(5)->GetCopy();
 
-    QList<cTMap*> DENSN = CopyQML(DENS);
-    QList<cTMap*> VXN = CopyQML(VX);
-    QList<cTMap*> VYN = CopyQML(VY);
-    QList<cTMap*> VZN = CopyQML(VZ);
-    QList<cTMap*> PN = CopyQML(P);
-    QList<cTMap*> LSN = CopyQML(LS);
-
-
-    f.StoreToData(DENSN, VXN,VYN,VZN,PN,LSN);
-
-    std::vector<cTMap*> ret;
+    f.StoreToData(DENSN->GetMapList(), VXN->GetMapList(),VYN->GetMapList(),VZN->GetMapList(),PN->GetMapList(),LSN->GetMapList());
 
 
-    for(int i = 0; i < DENSN.length(); i++)
-    {
-
-        ret.push_back(DENSN.at(i));
-        ret.push_back(VXN.at(i));
-        ret.push_back(VYN.at(i));
-        ret.push_back(VZN.at(i));
-        ret.push_back(PN.at(i));
-        ret.push_back(LSN.at(i));
-    }
-
-    return ret;
+    return {DENSN, VXN,VYN,VZN,PN,LSN};
 
 }
 

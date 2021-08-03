@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+
+    <link rel="shortcut icon" href="/favicon.ico?1">
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Hydrology | LISEM</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Hydrology" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="On this page, running the LISEM model for hydrology will be described. It assumes you have defined your study site and have a decent elevation model for your study site. Additionally, we assume you have a land cover map available. If not, you can use LISEM to classify multi-spectral sattelite imagery such as Sentinel-2, which is freely available at 10 meter spatial resolution." />
+<meta property="og:description" content="On this page, running the LISEM model for hydrology will be described. It assumes you have defined your study site and have a decent elevation model for your study site. Additionally, we assume you have a land cover map available. If not, you can use LISEM to classify multi-spectral sattelite imagery such as Sentinel-2, which is freely available at 10 meter spatial resolution." />
+<link rel="canonical" href="http://localhost:4000/docs/hydrology/" />
+<meta property="og:url" content="http://localhost:4000/docs/hydrology/" />
+<meta property="og:site_name" content="LISEM" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-08-03T15:35:14+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Hydrology" />
+<script type="application/ld+json">
+{"@type":"WebPage","headline":"Hydrology","dateModified":"2021-08-03T15:35:14+02:00","datePublished":"2021-08-03T15:35:14+02:00","url":"http://localhost:4000/docs/hydrology/","description":"On this page, running the LISEM model for hydrology will be described. It assumes you have defined your study site and have a decent elevation model for your study site. Additionally, we assume you have a land cover map available. If not, you can use LISEM to classify multi-spectral sattelite imagery such as Sentinel-2, which is freely available at 10 meter spatial resolution.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="alternate" type="application/rss+xml" title="LISEM" href="http://localhost:4000/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+            <a class="navbar-brand" href="/">
+                <span><img src="/assets/img/logonav.png" alt="Logo"></span> LISEM
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li  class="active" ><a href="/docs/home/">Docs</a></li>
+                <li ><a href="/docs/downloads/">Download</a></li>
+				<li ><a href="/docs/publications/">Publications</a></li>
+				<li ><a href="/docs/showcase/">Showcases</a></li>
+				<li ><a href="/docs/about/">About</a></li>
+				<li ><a href="/blog/2020/07/09/Alpha-Release/">Blog</a></li>
+            </ul>
+            <div class="navbar-right">
+                <form class="navbar-form navbar-left">
+                    <div class="form-group has-feedback">
+                        <input id="search-box" type="search" class="form-control" placeholder="Search...">
+                        <i class="fa fa-search form-control-feedback"></i>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/bastianvandenbout/LISEM"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+				<ul class="nav navbar-nav">
+                    <li><a href="https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <div class="container">
+    <div class="row">
+	<p class="text-center">
+                &nbsp;
+				&nbsp;
+				&nbsp;
+              </p>
+			  
+        <div class="col-md-4">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+            Getting Started
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-1" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/gettingstarted/">Getting Started</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/mapviewer/">Mapviewer</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/datamanipulation/">Data Manipulation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingscripting/">Scripting</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingpython/">Using with Python</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingmodel/">Using the model</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
+            Examples
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/elevationdata/">Elevation data</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/interpolation/">Interpolation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/warping/">Warping</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/distances/">Distances</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/classification/">Classification</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/segmentation/">Segmentation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/filters/">Filters</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/soils/">Soils</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/calibration/">Calibration</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/webdata/">Web Data</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/dynamicmodels/">Dynamic Models</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/gpu/">GPU</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+            LISEM hazard model
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/studysite/">Study Site Preparation</a>
+          
+            
+            
+            <a class="list-group-item active" href="/docs/hydrology/">Hydrology</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/flooding/">Flooding</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/slopefailure/">SlopeFailure</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/landslide/">Landslide and Debris Flow runout</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
+            Lisem Classic
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-4" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/lisemclassic/">Lisem Classic</a>
+          
+        </div>
+      </div>
+    </div>
+  
+</div>
+
+        </div>
+
+        <div class="col-md-8">
+            <h1>Hydrology</h1>
+            <div id="markdown-content-container"><p>On this page, running the LISEM model for hydrology will be described. 
+It assumes you have defined your study site and have a decent elevation model for your study site.
+Additionally, we assume you have a land cover map available. If not, you can use LISEM to classify multi-spectral sattelite imagery such as Sentinel-2, which is freely available at 10 meter spatial resolution.</p>
+
+<h2 id="data-preparation">Data Preparation</h2>
+
+<h3 id="channel-properties">Channel properties</h3>
+<p>If there is a river or channel present in the study site, this can be specified in the model. The flow in such a channel will be simulated as a seperate 1-d water flow, with improved connectivity. 
+Simulating water flow through a channel that is of similar size as the gridcells will usually not work.</p>
+
+<p>Channel locations can be estimated based on drainage patterns.
+First, we calculate the accuflux based off the drainage network.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accuflux.map = Accuflux(ldd.map,1.0);
+</code></pre></div></div>
+
+<p><img src="/assets/img/calc_6.png" alt="Model" /></p>
+
+<p>By setting a threshold on the accuflux value, channel cells can automatically be selected.
+Alternatively, this threshold can also be applied to the stream order (see StreamOrder(LDD)).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelmask.map = MapIf(accuflux.map &gt;&gt; 5000,1.0,0.0);
+</code></pre></div></div>
+
+<p><img src="/assets/img/calc_9.png" alt="Model" /></p>
+
+<p>Finally we can take the channel ldd from the main drainage network.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelldd.map = MapIf(channelmask.map &gt;&gt; 0.5,ldd.map);
+</code></pre></div></div>
+
+<p>The width and depth of the channel might be effectively approximated by one of two methods.
+First, it is possible to create a custom logarithmic relationship based on the dimensions of the channel at two points.
+Secondly, but less accurately, global relationships can be used to estimate the dimensions.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>channelwidth.tif = 9.68*(accuflux.tif/1e6)**0.32
+channeldepth.tif = 11.3*(accuflux.tif/1e6)**0.083
+</code></pre></div></div>
+
+<p>The <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/channelmask.map/download">corrected Channel Mask</a>, <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/channelldd.map/download">Channel LDD</a>, <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/channelwidth.map/download">Channel width</a>, <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/channeldepth.map/download">Channel depth</a> are available for download.</p>
+
+<h3 id="land-cover-properties">Land cover properties</h3>
+<p>When a land cover map is available, the surface properties can then be defined.
+The following properties are required:</p>
+
+<ul>
+  <li>Mannings N - estimated through field photos/visits and reference guide such as the USGS field manual for Mannings N</li>
+  <li>Vegetation height - estimated through field photos/visits</li>
+  <li>Vegetation Cover - estimated through ndvi, or field photos/visits</li>
+  <li>SMax Surface - calculated (see below)</li>
+  <li>SMax Canopy - calculated (see below)</li>
+</ul>
+
+<p>The first option here is to define these values for each land cover class. 
+You can put these into a table and combine this with the land cover map to create the variable maps.
+Both are available for download: <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/lu.map/download">land use map</a> and <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/lu.tbl/download">lu properties table</a></p>
+
+<p><img src="/assets/img/model_lutable.png" alt="Model" /></p>
+
+<p><img src="/assets/img/model_lumap.png" alt="Model" /></p>
+
+<p>Combining these can be done using the following code:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//calculate mannings n
+n.tif = RasterFromTable(lu.tbl,lu.map,lu.map * 0.0 + 0);
+</code></pre></div></div>
+
+<p><img src="/assets/img/model_manning.png" alt="Model" /></p>
+
+<p>The second option is to estimate vegetation cover and maximum surface storage from an NDVI (normalized differential vegetation index).
+Some common emperical relationships are provided below.</p>
+
+<ul>
+  <li>NDVI - NDVI = (NIR-RED)/(NIR+RED) (for sentinel-2 NIR = Band 8, and RED = band 4)</li>
+  <li>Vegetation Cover - vegcover=e^((-2.0*NDVI)/(1-NDVI))</li>
+  <li>Bare surface Cover - 1.0-vegetation cover</li>
+  <li>Leaf area Index - LAI =ln(1-Cover)/(-0.4)</li>
+  <li>SMAX Canopy (Crops) - S_max=0.935+0.498 LAI-0.00575 LAI^2</li>
+  <li>SMAX Canopy (Pinus) - S_max=0.2331 LAI</li>
+  <li>SMAX Canopy (Douglas) - S_max=0.3165 LAI</li>
+  <li>SMAX Canopy (Olive) - S_max=1.46 LAI^(0.56 )</li>
+  <li>SMAX Canopy (Eucalypt) - S_max=0.0918 LAI^1.04</li>
+  <li>SMAX Canopy (Boradleaved Forest) - S_max=0.2856 LAI</li>
+  <li>SMAX Canopy (Bracken) - S_max=0.1713 LAI</li>
+  <li>SMAX Canopy (Clumped Grass) - S_max=0.59 LAI^0.88</li>
+  <li>SMax Surface - S_max=0.243 RR+0.010 RR^2+ 0.012RR S (RR is the standard deviation of the terrain in mm, typically around 2 for roads and around 15 for a forest).</li>
+</ul>
+
+<h3 id="building-elements">Building elements</h3>
+<p>You can add building elements to the LISEM simulation by adapting the land use classes to contain buildings and roads.
+Alternatively, you might add a building cover and road withd map to the simulation. These let LISEM automatically take into account those elements at a sub-pixel level.
+The building cover is a fraction between 0 (no buildings) and 1 (full building cover). The road witdh indicated the width of a road ina gridcell. This can of course not be more than the width of the gridcell itself.
+The OpenStreetMaps database is a high-quality open dataset of roads, bridges, buildings and special locations.</p>
+
+<h3 id="soil-properties">Soil properties</h3>
+<p>Soil properties can be provided through the following inputs, which you can download:</p>
+
+<ul>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/clay.map/download">Clay (fraction between 0 and 1)</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/sand.map/download">Sand (fraction between 0 and 1)</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/gravel.map/download">Gravel (volumetric fraction)</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/om.map/download">Organic Matter (kg per square meter)</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/gwh.map/download">Ground Water Height (m of water height above bed rock)</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/thetaieff.map/download">Theta Initial (fraction between 0 and 1)</a></li>
+</ul>
+
+<p>Silt content is assumed to be 1.0 - clay - sand.
+The initial conditions (ground water height and initial theta) are usually estimated based on antecedent rainfall.</p>
+
+<p>Based on these input paramters, the Saxton et al. (2006) pedotransfer functions are used to estimate saturated conductivity, porosity, field capacity and matric suction.
+If no measured data is available for these parameters, they can be downloaded from the SOILGRIDS database.
+If you are interested in checking the values that are calculated by the model, see also the Saxton… Functions in the LISEM scripting environment.</p>
+
+<h3 id="soil-depth">Soil depth</h3>
+
+<p>Soil depth is a parameter that is required for hydrology, but is of particular importance to slope stability/failure and ground water flow.
+In particular as soil depth is critical in Factor of Safety equations. 
+THe actual soil depth varies strongly with slopes, as at any moment, the combination of these two will commonly result in failures if the soil depth becomes too much.
+As such, inputting soil data that does not consider the variations in slope will result in strange failure patterns.
+There are several ways in which this difficult parameter might be estimated.
+The first is the SOILGRIDS database, although the spatial resolution is typically to low for quality results.
+The second is a physically-based steady state soil depth model. Such a model is provide by lisem:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>soildepth.map = AccufluxSoil(dem.map,AccuFlux2D(dem.map,dem.map * 0.0 + 1.0,dem.map * 0.0 + 1.0,500,0.2,1.0),dem.map * 0.0 + 0.001,0.0000001,2,500,0.2);
+</code></pre></div></div>
+<p>The results of this model might be calibrated based off measurements of soil depth or of landslide slipe surface depths.</p>
+
+<p><img src="/assets/img/soils_calc2.png" alt="Model" /></p>
+
+<p>A calibrated version is available to <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/soildepth.map/download">download here</a>.
+Finally, a multi-variate statistical model might be used, although this is much more site-specific.</p>
+
+<h3 id="rainfall">Rainfall</h3>
+<p>Rainfall data can be provided in a simple format.
+<img src="/assets/img/rain_format.png" alt="Model" /></p>
+
+<p>If more complex rainfall input is desired, the values in the file can be replaced with a file name.
+This file must be a map of same extent as the database, and will be read during the simulation.</p>
+
+<h2 id="running-the-model">Running the model</h2>
+<p>Running the model can be done from the interface. 
+All the settings can be saved in a runfile.
+Be sure to save your runfile after providing the desired setting.
+You can also load existing runfiles.</p>
+
+<p><img src="/assets/img/model_menu.png" alt="Model" /></p>
+
+<h3 id="processes">Processes</h3>
+<p>Select the relevant processes. For now, we simulate rainfall, hydrology, and a channel.
+Some options depend on other processes (such as slope stabiltiy dpeending on hydrology.</p>
+
+<p><img src="/assets/img/model_processes1.png" alt="Model" /></p>
+
+<h3 id="simulation-time-domain">Simulation time domain</h3>
+<p>The time settings need to be set to determine the duration of the simulation.
+Start and end time are in minutes (hold the mouse on the input box to show the tooltip).
+Timestep and Timestep flow are in seconds.
+Typically, timestep should be roughly equal to grid cell size. 
+Timestep flow needs to be set low enough to capture the dynamics of flow.
+The value of 0.2 seconds is a safe default, but for speed increase a higher value (0.5 or 1.0) might be attempted.
+<img src="/assets/img/model_time.png" alt="Model" /></p>
+
+<h3 id="setting-directories">Setting directories</h3>
+<p>The time input directory will be used to read any time-inputs such as rainfall.
+Make sure the rainfall.txt file is located in this folder.
+The map directory must contain all the input maps.
+Finally, the output directory will be filled with the output maps.
+Any existing output is overwritten after each timestep.
+<img src="/assets/img/model_dirs.png" alt="Model" /></p>
+<h3 id="checking-map-names">Checking map names</h3>
+<p>It is usually easiest to provide the maps with their default names, although the names can be changed within the interface.
+The required maps are highlighted in the list.
+The numbers after the map act as a multiplier. This can be used for easy calibration.</p>
+
+<p><img src="/assets/img/model_maps.png" alt="Model" /></p>
+<h3 id="specifying-output">Specifying output</h3>
+<p>Finally, specify the output options. 
+By default, output is in GeoTIFF format. If this is not checked, the PCRaster-Map format is used.
+Timeseries can also be written to disk. A list of maps is written for each selected variable.
+Note that this might quickly fill your hard drive!
+<img src="/assets/img/model_output.png" alt="Model" /></p>
+<h3 id="ready-set-go">Ready, Set, Go!</h3>
+<p>Finally, remember to save your run-file,
+and press the play button to start the simulation!</p>
+
+<p>You might get an error message indicating some file was not found.
+Check the console to see details.
+<img src="/assets/img/model_error.png" alt="Model" /></p>
+
+<p>If things worked, you can now see the model in the map viewer.
+<img src="/assets/img/model_view.png" alt="Model" /></p>
+</div>
+            <div style="clear:both;">
+              <p class="text-center">
+                <br />
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/discussions" class="btn btn-default" role="button">
+                  <i class="fa fa-pencil fa-lg"></i> Ask a question
+                </a>
+              </p>
+            </div>
+            <hr>
+            
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/docs/studysite/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
+
+      
+        
+        
+        <li class="next">
+          <a href="/docs/flooding/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+      </ul>
+    <div class="clear"></div>
+    
+
+        </div>
+
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="container">
+
+        <p class="text-center">
+            LISEM 2021 |
+            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University
+        </p>
+        <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+    </div>
+</footer>
+
+    <script>
+  var baseurl = ''
+</script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="/assets/js/bootstrap.min.js "></script>
+<script src="/assets/js/typeahead.bundle.min.js "></script>
+
+<script src="/assets/js/main.js "></script>
+
+</body>
+
+</html>

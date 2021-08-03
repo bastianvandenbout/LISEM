@@ -598,18 +598,25 @@ public slots:
                 LISEMS_ERROR("Exception encountered when running script");
 
                 ce->SetHighlightErrorLocation( ctx->GetLineNumber(), -1);
-
+                std::cout << 1  << std::endl;
                 st->m_StackDisplay->SetFromContext(ctx,0,true);
-
+                std::cout << 2  << std::endl;
                 //pause by setting up waitcondition
                 st->m_PauseMutex.lock();
+                std::cout << 3  << std::endl;
                 st->m_CodeIsPaused.store(true);
+                std::cout << 4  << std::endl;
                 LISEMS_STATUS("Paused script execution");
                 st->int_emitupdatebuttons_pause();
+                std::cout << 5  << std::endl;
                 st->m_PauseWaitCondition.wait(&(st->m_PauseMutex));
+                std::cout << 6  << std::endl;
                 st->m_CodeIsPauseRequested.store(false);
+                std::cout << 7  << std::endl;
                 st->m_CodeIsPaused.store(false);
+                std::cout << 8  << std::endl;
                 st->int_emitupdatebuttons_start();
+                std::cout << 9  << std::endl;
                 st->m_PauseMutex.unlock();
 
                 st->m_StackDisplay->Clear();

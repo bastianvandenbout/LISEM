@@ -22,6 +22,14 @@
   - dynamicmodels
   - gpu
   
+- title: LISEM hazard model
+  docs:
+  - studysite
+  - hydrology
+  - flooding
+  - slopefailure
+  - landslide
+  
 - title: Lisem Classic
   docs:
   - lisemclassic

@@ -570,6 +570,18 @@ bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
                 m_MapViewTool->AddPointCloudLayerFromFile(filepath);
             }
 
+            if(IsFieldFile(filepath))
+            {
+                use = true;
+                m_MapViewTool->AddFieldLayerFromFile(filepath);
+            }
+
+            if(IsModelFile(filepath))
+            {
+                use = true;
+                m_MapViewTool->AddObjectLayerFromFile(filepath);
+            }
+
             if((ext.compare(".run") == 0))
             {
                 use = true;

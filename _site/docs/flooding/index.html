@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+
+    <link rel="shortcut icon" href="/favicon.ico?1">
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Flooding | LISEM</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Flooding" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Flooding within hydrology" />
+<meta property="og:description" content="Flooding within hydrology" />
+<link rel="canonical" href="http://localhost:4000/docs/flooding/" />
+<meta property="og:url" content="http://localhost:4000/docs/flooding/" />
+<meta property="og:site_name" content="LISEM" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-08-03T15:35:14+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Flooding" />
+<script type="application/ld+json">
+{"@type":"WebPage","headline":"Flooding","dateModified":"2021-08-03T15:35:14+02:00","datePublished":"2021-08-03T15:35:14+02:00","url":"http://localhost:4000/docs/flooding/","description":"Flooding within hydrology","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="alternate" type="application/rss+xml" title="LISEM" href="http://localhost:4000/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+            <a class="navbar-brand" href="/">
+                <span><img src="/assets/img/logonav.png" alt="Logo"></span> LISEM
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li  class="active" ><a href="/docs/home/">Docs</a></li>
+                <li ><a href="/docs/downloads/">Download</a></li>
+				<li ><a href="/docs/publications/">Publications</a></li>
+				<li ><a href="/docs/showcase/">Showcases</a></li>
+				<li ><a href="/docs/about/">About</a></li>
+				<li ><a href="/blog/2020/07/09/Alpha-Release/">Blog</a></li>
+            </ul>
+            <div class="navbar-right">
+                <form class="navbar-form navbar-left">
+                    <div class="form-group has-feedback">
+                        <input id="search-box" type="search" class="form-control" placeholder="Search...">
+                        <i class="fa fa-search form-control-feedback"></i>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/bastianvandenbout/LISEM"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+				<ul class="nav navbar-nav">
+                    <li><a href="https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <div class="container">
+    <div class="row">
+	<p class="text-center">
+                &nbsp;
+				&nbsp;
+				&nbsp;
+              </p>
+			  
+        <div class="col-md-4">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+            Getting Started
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-1" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/gettingstarted/">Getting Started</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/mapviewer/">Mapviewer</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/datamanipulation/">Data Manipulation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingscripting/">Scripting</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingpython/">Using with Python</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingmodel/">Using the model</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
+            Examples
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/elevationdata/">Elevation data</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/interpolation/">Interpolation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/warping/">Warping</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/distances/">Distances</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/classification/">Classification</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/segmentation/">Segmentation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/filters/">Filters</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/soils/">Soils</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/calibration/">Calibration</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/webdata/">Web Data</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/dynamicmodels/">Dynamic Models</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/gpu/">GPU</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+            LISEM hazard model
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/studysite/">Study Site Preparation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/hydrology/">Hydrology</a>
+          
+            
+            
+            <a class="list-group-item active" href="/docs/flooding/">Flooding</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/slopefailure/">SlopeFailure</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/landslide/">Landslide and Debris Flow runout</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
+            Lisem Classic
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-4" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/lisemclassic/">Lisem Classic</a>
+          
+        </div>
+      </div>
+    </div>
+  
+</div>
+
+        </div>
+
+        <div class="col-md-8">
+            <h1>Flooding</h1>
+            <div id="markdown-content-container"><h3 id="flooding-within-hydrology">Flooding within hydrology</h3>
+
+<p>If you have followed the descriptions for modelling hydrology or groundwater, 
+flooding is automatically set up. That is, if there is sufficient precipitation to cause flooding, the model will simulate this.</p>
+
+<h3 id="simple-water-flow-simulation">Simple water-flow simulation</h3>
+<p>To do a flood simulation without hydrology, little data and setup is required.</p>
+<h4 id="elevation-and-mannings-n">Elevation and Mannings N</h4>
+<p>First, get an elevation model and cut it to the desired extent.
+Second, define a Mannings N map. This paramter described surface roughness and determines friction for surface flows.
+This map can be made homogeneous (one single value for the entire model domain).
+If you wish to have a more detailed description, see the page about modelling hydrology.</p>
+
+<h4 id="initial-conditions">Initial conditions</h4>
+<p>Besides terrain and surface roughness, you need to specify the initial water height, including river, lakes and other surface flows.
+We will use the following initial fluid height (in meters).</p>
+
+<h4 id="modelling">Modelling</h4>
+<p>There are two options to run this simulation. You can use the script environment to call the FlowDynamic function in a loop.
+This function provides highly accurate saint-venant surface flow with wave behavior.
+Such a script is provided below.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+
+void main()
+{
+    
+    Map dem = dem.map; 
+    Map whinitial = initialwaterheight.map;
+    Map n= dem * 0.0 + 0.1; //homogeneous mannings n of 0.1
+    
+    Print("Create Initial Properties");
+    
+	//a list with {height, x-velocity, y-velocity}
+    array&lt;Map&gt; flowprops = {whinitial,whinitial * 0.0,whinitial*0.0};
+    
+    Print("Add Layers");
+    UILayer l = AddViewLayer( whinitial, "elevation",true);
+    for(int i = 0; i &lt; 5000; i++)
+    {   
+        flowprops = FlowDynamic(dem, n,flowprops[0],flowprops[1],flowprops[2],0.1);
+        
+        ReplaceViewLayer(l, flowprops[0]);
+		
+		//every 50 timesteps, store the flow height and velocity
+        if( i % 50== 0)
+        {
+            whelev.tif = dem+flowprops[0];
+            whvel.tif = sqrt(flowprops[2] *flowprops[2]  + flowprops[1] *flowprops[1]) ;
+        
+        }
+        Print("Timestep : " + ToString(i));
+        
+    } 
+}
+</code></pre></div></div>
+<p>The example data can be downloaded for: <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/Dijkring41/dem_cut.map/download">Elevation</a>, <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/Dijkring41/initialwh.map/download">Initial Water</a> and <a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/Dijkring41/n.map/download">Mannings N</a>.
+The map view now shows the real-time results:</p>
+
+<p><img src="/assets/img/model_flood.png" alt="Model" /></p>
+
+<h4 id="ready-set-go">Ready, Set, Go!</h4>
+<p>Alternatively, you can use the LISEM Hazard model.
+Set the processes to use initial water.</p>
+
+<p><img src="/assets/img/model_processes2.png" alt="Model" /></p>
+
+<p>For more details, see also the page on modelling hydrology.
+First set the input and output directories.
+Then, set the map names.
+Finally, set the desired output options.
+You can specify timeseries output for every x timesteps.</p>
+
+<p>Press run and see the simulation progress!</p>
+
+</div>
+            <div style="clear:both;">
+              <p class="text-center">
+                <br />
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/discussions" class="btn btn-default" role="button">
+                  <i class="fa fa-pencil fa-lg"></i> Ask a question
+                </a>
+              </p>
+            </div>
+            <hr>
+            
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/docs/hydrology/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
+
+      
+        
+        
+        <li class="next">
+          <a href="/docs/slopefailure/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+      </ul>
+    <div class="clear"></div>
+    
+
+        </div>
+
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="container">
+
+        <p class="text-center">
+            LISEM 2021 |
+            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University
+        </p>
+        <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+    </div>
+</footer>
+
+    <script>
+  var baseurl = ''
+</script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="/assets/js/bootstrap.min.js "></script>
+<script src="/assets/js/typeahead.bundle.min.js "></script>
+
+<script src="/assets/js/main.js "></script>
+
+</body>
+
+</html>

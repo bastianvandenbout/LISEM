@@ -187,22 +187,6 @@ void OpenGLCLManager::InitGLCL_int()
     m_TexturePainter = new OpenGLTexturePainter();
     m_TexturePainter->LoadShaders();
 
-    /*m_GLProgram_uimap = GetMGLProgram(m_KernelDir+ "UIMapDraw.vert", m_KernelDir+ "UIMapDraw.frag");
-    m_GLProgram_uiobject = GetMGLProgram(m_KernelDir+ "UIObjectDraw.vert", m_KernelDir+ "UIObjectDraw.frag");
-    m_GLProgram_uiobjectinstanced = GetMGLProgram(m_KernelDir+ "UIObjectDrawInstanced.vert", m_KernelDir+ "UIObjectDrawInstanced.frag");
-    m_GLProgram_uiduomap = GetMGLProgram(m_KernelDir+ "UIDuoMapDraw.vert", m_KernelDir+ "UIDuoMapDraw.frag");
-    m_GLProgram_uimapshape = GetMGLProgram(m_KernelDir+ "UIMapDrawShape.vert", m_KernelDir+ "UIMapDrawShape.frag");
-    m_GLProgram_uimultimap = GetMGLProgram(m_KernelDir+ "UIMultiMapDraw.vert", m_KernelDir+ "UIMultiMapDraw.frag");
-    m_GLProgram_uivectorl = GetMGLProgram(m_KernelDir+ "UIGeoLineDraw.vert", m_KernelDir+ "UIGeoLineDraw.frag");
-    m_GLProgram_uivectorp = GetMGLProgram(m_KernelDir+ "UIGeoPolygonDraw.vert", m_KernelDir+ "UIGeoPolygonDraw.frag");
-    m_GLProgram_particles = GetMGLProgram(m_KernelDir + "partsim.vert", m_KernelDir + "partsim.frag");
-    m_GLProgram_pointcloud = GetMGLProgram(m_KernelDir + "UIGeoPointCloud.vert", m_KernelDir + "UIGeoPointCloud.frag");
-    m_GLProgram_pointcloud3d = GetMGLProgram(m_KernelDir + "UIGeo3DPointCloud.vert", m_KernelDir + "UIGeo3DPointCloud.frag");
-    m_GLProgram_uipointsimple =GetMGLProgram(m_KernelDir+ "UIGeoSimplePointDraw.vert", m_KernelDir+ "UIGeoSimplePointDraw.frag");
-    m_GLProgram_uiterrain = GetMGLProgram(m_KernelDir + "terrain_vs.glsl", m_KernelDir + "terrain_fs.glsl", m_KernelDir + "terrain_gs.glsl", m_KernelDir + "terrain_tc.glsl", m_KernelDir + "terrain_te.glsl");
-    m_GLProgram_uiterrainlayer = GetMGLProgram(m_KernelDir + "terrain_vs_layer.glsl", m_KernelDir + "terrain_fs_layer.glsl", m_KernelDir + "terrain_gs_layer.glsl", m_KernelDir + "terrain_tc_layer.glsl", m_KernelDir + "terrain_te_layer.glsl");
-    m_GLProgram_uiocean = GetMGLProgram(m_KernelDir + "terrain_vs_ocean.glsl", m_KernelDir + "terrain_fs_ocean.glsl", m_KernelDir + "terrain_gs_ocean.glsl", m_KernelDir + "terrain_tc_ocean.glsl", m_KernelDir + "terrain_te_ocean.glsl");*/
-
     m_ScreenTarget = new OpenGLCLMSAARenderTarget();
     m_MSAATarget = new OpenGLCLMSAARenderTarget();
 
@@ -605,6 +589,17 @@ void OpenGLCLManager::GLCLLoop()
 
         //reset the current thread for opengl
         glfwMakeContextCurrent(NULL);
+
+
+        //load and output all the errors that have occured in the past cycle.
+        //GLenum err;
+        //while((err = glGetError()) != GL_NO_ERROR)
+        //{
+
+        //    std::cout << "OpenGL Error " << err  << " " <<  gl_error_string(err) <<  std::endl;
+        //    LISEM_ERROR("OpenGL Error " +QString::number(err) + gl_error_string(err));
+        //}
+
 
         m_GLMutex.unlock();
         m_GLOutputUIMutex.unlock();

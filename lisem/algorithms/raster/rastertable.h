@@ -651,10 +651,10 @@ inline cTMap * AS_RasterFromTable(MatrixTable * table, cTMap * Other, cTMap * Ot
                     {
 
                     }else {
-                        class_r = (int) (0.5f +Other->data[0][0]);
+                        class_r = (int) (0.25f +Other->data[0][0]);
                     }
                 }else {
-                    class_r = (int) (0.5f +Other->data[r][c]);
+                    class_r = (int) (0.25f +Other->data[r][c]);
                 }
 
                 if(Other2->AS_IsSingleValue)
@@ -663,14 +663,14 @@ inline cTMap * AS_RasterFromTable(MatrixTable * table, cTMap * Other, cTMap * Ot
                     {
 
                     }else {
-                        class_c = (int) (0.5f +Other2->data[0][0]);
+                        class_c = (int) (0.25f +Other2->data[0][0]);
                     }
                 }else {
-                    class_c = (int) (0.5f +Other2->data[r][c]);
+                    class_c = (int) (0.25f +Other2->data[r][c]);
                 }
 
 
-                if(class_r == 0 || class_c == 0)
+                if(class_r < 0 || class_c < 0)
                 {
                     pcr::setMV(map->data[r][c]);
                 }else {

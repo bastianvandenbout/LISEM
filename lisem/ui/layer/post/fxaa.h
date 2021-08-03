@@ -55,9 +55,6 @@ public:
     //virtual sub-draw function that is specifically meant for geo-objects
     inline void OnDraw3DPostProcess(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
     {
-
-        std::cout << "draw postprocess FXAA" << std::endl;
-
         float matrix[16] = {
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
@@ -115,10 +112,6 @@ public:
 
 
         glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_PostProcessBuffer2->GetFrameBuffer());
-
-
-        std::cout << "buffer post 1 " << s.GL_PostProcessBuffer1->GetTexture(0) << std::endl;
-        std::cout << "buffer post 2 " << s.GL_PostProcessBuffer2->GetTexture(0) << std::endl;
 
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
         glad_glDrawBuffers(1, DrawBuffers);

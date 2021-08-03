@@ -38,10 +38,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     s.GL_3DFrameBuffer->ClearAll();
     s.GL_3DFrameBuffer->SetAsTarget();
 
-    std::cout << "draw 3d_1 " << std::endl;
     DrawBaseLayers3D(s);
-
-    std::cout << "draw 3d_2 " << std::endl;
 
     s.GL_3DFrameBuffer->BlitToTexture();
 

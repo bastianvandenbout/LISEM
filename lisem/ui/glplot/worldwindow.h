@@ -261,6 +261,7 @@ public:
     UILayer * GetUITimeSeriesLayerFromFile(QList<QString> path);
     UILayer * GetUILayerFromMap(cTMap * map, QString name = "", bool native = false);
     UILayer * GetUIVectorLayerFromFile(QString path);
+    UILayer * GetUIFieldLayerFromFile(QString path);
     UILayer * GetUIPointCloudLayerFromFile(QString path);
     UILayer * GetUIObjectLayerFromFile(QString path);
 

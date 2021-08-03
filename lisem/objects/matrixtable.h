@@ -235,7 +235,9 @@ public:
                 S.remove(S.count()-1,1);
             // readLine also reads \n as a character on an empty line!
             if (!S.trimmed().isEmpty())
+            {
                 Lines << S.trimmed();
+            }
             //qDebug() << S;
         }
         fff.close();

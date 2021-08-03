@@ -50,6 +50,8 @@ class SPHFileSystemModel : public QFileSystemModel
     QIcon *icon_pointcloud;
     QIcon *icon_table;
     QIcon *icon_debug;
+    QIcon *icon_field;
+    QIcon *icon_model;
 
     QString m_Dir;
 public:
@@ -68,6 +70,8 @@ public:
         icon_info = new QIcon();
         icon_delete = new QIcon();
         icon_map = new QIcon();
+        icon_field = new QIcon();
+        icon_model = new QIcon();
         icon_script = new QIcon();
         icon_runfile = new QIcon();
         icon_diropen = new QIcon();
@@ -92,6 +96,9 @@ public:
         icon_table->addFile((m_Dir + LISEM_FOLDER_ASSETS + "table.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_vector->addFile((m_Dir + LISEM_FOLDER_ASSETS + "vector.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_pointcloud->addFile((m_Dir + LISEM_FOLDER_ASSETS + "pointcloud.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon_field->addFile((m_Dir + LISEM_FOLDER_ASSETS + "field.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon_model->addFile((m_Dir + LISEM_FOLDER_ASSETS + "mesh.png"), QSize(), QIcon::Normal, QIcon::Off);
+
         //icon_debug->addFile((m_Dir + LISEM_FOLDER_ASSETS + "debug.png"), QSize(), QIcon::Normal, QIcon::Off);
     }
 
@@ -123,6 +130,12 @@ public:
                 }else if(IsTableFile(info.filePath()) )
                 {
                     return *icon_table;
+                }else if(IsFieldFile(info.filePath()))
+                {
+                    return *icon_field;
+                }else if(IsModelFile(info.filePath()))
+                {
+                    return *icon_model;
                 }
             }
         }
@@ -1025,6 +1038,14 @@ public slots:
                    }
                    t->Empty();
                    delete t;
+
+                }else if(IsModelFile(file))
+                {
+
+
+                }else if(IsFieldFile(file))
+                {
+
 
                 }else
                 {

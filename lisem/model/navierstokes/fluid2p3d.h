@@ -151,7 +151,7 @@ public:
     char interpMethd = 0;
     char do_redistance = 1;
     char do_volumeCorrection = 1;
-    char solver_mode = 2;
+    char solver_mode = 0;
     float maxdist = DIST;
     float volume0 = 0.0;
     float y_volume0 = 0.0;
@@ -171,6 +171,11 @@ public:
     cTMap3D * source_dists = NULL;
     cTMap3D * swap_dists = NULL;
     cTMap3D * tmp = NULL;
+
+    cTMap3D * block = NULL;
+    cTMap3D * blocku = NULL;
+    cTMap3D * blockv = NULL;
+    cTMap3D * blockw = NULL;
 
     char ***computed;
     char ***region;
@@ -275,6 +280,12 @@ public:
         uy_swap = CreateMap(rows+1,cols+1,levels +1);
         uz_swap = CreateMap(rows+1,cols+1,levels +1);
 
+
+        block = CreateMap(rows+1,cols+1,levels +1);
+        blocku = CreateMap(rows+1,cols+1,levels +1);
+        blockv = CreateMap(rows+1,cols+1,levels +1);
+        blockw = CreateMap(rows+1,cols+1,levels +1);
+
         InitLevelSet(rows,cols,levels);
         if( do_redistance )
         {
@@ -298,7 +309,7 @@ public:
     }
 
 
-    inline void InitializeFromData(QList<cTMap *> &FH, QList<cTMap *> &FUx, QList<cTMap *> &FUy, QList<cTMap *> &FUz,QList<cTMap *> &Fp, QList<cTMap *> &LevelSet)
+    inline void InitializeFromData(std::vector<cTMap *> FH, std::vector<cTMap *> FUx, std::vector<cTMap *> FUy, std::vector<cTMap *> FUz,std::vector<cTMap *> Fp, std::vector<cTMap *> LevelSet, std::vector<cTMap *> Block, std::vector<cTMap *> Blocku, std::vector<cTMap *> Blockv, std::vector<cTMap *> Blockw)
     {
 
         bool has_levelset = false;
@@ -353,6 +364,11 @@ public:
                     ux->data[i][j][k] = FUx.at(k)->data[j][i];
                     uy->data[i][j][k] = FUy.at(k)->data[j][i];
                     uz->data[i][j][k] = FUz.at(k)->data[j][i];
+
+                    block->data[i][j][k] = Block.at(k)->data[j][i];
+                    blocku->data[i][j][k] = Blocku.at(k)->data[j][i];
+                    blockv->data[i][j][k] = Blockv.at(k)->data[j][i];
+                    blockw->data[i][j][k] = Blockw.at(k)->data[j][i];
                 }
             }
         }
@@ -366,7 +382,7 @@ public:
 
     }
 
-    inline void StoreToData(QList<cTMap *> &FH, QList<cTMap *> &FUx, QList<cTMap *> &FUy,QList<cTMap *> &FUz,  QList<cTMap *> &Fp, QList<cTMap *>&LevelSet)
+    inline void StoreToData(std::vector<cTMap *> FH, std::vector<cTMap *> FUx, std::vector<cTMap *> FUy,std::vector<cTMap *> FUz,  std::vector<cTMap *> Fp, std::vector<cTMap *> LevelSet)
     {
         for(int k = 0; k < gz; k++)
         {
@@ -1163,20 +1179,23 @@ public:
         delete s; s = nullptr;
         delete r2; r2 = nullptr;
         delete tmp; tmp = nullptr;
+
+        delete block; block = nullptr;
+        delete blocku; blocku = nullptr;
+        delete blockv; blockv = nullptr;
+        delete blockw; blockw = nullptr;
+
         free3D(grids);
     }
     inline void markLiquid() {
         getLevelSet(A);
     }
     inline float getLevelSet( int i, int j , int k) {
-        if( i<0 || i>gx-1 || j<0 || j>gy-1 || k<0 || k>gz-1) return 1.0;
+        if( i<0 || i>gx-1 || j<0 || j>gy-1 || k<0 || k>gz-1 || block->data[i][j][k] > 0.5f) return 1.0;
         return grids[i][j][k].dist;
     }
 
     inline void getLevelSet( cTMap3D *dists ) {
-
-
-        std::cout << "GetLevelSet1  " << GetFlowCells(dists,gx,gy,gz) << std::endl;
 
         for(int i = 0; i < gx; i++)
         {
@@ -1184,13 +1203,17 @@ public:
             {
                 for(int k = 0; k < gz; k++)
                 {
+                    if(block->data[i][j])
+                    {
+                        dists->data[i][j][k] = 1.0;
+                    }
+
                      dists->data[i][j][k] = grids[i][j][k].known ? grids[i][j][k].dist : 1.0;
 
                 }
             }
         }
 
-        std::cout << "GetLevelSet2  " << GetFlowCells(dists,gx,gy,gz) << std::endl;
     }
 
 
@@ -1252,7 +1275,13 @@ public:
             {
                 for(int k = 0; k < gz; k++)
                 {
-                    grids[i][j][k].dist = swap_dists->data[i][j][k];
+                    if(block->data[i][j][k] <= 0.5f)
+                    {
+                        grids[i][j][k].dist = swap_dists->data[i][j][k];
+                    }else
+                    {
+                        grids[i][j][k].dist = 1.0;
+                    }
                 }
             }
         }
@@ -1289,6 +1318,21 @@ public:
                     if( i==0 || i==gx )
                     {
                         ux->data[i][j][k] = 0.0;
+                    }else {
+                        if(block->data[i+1][j][k] > 0.5f)
+                        {
+                            ux->data[i][j][k] = std::min(blocku->data[i+1][j][k],ux->data[i][j][k]);
+
+                        }
+                        if(block->data[i-1][j][k] > 0.5f)
+                        {
+                            ux->data[i][j][k] = std::max(blocku->data[i-1][j][k],ux->data[i][j][k]);
+
+                        }
+                        if(block->data[i][j][k] > 0.5f)
+                        {
+                            ux->data[i][j][k] = 0.0;
+                        }
                     }
                 }
             }
@@ -1304,6 +1348,21 @@ public:
                     if( j==0 || j==gy)
                     {
                         uy->data[i][j][k] = 0.0;
+                    }else {
+                        if(block->data[i][j+1][k] > 0.5f)
+                        {
+                            uy->data[i][j][k] = std::min(blockv->data[i][j+1][k],uy->data[i][j][k]);
+
+                        }
+                        if(block->data[i][j-1][k] > 0.5f)
+                        {
+                            uy->data[i][j][k] = std::max(blockv->data[i][j-1][k],uy->data[i][j][k]);
+
+                        }
+                        if(block->data[i][j][k] > 0.5f)
+                        {
+                            uy->data[i][j][k] = 0.0;
+                        }
                     }
                 }
             }
@@ -1318,6 +1377,21 @@ public:
                     if( k==0 || k==gz)
                     {
                         uz->data[i][j][k] = 0.0;
+                    }else {
+                        if(block->data[i][j][k+1] > 0.5f)
+                        {
+                            uz->data[i][j][k] = std::min(blockw->data[i][j][k+1],uz->data[i][j][k]);
+
+                        }
+                        if(block->data[i][j][k-1] > 0.5f)
+                        {
+                            uz->data[i][j][k] = std::max(blockw->data[i][j][k-1],uz->data[i][j][k]);
+
+                        }
+                        if(block->data[i][j][k] > 0.5f)
+                        {
+                            uz->data[i][j][k] = 0.0;
+                        }
                     }
                 }
             }
@@ -1601,6 +1675,15 @@ public:
         i = std::min(std::max(0,i),nx-1);
         j = std::min(std::max(0,j),ny-1);
         k = std::min(std::max(0,k),nz-1);
+        if(block->data[i][j][k] > 0.5f)
+        {
+            i = fi;
+            j = fj;
+            k = fz;
+            if( _A->data[i][j][k] < 0.0 ) return _x->data[i][j][k];
+            return 0.0;
+        }
+
         if( _A->data[i][j][k] < 0.0 ) return _x->data[i][j][k];
         return subcell_solver ? _A->data[i][j][k]/fmin(1.0e-6,_A->data[fi][fj][fz])*_x->data[fi][fj][fz] : 0.0;
     }
@@ -1616,7 +1699,7 @@ public:
                     if( _A->data[i][j][k] < 0.0 ) {
                         _ans->data[i][j][k] = (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i+1,j,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i-1,j,k,nx,ny,nz))/(hx);
                         _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j+1,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j-1,k,nx,ny,nz))/(hy);
-                        _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j,k+1,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j,k-1,nx,ny,nz))/(hx);
+                        _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j,k+1,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j,k-1,nx,ny,nz))/(hz);
 
                     } else {
                         _ans->data[i][j][k] = 0.0;
@@ -1701,20 +1784,20 @@ public:
     }
 
     inline float A_ref( cTMap3D *_A, int i, int j, int k,int qi, int qj, int qk,int nx, int ny, int nz) {
-        if( i<0 || i>nx-1 || j<0 || j>ny-1 ||  k<0 || k>nz-1 || _A->data[i][j][k]>0.0 ) return 0.0;
-        if( qi<0 || qi>nx-1 || qj<0 || qj>ny-1 ||  qk<0 || qk>nz-1 || _A->data[qi][qj][qk]>0.0 ) return 0.0;
+        if( i<0 || i>nx-1 || j<0 || j>ny-1 ||  k<0 || k>nz-1 || _A->data[i][j][k]>0.0 || block->data[i][j][k] > 0.5f) return 0.0;
+        if( qi<0 || qi>nx-1 || qj<0 || qj>ny-1 ||  qk<0 || qk>nz-1 || _A->data[qi][qj][qk]>0.0|| block->data[qi][qj][qk] > 0.5f ) return 0.0;
         return -1.0;
     }
 
     inline float A_diag( cTMap3D *_A, int i, int j, int k, int nx, int ny, int nz ) {
-        float diag = 4.0;
+        float diag = 8.0;
         if( _A->data[i][j][k] > 0.0 ) return diag;
         int q3[][3] = { {i-1,j,k}, {i+1,j,k}, {i,j-1,k}, {i,j+1,k} , {i,j,k-1}, {i,j,k+1} };
         for( int m=0; m<6; m++ ) {
             int qi = q3[m][0];
             int qj = q3[m][1];
             int qk = q3[m][2];
-            if( qi<0 || qi>nx-1 || qj<0 || qj>ny-1 || qk<0 || qk>nz-1 ) diag -= 1.0;
+            if( qi<0 || qi>nx-1 || qj<0 || qj>ny-1 || qk<0 || qk>nz-1 || block->data[qi][qj][qk] > 0.5f) diag -= 1.0;
             else if( _A->data[qi][qj][qk] > 0.0 && subcell ) {
                 diag -= _A->data[qi][qj][qk]/fmin(1.0e-6,_A->data[i][j][k]);
             }
@@ -1724,6 +1807,10 @@ public:
 
     inline float P_ref( cTMap3D *_P, int i, int j,int k, int nx,int ny , int nz) {
         if( i<0 || i>nx-1 || j<0 || j>ny-1 ||  k<0 || k>nz-1 ) return 0.0;
+        if(block->data[i][j][k] > 0.5f)
+        {
+            return 0.0;
+        }
         return _P->data[i][j][k];
     }
 
@@ -1732,7 +1819,7 @@ public:
     inline void buildPreconditioner( cTMap3D *_P, cTMap3D *_A, int nx, int ny, int nz ) {
         clear(_P,nx,ny,nz);
         float t = solver_mode == 2 ? 0.97 : 0.0;
-        float a = 0.25;
+        float a = 0.125;
         for( int i=0; i<nx; i++ ) {
             for( int j=0; j<ny; j++ ) {
                 for( int k=0; k<nz; k++ ) {
@@ -1751,6 +1838,11 @@ public:
                         float e = diag - square(left) - square(bottom) - square(top)- t*( mleft + mbottom+ mtop1 + mtop2 + mtop3 + mtop4 );
                         if( e < a*diag ) e = diag;
                         _P->data[i][j][k] = 1.0/sqrtf(e);
+                        if(!std::isfinite(_P->data[i][j][k]) )
+                        {
+                            std::cout << _P->data[i][j][k] << " " << e  << "  " << diag << " " << t <<  " " << left << " " << std::endl;
+
+                        }
                     }
                 }
             }
@@ -1764,7 +1856,7 @@ public:
         }
 
         clear(q2,nx,ny,nz);
-        clear(_z,nx,ny,nz);
+        //clear(_z,nx,ny,nz);
 
         // Lq = r
         for( int i=0; i<nx; i++ ) {

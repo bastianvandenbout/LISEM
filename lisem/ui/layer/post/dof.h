@@ -58,8 +58,6 @@ public:
     inline void OnDraw3DPostProcess(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
     {
 
-        std::cout << "draw postprocess FXAA" << std::endl;
-
         float matrix[16] = {
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,

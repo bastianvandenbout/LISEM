@@ -160,6 +160,7 @@ public:
         m_Context = ctx;
         if(reset)
         {
+
             m_CallStackList.clear();
 
             // Show the call stack
@@ -187,6 +188,7 @@ public:
                 m_CurrentStack = stack;
                 int stackLevel = stack;
                 asIScriptEngine *engine = ctx->GetEngine();
+
 
                 std::vector<SDTreeItem*> Roots;
                 AddScriptItemsToTree(Roots,nullptr,0,nullptr,ctx,stackLevel,engine,nullptr);
@@ -218,32 +220,51 @@ public:
         {
             QVector<void*> data_doner;
 
+            std::cout << "a1 " << std::endl;
             //get all base items
             int typeId = ctx->GetThisTypeId(stacklevel);
+
+            std::cout << "a1 " << std::endl;
             void *varPointer = ctx->GetThisPointer(stacklevel);
             if( typeId )
             {
+
+                std::cout << "a2 " << std::endl;
                 SDTreeItem * item = GetTreeItem(typeId, varPointer,ctx,stacklevel,engine, "this");
                 data_doner.push_back(varPointer);
                 Roots.push_back(item);
             }
 
+
+            std::cout << "a3 " << std::endl;
             int numVars = ctx->GetVarCount(stacklevel);
             for( int n = 0; n < numVars; n++ )
             {
+
+                std::cout << "a4 " << std::endl;
               int typeId = ctx->GetVarTypeId(n, stacklevel);
               void *varPointer = ctx->GetAddressOfVar(n, stacklevel);
+              std::cout << "a5 " << std::endl;
               QString name = QString(ctx->GetVarDeclaration(n,stacklevel));
 
 
               if( typeId )
               {
+
+
+                  std::cout << "a6 " << std::endl;
                   SDTreeItem * item = GetTreeItem(typeId, varPointer,ctx,stacklevel,engine,name);
+
+                  std::cout << "a7 " << std::endl;
+
                   data_doner.push_back(varPointer);
                   Roots.push_back(item);
 
                   if( typeId & asTYPEID_SCRIPTOBJECT )
                   {
+
+
+                      std::cout << "a8 " << std::endl;
                         AddScriptItemsToTree(Roots,item,typeId,varPointer,ctx,stacklevel,engine,&data_doner);
 
                   }
@@ -251,6 +272,9 @@ public:
               }
             }
 
+
+
+            std::cout << "a9 " << std::endl;
 
         }else {
 
@@ -296,6 +320,9 @@ public:
 
     inline SDTreeItem * GetTreeItem(int typeId,void *varPointer,asIScriptContext *ctx, int stacklevel, asIScriptEngine *engine, QString declarename)
     {
+
+
+        std::cout << "b1 " << std::endl;
         LSMScriptEngine * sphengine = (LSMScriptEngine*)(engine->GetUserData());
 
         QString name = sphengine->GetTypeName(typeId);
@@ -303,6 +330,7 @@ public:
         QString value = "{...}";
 
 
+        std::cout << "b2 " << std::endl;
 
         int typeId_l = typeId;
         asITypeInfo * info = sphengine->GetTypeInfoById(typeId);
@@ -319,6 +347,7 @@ public:
             }
         }
 
+        std::cout << "b3 " << std::endl;
         value = sphengine->GetTypeDebugValue(typeId,varPointer);
 
         if(value == "{...}")
@@ -331,84 +360,103 @@ public:
         }
 
 
-
         QVector<QVariant> data;
         data.push_back(declarename);
         data.push_back(name);
         data.push_back(value);
 
-        SDTreeItem * ret = new SDTreeItem(data,varPointer,sphengine->GetTypeDebugActions(typeId));
 
+        std::cout << "b4 " << declarename.toStdString() << "  " << name.toStdString() << " " << value.toStdString() << std::endl;
+
+
+
+        SDTreeItem * ret = new SDTreeItem(data,varPointer,sphengine->GetTypeDebugActions(typeId));
 
             if(sphengine->GetTypeIsDebugList(typeId_l))
             {
+                std::cout << "ib5"<<std::endl;
                 std::vector<int> x =  sphengine->GetTypeDebugListDims(typeId_l,varPointer);
                 int type_id_l = sphengine->GetTypeDebugListType(typeId_l,varPointer);
 
-                if(x.size() > 0)
+                std::cout << "ib6"<<std::endl;
+                if(x.size() > 0 )
                 {
-                    std::vector<int> index;
-                    std::vector<int> index_max;
-
-                    int max_listitems = std::max(2.0,std::pow(100.0,1.0/((double)(x.size()))));
-                    int n_total = 0;
-                    for(int i = 0; i < x.size(); i++)
+                    if(x.at(0) > 0)
                     {
-                        index.push_back(0);
-                        n_total = n_total * x.at(i);
-                        index_max.push_back(std::min(max_listitems-1,x.at(i)-1));
-                    }
+                        std::vector<int> index;
+                        std::vector<int> index_max;
 
-                    bool is_next = true;
-                    int n = 0;
-
-                    while(is_next)
-                    {
-                        //get element
-
-                        void * var_index = sphengine->GetTypeDebugListGet(typeId_l,varPointer,index);
-
-                        QString name_l = sphengine->GetTypeName(type_id_l);//declarename;
-
-                        for(int i = 0; i < index.size(); i++)
+                        int max_listitems = std::max(2.0,std::pow(100.0,1.0/((double)(x.size()))));
+                        int n_total = 0;
+                        for(int i = 0; i < x.size(); i++)
                         {
-                            name_l += "[" + QString::number(index.at(i)) + "]";
+                            index.push_back(0);
+                            n_total = n_total * x.at(i);
+                            index_max.push_back(std::min(max_listitems-1,x.at(i)-1));
                         }
-                        SDTreeItem * item_l = GetTreeItem(type_id_l,var_index,ctx, stacklevel, engine, name_l);
-                        ret->insertChildren(item_l);
 
-                        n++;
+                        bool is_next = true;
+                        int n = 0;
 
-                        //increment
-                        index.at(0) += 1;
+                        std::cout << "ib7"<<std::endl;
 
-                        //check if we are above bounds for all
-                        for(int i = 0; i < index.size(); i++)
+                        while(is_next)
                         {
-                            if(index.at(i) > index_max.at(i))
+                            //get element
+
+                            void * var_index = sphengine->GetTypeDebugListGet(typeId_l,varPointer,index);
+
+                            std::cout << "ib8 "<< var_index << std::endl;
+
+                            QString name_l = sphengine->GetTypeName(type_id_l);//declarename;
+
+                            for(int i = 0; i < index.size(); i++)
                             {
-                                index.at(i) = 0;
-                                if(i != index.size()-1)
+                                name_l += "[" + QString::number(index.at(i)) + "]";
+                            }
+                            std::cout << "ib9"<<std::endl;
+                            SDTreeItem * item_l = GetTreeItem(type_id_l,var_index,ctx, stacklevel, engine, name_l);
+                            ret->insertChildren(item_l);
+
+                            std::cout << "ib10" << std::endl;
+                            n++;
+
+                            //increment
+                            index.at(0) += 1;
+
+                            //check if we are above bounds for all
+                            for(int i = 0; i < index.size(); i++)
+                            {
+                                if(index.at(i) > index_max.at(i))
                                 {
-                                    index.at(i+1) += 1;
-                                }else {
-                                    //finally the last dimension reaches its final index, so break out of the while loop
-                                    is_next = false;
-                                    break;
+                                    index.at(i) = 0;
+                                    if(i != index.size()-1)
+                                    {
+                                        index.at(i+1) += 1;
+                                    }else {
+                                        //finally the last dimension reaches its final index, so break out of the while loop
+                                        is_next = false;
+                                        break;
+                                    }
                                 }
                             }
                         }
+
+                        if(n_total - n > 0)
+                        {
+                            QString name_l = sphengine->GetTypeName(type_id_l);//declarename;
+
+                            SDTreeItem * item_lrem = new SDTreeItem({"...["+ QString::number(n_total - n) + " items]",name_l,""});
+                            ret->insertChildren(item_lrem);
+                        }
                     }
 
-                    if(n_total - n > 0)
-                    {
-                        QString name_l = sphengine->GetTypeName(type_id_l);//declarename;
-
-                        SDTreeItem * item_lrem = new SDTreeItem({"...["+ QString::number(n_total - n) + " items]",name_l,""});
-                        ret->insertChildren(item_lrem);
-                    }
                 }
             }
+
+
+            std::cout << "b5 " << std::endl;
+
         return ret;
     }
 

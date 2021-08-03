@@ -46,6 +46,8 @@
 #include "widgets/mapcreatedialog.h"
 #include "widgets/vectorcreatedialog.h"
 #include "site.h"
+#include "resourcemanager.h"
+#include "extensionprovider.h"
 class MapViewTool;
 
 extern MapViewTool * CMapViewToolManager;
@@ -157,6 +159,8 @@ public:
     inline MapViewTool(  LISEMModel * m , MODELTOINTERFACE *minterface ,WorldWindow * w,QTabWidget * tabwidget, QWidget *parent = 0): QWidget( parent)
     {
 
+        SPHResourceManager *src = GetResourceManager();
+
 
         InitMapViewTool(this);
 
@@ -216,6 +220,8 @@ public:
         iconEV.addFile((m_Dir + LISEM_FOLDER_ASSETS + "addenvironment.png"), QSize(), QIcon::Normal, QIcon::Off);
         QIcon iconPC;
         iconPC.addFile((m_Dir + LISEM_FOLDER_ASSETS + "addpointcloud.png"), QSize(), QIcon::Normal, QIcon::Off);
+
+        QIcon *iconFL= src->GetIcon(src->GetDefaultIconName(LISEM_ICON_ADDFIELD));
 
         QIcon iconLoad;
         iconLoad.addFile((m_Dir + LISEM_FOLDER_ASSETS + "fileopen.png"), QSize(), QIcon::Normal, QIcon::Off);
@@ -332,6 +338,29 @@ public:
         connect(VNAct,SIGNAL(triggered(bool)), this, SLOT(OnAddVNewPressed()));
 
 
+        QToolButton *addFLButton = new QToolButton();
+        addFLButton->setIcon(*iconFL);
+        addFLButton->setIconSize(QSize(22,22));
+        addFLButton->resize(22,22);
+        addFLButton->setEnabled(true);
+
+
+        QAction * FLAAct = new QAction(tr("Add"), this);
+        FLAAct->setStatusTip(tr("Add a field to the display"));
+
+        QAction * FLNAct = new QAction(tr("New"), this);
+        FLNAct->setStatusTip(tr("Create new field"));
+
+
+        addFLButton->setPopupMode(QToolButton::MenuButtonPopup);
+        addFLButton->addAction(FLAAct);
+        addFLButton->addAction(FLNAct);
+
+
+        connect(FLAAct,SIGNAL(triggered(bool)), this, SLOT(OnAddFLPressed()));
+        connect(FLNAct,SIGNAL(triggered(bool)), this, SLOT(OnAddFLNewPressed()));
+
+
 
         QToolButton *addEVButton = new QToolButton();
         addEVButton->setIcon(iconEV);
@@ -413,6 +442,7 @@ public:
         TitleLayout->addWidget(addButton);
         TitleLayout->addWidget(addVButton);
         TitleLayout->addWidget(addPCButton);
+        TitleLayout->addWidget(addFLButton);
         TitleLayout->addWidget(addWebButton);
         TitleLayout->addWidget(addEVButton);
         TitleLayout->addWidget(CRSButton);
@@ -652,6 +682,15 @@ public:
     void AddVectorLayerFromFile(QString path)
     {
         UILayer *ml2 = m_WorldWindow->GetUIVectorLayerFromFile(path);
+        if(ml2 != nullptr)
+        {
+            m_WorldWindow->AddUILayer(ml2,true);
+        }
+    }
+
+    void AddFieldLayerFromFile(QString path)
+    {
+        UILayer *ml2 = m_WorldWindow->GetUIFieldLayerFromFile(path);
         if(ml2 != nullptr)
         {
             m_WorldWindow->AddUILayer(ml2,true);
@@ -1363,6 +1402,36 @@ public slots:
 
 
                 AddVectorLayerFromFile(path);
+            }
+        }
+
+    }
+
+    inline void OnAddFLNewPressed()
+    {
+
+
+    }
+    inline void OnAddFLPressed()
+    {
+        QString openDir = GetSite();
+
+        QString path = QFileDialog::getOpenFileName(this,
+                                            QString("Select Field"),
+                                            openDir,
+                                            GetExtensionsFileFilter(GetFieldExtensions()));
+
+        if(!path.isEmpty())
+        {
+            QFileInfo fileInfo(path);
+            if(fileInfo.exists())
+            {
+                LISEM_DEBUG("File does not exist");
+                QString filename(fileInfo.fileName());
+                QString filedir(fileInfo.dir().path());
+
+
+                AddFieldLayerFromFile(path);
             }
         }
 

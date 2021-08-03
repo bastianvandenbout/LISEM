@@ -189,7 +189,6 @@ bool WorldWindow::DrawPostProcess(GeoWindowState &s, WorldGLTransformManager * g
             int tex_loc = glad_glGetUniformLocation(m_OpenGLCLManager->m_GLProgram_CopyText->m_program,"tex");
             // bind texture
 
-            std::cout << "buffer post 1 " << s.GL_PostProcessBuffer1->GetTexture(0) << std::endl;
             glad_glUniform1i(tex_loc,0);
             glad_glActiveTexture(GL_TEXTURE0);
             glad_glBindTexture(GL_TEXTURE_2D, (s.GL_PostProcessBuffer1->GetTexture(0)));//m_2D3DRenderDTargets.at(0)->GetTexture(0));//

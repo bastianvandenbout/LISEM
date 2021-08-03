@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+
+    <link rel="shortcut icon" href="/favicon.ico?1">
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Landslide and Debris Flow runout | LISEM</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Landslide and Debris Flow runout" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This is about landslide and debris flow runout" />
+<meta property="og:description" content="This is about landslide and debris flow runout" />
+<link rel="canonical" href="http://localhost:4000/docs/landslide/" />
+<meta property="og:url" content="http://localhost:4000/docs/landslide/" />
+<meta property="og:site_name" content="LISEM" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-08-03T15:35:14+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Landslide and Debris Flow runout" />
+<script type="application/ld+json">
+{"@type":"WebPage","headline":"Landslide and Debris Flow runout","dateModified":"2021-08-03T15:35:14+02:00","datePublished":"2021-08-03T15:35:14+02:00","url":"http://localhost:4000/docs/landslide/","description":"This is about landslide and debris flow runout","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="alternate" type="application/rss+xml" title="LISEM" href="http://localhost:4000/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+            <a class="navbar-brand" href="/">
+                <span><img src="/assets/img/logonav.png" alt="Logo"></span> LISEM
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li  class="active" ><a href="/docs/home/">Docs</a></li>
+                <li ><a href="/docs/downloads/">Download</a></li>
+				<li ><a href="/docs/publications/">Publications</a></li>
+				<li ><a href="/docs/showcase/">Showcases</a></li>
+				<li ><a href="/docs/about/">About</a></li>
+				<li ><a href="/blog/2020/07/09/Alpha-Release/">Blog</a></li>
+            </ul>
+            <div class="navbar-right">
+                <form class="navbar-form navbar-left">
+                    <div class="form-group has-feedback">
+                        <input id="search-box" type="search" class="form-control" placeholder="Search...">
+                        <i class="fa fa-search form-control-feedback"></i>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/bastianvandenbout/LISEM"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+				<ul class="nav navbar-nav">
+                    <li><a href="https://www.youtube.com/channel/UC98LY1gnu1GdOQ0X2GN0zxA"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <div class="container">
+    <div class="row">
+	<p class="text-center">
+                &nbsp;
+				&nbsp;
+				&nbsp;
+              </p>
+			  
+        <div class="col-md-4">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+            Getting Started
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-1" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/gettingstarted/">Getting Started</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/mapviewer/">Mapviewer</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/datamanipulation/">Data Manipulation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingscripting/">Scripting</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingpython/">Using with Python</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/usingmodel/">Using the model</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
+            Examples
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-2" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/elevationdata/">Elevation data</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/interpolation/">Interpolation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/warping/">Warping</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/distances/">Distances</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/classification/">Classification</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/segmentation/">Segmentation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/filters/">Filters</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/soils/">Soils</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/calibration/">Calibration</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/webdata/">Web Data</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/dynamicmodels/">Dynamic Models</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/gpu/">GPU</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+            LISEM hazard model
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse" id="collapse-3" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/studysite/">Study Site Preparation</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/hydrology/">Hydrology</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/flooding/">Flooding</a>
+          
+            
+            
+            <a class="list-group-item " href="/docs/slopefailure/">SlopeFailure</a>
+          
+            
+            
+            <a class="list-group-item active" href="/docs/landslide/">Landslide and Debris Flow runout</a>
+          
+        </div>
+      </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
+            Lisem Classic
+          </a>
+        </h4>
+      </div>
+      
+      
+      <div class="panel-collapse collapse" id="collapse-4" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          
+            
+            
+            <a class="list-group-item " href="/docs/lisemclassic/">Lisem Classic</a>
+          
+        </div>
+      </div>
+    </div>
+  
+</div>
+
+        </div>
+
+        <div class="col-md-8">
+            <h1>Landslide and Debris Flow runout</h1>
+            <div id="markdown-content-container"><p>This is about landslide and debris flow runout</p>
+
+<h2 id="simple-runout-modelling-with-lisem">Simple runout modelling with LISEM</h2>
+<p>A simple runout modelling can be performed without the need for modelling slope stability, hydrology or slope failure.
+This works very similar to a simple flood setup. 
+The required data is elevation, mannings N and the initial material for the flow simulation.
+Because this consists of a mixture of water and solids, both initial water height, initial solid height, solid internal friction angle, solid density and solid rocksize are required.</p>
+
+<h3 id="initial-conditions">Initial Conditions</h3>
+<p>The initial condition maps can be downloaded below:</p>
+
+<ul>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/dem.map/download">Elevation</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/n.map/download">Mannings N</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialfh.map/download">Initial Water Height</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialsh.map/download">Initial Solid Height</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialscohesion.map/download">Initial Solid Cohesion</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialsifa.map/download">Initial Solid Internal Friction Angle</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialsd.map/download">Initial Solid Density</a></li>
+  <li><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/GrandBay/initialsrocksize.map/download">Initial Solid Rocksize</a></li>
+</ul>
+
+<h3 id="ready-set-go">Ready, Set, Go!</h3>
+<p>Set the initial water and initial solids in the processes.
+<img src="/assets/img/model_processes4.png" alt="Model" /></p>
+
+<p>After providing the input maps, you can run the simulation for the mass movement runout!</p>
+
+<p><img src="/assets/img/model_runout.png" alt="Model" /></p>
+
+<h2 id="modelling-of-runout-of-simulated-slope-failures">Modelling of runout of simulated slope failures</h2>
+
+<p>If you want to simulate runout after hydrology-induced slope failures, select the slope failure option in the processes.
+This requires a full hydrology and slope stability simulation, but will automatically predict failure volumes and initiate runout.
+Interactions with water flow (rivers or lakes) is also automatically taken into account.
+Note that the presence of a channel influences runout, as material often deposits in the channel, resulting in additional flooding.</p>
+</div>
+            <div style="clear:both;">
+              <p class="text-center">
+                <br />
+                <a target="_blank" href="https://github.com/bastianvandenbout/LISEM/discussions" class="btn btn-default" role="button">
+                  <i class="fa fa-pencil fa-lg"></i> Ask a question
+                </a>
+              </p>
+            </div>
+            <hr>
+            
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/docs/slopefailure/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
+
+      
+        
+        
+        <li class="next">
+          <a href="/docs/lisemclassic/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+      </ul>
+    <div class="clear"></div>
+    
+
+        </div>
+
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="container">
+
+        <p class="text-center">
+            LISEM 2021 |
+            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University
+        </p>
+        <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+    </div>
+</footer>
+
+    <script>
+  var baseurl = ''
+</script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="/assets/js/bootstrap.min.js "></script>
+<script src="/assets/js/typeahead.bundle.min.js "></script>
+
+<script src="/assets/js/main.js "></script>
+
+</body>
+
+</html>

@@ -55,7 +55,7 @@ public:
     char interpMethd = 1;
     char do_redistance = 1;
     char do_volumeCorrection = 1;
-    char solver_mode = 0;
+    char solver_mode = 2;
     float maxdist = DIST;
     float volume0 = 0.0;
     float y_volume0 = 0.0;
@@ -102,6 +102,8 @@ public:
     cTMap *ux_swap = NULL;
     cTMap *uy_swap = NULL;
     cTMap *block = NULL;
+    cTMap *blocku = NULL;
+    cTMap *blockv = NULL;
     struct gridComparison{
         bool operator () ( grid * left, grid * right){
             return fabs(left->dist) > fabs(right->dist);
@@ -155,6 +157,8 @@ public:
         tmp = CreateMap(rows+1,cols+1);
         P = CreateMap(rows+1,cols+1);
         block = CreateMap(rows+1,cols+1);
+        blocku = CreateMap(rows+1,cols+1);
+        blockv = CreateMap(rows+1,cols+1);
         ux1 = CreateMap(rows+1,cols+1);
         ux2 = CreateMap(rows+1,cols+1);
         uy1 = CreateMap(rows+1,cols+1);
@@ -178,7 +182,7 @@ public:
         y_volume0 = 0.0;
     }
 
-    inline void InitializeFromData(cTMap * FH, cTMap * FUx, cTMap * FUy, cTMap * Fp, cTMap * LevelSet, cTMap * blk)
+    inline void InitializeFromData(cTMap * FH, cTMap * FUx, cTMap * FUy, cTMap * Fp, cTMap * LevelSet, cTMap * blk, cTMap * blkux, cTMap * blkuy)
     {
 
         bool has_levelset = false;
@@ -234,6 +238,8 @@ public:
                 ux->data[i][j] = FUx->data[j][i];
                 uy->data[i][j] = FUy->data[j][i];
                 block->data[i][j] = blk->data[j][i];
+                blocku->data[i][j] = blkux->data[j][i];
+                blockv->data[i][j] = blkuy->data[j][i];
             }
         }
 
@@ -327,7 +333,6 @@ public:
             }
         }
 
-        std::cout << "volume " <<volume*0.5 << std::endl;
         return volume*0.5;
     }
 
@@ -776,6 +781,9 @@ int n = 0; int n2 = 0;
         delete s; s = nullptr;
         delete r2; r2 = nullptr;
         delete tmp; tmp = nullptr;
+        delete block; block = nullptr;
+        delete blocku; blocku = nullptr;
+        delete blockv; blockv = nullptr;
         free2D(grids);
     }
 
@@ -898,12 +906,12 @@ int n = 0; int n2 = 0;
             }else {
                 if(block->data[i+1][j] > 0.5f)
                 {
-                    ux->data[i][j] = std::min(0.0f,ux->data[i][j]);
+                    ux->data[i][j] = std::min(blocku->data[i+1][j],ux->data[i][j]);
 
                 }
                 if(block->data[i-1][j] > 0.5f)
                 {
-                    ux->data[i][j] = std::max(0.0f,ux->data[i][j]);
+                    ux->data[i][j] = std::max(blocku->data[i-1][j],ux->data[i][j]);
 
                 }
                 if(block->data[i][j] > 0.5f)
@@ -926,12 +934,12 @@ int n = 0; int n2 = 0;
             }else {
                 if(block->data[i][j+1] > 0.5f)
                 {
-                    uy->data[i][j] = std::min(0.0f,uy->data[i][j]);
+                    uy->data[i][j] = std::min(blockv->data[i][j+1],uy->data[i][j]);
 
                 }
                 if(block->data[i][j-1] > 0.5f)
                 {
-                    uy->data[i][j] = std::max(0.0f,uy->data[i][j]);
+                    uy->data[i][j] = std::max(blockv->data[i][j-1],uy->data[i][j]);
 
                 }
                 if(block->data[i][j] > 0.5f)
@@ -1264,6 +1272,8 @@ int n = 0; int n2 = 0;
                     float e = diag - square(left) - square(bottom) - t*( mleft + mbottom );
                     if( e < a*diag ) e = diag;
                     _P->data[i][j] = 1.0/sqrtf(e);
+                    //std::cout << _P->data[i][j] << " " << e  << "  " << diag << " " << t <<  " " << left << " " << std::endl;
+
                 }
             }
         }

@@ -170,7 +170,7 @@ public:
      void CalculateTangents();
      void SetAsEllipsoidTruncated(f32 radiusH, f32 radiusV, f32 Ylow, f32 Yhigh, f32 offset, unsigned int polyCountX, unsigned int polyCountY);
 
-     void SetAsCube(LSMVector3 size = LSMVector3(1.0,1.0,1.0));
+     void SetAsCube(LSMVector3 size = LSMVector3(1.0,1.0,1.0), LSMVector3 center = LSMVector3(0.0,0.0,0.0));
 
 
      void SetAsCone(float radius_top, float radius_low, float length, unsigned int tesselation);

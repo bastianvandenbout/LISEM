@@ -118,6 +118,8 @@ inline LISEM_API int Polygonise(GRIDCELL grid,double isolevel,TRIANGLE *triangle
 
 }
 
+#include "geo/raster/field.h"
+
 inline LISEM_API ModelGeometry * MarchingCubes(std::vector<cTMap*> data, float z_top, float dz, float value)
 {
 
@@ -187,15 +189,19 @@ inline LISEM_API ModelGeometry * MarchingCubes(std::vector<cTMap*> data, float z
                     LSMVector3 v1 = triangles[k].p[1];
                     LSMVector3 v2 = triangles[k].p[2];
 
+                    v0 = LSMVector3(v0.x,v0.z,v0.y);
+                    v1 = LSMVector3(v1.x,v1.z,v1.y);
+                    v2 = LSMVector3(v2.x,v2.z,v2.y);
+
                     LSMVector3 normal = LSMVector3::CrossProduct(v1-v0,v2-v0).Normalize();
 
-                    Vertex ve0; ve0.setPosition(v0);ve0.setNormal(normal);
-                    Vertex ve1; ve1.setPosition(v1);ve1.setNormal(normal);
-                    Vertex ve2; ve2.setPosition(v2);ve2.setNormal(normal);
+                    Vertex ve0; ve0.setPosition(v0);ve0.setNormal(normal);ve0.setUV(LSMVector2(0.0,0.0));
+                    Vertex ve1; ve1.setPosition(v1);ve1.setNormal(normal);ve1.setUV(LSMVector2(1.0,0.0));
+                    Vertex ve2; ve2.setPosition(v2);ve2.setNormal(normal);ve2.setUV(LSMVector2(0.0,1.0));
 
                     g_vertex.push_back(ve0);
                     g_vertex.push_back(ve1);
-                    g_vertex.push_back(ve1);
+                    g_vertex.push_back(ve2);
                     g_indices.push_back(index +0);
                     g_indices.push_back(index +1);
                     g_indices.push_back(index +2);
@@ -212,6 +218,12 @@ inline LISEM_API ModelGeometry * MarchingCubes(std::vector<cTMap*> data, float z
 }
 
 
+
+inline LISEM_API ModelGeometry * MarchingCubesF(Field * f, float value)
+{
+    return MarchingCubes(f->GetMapList(),f->GetBottom(),f->cellSizeZ(),value);
+
+}
 
 
 

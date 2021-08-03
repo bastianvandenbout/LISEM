@@ -430,6 +430,15 @@ public:
         }
     }
 
+    inline int GetVertexCount()
+    {
+        int count = 0;
+        for(int i = 0; i < meshes.size();i++)
+        {
+            count += meshes.at(i).GetVertexCount();
+        }
+        return count;
+    }
     inline int GetMeshCount()
     {
 

@@ -119,7 +119,71 @@ public:
         m_dz = 1.0;
 
     }
+    inline float GetWest()
+    {
+        if(m_Maps.size() > 0)
+        {
+            return m_Maps.at(0)->west();
+        }else
+        {
+            return 0.0;
+        }
+    }
 
+    inline float ValueAt(int l, int r, int c)
+    {
+        return m_Maps.at(l)->data[r][c];
+    }
+
+    inline float GetSizeX()
+    {
+        if(m_Maps.size() > 0)
+        {
+            return m_Maps.at(0)->cellSizeX() * ((float)(m_Maps.at(0)->nrCols()));
+        }else
+        {
+            return 0.0;
+        }
+
+    }
+    inline float GetSizeY()
+    {
+
+        if(m_Maps.size() > 0)
+        {
+            return m_Maps.at(0)->cellSizeY() * ((float)(m_Maps.at(0)->nrRows()));
+        }else
+        {
+            return 0.0;
+        }
+    }
+    inline float GetSizeZ()
+    {
+
+        return this->m_dz * ((float)(m_Maps.size()));
+
+    }
+
+    inline float GetNorth()
+    {
+        if(m_Maps.size() > 0)
+        {
+            return m_Maps.at(0)->north();
+        }else
+        {
+            return 0.0;
+        }
+    }
+    inline float GetBottom()
+    {
+        return m_ZStart;
+
+    }
+
+    inline float cellSizeZ()
+    {
+        return m_dz;
+    }
     inline cTMap * at(int i)
     {
         return m_Maps.at(i);
@@ -151,6 +215,39 @@ public:
         }
 
         return 0;
+    }
+
+    inline void GetMinMax(float * mini, float *maxi, float * avgi)
+    {
+        float min = 1e31;
+        float max = -1e31;
+        double avg = 0.0;
+        double avgn = 0.0;
+        for(int i = 0; i < m_Maps.size(); i++)
+        {
+            for(int r = 0; r < m_Maps.at(i)->nrRows(); r++)
+            {
+                for(int c = 0; c < m_Maps.at(i)->nrCols(); c++)
+                {
+                    if(!pcr::isMV(m_Maps.at(i)->data[r][c]))
+                    {
+                        min = std::min(m_Maps.at(i)->data[r][c],min);
+                        max = std::max(m_Maps.at(i)->data[r][c],max);
+                        avg +=m_Maps.at(i)->data[r][c];
+                        avgn += 1.0;
+                    }
+
+                }
+            }
+        }
+
+        if(avgn > 0.5)
+        {
+            avg = avg/avgn;
+        }
+        *mini = min;
+        *maxi = max;
+        *avgi = avg;
     }
 
 
@@ -330,5 +427,19 @@ inline static Field * FieldFromMapList(std::vector<cTMap *> maps, float z_start,
 
     return f;
 }
+
+inline static std::vector<cTMap *> MapListFromField(Field * f)
+{
+    std::vector<cTMap*> ret;
+    std::vector<cTMap*> ml = f->GetMapList();
+
+    for(int i = 0; i < ml.size(); i++)
+    {
+        ret.push_back(ml.at(i)->GetCopy());
+    }
+
+    return ret;
+}
+
 
 #endif // FIELD_H

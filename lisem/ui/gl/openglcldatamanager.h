@@ -24,6 +24,7 @@ LISEM_API extern OpenGLProgram * GLProgram_uiterrainlayer;
 LISEM_API extern OpenGLProgram * GLProgram_uiocean;
 LISEM_API extern OpenGLProgram * GLProgram_uiobject;
 LISEM_API extern OpenGLProgram * GLProgram_uiobjectinstanced;
+LISEM_API extern OpenGLProgram * GLProgram_uifield;
 
 LISEM_API extern QString KernelDir;
 LISEM_API extern QString AssetDir;
@@ -35,6 +36,7 @@ inline static void InitUIShaders(OpenGLCLManager * m)
 
 
     GLProgram_uimap = m->GetMGLProgram(KernelDir+ "UIMapDraw.vert", KernelDir+ "UIMapDraw.frag");
+    GLProgram_uifield = m->GetMGLProgram(KernelDir+ "UIFieldDraw.vert", KernelDir+ "UIFieldDraw.frag");
     GLProgram_uiobject = m->GetMGLProgram(KernelDir+ "UIObjectDraw.vert", KernelDir+ "UIObjectDraw.frag");
     GLProgram_uiobjectinstanced = m->GetMGLProgram(KernelDir+ "UIObjectDrawInstanced.vert", KernelDir+ "UIObjectDrawInstanced.frag");
     GLProgram_uiduomap = m->GetMGLProgram(KernelDir+ "UIDuoMapDraw.vert", KernelDir+ "UIDuoMapDraw.frag");
@@ -58,6 +60,7 @@ inline static void DestroyUIShaders(OpenGLCLManager * m)
 
 
     SAFE_DELETE(GLProgram_uimap);
+    SAFE_DELETE(GLProgram_uifield);
     SAFE_DELETE(GLProgram_uiobject);
     SAFE_DELETE(GLProgram_uiobjectinstanced);
     SAFE_DELETE(GLProgram_uiduomap);

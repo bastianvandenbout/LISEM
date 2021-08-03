@@ -39,7 +39,7 @@ engine->RegisterGlobalFunction("array<Map> @funcname(const array<Map> &in A, con
 #include "error.h"
 #include "geo/raster/map.h"
 #include "linear/lsm_vector2.h"
-
+#include "geo/raster/field.h"
 
 //type conversion function
 template <typename From, typename tot>
@@ -96,6 +96,14 @@ std::vector<cTMap*> asbind_convert<CScriptArray*, std::vector<cTMap*>>(CScriptAr
 }
 
 template <>
+std::vector<Field*> asbind_convert<CScriptArray*, std::vector<Field*>>(CScriptArray* x)
+{
+    std::vector<Field*> ret = x->ToSTDList<Field*>();
+    return ret;
+
+}
+
+template <>
 CScriptArray* asbind_convert< std::vector<cTMap*>,CScriptArray*>(std::vector<cTMap*> x)
 {
     // Obtain a pointer to the engine
@@ -117,6 +125,28 @@ CScriptArray* asbind_convert< std::vector<cTMap*>,CScriptArray*>(std::vector<cTM
     return array;
 }
 
+
+template <>
+CScriptArray* asbind_convert< std::vector<Field*>,CScriptArray*>(std::vector<Field*> x)
+{
+    // Obtain a pointer to the engine
+    asIScriptContext *ctx = asGetActiveContext();
+    asIScriptEngine *engine = ctx->GetEngine();
+
+    // TODO: This should only be done once
+    // TODO: This assumes that CScriptArray was already registered
+    asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<Field>");
+
+    // Create the array object
+    CScriptArray *array = CScriptArray::Create(arrayType);
+    array->Resize(x.size());
+    for(int i = 0; i < x.size(); i++)
+    {
+        array->SetValue(i,x.at(i),false);
+    }
+
+    return array;
+}
 
 
 
@@ -419,6 +449,22 @@ public:
 };
 
 template<>
+class asbindc_convert<CScriptArray*,std::vector<Field*>>
+{
+
+public:
+
+    inline static std::vector<Field*> asbind_convert(CScriptArray* x)
+    {
+        std::vector<Field*> ret = x->ToSTDList<Field*>();
+        return ret;
+
+    }
+};
+
+
+
+template<>
 class asbindc_convert<std::vector<cTMap*>,CScriptArray*>
 {
 
@@ -445,6 +491,37 @@ public:
         return array;
     }
 };
+
+
+template<>
+class asbindc_convert<std::vector<Field*>,CScriptArray*>
+{
+
+public:
+
+    inline static CScriptArray* asbind_convert(std::vector<Field*> x)
+    {
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        asIScriptEngine *engine = ctx->GetEngine();
+
+        // TODO: This should only be done once
+        // TODO: This assumes that CScriptArray was already registered
+        asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<Field>");
+
+        // Create the array object
+        CScriptArray *array = CScriptArray::Create(arrayType);
+        array->Resize(x.size());
+        for(int i = 0; i < x.size(); i++)
+        {
+            array->SetValue(i,x.at(i),false);
+        }
+
+        return array;
+    }
+};
+
+
 
 template<>
 class asbindc_convert<std::vector<std::vector<float>>,CScriptArray*>

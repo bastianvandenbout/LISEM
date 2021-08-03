@@ -1128,7 +1128,7 @@ inline BoundingBox AS_GetClassExtent(cTMap * Other, int mclass)
 
             if(!pcr::isMV(Other->data[ro][co]))
             {
-                if(((int)Other->data[ro][co]+0.5f) == mclass)
+                if(((int)(Other->data[ro][co]+0.5f)) == mclass)
                 {
                     if(!found)
                     {
