@@ -31,7 +31,7 @@
 // # along with this program; if not, write to the Free Software
 // # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA 
 #include <mpi.h>
-
+#include "defines.h"
 #include <iostream>
 #include <sstream>
 #include <cstdio>
@@ -74,7 +74,7 @@ void SeisFilter::computeSOS(double dt)
   CHECK_INPUT( m_dt > 0., "Filter::computeSOS: non-positive time step!");
   
 // separation in angle between poles in prototype filter
-  double dAlpha = M_PI/m_poles;
+  double dAlpha = LISEM_PI/m_poles;
   
 // odd or even order?
   if (2*(m_poles/2) == m_poles)
@@ -103,11 +103,11 @@ void SeisFilter::computeSOS(double dt)
     }    
     m_SOSp.push_back(sos1_ptr);
     
-    alpha0= M_PI - dAlpha;	
+    alpha0= LISEM_PI - dAlpha;
   }
   else
   {
-    alpha0=M_PI - 0.5*dAlpha;
+    alpha0=LISEM_PI - 0.5*dAlpha;
   }
   for (int q=0; q<m_complex_pairs; q++)
   {
@@ -161,8 +161,8 @@ ostream& operator<<( ostream& output, const SeisFilter& s )
 double SeisFilter::realPoleBP(double f1, double f2, double dt, SecondOrderSection *&sos_ptr)
 {
 // pre-warp the corner frequencies
-  double om1 = tan(M_PI*dt*f1);
-  double om2 = tan(M_PI*dt*f2);
+  double om1 = tan(LISEM_PI*dt*f1);
+  double om2 = tan(LISEM_PI*dt*f2);
 
 //  printf("RP_BP: Input corner frequencies f1=%e, f2=%e, pre-warped om1=%e, om2=%e, time step=%e\n", 
 //	 f1, f2, om1, om2, dt);
@@ -211,7 +211,7 @@ double SeisFilter::realPoleBP(double f1, double f2, double dt, SecondOrderSectio
 double SeisFilter::realPoleLP(double fc, double dt, SecondOrderSection *&sos_ptr)
 {
 // pre-warp the corner frequency
-  double omc = tan(M_PI*dt*fc);
+  double omc = tan(LISEM_PI*dt*fc);
 
 //  printf("RP_LP: Input corner frequency fc=%e, pre-warped omc=%e, time step=%e\n", 
 //	 fc, omc, dt);
@@ -267,7 +267,7 @@ double SeisFilter::complexConjugatedPolesBP(double f1, double f2, double dt, dou
 //         a2(1:3): denominator coefficients with a2(1)=1, SOS 2
 //
 // return min_pole_re: decay rate estimate
-  CHECK_INPUT(alpha < M_PI && alpha > M_PI/2, "pole angle alpha = " << alpha << " out of range");
+  CHECK_INPUT(alpha < LISEM_PI && alpha > LISEM_PI/2, "pole angle alpha = " << alpha << " out of range");
 
   double pole_min_re=0.;
 
@@ -275,8 +275,8 @@ double SeisFilter::complexConjugatedPolesBP(double f1, double f2, double dt, dou
   complex<double> iu(0.,1.);
 
 //pre-warp the corner frequencies
-  double om1 = tan(M_PI*dt*f1);
-  double om2 = tan(M_PI*dt*f2);
+  double om1 = tan(LISEM_PI*dt*f1);
+  double om2 = tan(LISEM_PI*dt*f2);
 
 //  printf("CCP_BP: Input corner frequencies f1=%e, f2=%e, pre-warped om1=%e, om2=%e, time step=%e\n", 
 //	 f1, f2, om1, om2,dt);
@@ -366,12 +366,12 @@ double SeisFilter::complexConjugatedPolesLP(double fc, double dt, double alpha,
 //        sos_ptr: pointer to a new Second order section
 //
 // return min_pole_re: decay rate estimate
-  CHECK_INPUT(alpha < M_PI && alpha > M_PI/2, "pole angle alpha = " << alpha << " out of range");
+  CHECK_INPUT(alpha < LISEM_PI && alpha > LISEM_PI/2, "pole angle alpha = " << alpha << " out of range");
 
   double pole_min_re=0.;
 
 //pre-warp the corner frequencies
-  double omc = tan(M_PI*dt*fc);
+  double omc = tan(LISEM_PI*dt*fc);
 
 //  printf("CCP_LP: Input corner frequency fc=%e, pre-warped omc=%e, time step=%e\n", 
 //	 fc, omc, dt);

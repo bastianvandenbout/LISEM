@@ -8,6 +8,7 @@
 #include "geo/raster/field.h"
 #include "field/fieldtrigonometric.h"
 #include "field/fieldmath.h"
+#include "raster/rasterflow.h"
 
 inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
 {
@@ -152,6 +153,8 @@ inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Field @SetMV(const Field &in s)", asFUNCTION( AS_Fieldsetmv),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Field @IsMV(const Field &in s)", asFUNCTION( AS_Fieldismv),  asCALL_CDECL); assert( r >= 0 );
 
+
+    r = engine->RegisterGlobalSTDFunction("Field @FieldMaskDem(Field &in f, const Map &in elevation, float value)", GetFuncConvert( AS_FieldMaskDem));
 
 
 }

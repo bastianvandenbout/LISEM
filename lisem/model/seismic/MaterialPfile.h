@@ -38,8 +38,6 @@
 
 class EW;
 
-using namespace std;
-
 class MaterialPfile : public MaterialData
 {
  public:
@@ -99,7 +97,7 @@ class MaterialPfile : public MaterialData
    Sarray mZ, mVp, mVs, mRho, mQp, mQs;
    
    double  m_vpmin, m_vsmin, m_rhomin;
-   string m_model_file, m_model_dir, m_model_name;
+   std::string m_model_file, m_model_dir, m_model_name;
    bool m_qf;
 
    double m_latmin, m_latmax, m_lonmin, m_lonmax, m_depthmin, m_depthmax;

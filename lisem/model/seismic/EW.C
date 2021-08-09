@@ -30,7 +30,7 @@
 // # along with this program; if not, write to the Free Software
 // # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA 
 #include "mpi.h"
-
+#include "defines.h"
 #include "EW.h"
 
 #include <cstring>
@@ -261,8 +261,8 @@ using namespace std;
 #define SQR(x) ((x)*(x))
 
 // constructor
-EW::EW(const string& fileName, vector<Source*> & a_GlobalSources,
-       vector<TimeSeries*> & a_GlobalTimeSeries, bool a_invproblem ): 
+EW::EW(std::stringstream &fileName, vector<Source*> & a_GlobalSources,
+       vector<STimeSeries*> & a_GlobalTimeSeries, bool a_invproblem ):
   m_epi_lat(0.0), m_epi_lon(0.0), m_epi_depth(0.0), m_epi_t0(0.0),
   m_topo_zmax(0.0),
   m_topoInputStyle(UNDEFINED), 
@@ -272,7 +272,6 @@ EW::EW(const string& fileName, vector<Source*> & a_GlobalSources,
   mIsInitialized(false),
   mParsingSuccessful(false),
   mNumberOfGrids(0),
-  mName(fileName),
   m_scenario(" "),
   mPath("./"),
   mObsPath("./"),
@@ -435,6 +434,8 @@ EW::EW(const string& fileName, vector<Source*> & a_GlobalSources,
   m_anisotropic(false),
   NO_TOPO(1e38)
 {
+
+   mName << fileName.rdbuf();
   
    MPI_Comm_rank(MPI_COMM_WORLD, &m_myRank);
    MPI_Comm_size(MPI_COMM_WORLD, &m_nProcs);
@@ -849,7 +850,7 @@ void EW::computeCartesianCoord(double &x, double &y, double lon, double lat)
   if( m_geoproj == 0 )
    //  // compute x and y
   {
-     double deg2rad = M_PI/180.0;
+     double deg2rad = LISEM_PI/180.0;
      double phi = mGeoAz * deg2rad;
      //     x = mMetersPerDegree*(cos(phi)*(lat-mLatOrigin) + cos(lat*deg2rad)*(lon-mLonOrigin)*sin(phi));
      //     y = mMetersPerDegree*(-sin(phi)*(lat-mLatOrigin) + cos(lat*deg2rad)*(lon-mLonOrigin)*cos(phi));
@@ -885,7 +886,7 @@ void EW::computeGeographicCoord(double x, double y, double & longitude, double &
   // conversion factor between degrees and radians
    if( m_geoproj == 0 )
    {
-      double deg2rad = M_PI/180.0;
+      double deg2rad = LISEM_PI/180.0;
       double phi = mGeoAz * deg2rad;
       // Compute the latitude
       latitude = mLatOrigin + 
@@ -1141,9 +1142,9 @@ void EW::getGlobalBoundingBox(double bbox[6])
 }
 
 //-----------------------------------------------------------------------
-void EW::setGMTOutput(string filename, string wppfilename)
+void EW::setGMTOutput(string filename, std::stringstream &wppfilename)
 {
-  mGMTFileName = filename;
+  mGMTFileName = "LISEM_SW4";
   mWriteGMTOutput = true;
 
 //  mWPPFileName = wppfilename;
@@ -1301,15 +1302,20 @@ void EW::saveGMTFile( vector<Source*> & a_GlobalUniqueSources )
       stationstr << "cat << EOF >! stations.d " << endl;
       // Write stations by rereading the WPP input file, since some might
       // live outside the grid...
-      ifstream sw4InputFile(mName.c_str());
-      if (!sw4InputFile.is_open())
-         contents << "# Error re-opening input file, skipping stations" << endl;
-      else
+      stringstream sw4InputFile; sw4InputFile << mName.rdbuf();
+
+
+      //if (!sw4InputFile.is_open())
+      //   contents << "# Error re-opening input file, skipping stations" << endl;
+      //else
       {
          char buffer[256];
          while (!sw4InputFile.eof())
          { 
             sw4InputFile.getline(buffer, 256);
+
+            std::cout << "sw4 file line: " <<  buffer << std::endl;
+
             if (startswith("rec", buffer) || startswith("sac", buffer))
             {
                numStations += 1;
@@ -1405,7 +1411,7 @@ void EW::saveGMTFile( vector<Source*> & a_GlobalUniqueSources )
       // Only write station info if there are stations.
       if (numStations > 0) contents << stationstr.str() << endl;
 
-      contents << "/bin/mv plot.ps " << mName << ".ps" << endl;
+      contents << "/bin/mv plot.ps " << "LISEM_SW4" << ".ps" << endl;
 
       stringstream filename;
       filename << mPath << mGMTFileName;
@@ -2278,7 +2284,7 @@ double EW::C6SmoothBump_x_T_Integral(double t, double R, double alpha, double be
 double EW::Gaussian(double t, double R, double c, double f )
 {
   double temp = R;
-  temp = 1 /(f* sqrt(2*M_PI))*exp(-pow(t-R/c,2) / (2*f*f));
+  temp = 1 /(f* sqrt(2*LISEM_PI))*exp(-pow(t-R/c,2) / (2*f*f));
   return temp;
 }
 
@@ -2286,7 +2292,7 @@ double EW::Gaussian(double t, double R, double c, double f )
 double EW::d_Gaussian_dt(double t, double R, double c, double f)
 {
   double temp = R;
-  temp = 1 /(f* sqrt(2*M_PI))*(-exp(-pow(t-R/c,2)/(2*f*f))*(t-R/c))/pow(f,2);
+  temp = 1 /(f* sqrt(2*LISEM_PI))*(-exp(-pow(t-R/c,2)/(2*f*f))*(t-R/c))/pow(f,2);
   return temp;
 }
 
@@ -2295,10 +2301,10 @@ double EW::Gaussian_x_T_Integral(double t, double R, double f, double alpha, dou
 {
   double temp = R;
   temp = -0.5*t*(erf( (t-R/beta)/(sqrt(2.0)*f))     - erf( (t-R/alpha)/(sqrt(2.0)*f)) ) -
-     f/sqrt(2*M_PI)*( exp(-pow(t-R/beta,2)/(2*f*f) ) - exp( -pow(t-R/alpha,2)/(2*f*f) )  ) ;
-     //  temp = 1/(f*sqrt(2*M_PI))*( f*f*(-exp(-pow(t-R/beta,2)/(2*f*f))+exp(-pow(t-R/alpha,2)/(2*f*f)) ) +
-     //	     t*0.5*sqrt(M_PI*2)*f*( erf((t-R/alpha)/(sqrt(2.0)*f)) - erf((t-R/beta)/(sqrt(2.0)*f)) ) );
-  //  temp = 1 /(f*sqrt(2*M_PI))*(f*( (-exp(-pow(t-R / alpha,2)/pow(f,2)) + exp(-pow(t-R / beta,2)/pow(f,2)) )*f + sqrt(M_PI)*t*(-erf((t-R / alpha) / f) + erf(R / beta / f))))/2.;
+     f/sqrt(2*LISEM_PI)*( exp(-pow(t-R/beta,2)/(2*f*f) ) - exp( -pow(t-R/alpha,2)/(2*f*f) )  ) ;
+     //  temp = 1/(f*sqrt(2*LISEM_PI))*( f*f*(-exp(-pow(t-R/beta,2)/(2*f*f))+exp(-pow(t-R/alpha,2)/(2*f*f)) ) +
+     //	     t*0.5*sqrt(LISEM_PI*2)*f*( erf((t-R/alpha)/(sqrt(2.0)*f)) - erf((t-R/beta)/(sqrt(2.0)*f)) ) );
+  //  temp = 1 /(f*sqrt(2*LISEM_PI))*(f*( (-exp(-pow(t-R / alpha,2)/pow(f,2)) + exp(-pow(t-R / beta,2)/pow(f,2)) )*f + sqrt(LISEM_PI)*t*(-erf((t-R / alpha) / f) + erf(R / beta / f))))/2.;
   return temp;
 }
 
@@ -2408,34 +2414,34 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		  if (tD == iSmoothWave)
 		  {
 		     A = ( 1/pow(alpha,2) * SmoothWave(time, fr*R, alpha) - 1/pow(beta,2) * SmoothWave(time, fr*R, beta) +
-			   3/pow(fr*R,2) * SmoothWave_x_T_Integral(time, fr*R, alpha, beta) ) / (4*M_PI*rho*R*R*R)  ;
+               3/pow(fr*R,2) * SmoothWave_x_T_Integral(time, fr*R, alpha, beta) ) / (4*LISEM_PI*rho*R*R*R)  ;
 	  
 		     B = ( 1/pow(beta,2) * SmoothWave(time, fr*R, beta) -
-			   1/pow(fr*R,2) * SmoothWave_x_T_Integral(time, fr*R, alpha, beta) ) / (4*M_PI*rho*R) ;
+               1/pow(fr*R,2) * SmoothWave_x_T_Integral(time, fr*R, alpha, beta) ) / (4*LISEM_PI*rho*R) ;
 		  }
 		  else if (tD == iVerySmoothBump)
 		  {
 		     A = ( 1/pow(alpha,2) * VerySmoothBump(time, fr*R, alpha) - 1/pow(beta,2) * VerySmoothBump(time, fr*R, beta) +
-			   3/pow(fr*R,2) * VerySmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*M_PI*rho*R*R*R)  ;
+               3/pow(fr*R,2) * VerySmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*LISEM_PI*rho*R*R*R)  ;
 		     
 		     B = ( 1/pow(beta,2) * VerySmoothBump(time, fr*R, beta) -
-			   1/pow(fr*R,2) * VerySmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*M_PI*rho*R) ;
+               1/pow(fr*R,2) * VerySmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*LISEM_PI*rho*R) ;
 		  }
 		  else if (tD == iC6SmoothBump)
 		  {
 		     A = ( 1/pow(alpha,2) * C6SmoothBump(time, fr*R, alpha) - 1/pow(beta,2) * C6SmoothBump(time, fr*R, beta) +
-			   3/pow(fr*R,2) * C6SmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*M_PI*rho*R*R*R)  ;
+               3/pow(fr*R,2) * C6SmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*LISEM_PI*rho*R*R*R)  ;
 		     
 		     B = ( 1/pow(beta,2) * C6SmoothBump(time, fr*R, beta) -
-			   1/pow(fr*R,2) * C6SmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*M_PI*rho*R) ;
+               1/pow(fr*R,2) * C6SmoothBump_x_T_Integral(time, fr*R, alpha, beta) ) / (4*LISEM_PI*rho*R) ;
 		  }
                   else if( tD == iGaussian )
 		  {
 		     A = ( 1/pow(alpha,2) * Gaussian(time, R, alpha,fr) - 1/pow(beta,2) * Gaussian(time, R, beta,fr) +
-			   3/pow(R,2) * Gaussian_x_T_Integral(time, R, fr, alpha, beta) ) / (4*M_PI*rho*R*R*R)  ;
+               3/pow(R,2) * Gaussian_x_T_Integral(time, R, fr, alpha, beta) ) / (4*LISEM_PI*rho*R*R*R)  ;
 		     
 		     B = ( 1/pow(beta,2) * Gaussian(time, R, beta,fr) -
-			   1/pow(R,2) * Gaussian_x_T_Integral(time, R, fr, alpha, beta) ) / (4*M_PI*rho*R) ;
+               1/pow(R,2) * Gaussian_x_T_Integral(time, R, fr, alpha, beta) ) / (4*LISEM_PI*rho*R) ;
 		  }
 		  up[3*ind]   = ( (x - x0)*(x - x0)*fx + (x - x0)*(y - y0)*fy + (x - x0)*(z - z0)*fz )*A + fx*B;
 		  up[3*ind+1] = ( (y - y0)*(x - x0)*fx + (y - y0)*(y - y0)*fy + (y - y0)*(z - z0)*fz )*A + fy*B;
@@ -2488,7 +2494,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		  }
 		  up[3*ind] += 
 	// m_xx*G_xx,x
-		     + m0*mxx/(4*M_PI*rho)*
+             + m0*mxx/(4*LISEM_PI*rho)*
 		     ( 
 		      + 3*(x-x0)*(x-x0)*(x-x0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2510,7 +2516,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_yy*G_xy,y
-		     + m0*myy/(4*M_PI*rho)*
+             + m0*myy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2524,7 +2530,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_zz*G_xz,z
-		     + m0*mzz/(4*M_PI*rho)*
+             + m0*mzz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(z-z0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2538,7 +2544,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_xy*G_xy,x
-		     + m0*mxy/(4*M_PI*rho)*
+             + m0*mxy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(x-x0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2552,7 +2558,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_xy*G_xx,y
-		     + m0*mxy/(4*M_PI*rho)*
+             + m0*mxy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(x-x0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2572,7 +2578,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_xz*G_xz,x
-		     + m0*mxz/(4*M_PI*rho)*
+             + m0*mxz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(x-x0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2586,7 +2592,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_yz*G_xz,y
-		     + m0*myz/(4*M_PI*rho)*
+             + m0*myz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2598,7 +2604,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_xz*G_xx,z
-		     + m0*mxz/(4*M_PI*rho)*
+             + m0*mxz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(x-x0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2618,7 +2624,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind] +=
 		     // m_yz*G_yx,z
-		     + m0*myz/(4*M_PI*rho)*
+             + m0*myz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2631,7 +2637,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		  //------------------------------------------------------------
 		  up[3*ind+1] += 
 		     // m_xx*G_xy,x
-		     m0*mxx/(4*M_PI*rho)*
+             m0*mxx/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(x-x0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2645,7 +2651,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_yy**G_yy,y
-		     + m0*myy/(4*M_PI*rho)*
+             + m0*myy/(4*LISEM_PI*rho)*
 		     ( 
 		      + 3*(y-y0)*(y-y0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2667,7 +2673,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_zz*G_zy,z
-		     + m0*mzz/(4*M_PI*rho)*
+             + m0*mzz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(z-z0)*(z-z0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2681,7 +2687,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_xy*G_yy,x
-		     + m0*mxy/(4*M_PI*rho)*
+             + m0*mxy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2701,7 +2707,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_xz*G_zy,x
-		     + m0*mxz/(4*M_PI*rho)*
+             + m0*mxz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	  
@@ -2713,7 +2719,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_xy*G_xy,y
-		     + m0*mxy/(4*M_PI*rho)*
+             + m0*mxy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	  
@@ -2727,7 +2733,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_yz*G_zy,y
-		     + m0*myz/(4*M_PI*rho)*
+             + m0*myz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(z-z0)*(y-y0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	  
@@ -2741,7 +2747,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_xz*G_xy,z
-		     + m0*mxz/(4*M_PI*rho)*
+             + m0*mxz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	  
@@ -2753,7 +2759,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+1] += 
 		     // m_yz*G_yy,z
-		     + m0*myz/(4*M_PI*rho)*
+             + m0*myz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(z-z0)*(y-y0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2774,7 +2780,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		  //------------------------------------------------------------
 		  up[3*ind+2] += 
 		     // m_xx*G_zx,x
-		     + m0*mxx/(4*M_PI*rho)*
+             + m0*mxx/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(x-x0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2788,7 +2794,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_yy*G_zy,y
-		     + m0*myy/(4*M_PI*rho)*
+             + m0*myy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(y-y0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2802,7 +2808,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_zz**G_zz,z
-		     + m0*mzz/(4*M_PI*rho)*
+             + m0*mzz/(4*LISEM_PI*rho)*
 		     ( 
 		      + 3*(z-z0)*(z-z0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2824,7 +2830,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_xy*G_zy,x
-		     + m0*mxy/(4*M_PI*rho)*
+             + m0*mxy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	  
@@ -2836,7 +2842,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_xz**G_zz,x
-		     + m0*mxz/(4*M_PI*rho)*
+             + m0*mxz/(4*LISEM_PI*rho)*
 		     ( 
 		      + 3*(x-x0)*(z-z0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2856,7 +2862,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_xy*G_xz,y
-		     + m0*mxy/(4*M_PI*rho)*
+             + m0*mxy/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(y-y0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2868,7 +2874,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_yz*G_zz,y
-		     + m0*myz/(4*M_PI*rho)*
+             + m0*myz/(4*LISEM_PI*rho)*
 		     ( 
 		      + 3*(y-y0)*(z-z0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2888,7 +2894,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_xz*G_xz,z
-		     + m0*mxz/(4*M_PI*rho)*
+             + m0*mxz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(x-x0)*(z-z0)*(z-z0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 	 
@@ -2902,7 +2908,7 @@ void EW::get_exact_point_source( double* up, double t, int g, Source& source, in
 		      );
 		  up[3*ind+2] += 
 		     // m_yz*G_yz,z
-		     + m0*myz/(4*M_PI*rho)*
+             + m0*myz/(4*LISEM_PI*rho)*
 		     (
 		      + 3*(z-z0)*(z-z0)*(y-y0) / pow(R,5) * (A/pow(alpha,2) - B/pow(beta,2))
 
@@ -2946,17 +2952,17 @@ complex<double> atan2(complex<double> z, complex<double> w)
   if (w == Zero)
     {
       if (z.real() > 0)
-        return M_PI/2.;
+        return LISEM_PI/2.;
       else
-        return -M_PI/2.;
+        return -LISEM_PI/2.;
     }
   else
     {
       complex<double> retval = I/2.*log((I + z/w)/(I - z/w));
       if( retval.real() < 0 && z.real() > 0 )
-         retval = retval + M_PI;
+         retval = retval + LISEM_PI;
       if( retval.real() > 0 && z.real() < 0 )
-         retval = retval - M_PI;
+         retval = retval - LISEM_PI;
       return retval;
       //      return I/2.*log((I + z/w)/(I - z/w));
     }
@@ -3067,7 +3073,7 @@ void EW::get_exact_lamb( vector<Sarray> & a_U, double a_t, Source& a_source )
 	  {
 	    uz += G2_Integral(min(tau - 1/sqrt(3.),beta/r), tau, r, beta) - G2_Integral(max(tau - 1,0.0), tau, r, beta);
 	  }
-	  uz *= -fz/(M_PI*M_PI*mu)*alpha*alpha/(beta*beta*beta);
+      uz *= -fz/(LISEM_PI*LISEM_PI*mu)*alpha*alpha/(beta*beta*beta);
 	}
       } // end if R<h
 // assign Sarray
@@ -3081,7 +3087,7 @@ double EW::G4_Integral(double T, double t, double r, double beta)
 {
   double c0 = 1024., c1 = -5120., c2 = 10240., c3 = -10240., c4 = 5120., c5 = -1024.;
  
-  return -(M_PI*(  (c5*pow(r,9)*pow(T,10))/pow(beta,9) 
+  return -(LISEM_PI*(  (c5*pow(r,9)*pow(T,10))/pow(beta,9)
 		 + (c4*pow(r,8)*pow(T,9))/pow(beta,8) 
 		 + (c3*pow(r,7)*pow(T,8))/pow(beta,7) 
 		 + (c2*pow(r,6)*pow(T,7))/pow(beta,6) 
@@ -3098,11 +3104,11 @@ double EW::G3_Integral(double iT, double it, double ir, double ibeta)
   complex<double> gamma = sqrt(3. + sqrt(3.))/2.;
   complex<double> tmp;
  
-  tmp = -(M_PI*((c5*pow(r,9)*pow(T,10))/pow(beta,9) + (c4*pow(r,8)*pow(T,9))/pow(beta,8) + (c3*pow(r,7)*pow(T,8))/pow(beta,7) +
+  tmp = -(LISEM_PI*((c5*pow(r,9)*pow(T,10))/pow(beta,9) + (c4*pow(r,8)*pow(T,9))/pow(beta,8) + (c3*pow(r,7)*pow(T,8))/pow(beta,7) +
         (c2*pow(r,6)*pow(T,7))/pow(beta,6) + (c1*pow(r,5)*pow(T,6))/pow(beta,5) + (c0*pow(r,4)*pow(T,5))/pow(beta,4)))
     /8.;
  
-  tmp += (sqrt(5. + 3.*sqrt(3.))*M_PI*pow(r,4)*(-(sqrt(-pow(t,2) + 2.*t*T - pow(T,2) + pow(gamma,2))*
+  tmp += (sqrt(5. + 3.*sqrt(3.))*LISEM_PI*pow(r,4)*(-(sqrt(-pow(t,2) + 2.*t*T - pow(T,2) + pow(gamma,2))*
            (10.*c5*pow(r,5)*(114064.*pow(t,8) + 73744.*pow(t,7)*T + 8.*pow(t,6)*(6698.*pow(T,2) + 150373.*pow(gamma,2)) +
                 8.*pow(t,5)*(5018.*pow(T,3) + 68871.*T*pow(gamma,2)) +
                 2.*pow(t,4)*(15032.*pow(T,4) + 139272.*pow(T,2)*pow(gamma,2) + 961437.*pow(gamma,4)) +
@@ -3155,11 +3161,11 @@ double EW::G2_Integral(double iT, double it, double ir, double ibeta)
   complex<double> gamma = sqrt(3. + sqrt(3.))/2.;
   complex<double> tmp;
 
-  tmp = (-(M_PI*((c5*pow(r,9)*pow(T,10))/pow(beta,9) + (c4*pow(r,8)*pow(T,9))/pow(beta,8) + (c3*pow(r,7)*pow(T,8))/pow(beta,7) + 
+  tmp = (-(LISEM_PI*((c5*pow(r,9)*pow(T,10))/pow(beta,9) + (c4*pow(r,8)*pow(T,9))/pow(beta,8) + (c3*pow(r,7)*pow(T,8))/pow(beta,7) +
         (c2*pow(r,6)*pow(T,7))/pow(beta,6) + (c1*pow(r,5)*pow(T,6))/pow(beta,5) + (c0*pow(r,4)*pow(T,5))/pow(beta,4)))
     /8.)/2.;
 
-  tmp += ((sqrt(5. + 3.*sqrt(3.))*M_PI*pow(r,4)*(-(sqrt(-pow(t,2) + 2.*t*T - pow(T,2) + pow(gamma,2))*
+  tmp += ((sqrt(5. + 3.*sqrt(3.))*LISEM_PI*pow(r,4)*(-(sqrt(-pow(t,2) + 2.*t*T - pow(T,2) + pow(gamma,2))*
            (10.*c5*pow(r,5)*(114064.*pow(t,8) + 73744.*pow(t,7)*T + 8.*pow(t,6)*(6698.*pow(T,2) + 150373.*pow(gamma,2)) + 
                 8.*pow(t,5)*(5018.*pow(T,3) + 68871.*T*pow(gamma,2)) + 
                 2.*pow(t,4)*(15032.*pow(T,4) + 139272.*pow(T,2)*pow(gamma,2) + 961437.*pow(gamma,4)) + 
@@ -3199,7 +3205,7 @@ double EW::G2_Integral(double iT, double it, double ir, double ibeta)
           atan2((t - T),sqrt(-pow(t,2) + 2.*t*T - pow(T,2) + pow(gamma,2))))/128.))/(48.*pow(beta,9)))/2.;
 
     
-    tmp += -(sqrt(-5. + 3.*sqrt(3.))*M_PI*pow(r,4)*(sqrt(-0.75 + sqrt(3.)/4. + pow(t - T,2))*
+    tmp += -(sqrt(-5. + 3.*sqrt(3.))*LISEM_PI*pow(r,4)*(sqrt(-0.75 + sqrt(3.)/4. + pow(t - T,2))*
          (640.*pow(-3. + sqrt(3.),4)*c5*pow(r,5) - 
            (pow(-3. + sqrt(3.),3)*pow(r,3)*(10.*c5*pow(r,2)*(572519.*pow(t,2) + 82841.*t*T + 8192.*pow(T,2)) + 
                 9.*beta*(9.*c4*r*(15159.*t + 1225.*T) + 16384.*c3*beta)))/64. + 
@@ -3243,7 +3249,7 @@ double EW::G2_Integral(double iT, double it, double ir, double ibeta)
    (3.87072e6*pow(beta,9));
     
 
-    tmp += (M_PI*pow(r,4)*(4.*sqrt(-0.25 + pow(t - T,2))*(10.*c5*pow(r,5)*
+    tmp += (LISEM_PI*pow(r,4)*(4.*sqrt(-0.25 + pow(t - T,2))*(10.*c5*pow(r,5)*
            (7300096.*pow(t,8) + 4719616.*pow(t,7)*T + 128.*pow(t,5)*T*(68871. + 20072.*pow(T,2)) + 
              128.*pow(t,6)*(150373. + 26792.*pow(T,2)) + 8.*pow(t,3)*T*(284361. + 274144.*pow(T,2) + 176000.*pow(T,4)) + 
              8.*pow(t,4)*(961437. + 557088.*pow(T,2) + 240512.*pow(T,4)) + 
@@ -3434,7 +3440,7 @@ void EW::Force(double a_t, vector<Sarray> & a_F, vector<GridPointSource*> point_
 
         // need to store all the phase angle constants somewhere
         for (int i=0; i<21; i++)
-           phc[i] = i*10*M_PI/180;
+           phc[i] = i*10*LISEM_PI/180;
 
         for(g=0 ; g<mNumberOfCartesianGrids; g++ )
         {
@@ -3630,7 +3636,7 @@ void EW::Force_tt(double a_t, vector<Sarray> & a_F, vector<GridPointSource*> poi
         // need to store all the phase angle constants somewhere
         phc[0]=0;
         for (int i=0; i<21; i++)
-           phc[i] = i*10*M_PI/180;
+           phc[i] = i*10*LISEM_PI/180;
 
         for(g=0 ; g<mNumberOfCartesianGrids; g++ )
         {
@@ -5131,6 +5137,225 @@ void EW::extractTopographyFromGridFile( string a_topoFileName )
 }
 
 //-----------------------------------------------------------------------
+void EW::extractTopographyFromcTMap()
+{
+
+    if (proc_zero())
+       cout << "***inside extractTopographyFromcTMap***"<< endl;
+
+    int Nx, Ny, i, j;
+    Sarray gridElev;
+    double *yv, *xv;
+
+
+    gridElev.define(1,1,Nx,1,Ny,1,1);
+    gridElev(1,i,j,1) = 1.0;
+
+
+    double xMax=-999e10, xMin=999e10, yMax=-999e10, yMin=999e10, elevMax=-1e10, elevMin=1e10;
+    for (i=1; i<=Nx; i++)
+    {
+       if (xv[i] < xMin) xMin=xv[i];
+       if (xv[i] > xMax) xMax=xv[i];
+    }
+    for (i=1; i<=Ny; i++)
+    {
+       if (yv[i] < yMin) yMin=yv[i];
+       if (yv[i] > yMax) yMax=yv[i];
+    }
+ // make sure that the topography grid covers the whole computational domain
+    if (xMin > 0 || yMin > 0 || xMax < m_global_xmax || yMax < m_global_ymax)
+    {
+       if (proc_zero()) printf("ERROR: cTMap grid with %e<=x<=%e and %e<=y<=%e\n"
+                   "does not cover the computational domain: 0<=x<=%e, 0<=y<=%e\n",
+                 xMin, xMax, yMin, yMax, m_global_xmax, m_global_ymax);
+       MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    for (i=1; i<=Nx; i++)
+       for (j=1; j<=Ny; j++)
+       {
+      if (gridElev(1,i,j,1) < elevMin) elevMin=gridElev(1,i,j,1);
+      if (gridElev(1,i,j,1) > elevMax) elevMax=gridElev(1,i,j,1);
+       }
+    if (proc_zero())
+       printf("xMin=%e, xMax=%e\nyMin=%e, yMax=%e\nelevMin=%e, evalMax=%e\n",
+          xMin, xMax, yMin, yMax, elevMin, elevMax);
+
+    double xP, yP, elev;
+ // If the yv vector is not in increasing order, we need to reorder it
+    if (yv[1] > yv[Ny])
+    {
+ // tmp
+       if (proc_zero()) printf("Reordering the yv vector...\n");
+       for (j=1; j<=Ny/2; j++)
+       {
+      yP=yv[Ny+1-j];
+      yv[Ny+1-j] = yv[j];
+      yv[j] = yP;
+
+      for (i=1; i<=Nx; i++)
+      {
+         elev = gridElev(1,i,Ny+1-j,1);
+         gridElev(1,i,Ny+1-j,1) = gridElev(1,i,j,1);
+         gridElev(1,i,j,1) = elev;
+      }
+       }
+    }
+
+ // If the xv vector is not in increasing order, we need to reorder it
+    if (xv[1] > xv[Nx])
+    {
+ // tmp
+       if (proc_zero()) printf("Reordering the xv vector...\n");
+       for (i=1; i<=Nx/2; i++)
+       {
+      xP=xv[Nx+1-i];
+      xv[Nx+1-i] = xv[i];
+      xv[i] = xP;
+
+      for (j=1; j<=Ny; j++)
+      {
+         elev = gridElev(1,Nx+1-i,j,1);
+         gridElev(1,Nx+1-i,j,1) = gridElev(1,i,j,1);
+         gridElev(1,i,j,1) = elev;
+      }
+       }
+    }
+
+ // 2. interpolate in the grid file to get elevations on the computational grid
+    double deltaY = (yMax-yMin)/Ny;
+    double deltaX = (xMax-xMin)/Nx;
+
+    int i0, j0;
+    int topLevel = mNumberOfGrids-1;
+    double hp = 1.01*mGridSize[topLevel]; // change this to 2 grid sizes because there are double ghost points?
+    bool xGhost, yGhost;
+
+    for (int i = m_iStart[topLevel]; i <= m_iEnd[topLevel]; ++i)
+    {
+       for (int j = m_jStart[topLevel]; j <= m_jEnd[topLevel]; ++j)
+       {
+      xP = (i-1)*mGridSize[topLevel];
+      yP = (j-1)*mGridSize[topLevel];
+      xGhost=true;
+      yGhost=true;
+      if (yP > yMax+hp || yP < yMin-hp || xP > xMax+hp || xP < xMin-hp)
+      {
+        mTopo(i,j,1) = NO_TOPO;
+        continue;
+        // printf("ERROR: xP=%e, yP=%e is outside the topography grid by more than a grid step\n",
+        // 	  xP, yP);
+        //  MPI_Abort(MPI_COMM_WORLD, 1);
+      }
+ // Compute i0
+      if (xP < xMin)
+         i0=1;
+      else if (xP > xMax)
+         i0=Nx-1;
+      else
+      {
+         xGhost=false;
+         i0 = 1+(int)((xP-xMin)/deltaX);
+         if (i0 < 1)
+            i0 = 1;
+         if (i0 > Nx-1)
+            i0 = Nx-1;
+ // should stop loop if i0 is out of bounds
+         while ( i0>=1 && i0 <= Nx-1 && ( xP < xv[i0] || xv[i0+1] < xP ) )
+         {
+            if(xP<xv[i0])
+           i0--;
+            else if (xP>xv[i0+1])
+           i0++;
+         }
+      }
+
+ // Compute j0
+      if (yP < yMin)
+         j0=1;
+      else if (yP > yMax)
+         j0=Ny-1;
+      else
+      {
+         yGhost=false;
+         j0 = 1+(int)((yP-yMin)/deltaY);
+         if (j0 < 1)
+            j0 = 1;
+         if (j0 > Ny-1)
+            j0 = Ny-1;
+  // should stop loop if j0 is out of bounds
+         while ( j0>=1 && j0 <= Ny-1 && ( yP < yv[j0] || yv[j0+1] < yP ) )
+         {
+            if (yP<yv[j0])
+           j0--;
+            else if (yP>yv[j0+1])
+           j0++;
+         }
+      }
+
+ // enforce bounds again
+      if (i0 < 1) i0 = 1;
+      if (i0 > Nx-1) i0 = Nx-1;
+      if (j0 < 1) j0 = 1;
+      if (j0 > Ny-1) j0 = Ny-1;
+
+ // test that we are inside the interval
+      if (!xGhost && !(xv[i0] <= xP && xP <= xv[i0+1]))
+      {
+         printf("EW::extractTopographyFromCartesianFile: Fatal error: Unable to interpolate topography for xP=%e\n"
+            "because it is outside the cell (xv[%i]=%e, xv[%i]=%e)\n", xP, i0, xv[i0], i0+1, xv[i0+1]);
+         MPI_Abort(MPI_COMM_WORLD,1);
+      }
+
+
+      if (!yGhost && !(yv[j0] <= yP && yP <= yv[j0+1]))
+      {
+         printf("EW::extractTopographyFromCartesianFile: Fatal error: Unable to interpolate topography for yP=%e\n"
+            "because it is outside the cell (yv[%i]=%e, yv[%i]=%e)\n", yP, j0, yv[j0], j0+1, yv[j0+1]);
+         MPI_Abort(MPI_COMM_WORLD,1);
+      }
+
+ // bi-cubic interpolation should make the surface smoother
+ // shift the stencil if it is too close to the boundaries
+      if (i0 < 2) i0 = 2;
+      if (i0 > Nx-2) i0 = Nx-2;
+
+      if (j0 < 2) j0 = 2;
+      if (j0 > Ny-2) j0 = Ny-2;
+
+ // local step sizes
+      double q = i0 + (xP - xv[i0])/(xv[i0+1]-xv[i0]);
+      double r = j0 + (yP - yv[j0])/(yv[j0+1]-yv[j0]);
+
+      double Qim1, Qi, Qip1, Qip2, Rjm1, Rj, Rjp1, Rjp2, tjm1, tj, tjp1, tjp2;
+      Qim1 = (q-i0)*(q-i0-1)*(q-i0-2)/(-6.);
+      Qi   = (q-i0+1)*(q-i0-1)*(q-i0-2)/(2.);
+      Qip1 = (q-i0+1)*(q-i0)*(q-i0-2)/(-2.);
+      Qip2 = (q-i0+1)*(q-i0)*(q-i0-1)/(6.);
+
+      Rjm1 = (r-j0)*(r-j0-1)*(r-j0-2)/(-6.);
+      Rj   = (r-j0+1)*(r-j0-1)*(r-j0-2)/(2.);
+      Rjp1 = (r-j0+1)*(r-j0)*(r-j0-2)/(-2.);
+      Rjp2 = (r-j0+1)*(r-j0)*(r-j0-1)/(6.);
+
+      tjm1 = Qim1*gridElev(i0-1,j0-1,1) +    Qi*gridElev(i0,  j0-1,1)
+          +  Qip1*gridElev(i0+1,j0-1,1) +  Qip2*gridElev(i0+2,j0-1,1);
+      tj   = Qim1*gridElev(i0-1,j0,  1) +    Qi*gridElev(i0,  j0,  1)
+          +  Qip1*gridElev(i0+1,j0,  1) +  Qip2*gridElev(i0+2,j0,  1);
+      tjp1 = Qim1*gridElev(i0-1,j0+1,1) +    Qi*gridElev(i0,  j0+1,1)
+          +  Qip1*gridElev(i0+1,j0+1,1) +  Qip2*gridElev(i0+2,j0+1,1);
+      tjp2 = Qim1*gridElev(i0-1,j0+2,1) +    Qi*gridElev(i0,  j0+2,1)
+          +  Qip1*gridElev(i0+1,j0+2,1) +  Qip2*gridElev(i0+2,j0+2,1);
+
+      mTopo(i,j,1) = Rjm1*tjm1 + Rj*tj + Rjp1*tjp1 + Rjp2*tjp2;
+       }
+    }
+    delete[] yv;
+    delete[] xv;
+}
+
+//-----------------------------------------------------------------------
 void EW::extractTopographyFromCartesianFile(string a_topoFileName)
 {
    if (proc_zero())
@@ -6546,9 +6771,9 @@ void EW::setup_attenuation_relaxation( double minvsoh )
 // use the number of mechanisms to determine bandwidth of attenuation model. Use this to assign omega_min
 
     if( m_att_use_max_frequency )
-       m_max_omega = 2*M_PI*m_att_max_frequency;
+       m_max_omega = 2*LISEM_PI*m_att_max_frequency;
     else
-       m_max_omega = 2.*M_PI*minvsoh/m_att_ppw;
+       m_max_omega = 2.*LISEM_PI*minvsoh/m_att_ppw;
 
 // the band width is set to get approximately constant Q throughout the frequency band
 //     if (n <= 2)
@@ -6575,7 +6800,7 @@ void EW::setup_attenuation_relaxation( double minvsoh )
     {
       printf("\n*** Attenuation parameters calculated for %i mechanisms,\n"
 	     "      max freq=%e [Hz], min_freq=%e [Hz], velo_freq=%e [Hz]\n\n",
-	     m_number_mechanisms, m_max_omega/2/M_PI, m_min_omega/2/M_PI, m_velo_omega/2/M_PI);
+         m_number_mechanisms, m_max_omega/2/LISEM_PI, m_min_omega/2/LISEM_PI, m_velo_omega/2/LISEM_PI);
     }
     int n = m_number_mechanisms;
     if( n == 1 )

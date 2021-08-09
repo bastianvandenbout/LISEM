@@ -219,18 +219,21 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
 
         float dist = rayTriangleIntersect(Ray(O,Dir),v1,v2,v3);
 
-        if(std::isfinite(dist))
-        {
-            if(found == false)
+
+            if(std::isfinite(dist))
             {
-                found = true;
-                dist_min = dist;
-            }else if(dist < dist_min)
-            {
-                dist_min = dist;
+                if(dist  > 0.0)
+                {
+                    if(found == false)
+                    {
+                        found = true;
+                        dist_min = dist;
+                    }else if(dist < dist_min)
+                    {
+                        dist_min = dist;
+                    }
             }
         }
-
     }
 
     if(found)
@@ -239,6 +242,54 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
     }else
     {
         return -INFINITYFLTLSM;
+    }
+
+}
+
+bool LSMMesh::IsPointInside(LSMVector3 O)
+{
+    LSMVector3 Dir = LSMVector3(0.0,1.0,0.0);
+    bool found = false;
+    float dist_min = 0.0f;
+    int triangleCount = indices.size()/3;
+
+    int n_up= 0;
+    int n_down = 0;
+
+    for (long a = 0; a < triangleCount; a++)
+    {
+        long i1 = indices.at(a * 3 + 0);
+        long i2 = indices.at(a * 3 + 1);
+        long i3 = indices.at(a * 3 + 2);
+
+        const LSMVector3& v1 = vertices[i1].position();
+        const LSMVector3& v2 = vertices[i2].position();
+        const LSMVector3& v3 = vertices[i3].position();
+
+
+        float dist = rayTriangleIntersect(Ray(O,Dir),v1,v2,v3);
+
+        if(std::isfinite(dist))
+        {
+            if(dist > 0.0)
+            {
+                n_up ++;
+
+            }else
+            {
+                n_down ++;
+
+            }
+        }
+
+    }
+
+    if((n_up + n_down) %2 == 0 && n_up %2 == 0 && n_up > 0 && n_down > 0)
+    {
+        return true;
+    }else
+    {
+        return false;
     }
 
 }

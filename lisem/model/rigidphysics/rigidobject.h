@@ -379,6 +379,117 @@ public:
 
     }
 
+    static inline RigidPhysicsObject * RigidPhysicsObject_AsASMesh(ModelGeometry * gmodel,double density, LSMVector3 position = LSMVector3(0.0,0.0,0.0), LSMVector3 rotation = LSMVector3(0.0,0.0,0.0),LSMVector3 vel = LSMVector3(0.0,0.0,0.0), LSMVector3 rotvel = LSMVector3(0.0,0.0,0.0), double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "", bool is_static = false)
+    {
+        RigidPhysicsObject * ret = new RigidPhysicsObject();
+        ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+        ret->m_chMaterial->SetFriction(friction);
+        ret->m_chMaterial->SetCompliance(compliance);
+        ret->m_chMaterial->SetComplianceT(complianceT);
+        ret->m_chMaterial->SetDampingF(DampingF);
+        ret->m_chBody = std::shared_ptr<ChBody>(new ChBody(), [=](ChBody* b)
+        {
+            std::cout << "Deleting body\n" << b << std::endl;
+            //delete b;
+            //delete b;
+
+        });
+
+        ret->m_chBody->SetCollide(true);
+        std::shared_ptr<collision::ChCollisionModel> cmodel = ret->m_chBody->GetCollisionModel();
+
+        bool is_closed = true;
+
+        cmodel->ClearModel();
+        if(!is_closed)
+        {
+            //dynamic shape requires mass and inertia, which can be estimated from a connected closed mesh only
+            //for other mesh types this requires custom mass and inertia components, which is not supported in this helper function
+            is_static = true;
+
+            std::shared_ptr<geometry::ChTriangleMeshSoup> chgeom = chrono_types::make_shared<geometry::ChTriangleMeshSoup>();
+
+
+            QList<LSMMesh*> meshes = gmodel->GetMeshes();
+            //for each mesh
+            for(int i = 0; i < meshes.length(); i++)
+            {
+                LSMMesh * m = meshes.at(i);
+                m->CalcIsConvex();
+
+                int triangleCount = m->indices.size()/3;
+
+
+                //for each triangle
+                for(int a = 0; a < triangleCount; a++)
+                {
+                    long i1 = m->indices.at(a * 3 + 0);
+                    long i2 = m->indices.at(a * 3 + 1);
+                    long i3 = m->indices.at(a * 3 + 2);
+
+                    const LSMVector3& v1 = m->vertices[i1].position();
+                    const LSMVector3& v2 = m->vertices[i2].position();
+                    const LSMVector3& v3 = m->vertices[i3].position();
+
+                    chgeom->addTriangle(ChVector<double>(v1.x,v1.y,v1.z),ChVector<double>(v2.x,v2.y,v2.z),ChVector<double>(v3.x,v3.y,v3.z));
+                }
+            }
+
+            cmodel->AddTriangleMesh(ret->m_chMaterial,chgeom,true,false);
+        }else
+        {
+            std::shared_ptr<geometry::ChTriangleMeshConnected> chgeom = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
+
+
+            QList<LSMMesh*> meshes = gmodel->GetMeshes();
+            //for each mesh
+            for(int i = 0; i < meshes.length(); i++)
+            {
+                LSMMesh * m = meshes.at(i);
+
+                int triangleCount = m->indices.size()/3;
+
+
+                //for each triangle
+                for(int a = 0; a < triangleCount; a++)
+                {
+                    long i1 = m->indices.at(a * 3 + 0);
+                    long i2 = m->indices.at(a * 3 + 1);
+                    long i3 = m->indices.at(a * 3 + 2);
+
+                    const LSMVector3& v1 = m->vertices[i1].position();
+                    const LSMVector3& v2 = m->vertices[i2].position();
+                    const LSMVector3& v3 = m->vertices[i3].position();
+
+                    chgeom->addTriangle(ChVector<double>(v1.x,v1.y,v1.z),ChVector<double>(v2.x,v2.y,v2.z),ChVector<double>(v3.x,v3.y,v3.z));
+                }
+            }
+
+            cmodel->AddTriangleMesh(ret->m_chMaterial,chgeom,true,false);
+        }
+
+        ret->m_Family = family;
+        cmodel->BuildModel();
+
+        ret->m_chBody->SetCollisionModel(cmodel);
+        ret->m_chBody->SetCollide(true);
+        ret->m_chBody->SetDensity((float)density);
+        ret->m_chBody->SetMass(1.0);
+        if(is_static)
+        {
+            ret->m_chBody->SetBodyFixed(true);
+        }
+        ret->m_chBody->SetInertiaXX(ChVector<>((1.0 / 12.0) * 1.0  ,
+                                               (1.0 / 12.0) * 1.0  ,
+                                               (1.0 / 12.0) * 1.0  ));
+
+        ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
+        LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
+        ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+        ret->m_TriangulatedModel = gmodel;
+        return ret;
+
+    }
 
     static inline RigidPhysicsObject * RigidPhysicsObject_AsMesh(ModelGeometry * gmodel,bool is_closed, bool is_static, double density = 1.0f, double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "")
     {
@@ -588,8 +699,10 @@ public:
 
     inline RigidPhysicsObject * GetCopy()
     {
+        std::cout << "get copy" << std::endl;
         RigidPhysicsObject * ret = new RigidPhysicsObject();
         ret->CopyFrom(this);
+        std::cout << "end get copy "<< std::endl;
         return ret;
     }
 
@@ -626,6 +739,7 @@ inline void RigidPhysicsObject::AS_AddRef()
 inline RigidPhysicsObject* RigidPhysicsObject::AS_Assign(RigidPhysicsObject * other)
 {
 
+    std::cout << "start assign "<< std::endl;
     //copy all the contents from the other object to this
     this->CopyFrom(other);
 

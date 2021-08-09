@@ -1,5 +1,6 @@
 #pragma once
 
+#include "defines.h"
 #include <math.h>   
 #define RAND48_SEED_0   (0x330e)
 #define RAND48_SEED_1 (0xabcd)

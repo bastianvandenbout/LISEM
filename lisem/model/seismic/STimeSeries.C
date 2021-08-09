@@ -51,7 +51,7 @@ using namespace std;
 void parsedate( char* datestr, int& year, int& month, int& day, int& hour, int& minute,
 		int& second, int& msecond, int& fail );
 
-TimeSeries::TimeSeries( EW* a_ew, std::string fileName, std::string staName, receiverMode mode, bool sacFormat, bool usgsFormat, 
+STimeSeries::STimeSeries( EW* a_ew, std::string fileName, std::string staName, receiverMode mode, bool sacFormat, bool usgsFormat,
 			double x, double y, double depth, bool topoDepth, int writeEvery, bool xyzcomponent ):
   m_ew(a_ew),
   m_mode(mode),
@@ -275,19 +275,19 @@ TimeSeries::TimeSeries( EW* a_ew, std::string fileName, std::string staName, rec
    a_ew->computeGeographicCoord(mX, mY, m_rec_lon, m_rec_lat);
    a_ew->computeGeographicCoord(mGPX, mGPY, m_rec_gp_lon, m_rec_gp_lat);
 
-   m_calpha = cos(M_PI*m_x_azimuth/180.0);
-   m_salpha = sin(M_PI*m_x_azimuth/180.0);
+   m_calpha = cos(LISEM_PI*m_x_azimuth/180.0);
+   m_salpha = sin(LISEM_PI*m_x_azimuth/180.0);
 
-   double cphi   = cos(M_PI*m_rec_lat/180.0);
-   double sphi   = sin(M_PI*m_rec_lat/180.0);
+   double cphi   = cos(LISEM_PI*m_rec_lat/180.0);
+   double sphi   = sin(LISEM_PI*m_rec_lat/180.0);
 
    double metersperdegree = a_ew->getMetersPerDegree();
 
 //
 // NOTE: this calculation assumes a spheroidal mapping
 //
-   m_thxnrm = m_salpha + (mX*m_salpha+mY*m_calpha)/cphi/metersperdegree * (M_PI/180.0) * sphi * m_calpha;
-   m_thynrm = m_calpha - (mX*m_salpha+mY*m_calpha)/cphi/metersperdegree * (M_PI/180.0) * sphi * m_salpha;
+   m_thxnrm = m_salpha + (mX*m_salpha+mY*m_calpha)/cphi/metersperdegree * (LISEM_PI/180.0) * sphi * m_calpha;
+   m_thynrm = m_calpha - (mX*m_salpha+mY*m_calpha)/cphi/metersperdegree * (LISEM_PI/180.0) * sphi * m_salpha;
    double nrm = sqrt( m_thxnrm*m_thxnrm + m_thynrm*m_thynrm );
    m_thxnrm /= nrm;
    m_thynrm /= nrm;
@@ -299,7 +299,7 @@ TimeSeries::TimeSeries( EW* a_ew, std::string fileName, std::string staName, rec
 } // end constructor
 
 //--------------------------------------------------------------
-inline TimeSeries::~TimeSeries()
+inline STimeSeries::~STimeSeries()
 {
 // deallocate the recording arrays
   if (mRecordedSol)
@@ -324,7 +324,7 @@ inline TimeSeries::~TimeSeries()
 }
 
 //--------------------------------------------------------------
-void TimeSeries::allocateRecordingArrays( int numberOfTimeSteps, double startTime, double timeStep )
+void STimeSeries::allocateRecordingArrays( int numberOfTimeSteps, double startTime, double timeStep )
 {
   if (!m_myPoint) return; // only one processor saves each time series
   if (numberOfTimeSteps > 0)
@@ -353,7 +353,7 @@ void TimeSeries::allocateRecordingArrays( int numberOfTimeSteps, double startTim
 }
 
 //--------------------------------------------------------------
-void TimeSeries::recordData(vector<double> & u) 
+void STimeSeries::recordData(vector<double> & u)
 {
    if (!m_myPoint) return;
 
@@ -412,7 +412,7 @@ void TimeSeries::recordData(vector<double> & u)
 
    
 //----------------------------------------------------------------------
-void TimeSeries::writeFile( string suffix )
+void STimeSeries::writeFile( string suffix )
 {
   if (!m_myPoint) return;
 
@@ -820,7 +820,7 @@ void TimeSeries::writeFile( string suffix )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::
+void STimeSeries::
 write_sac_format(int npts, char *ofile, float *y, float btime, float dt, char *var,
 		 float cmpinc, float cmpaz)
 {
@@ -918,7 +918,7 @@ write_sac_format(int npts, char *ofile, float *y, float btime, float dt, char *v
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::write_usgs_format(string a_fileName)
+void STimeSeries::write_usgs_format(string a_fileName)
 {
    string mname[] = {"Zero","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
    FILE *fd=fopen(a_fileName.c_str(),"w");
@@ -1060,7 +1060,7 @@ void TimeSeries::write_usgs_format(string a_fileName)
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::readFile( EW *ew, bool ignore_utc )
+void STimeSeries::readFile( EW *ew, bool ignore_utc )
 {
 //building the file name...
 // 
@@ -1222,7 +1222,7 @@ void TimeSeries::readFile( EW *ew, bool ignore_utc )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::interpolate( TimeSeries& intpfrom )
+void STimeSeries::interpolate( STimeSeries& intpfrom )
 {
 // Interpolate data to the grid in this object
    int order = 4;
@@ -1333,7 +1333,7 @@ void TimeSeries::interpolate( TimeSeries& intpfrom )
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::misfit( TimeSeries& observed, TimeSeries* diff,
+double STimeSeries::misfit( STimeSeries& observed, STimeSeries* diff,
 			   double& dshift, double& ddshift, double& dd1shift )
 {
    // Computes  misfit.
@@ -1573,7 +1573,7 @@ double TimeSeries::misfit( TimeSeries& observed, TimeSeries* diff,
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::misfit2( TimeSeries& observed )
+double STimeSeries::misfit2( STimeSeries& observed )
 {
    // Computes  travel time (correlation) misfit.
    //  if diff !=NULL, also computes diff := this - observed
@@ -1704,12 +1704,12 @@ double TimeSeries::misfit2( TimeSeries& observed )
 }
 
 //-----------------------------------------------------------------------
-TimeSeries* TimeSeries::copy( EW* a_ew, string filename, bool addname )
+STimeSeries* STimeSeries::copy( EW* a_ew, string filename, bool addname )
 {
    if( addname )
       filename = m_fileName + filename;
 
-   TimeSeries* retval = new TimeSeries( a_ew, filename, m_staName, m_mode, m_sacFormat, m_usgsFormat,
+   STimeSeries* retval = new STimeSeries( a_ew, filename, m_staName, m_mode, m_sacFormat, m_usgsFormat,
 					mX, mY, mZ, m_zRelativeToTopography, mWriteEvery, m_xyzcomponent );
    retval->m_t0    = m_t0;
    retval->m_dt    = m_dt;
@@ -1781,7 +1781,7 @@ TimeSeries* TimeSeries::copy( EW* a_ew, string filename, bool addname )
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::arrival_time( double lod )
+double STimeSeries::arrival_time( double lod )
 {
   // Assume three components
    if( m_nComp != 3 )
@@ -1829,7 +1829,7 @@ double TimeSeries::arrival_time( double lod )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::use_as_forcing( int n, std::vector<Sarray>& f,
+void STimeSeries::use_as_forcing( int n, std::vector<Sarray>& f,
 				 std::vector<double> & h, double dt,
 				 Sarray& Jac, bool topography_exists )
 {
@@ -1859,7 +1859,7 @@ void TimeSeries::use_as_forcing( int n, std::vector<Sarray>& f,
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::product( TimeSeries& ts ) const
+double STimeSeries::product( STimeSeries& ts ) const
 {
    // No weighting, use if one of the time series already has
    // been multiplied by wgh, such as returned by the mistfit function
@@ -1879,7 +1879,7 @@ double TimeSeries::product( TimeSeries& ts ) const
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::product_wgh( TimeSeries& ts ) const
+double STimeSeries::product_wgh( STimeSeries& ts ) const
 {
    // Product which uses weighting, for computing Hessian
    double prod = 0;
@@ -1926,7 +1926,7 @@ double TimeSeries::product_wgh( TimeSeries& ts ) const
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::utc_distance( int utc1[7], int utc2[7] )
+double STimeSeries::utc_distance( int utc1[7], int utc2[7] )
 {
    // Compute time in seconds between two [y,M,d,h,m,s,ms] times
    // returns utc2-utc1 in seconds.
@@ -1980,7 +1980,7 @@ double TimeSeries::utc_distance( int utc1[7], int utc2[7] )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::dayinc( int date[7] )
+void STimeSeries::dayinc( int date[7] )
 {
    date[2]++;
    if( date[2] > lastofmonth( date[0], date[1] ) )
@@ -1996,7 +1996,7 @@ void TimeSeries::dayinc( int date[7] )
 }
 
 //-----------------------------------------------------------------------
-int TimeSeries::lastofmonth( int year, int month )
+int STimeSeries::lastofmonth( int year, int month )
 {
    int days;
    int leapyear=0;
@@ -2011,7 +2011,7 @@ int TimeSeries::lastofmonth( int year, int month )
 }
 
 //-----------------------------------------------------------------------
-int TimeSeries::utccompare( int utc1[7], int utc2[7] )
+int STimeSeries::utccompare( int utc1[7], int utc2[7] )
 {
    int c = 0;
    int retval;
@@ -2030,7 +2030,7 @@ int TimeSeries::utccompare( int utc1[7], int utc2[7] )
 }   
 
 //-----------------------------------------------------------------------
-int TimeSeries::leap_second_correction( int utc1[7], int utc2[7] )
+int STimeSeries::leap_second_correction( int utc1[7], int utc2[7] )
 // Count the number of leap seconds between two utc times.
 {
    int* leap_sec_y, *leap_sec_m;
@@ -2148,7 +2148,7 @@ int TimeSeries::leap_second_correction( int utc1[7], int utc2[7] )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::filter_data( SeisFilter* filter_ptr )
+void STimeSeries::filter_data( SeisFilter* filter_ptr )
 {
    if( m_myPoint )
    {
@@ -2185,7 +2185,7 @@ void TimeSeries::filter_data( SeisFilter* filter_ptr )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::print_timeinfo() const
+void STimeSeries::print_timeinfo() const
 {
    if( m_myPoint )
    {
@@ -2199,7 +2199,7 @@ void TimeSeries::print_timeinfo() const
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::set_window( double winl, double winr )
+void STimeSeries::set_window( double winl, double winr )
 {
    m_use_win = true;
    m_winL = winl;
@@ -2207,7 +2207,7 @@ void TimeSeries::set_window( double winl, double winr )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::exclude_component( bool usex, bool usey, bool usez )
+void STimeSeries::exclude_component( bool usex, bool usey, bool usez )
 {
    m_use_x = usex;
    m_use_y = usey;
@@ -2215,7 +2215,7 @@ void TimeSeries::exclude_component( bool usex, bool usey, bool usez )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::readSACfiles( EW *ew, const char* sac1,
+void STimeSeries::readSACfiles( EW *ew, const char* sac1,
 			       const char* sac2, const char* sac3, bool ignore_utc )
 {
    string file1, file2, file3;
@@ -2312,7 +2312,7 @@ void TimeSeries::readSACfiles( EW *ew, const char* sac1,
 	       cout << " az3 = " << cmpaz3 << " inc3 = " << cmpinc3 << endl;
 	    }
 // Assume that we are using geographic coordinates, transform to (east,north,up) components.
-	    const double convfactor = M_PI/180.0;
+        const double convfactor = LISEM_PI/180.0;
 	    cmpaz1  *= convfactor;
 	    cmpaz2  *= convfactor;
 	    cmpaz3  *= convfactor;
@@ -2391,7 +2391,7 @@ void TimeSeries::readSACfiles( EW *ew, const char* sac1,
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::readSACheader( const char* fname, double& dt, double& t0,
+void STimeSeries::readSACheader( const char* fname, double& dt, double& t0,
 				double& lat, double& lon, double& cmpaz,
 				double& cmpinc, int utc[7], int& npts )
 {
@@ -2463,7 +2463,7 @@ void TimeSeries::readSACheader( const char* fname, double& dt, double& t0,
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::readSACdata( const char* fname, int npts, double* u )
+void STimeSeries::readSACdata( const char* fname, int npts, double* u )
 {
    if( !(sizeof(float)==4) || !(sizeof(int)==4) || !(sizeof(char)==1) )
    {
@@ -2508,7 +2508,7 @@ void TimeSeries::readSACdata( const char* fname, int npts, double* u )
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::convertjday( int jday, int year, int& day, int& month )
+void STimeSeries::convertjday( int jday, int year, int& day, int& month )
 {
    if( jday > 0 && jday < 367 )
    {
@@ -2541,7 +2541,7 @@ void TimeSeries::convertjday( int jday, int year, int& day, int& month )
 //}
 
 //-----------------------------------------------------------------------
-void TimeSeries::set_utc_to_simulation_utc()
+void STimeSeries::set_utc_to_simulation_utc()
 {
    m_ew->get_utc(m_utc);
    m_shift += m_t0;
@@ -2549,25 +2549,25 @@ void TimeSeries::set_utc_to_simulation_utc()
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::set_shift( double shift )
+void STimeSeries::set_shift( double shift )
 {
    m_shift = shift;
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::get_shift() const
+double STimeSeries::get_shift() const
 {
    return m_shift;
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::add_shift( double shift )
+void STimeSeries::add_shift( double shift )
 {
    m_shift += shift;
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::getwgh( double ai, double wgh[6], double dwgh[6], double ddwgh[6] )
+void STimeSeries::getwgh( double ai, double wgh[6], double dwgh[6], double ddwgh[6] )
 {
    double pol=ai*ai*ai*ai*ai*(5.0/3-7.0/24*ai-17.0/12*ai*ai + 1.125*ai*ai*ai-0.25*ai*ai*ai*ai);
    wgh[0] = (2*ai-ai*ai-2*ai*ai*ai-19*ai*ai*ai*ai)/24 + pol;
@@ -2595,7 +2595,7 @@ void TimeSeries::getwgh( double ai, double wgh[6], double dwgh[6], double ddwgh[
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::getwgh5( double ai, double wgh[6], double dwgh[6], double ddwgh[6] )
+void STimeSeries::getwgh5( double ai, double wgh[6], double dwgh[6], double ddwgh[6] )
 {
    wgh[0] = (2*ai-ai*ai-2*ai*ai*ai+ai*ai*ai*ai)/24;
    wgh[1] = (-ai+ai*ai)*2.0/3+ai*ai*ai*(1-ai)/6;
@@ -2620,7 +2620,7 @@ void TimeSeries::getwgh5( double ai, double wgh[6], double dwgh[6], double ddwgh
 }
 
 //-----------------------------------------------------------------------
-void TimeSeries::set_scalefactor( double value )
+void STimeSeries::set_scalefactor( double value )
 {
    m_scalefactor = value;
    m_compute_scalefactor = false;
@@ -2628,13 +2628,13 @@ void TimeSeries::set_scalefactor( double value )
 
 
 //-----------------------------------------------------------------------
-bool TimeSeries::get_compute_scalefactor() const
+bool STimeSeries::get_compute_scalefactor() const
 {
    return m_compute_scalefactor;
 }
 
 //-----------------------------------------------------------------------
-double TimeSeries::get_scalefactor() const
+double STimeSeries::get_scalefactor() const
 {
    return m_scalefactor;
 }

@@ -48,6 +48,11 @@
 #include "site.h"
 #include "resourcemanager.h"
 #include "extensionprovider.h"
+#include "geo/raster/field.h"
+#include "rigidphysics/rigidworld.h"
+#include "layer/geo/uifieldlayer.h"
+#include "layer/geo/uirigidworldlayer.h"
+
 class MapViewTool;
 
 extern MapViewTool * CMapViewToolManager;
@@ -837,6 +842,46 @@ public:
         return lay;
     }
 
+    inline ASUILayer AddLayerFromScript(Field * m, QString name, bool can_remove)
+    {
+        ASUILayer lay;
+
+        if(m != nullptr)
+        {
+            Field* s = m->GetCopy();
+            UIFieldLayer *HS = new UIFieldLayer(s,QString(name),m->AS_FileName.size() == 0? false : true,m->AS_FileName,!can_remove);
+            HS->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_RASTERUI),true);
+            m_WorldWindow->AddUILayer(HS,true);
+
+            lay.SetUID(HS->GetUID());
+            return lay;
+        }
+
+        return lay;
+    }
+
+    inline ASUILayer AddLayerFromScript(RigidPhysicsWorld * m, QString name, bool can_remove)
+    {
+        std::cout << "add view layer " << std::endl;
+        ASUILayer lay;
+        m->AS_AddRef();
+
+        if(m != nullptr)
+        {
+            UIRigidWorldLayer *UIP = new UIRigidWorldLayer(m,QString(name),"",!can_remove);
+
+            m_WorldWindow->AddUILayer(UIP,true);
+
+            lay.SetUID(UIP->GetUID());
+
+            std::cout << "return view layer " << std::endl;
+
+            return lay;
+        }
+
+        return lay;
+    }
+
     inline void RemoveLayerFromScript(ASUILayer id)
     {
         if(id.GetUID() > -1)
@@ -891,6 +936,47 @@ public:
 
                     LISEMS_WARNING("Could not create raster layer to replace layer id " + QString::number(id.GetUID()));
                 }
+
+            }else
+            {
+
+                LISEMS_WARNING("Could not replace layer with id " + QString::number(id.GetUID()));
+            }
+        }
+    }
+
+
+
+    inline void ReplaceLayerFromScript(ASUILayer id, Field * m)
+    {
+        if(m != nullptr && id.GetUID()  > -1)
+        {
+            UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID() );
+            if(l != nullptr)
+            {
+
+                if(l->layertypeName() == "UIFieldLayer")
+                {
+                    UIFieldLayer * lrs =  (UIFieldLayer *) l;
+                    if(lrs->IsLayerDirectReplaceable(m))
+                    {
+                        m_WorldWindow->m_UILayerMutex.lock();
+                        std::cout << "do direct replace " << std::endl;
+                        lrs->DirectReplace(m->GetCopy());
+                        m_WorldWindow->m_UILayerMutex.unlock();
+                        return;
+                    }
+                }
+
+                Field* s = m->GetCopy();
+
+                QString name =l->GetName();
+                UIFieldLayer *HS = new UIFieldLayer(s,QString(name),m->AS_FileName.size() == 0? false : true,m->AS_FileName,!false);
+                HS->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_RASTERUI),true);
+                m_WorldWindow->AddUILayer(HS,true);
+
+
+                m_WorldWindow->ReplaceUILayer(l,HS);
 
             }else
             {
@@ -987,6 +1073,8 @@ public:
         //add layer
         sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
         r = sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Shapes &in shapes, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(ShapeFile *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Field &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(const RigidModel &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(RigidPhysicsWorld *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
 
         //remove layer
 
@@ -995,6 +1083,7 @@ public:
         //replace layer
         r = sm->m_Engine->RegisterGlobalFunction("void ReplaceViewLayer(UILayer layer, Map &in map)", asMETHODPR( MapViewTool ,ReplaceLayerFromScript,(ASUILayer, cTMap *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
         r = sm->m_Engine->RegisterGlobalFunction("void ReplaceViewLayer(UILayer layer, Shapes &in shapes)", asMETHODPR( MapViewTool ,ReplaceLayerFromScript,(ASUILayer, ShapeFile *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        r = sm->m_Engine->RegisterGlobalFunction("void ReplaceViewLayer(UILayer layer, Field &in shapes)", asMETHODPR( MapViewTool ,ReplaceLayerFromScript,(ASUILayer, Field *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
 
         //Get Layer Id Map
 

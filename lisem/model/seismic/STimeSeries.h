@@ -38,7 +38,6 @@ class EW;
 class Sarray;
 class SeisFilter;
 
-using namespace std;
 
 class STimeSeries{
 
@@ -53,9 +52,9 @@ STimeSeries( EW* a_ew, std::string fileName, std::string staName, receiverMode m
 
 void allocateRecordingArrays( int numberOfTimeSteps, double startTime, double timeStep );
   
-void recordData(vector<double> & u);
+void recordData(std::vector<double> & u);
 
-void writeFile( string suffix="" );
+void writeFile( std::string suffix="" );
 
 void readFile( EW* ew, bool ignore_utc );
 
@@ -73,7 +72,7 @@ double getZ() const {return mZ;}
 
 double arrival_time( double lod );
 
-STimeSeries* copy( EW* a_ew, string filename, bool addname=false );
+STimeSeries* copy( EW* a_ew, std::string filename, bool addname=false );
 
 double misfit( STimeSeries& observed, STimeSeries* diff, double& dshift, double& ddshift, double& dd1shift );
 double misfit2( STimeSeries& observed );
@@ -110,7 +109,7 @@ int m_grid0;
 
 private:   
 STimeSeries();
-void write_usgs_format( string a_fileName);
+void write_usgs_format( std::string a_fileName);
 void write_sac_format( int npts, char *ofile, float *y, float btime, float dt, char *var,
 		       float cmpinc, float cmpaz);
 double utc_distance( int utc1[7], int utc2[7] );
@@ -141,7 +140,7 @@ bool m_zRelativeToTopography; // location is given relative to topography
 int mWriteEvery;
 
 bool m_usgsFormat, m_sacFormat;
-string m_path;
+std::string m_path;
 
 // start time, shift, and time step 
 double m_t0, m_shift, m_dt;

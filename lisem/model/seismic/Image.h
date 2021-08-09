@@ -94,25 +94,25 @@ void computeImageMagdt( std::vector<Sarray> &a_Up, std::vector<Sarray> &a_Um, do
 void computeImageMag( std::vector<Sarray> &a_U );
 void computeImageHmagdt( std::vector<Sarray> &a_Up, std::vector<Sarray> &a_Um, double dt );
 void computeImageHmag( std::vector<Sarray> &a_U );
-void compute_image_gradp( vector<Sarray>& a_gLambda, vector<Sarray>& a_Mu,
-			  vector<Sarray>& a_Lambda, vector<Sarray>& a_Rho );
-void compute_image_grads( vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda, 
-			  vector<Sarray>& a_Mu, vector<Sarray>& a_Rho );
+void compute_image_gradp( std::vector<Sarray>& a_gLambda, std::vector<Sarray>& a_Mu,
+              std::vector<Sarray>& a_Lambda, std::vector<Sarray>& a_Rho );
+void compute_image_grads( std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+              std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Rho );
 
-void computeImageQuantityDiff( vector<Sarray>& a_U, vector<Sarray>& a_Uex,
+void computeImageQuantityDiff( std::vector<Sarray>& a_U, std::vector<Sarray>& a_Uex,
 			       int comp );
 
 void output_image( int a_cycle, double a_time, double a_dt,
-		   vector<Sarray>& a_Up,  vector<Sarray>& a_U, vector<Sarray>& a_Um,
-		   vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-		   vector<Sarray>& a_gRho, vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda,
-		   vector<Source*>& a_sources, int a_dminus );
+           std::vector<Sarray>& a_Up,  std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um,
+           std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+           std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+           std::vector<Source*>& a_sources, int a_dminus );
 
 void update_image( int a_cycle, double a_time, double a_dt,
-		   vector<Sarray>& a_Up,  vector<Sarray>& a_U, vector<Sarray>& a_Um,
-		   vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-		   vector<Sarray>& a_gRho, vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda,
-		   vector<Source*>& a_sources, int a_dminus );
+           std::vector<Sarray>& a_Up,  std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um,
+           std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+           std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+           std::vector<Source*>& a_sources, int a_dminus );
 
 //void computeImageError(std::vector<Sarray> &a_mu, int a_nComp);
 
@@ -120,7 +120,7 @@ void copy2DArrayToImage(Sarray &twoDimensionalArray);
 
 bool is_time_derivative() const;
 
-void associate_gridfiles( vector<SeisImage*>& imgs );
+void associate_gridfiles( std::vector<SeisImage*>& imgs );
    
 void writeImagePlane_2(int cycle, std::string &a_path, double time );
 void add_grid_filenames_to_file( const char* fname );

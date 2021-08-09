@@ -116,25 +116,25 @@ void EW::check_materials()
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
   if( myRank == 0 )
   {
-    string indent  = "\n       ";
-    string indents =   "       ";
+    std::string indent  = "\n       ";
+    std::string indents =   "       ";
       
-    cout << indent << "----------- Material properties ranges ---------------"
+    std::cout << indent << "----------- Material properties ranges ---------------"
 //            << indent << "  For grid [" << m_level << "][" << m_gridnr << "]" << endl
 	 << indent << mins[0] << " kg/m^3 <=  Density <= " << maxs[0] << " kg/m^3"
 	 << indent << mins[1] << " m/s    <=  Vp      <= " << maxs[1] << " m/s"
 	 << indent << mins[2] << " m/s    <=  Vs      <= " << maxs[2] << " m/s" 
 	 << indent << mins[5] << "        <=  Vp/Vs   <= " << maxs[5]
 	 << indent << mins[3] << " Pa     <=  mu      <= " << maxs[3] << " Pa"
-	 << indent << mins[4] << " Pa     <=  lambda  <= " << maxs[4] << " Pa" << endl;
+     << indent << mins[4] << " Pa     <=  lambda  <= " << maxs[4] << " Pa" << std::endl;
 
     if( usingAttenuation() && !m_twilight_forcing)
     {
-      cout << indents << "Using attenuation "
+      std::cout << indents << "Using attenuation "
            << indent << mins[6] << "        <=  Qs      <= " << maxs[6] << "  "
-           << indent << mins[7] << "        <=  Qp      <= " << maxs[7] << "  " << endl;
+           << indent << mins[7] << "        <=  Qp      <= " << maxs[7] << "  " << std::endl;
     }
-    cout  << indents << "------------------------------------------------------" << endl;
+    std::cout  << indents << "------------------------------------------------------" << std::endl;
   }
    
 
@@ -546,7 +546,7 @@ double EW::localMaxVpOverVs()
 //} // end extrapolateInZ
 
 //-----------------------------------------------------------------------
-void EW::extrapolateInXY( vector<Sarray>& field )
+void EW::extrapolateInXY( std::vector<Sarray>& field )
 {
    for( int g= 0; g < mNumberOfGrids ; g++ )
    {
@@ -605,7 +605,7 @@ void EW::extrapolateInZ( int g, Sarray& field, bool lowk, bool highk )
 }
 
 //-----------------------------------------------------------------------
-void EW::extrapolateInXYvector( vector<Sarray>& field )
+void EW::extrapolateInXYvector( std::vector<Sarray>& field )
 {
 
    for( int g= 0; g < mNumberOfGrids ; g++ )

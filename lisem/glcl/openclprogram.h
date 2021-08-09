@@ -66,6 +66,8 @@ public:
     bool m_IsCPU = false;
     std::function<bool(std::vector<void*>)> m_cpuprogram;
 
+    std::string m_file_name;
+    std::string m_name;
 public:
 
     OpenCLProgram();
@@ -83,6 +85,8 @@ public:
 
     inline int LoadProgramString(cl::Context c, cl::Device d, std::string file,std::string name)
     {
+        m_file_name = file;
+        m_name = name;
         LISEM_DEBUG("compiling " + QString(file.c_str()) + " " + QString(name.c_str()));
 
         ClearArguments();
@@ -516,11 +520,21 @@ public:
     {
 
 
+
         //textures and dat abuffers require additional functionality
         for(int i = 0; i < argumentlist_buffer.length(); i++)
         {
             CLProgramArgument<OpenGLCLBuffer*> arg = argumentlist_buffer.at(i);
-            m_kernel.setArg(arg.id,arg.data->m_buffercl);
+            try
+            {
+                m_kernel.setArg(arg.id,arg.data->m_buffercl);
+            }catch(cl::Error &e)
+            {
+                std::cout << "cl error " << e.err() << " " << e.what() << " " << arg.id << " buffer " <<  m_name << " " << m_file_name <<   std::endl;
+                LISEMS_ERROR("Error during GPU calculation : " + QString::number(e.err()) + " : " + QString(e.what()) + " " +  QString(m_name.c_str())+ " " +  QString(m_file_name.c_str()));
+                throw 1;
+            }
+
         }
 
         for(int i = 0; i < argumentlist_texture.length(); i++)
@@ -529,22 +543,42 @@ public:
             if(arg.data->m_IsCLOnly)
             {
                 std::cout << "add opencl image to kernel " << std::endl;
-                m_kernel.setArg(arg.id,arg.data->m_TextureGPUCL->m_texcl);
+                try
+                {
+                    m_kernel.setArg(arg.id,arg.data->m_TextureGPUCL->m_texcl);
+                }catch(cl::Error &e)
+                {
+                    std::cout << "cl error " << e.err() << " " << e.what() << " " << arg.id << " textureclonly " <<  m_name << " " << m_file_name << std::endl;
+                    LISEMS_ERROR("Error during GPU calculation : " + QString::number(e.err()) + " : " + QString(e.what())+ " " +  QString(m_name.c_str())+ " " +  QString(m_file_name.c_str()));
+                    throw 1;
+                }
             }else
             {
-                m_kernel.setArg(arg.id,arg.data->m_TextureGPU->m_texcl);
+                try
+                {
+
+                    m_kernel.setArg(arg.id,arg.data->m_TextureGPU->m_texcl);
+                }catch(cl::Error &e)
+                {
+                    std::cout << "cl error " << e.err() << " " << e.what() << " " << arg.id << " texture " <<  m_name << " " << m_file_name <<  std::endl;
+                    LISEMS_ERROR("Error during GPU calculation : " + QString::number(e.err()) + " : " + QString(e.what())+ " " +  QString(m_name.c_str())+ " " +  QString(m_file_name.c_str()));
+                    throw 1;
+                }
             }
         }
 
-        //normal data using template function
-        SetArgumentForExecutionFromList_R(argumentlist_float_ref);
-        SetArgumentForExecutionFromList_R(argumentlist_int_ref);
-        SetArgumentForExecutionFromList_R(argumentlist_double_ref);
-        SetArgumentForExecutionFromList_R(argumentlist_char_ref);
-        SetArgumentForExecutionFromList_NR(argumentlist_float);
-        SetArgumentForExecutionFromList_NR(argumentlist_int);
-        SetArgumentForExecutionFromList_NR(argumentlist_double);
-        SetArgumentForExecutionFromList_NR(argumentlist_char);
+
+            //normal data using template function
+            SetArgumentForExecutionFromList_R(argumentlist_float_ref);
+            SetArgumentForExecutionFromList_R(argumentlist_int_ref);
+            SetArgumentForExecutionFromList_R(argumentlist_double_ref);
+            SetArgumentForExecutionFromList_R(argumentlist_char_ref);
+            SetArgumentForExecutionFromList_NR(argumentlist_float);
+            SetArgumentForExecutionFromList_NR(argumentlist_int);
+            SetArgumentForExecutionFromList_NR(argumentlist_double);
+            SetArgumentForExecutionFromList_NR(argumentlist_char);
+
+
 
         return 0.0;
     }
@@ -555,7 +589,15 @@ public:
         for(int i = 0; i < argumentlist.length(); i++)
         {
             CLProgramArgument<B> arg = argumentlist.at(i);
-            m_kernel.setArg(arg.id,arg.length * sizeof(arg),arg.data);
+            try
+            {
+                m_kernel.setArg(arg.id,arg.length * sizeof(arg),arg.data);
+            }catch(cl::Error &e)
+            {
+                std::cout << "cl error " << e.err() << " " << e.what() << " " << arg.id << " other " <<  m_name << " " << m_file_name <<  std::endl;
+                LISEMS_ERROR("Error during GPU calculation : " + QString::number(e.err()) + " : " + QString(e.what())+ " " +  QString(m_name.c_str())+ " " +  QString(m_file_name.c_str()));
+                throw 1;
+            }
         }
         return 0;
     }
@@ -566,7 +608,15 @@ public:
         for(int i = 0; i < argumentlist.length(); i++)
         {
             CLProgramArgument<B> arg = argumentlist.at(i);
-            m_kernel.setArg(arg.id,arg.data);
+            try
+            {
+                m_kernel.setArg(arg.id,arg.data);
+            }catch(cl::Error &e)
+            {
+                std::cout << "cl error " << e.err() << " " << e.what() << " " << arg.id << " other" << std::endl;
+                LISEMS_ERROR("Error during GPU calculation : " + QString::number(e.err()) + " : " + QString(e.what()));
+                throw 1;
+            }
         }
         return 0;
     }

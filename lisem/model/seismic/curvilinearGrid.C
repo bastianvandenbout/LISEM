@@ -53,7 +53,7 @@ void EW::setup_metric()
 {
    if (!m_topography_exists ) return;
    if (mVerbose >= 1 && proc_zero())
-      cout << "***inside setup_metric***"<< endl;
+      std::cout << "***inside setup_metric***"<< std::endl;
    int g=mNumberOfGrids-1;
    int Bx=m_iStart[g];
    int By=m_jStart[g];
@@ -112,7 +112,7 @@ void EW::generate_grid()
 //  m_grid_interpolation_order = a_order;
 
   if (mVerbose >= 1 && proc_zero())
-    cout << "***inside generate_grid***"<< endl;
+    std::cout << "***inside generate_grid***"<< std::endl;
 
 // get the size from the top Cartesian grid
   int g = mNumberOfCartesianGrids-1;
@@ -218,8 +218,8 @@ bool EW::curvilinear_grid_mapping( double q, double r, double s, double & X0, do
 
   if (! (q >= qMin && q <= qMax && r >= rMin && r <= rMax && s >= sMin && s <= sMax))
   {
-    cout << "curvilinear_grid_mapping: input parameters out of bounds (q,r,s) = " << q << ", " << r << ", " << s << endl;
-    cout << "limits are " << qMin << " " << qMax << " " << rMin << " " << rMax << " " <<sMin <<  " " << sMax << endl;
+    std::cout << "curvilinear_grid_mapping: input parameters out of bounds (q,r,s) = " << q << ", " << r << ", " << s << std::endl;
+    std::cout << "limits are " << qMin << " " << qMax << " " << rMin << " " << rMax << " " <<sMin <<  " " << sMax << std::endl;
     return false;
   }
   
@@ -424,8 +424,8 @@ bool EW::invert_curvilinear_grid_mapping( double X0, double Y0, double Z0, doubl
 
   if (g != gCurv)
   {
-    cout << "invert_curvilinear_grid_mapping: computeNearestGridPoint returned g!=gCurv for (X0, Y0, Z0) = " 
-	 << X0 << ", " << Y0 << ", " << Z0 << endl;
+    std::cout << "invert_curvilinear_grid_mapping: computeNearestGridPoint returned g!=gCurv for (X0, Y0, Z0) = "
+     << X0 << ", " << Y0 << ", " << Z0 << std::endl;
     MPI_Abort(MPI_COMM_WORLD,1);
   }
   
@@ -613,7 +613,7 @@ bool EW::invert_curvilinear_grid_mapping( double X0, double Y0, double Z0, doubl
 // check convergence
       if (fabs(F0) > 1.e-9)
       {
-        cout << "invert_curvilinear_grid_mapping: poor convergence for X0, Y0, Z0 = " << X0 << ", " << Y0 << ", " << Z0 << endl;
+        std::cout << "invert_curvilinear_grid_mapping: poor convergence for X0, Y0, Z0 = " << X0 << ", " << Y0 << ", " << Z0 << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
       }
       zeta = zeta0;
@@ -711,7 +711,7 @@ void EW::smoothTopography(int maxIter)
 void EW::buildGaussianHillTopography(double amp, double Lx, double Ly, double x0, double y0)
 {
   if (mVerbose >= 1 && proc_zero())
-    cout << "***inside buildGaussianHillTopography***"<< endl;
+    std::cout << "***inside buildGaussianHillTopography***"<< std::endl;
 
   int topLevel = mNumberOfGrids-1;
 
@@ -785,7 +785,7 @@ bool EW::interpolate_topography( double q, double r, double & Z0, bool smoothed)
   
   if (! inside_domain)
   {
-    cout << "interpolate_topography: input parameters out of bounds (q,r) = " << q << ", " << r << endl;
+    std::cout << "interpolate_topography: input parameters out of bounds (q,r) = " << q << ", " << r << std::endl;
     return false;
   }
   
@@ -806,7 +806,7 @@ bool EW::interpolate_topography( double q, double r, double & Z0, bool smoothed)
 
   if (g != gCurv)
   {
-     cout << "interpolate_topography: g = " << g << " gcurv = " << gCurv << endl;
+     std::cout << "interpolate_topography: g = " << g << " gcurv = " << gCurv << std::endl;
     return false;
   }
   double tau; // holds the elevation at (q,r). Recall that elevation=-z
@@ -871,9 +871,9 @@ bool EW::interpolate_topography( double q, double r, double & Z0, bool smoothed)
     }
     else
     {
-       cout << "interpolate_topography: point not in ext domain i= "  << i << " j = " << j << " limits " << 
+       std::cout << "interpolate_topography: point not in ext domain i= "  << i << " j = " << j << " limits " <<
 	  m_iStart[gCurv] << " " << m_iEnd[gCurv] << " " << m_jStart[gCurv] << " " << m_jEnd[gCurv] << 
-	  " nearest i = " << iNear << " j= " << jNear << endl;
+      " nearest i = " << iNear << " j= " << jNear << std::endl;
        return false;
     }
     }
@@ -931,11 +931,11 @@ void EW::metric_derivatives_test()
       l2[c] = sqrt(l2[c]);
    if( proc_zero() )
    {
-      cout << "Errors in metric, max norm and L2 norm \n";
+      std::cout << "Errors in metric, max norm and L2 norm \n";
       for( int c=0 ; c < 4 ; c++ )
-	 cout << " " << li[c] << " " << l2[c] << endl;
-      cout << "Error in Jacobian, max norm and L2 norm \n";
-      cout << " " << li[4] << " " << l2[4] << endl;
+     std::cout << " " << li[c] << " " << l2[c] << std::endl;
+      std::cout << "Error in Jacobian, max norm and L2 norm \n";
+      std::cout << " " << li[4] << " " << l2[4] << std::endl;
    }
 }
 
@@ -1004,7 +1004,7 @@ void EW::smooth_grid( int maxIter )
 // NOTE: the current smoothing algorithm makes the error larger rather than smaller!
    double rf=0.05; // rf<1/6 for stability
    if (mVerbose >= 1 && proc_zero() && maxIter>0)
-      cout << "***smoothing the grid with " << maxIter << " Jacobi iterations and relaxation factor " << rf << " ***"<< endl;
+      std::cout << "***smoothing the grid with " << maxIter << " Jacobi iterations and relaxation factor " << rf << " ***"<< std::endl;
 
    int topLevel = mNumberOfGrids-1;
    int i, j, k, iter;

@@ -31,7 +31,7 @@
 // # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA 
 #include "EW.h"
 #include <cstring>
-
+#include "defines.h"
 // making directories
 #include <errno.h>
 //extern int errno;
@@ -84,10 +84,10 @@ void F77_FUNC(computedtaniso2curv,COMPUTEDTANISO2CURV)( int *, int *, int *, int
 #define SQR(x) ((x)*(x))
 
 //----------------------------------------------
-void EW::setupRun( vector<Source*> & a_GlobalUniqueSources )
+void EW::setupRun( std::vector<Source*> & a_GlobalUniqueSources)
 {
    if( mIsInitialized && proc_zero() )
-      cout << " WARNING, calling setupRun twice " << endl;
+      std::cout << " WARNING, calling setupRun twice " << std::endl;
 
   double time_start = MPI_Wtime();
 
@@ -101,15 +101,15 @@ void EW::setupRun( vector<Source*> & a_GlobalUniqueSources )
     
   if( mVerbose && proc_zero() )
   {
-    cout << "  Using Bjorn's fast (parallel)" << " IO library" << endl;
+    std::cout << "  Using Bjorn's fast (parallel)" << " IO library" << std::endl;
     if (m_pfs)
     {
-      cout << "Assuming a PARALLEL file system" << endl;
-      cout << "Writing images from (up to) " << m_nwriters << " procs" << endl;
+      std::cout << "Assuming a PARALLEL file system" << std::endl;
+      std::cout << "Writing images from (up to) " << m_nwriters << " procs" << std::endl;
     }
     else
     {
-      cout << "Assuming a SERIAL file system." << endl;
+      std::cout << "Assuming a SERIAL file system." << std::endl;
     }
   }
   
@@ -121,13 +121,13 @@ void EW::setupRun( vector<Source*> & a_GlobalUniqueSources )
     int g;
     for( g=mNumberOfCartesianGrids-1; g>=0; g-- )
     {
-      cout << "Info: Grid #" << g <<" min z-coordinate: " << m_zmin[g] << endl;
+      std::cout << "Info: Grid #" << g <<" min z-coordinate: " << m_zmin[g] << std::endl;
     }
     for( g=mNumberOfGrids-1; g>=0; g-- )
     {
-      cout << "Info: mGridSize[" << g << "]=" << mGridSize[g] << endl;
+      std::cout << "Info: mGridSize[" << g << "]=" << mGridSize[g] << std::endl;
     }
-    cout << endl;
+    std::cout << std::endl;
   }
 
 // Set boundary conditions, if not done in input file.
@@ -357,7 +357,7 @@ void EW::setupRun( vector<Source*> & a_GlobalUniqueSources )
   }
   
   if( mVerbose && proc_zero() )
-    cout << "  Assigned material properties" << endl;
+    std::cout << "  Assigned material properties" << std::endl;
 
 // compute time-step and number of time steps. 
 // Note: SW4 always ends the simulation at mTmax, whether prefilter is enabled or not.
@@ -372,7 +372,7 @@ void EW::setupRun( vector<Source*> & a_GlobalUniqueSources )
 // Initialize image files: set time, tell images about grid hierarchy.
   initialize_image_files();
   if( mVerbose && proc_zero() )
-    cout << "*** Initialized Images" << endl;
+    std::cout << "*** Initialized Images" << std::endl;
 
 // // is the curvilinear grid ok?
 //   if (topographyExists() && m_minJacobian <=0. && proc_zero()) // m_minJacobian is the global minimum and should be the same on all processes
@@ -409,7 +409,7 @@ void EW::setupRun( vector<Source*> & a_GlobalUniqueSources )
 }
 
 //-----------------------------------------------------------------------
-void EW::preprocessSources( vector<Source*> & a_GlobalUniqueSources )
+void EW::preprocessSources( std::vector<Source*> & a_GlobalUniqueSources )
 {
 // This routine should be called once, after setupRun (can we include it in setupRun?)
 
@@ -440,13 +440,13 @@ void EW::preprocessSources( vector<Source*> & a_GlobalUniqueSources )
       bool sources_ok=true;
       
       if (mVerbose && proc_zero())
-	cout << "Sanity testing of the source" << endl;
+    std::cout << "Sanity testing of the source" << std::endl;
 
       if( (m_point_source_test || m_lamb_test) && a_GlobalUniqueSources.size() != 1 )
       {
 	if (proc_zero())
-	  cout << "Error: Point Source Test and Lamb Test must have one single source" << endl
-	       << "       The number of defined sources is " << a_GlobalUniqueSources.size() << endl; 
+      std::cout << "Error: Point Source Test and Lamb Test must have one single source" << std::endl
+           << "       The number of defined sources is " << a_GlobalUniqueSources.size() << std::endl;
 	sources_ok=false;
       }
 
@@ -456,17 +456,17 @@ void EW::preprocessSources( vector<Source*> & a_GlobalUniqueSources )
 				   a_GlobalUniqueSources[0]->getName() == "Gaussian") )
       {
 	if (proc_zero())
-	  cout << "Error: Point Source Test can only have source types" 
-	       << " VerySmoothBump, SmoothWave, or Gaussian" << endl
-	       << "  Input name is " << a_GlobalUniqueSources[0]->getName() << endl;
+      std::cout << "Error: Point Source Test can only have source types"
+           << " VerySmoothBump, SmoothWave, or Gaussian" << std::endl
+           << "  Input name is " << a_GlobalUniqueSources[0]->getName() << std::endl;
 	sources_ok=false;
       }
 
       if( m_lamb_test && a_GlobalUniqueSources[0]->isMomentSource() )
       {
 	if (proc_zero())
-	  cout << "Error: Lamb's Test must have one point force" << endl
-	       << "       The defined source is a moment tensor" << endl;
+      std::cout << "Error: Lamb's Test must have one point force" << std::endl
+           << "       The defined source is a moment tensor" << std::endl;
 	sources_ok=false;
       }
 
@@ -482,11 +482,11 @@ void EW::preprocessSources( vector<Source*> & a_GlobalUniqueSources )
 	       freq == 1.0 && z0 == 0.0 && fx == 0.0 && fy == 0.0) )
 	{
 	  if (proc_zero())
-	    cout << "Error: Lamb Test assumes a 'VerySmoothBump' time function with freq=1" 
-		 << " on z=0 with fx=0 and fy=0" << endl
+        std::cout << "Error: Lamb Test assumes a 'VerySmoothBump' time function with freq=1"
+         << " on z=0 with fx=0 and fy=0" << std::endl
 		 << " The specified source has a '" << a_GlobalUniqueSources[0]->getName() 
 		 << "' time function with freq=" << freq 
-		 << " on z=" << z0 << " with fx=" << fx << " and fy=" << fy << endl;
+         << " on z=" << z0 << " with fx=" << fx << " and fy=" << fy << std::endl;
 	  sources_ok=false;
 	}
       } // end if m_lamb_test
@@ -623,7 +623,7 @@ void EW::preprocessSources( vector<Source*> & a_GlobalUniqueSources )
 
 // output details about the filter
 	if (mVerbose>=3 && proc_zero() )
-           cout << *m_filter_ptr;
+           std::cout << *m_filter_ptr;
 
 	if (!getQuiet() && proc_zero() )
         {
@@ -691,7 +691,7 @@ void EW::preprocessSources( vector<Source*> & a_GlobalUniqueSources )
 } // end preprocessSources
 
 //-----------------------------------------------------------------------
-void EW::compute_epicenter( vector<Source*> & a_GlobalUniqueSources ) 
+void EW::compute_epicenter( std::vector<Source*> & a_GlobalUniqueSources )
 {
   // To find out which event goes first, we need to query all sources
   double earliestTime=0.;
@@ -730,7 +730,7 @@ void EW::setupSBPCoeff()
 {
   double gh2; // this coefficient is also stored in m_ghcof[0]
   if (mVerbose >=2 && m_myRank == 0)
-    cout << "Setting up SBP boundary stencils" << endl;
+    std::cout << "Setting up SBP boundary stencils" << std::endl;
   
 // get coefficients for difference approximation of 2nd derivative with variable coefficients
 //      call VARCOEFFS4( acof, ghcof )
@@ -786,9 +786,9 @@ void EW::set_materials()
 // output a list of material id's
 	if (proc_zero() && mVerbose>=3)
 	{
-	   cout << "**** Material ID's: ********" << endl;
+       std::cout << "**** Material ID's: ********" << std::endl;
 	   for (int q=0; q<m_materials.size(); q++)
-	      cout << "Material[" << q << "]->ID=" << m_materials[q]->m_materialID << endl;
+          std::cout << "Material[" << q << "]->ID=" << m_materials[q]->m_materialID << std::endl;
 	}
      }
 
@@ -802,9 +802,9 @@ void EW::set_materials()
     if (proc_zero())
     {
       if (lastAllCoveringBlock == 0)
-	cout << "Considering all material blocks" << endl;
+    std::cout << "Considering all material blocks" << std::endl;
       else
-	cout << "Only considering material blocks with index >= " << lastAllCoveringBlock << endl;
+    std::cout << "Only considering material blocks with index >= " << lastAllCoveringBlock << std::endl;
     } // end if proc_zero()
     for( unsigned int b = lastAllCoveringBlock ; b < m_mtrlblocks.size() ; b++ )
        m_mtrlblocks[b]->set_material_properties(mRho, mMu, mLambda, mQs, mQp); 
@@ -969,9 +969,9 @@ void EW::set_materials()
   {
 // tmp
     if (proc_zero())
-      cout << "******************************" << endl
-	   << " ASSIGNING TWILIGHT MATERIALS " << endl
-	   << "******************************" << endl;
+      std::cout << "******************************" << std::endl
+       << " ASSIGNING TWILIGHT MATERIALS " << std::endl
+       << "******************************" << std::endl;
 
 // For some forcings (such as twilight forcing) the material is set here.
       double xP, yP, zP;
@@ -1130,9 +1130,9 @@ void EW::set_anisotropic_materials()
       if (proc_zero())
       {
          if (lastAllCoveringBlock == 0)
-            cout << "Considering all material blocks" << endl;
+            std::cout << "Considering all material blocks" << std::endl;
          else
-            cout << "Only considering material blocks with index >= " << lastAllCoveringBlock << endl;
+            std::cout << "Only considering material blocks with index >= " << lastAllCoveringBlock << std::endl;
       } // end if proc_zero()
 
       int g = mNumberOfGrids-1;
@@ -1199,9 +1199,9 @@ void EW::set_anisotropic_materials()
    {
 // tmp
       if (proc_zero())
-         cout << "******************************" << endl
-              << " ASSIGNING ANISOTROPIC TWILIGHT MATERIALS " << endl
-              << "******************************" << endl;
+         std::cout << "******************************" << std::endl
+              << " ASSIGNING ANISOTROPIC TWILIGHT MATERIALS " << std::endl
+              << "******************************" << std::endl;
 
 // For some forcings (such as twilight forcing) the material is set here.
       double xP, yP, zP;
@@ -1213,7 +1213,7 @@ void EW::set_anisotropic_materials()
       // need to store all the phase angle constants somewhere
      phc[0]=0;
       for (int i=0; i<21; i++)
-         phc[i] = i*10*M_PI/180;
+         phc[i] = i*10*LISEM_PI/180;
 	
       for (g=0; g<mNumberOfCartesianGrids; g++)
       {
@@ -1283,14 +1283,14 @@ void EW::set_anisotropic_materials()
    } // end if m_twilight
    else
    {
-      CHECK_INPUT(false, "Error:  the only test for an anisotropic material is twilight" << endl);
+      CHECK_INPUT(false, "Error:  the only test for an anisotropic material is twilight" << std::endl);
    }
    
 } // end set_anisotropic_materials()
 
 
 //-----------------------------------------------------------------------
-void EW::check_anisotropic_material( vector<Sarray>& rho, vector<Sarray>& c )
+void EW::check_anisotropic_material( std::vector<Sarray>& rho, std::vector<Sarray>& c )
 {
    double rhomin=1e38, rhomax=-1e38;
    double eigmin=1e38, eigmax=-1e38;
@@ -1323,10 +1323,10 @@ void EW::check_anisotropic_material( vector<Sarray>& rho, vector<Sarray>& c )
 
    if( proc_zero() )
    {
-      cout << " Material properties " << endl;
-      cout <<  rhomin <<  " <=  Density <= " << rhomax  << endl;
-      cout <<  eigmin <<  " <=  Eig(c)  <= " << eigmax << endl;
-      CHECK_INPUT(eigmin > 0, "ERROR: tensor of elastic coefficients is not positive definite. The problem is not well posed" << endl);
+      std::cout << " Material properties " << std::endl;
+      std::cout <<  rhomin <<  " <=  Density <= " << rhomax  << std::endl;
+      std::cout <<  eigmin <<  " <=  Eig(c)  <= " << eigmax << std::endl;
+      CHECK_INPUT(eigmin > 0, "ERROR: tensor of elastic coefficients is not positive definite. The problem is not well posed" << std::endl);
    }
 }
 
@@ -1336,21 +1336,21 @@ void EW::create_output_directory( )
    if (proc_zero()) 
    {
 
-     cout << "----------------------------------------------------" << endl
-	  << " Making Output Directory: " << mPath << endl
-	  << "\t\t" << endl;
+     std::cout << "----------------------------------------------------" << std::endl
+      << " Making Output Directory: " << mPath << std::endl
+      << "\t\t" << std::endl;
 
       // Create directory where all these files will be written.
 
       int err = mkdirs(mPath);
 
       if (err == 0)
-	cout << "... Done!" << endl
-	     << "----------------------------------------------------" << endl;
+    std::cout << "... Done!" << std::endl
+         << "----------------------------------------------------" << std::endl;
       else
       {
 // fatal error
-	cerr << endl << "******** Failed to create the output directory *******" << endl << endl;
+    std::cout << std::endl << "******** Failed to create the output directory *******" << std::endl <<std:: endl;
 	MPI_Abort(MPI_COMM_WORLD,1);
       }
 
@@ -1358,23 +1358,23 @@ void EW::create_output_directory( )
       if (access(mPath.c_str(),W_OK)!=0)
       {
 // fatal error
-	cerr << endl << "Error: No write permission on output directory: " << mPath << endl;
+    std::cout << std::endl << "Error: No write permission on output directory: " << mPath << std::endl;
 	MPI_Abort(MPI_COMM_WORLD,1);
       }
       
    }
   // Let processor 0 finish first!
-   cout.flush();  cerr.flush();
+   std::cout.flush();  std::cerr.flush();
    MPI_Barrier(MPI_COMM_WORLD);
 
 // Check that the mPath directory exists from all processes
    struct stat statBuf;
    int statErr = stat(mPath.c_str(), &statBuf);
-   CHECK_INPUT(statErr == 0 && S_ISDIR(statBuf.st_mode), "Error: " << mPath << " is not a directory" << endl);
+   CHECK_INPUT(statErr == 0 && S_ISDIR(statBuf.st_mode), "Error: " << mPath << " is not a directory" << std::endl);
    
 // check that all processes have write permission on the directory
    CHECK_INPUT(access(mPath.c_str(),W_OK)==0,
-	   "Error: No write permission on output directory: " << mPath << endl);
+       "Error: No write permission on output directory: " << mPath << std::endl);
 }
 
 //-----------------------------------------------------------------------
@@ -1489,8 +1489,8 @@ void EW::computeDT()
 //           cout << "eig solver " << W[0] << " analytic values " << eg1 << " and " << eg2 << endl;
 
 	   dtCurvGP = dtGP = mCFL*sqrt(4.*mRho[g](i,j,k)/(-W[0]));
-	   dtloc = min(dtloc, dtGP);
-	   dtCurv = min(dtCurv, dtCurvGP);
+       dtloc = std::min(dtloc, dtGP);
+       dtCurv = std::min(dtCurv, dtCurvGP);
 	 }
 // tmp
 //     fclose(fp);
@@ -1517,7 +1517,7 @@ void EW::computeDT()
 
     if (!mQuiet && (mVerbose >= 1 || mOrder<4) && proc_zero())
     {
-      cout << "TIME accuracy order=" << mOrder << " CFL=" << mCFL << " prel. time step=" << mDt << endl;
+      std::cout << "TIME accuracy order=" << mOrder << " CFL=" << mCFL << " prel. time step=" << mDt << std::endl;
     }
     
     if (mTimeIsSet)
@@ -1567,7 +1567,7 @@ void EW::computeDTanisotropic()
     MPI_Allreduce( &dtproc, &mDt, 1, MPI_DOUBLE, MPI_MIN, m_cartesian_communicator);
     if (!mQuiet && mVerbose >= 1 && proc_zero())
     {
-      cout << "order of accuracy=" << mOrder << " CFL=" << mCFL << " prel. time step=" << mDt << endl;
+      std::cout << "order of accuracy=" << mOrder << " CFL=" << mCFL << " prel. time step=" << mDt << std::endl;
     }
     
     if (mTimeIsSet)
@@ -1582,22 +1582,22 @@ void EW::computeDTanisotropic()
 }
 
 //-----------------------------------------------------------------------
-int EW::mkdirs(const string& path)
+int EW::mkdirs(const std::string& path)
 {
    
    //   string pathTemp(path.begin(), path.end()); 
-   string pathTemp = path;
+   std::string pathTemp = path;
    //-----------------------------------------------------------------
    // Recursively call stat and then mkdir on each sub-directory in 'path'
    //-----------------------------------------------------------------
-   string sep = "/";
+   std::string sep = "/";
 
    char * pathtemparg = new char[pathTemp.length()+1];
    strcpy(pathtemparg,pathTemp.c_str());
    char* token = strtok( pathtemparg, sep.c_str() );
 //   char* token = strtok(const_cast<char*>(pathTemp.c_str()), sep.c_str());
 
-   stringstream pathsofar;
+   std::stringstream pathsofar;
 
 // for checking the status:
    struct stat statBuf;
@@ -1625,7 +1625,7 @@ int EW::mkdirs(const string& path)
 	}
 	else
 	{
-	  cerr << "stat() says: '" << pathsofar.str() << "' is not a directory." << endl;
+      std::cout << "stat() says: '" << pathsofar.str() << "' is not a directory." << std::endl;
 	// real error, let's bail...
 	  delete[] pathtemparg;
 	  return -1;
@@ -1637,13 +1637,13 @@ int EW::mkdirs(const string& path)
 //	cerr << "stat() returned an error code." << endl;
 	if (errno == EACCES)
 	{
-	  cerr << "Error: **Search permission is denied for one of the directories in the path prefix of " << pathsofar.str() << endl;
+      std::cout << "Error: **Search permission is denied for one of the directories in the path prefix of " << pathsofar.str() << std::endl;
 	  delete[] pathtemparg;
 	  return -1;
 	}
 	else if (errno == ENOTDIR)
 	{
-	  cerr << "Error: **A component of the path '" <<  pathsofar.str() << "' is not a directory. " << endl;
+      std::cout << "Error: **A component of the path '" <<  pathsofar.str() << "' is not a directory. " << std::endl;
 	  delete[] pathtemparg;
 	  return -1;
 	}
@@ -1651,54 +1651,54 @@ int EW::mkdirs(const string& path)
  	{
 // this means that we need to call mkdir to create the directory
 	  if (mVerbose >=2) 
-	    cout << "Info: **stat returned ENOENT (the path does not exist, or the path " << endl
-		 << "      is an empty string) " << pathsofar.str() << endl;
+        std::cout << "Info: **stat returned ENOENT (the path does not exist, or the path " << std::endl
+         << "      is an empty string) " << pathsofar.str() << std::endl;
  	}
 	else
 	{
 	  if (mVerbose >=2) 
-	    cout << "Info: **stat returned other error code for path: " << pathsofar.str() << endl;
+        std::cout << "Info: **stat returned other error code for path: " << pathsofar.str() << std::endl;
 	}
       }
 
 // if we got this far, then 'pathsofar' does not exists
 
 // tmp
-      if (mVerbose >=2) cout << "Calling mkdir() on path: " << pathsofar.str() << endl;
+      if (mVerbose >=2) std::cout << "Calling mkdir() on path: " << pathsofar.str() << std::endl;
 // old code for recursively making the output directory
        if (mkdir(pathsofar.str().c_str()) // why do we need group permissions?
           == -1)
       {
-	if (mVerbose >=2) cout << "mkdir() returned an error code." << endl;
+    if (mVerbose >=2) std::cout << "mkdir() returned an error code." << std::endl;
          // check error conditions
 	if (errno == EEXIST)
 	{
 // can this ever happen since we called stat(), which said that the directory did not exist ???
-	  if (mVerbose >=2) cout << "Info: ** The directory already exists:" << pathsofar.str() << endl;
+      if (mVerbose >=2) std::cout << "Info: ** The directory already exists:" << pathsofar.str() << std::endl;
 	  
 	  // it already exists, this is okay!
 	  token = strtok(NULL, sep.c_str());
 	  continue;
 	}
 	else if (errno == EACCES)
-	  cerr << "Error: **Write permission is denied for the parent directory in which the new directory is to be added." << pathsofar.str() << endl;
+      std::cout << "Error: **Write permission is denied for the parent directory in which the new directory is to be added." << pathsofar.str() << std::endl;
 	else if (errno == EMLINK)
-	  cerr << "Error: **The parent directory has too many links (entries)." << 
-	    pathsofar.str() << endl;
+      std::cout << "Error: **The parent directory has too many links (entries)." <<
+        pathsofar.str() << std::endl;
 	else if (errno == ENOSPC)
-	  cerr << "Error: **The file system doesn't have enough room to create the new directory." <<
-	    pathsofar.str() << endl;
+      std::cout << "Error: **The file system doesn't have enough room to create the new directory." <<
+        pathsofar.str() << std::endl;
 	else if (errno == EROFS)
-	  cerr << "Error: **  The parent directory of the directory being created is on a read-only file system and cannot be modified." << pathsofar.str() << endl;
+     std::cout << "Error: **  The parent directory of the directory being created is on a read-only file system and cannot be modified." << pathsofar.str() << std::endl;
 	else if (errno == ENOSPC)
-	  cerr << "Error: ** The new directory cannot be created because the user's disk quota is exhausted." << pathsofar.str() << endl;
+      std::cout << "Error: ** The new directory cannot be created because the user's disk quota is exhausted." << pathsofar.str() << std::endl;
 	// real error, let's bail...
 	delete[] pathtemparg;
 	return -1;
       }
       else
       {
-	if (mVerbose >=2) cout << "mkdir() returned successfully." << endl;
+    if (mVerbose >=2) std::cout << "mkdir() returned successfully." << std::endl;
 
 // are there more directories to be made?
 	token = strtok(NULL, sep.c_str());
@@ -1712,7 +1712,7 @@ int EW::mkdirs(const string& path)
 void EW::setup_supergrid( )
 {
   if (mVerbose >= 3 && proc_zero())
-    cout << "*** Inside setup_supergrid ***" << endl;
+    std::cout << "*** Inside setup_supergrid ***" << std::endl;
   
 // check to see if there are any supergrid boundary conditions
   for (int b=0; b<6; b++)
@@ -1724,10 +1724,10 @@ void EW::setup_supergrid( )
   }
 
   if (mVerbose && proc_zero() && m_use_supergrid)
-    cout << "Detected at least one boundary with supergrid conditions" << endl;
+    std::cout << "Detected at least one boundary with supergrid conditions" << std::endl;
   
   int gTop = mNumberOfCartesianGrids-1;
-  vector<double> sg_width(mNumberOfCartesianGrids);
+  std::vector<double> sg_width(mNumberOfCartesianGrids);
 
 // if the number of grid points was specified in the input file, we need to convert that to a physical width, based on the coarsest grid
   if ( !m_use_sg_width )
@@ -2069,7 +2069,7 @@ void EW::assign_supergrid_damping_arrays()
 }
 
 //-----------------------------------------------------------------------
-void EW::material_ic( vector<Sarray>& a_mtrl )
+void EW::material_ic( std::vector<Sarray>& a_mtrl )
 {
 // interface between curvilinear and top Cartesian grid
    if (topographyExists())
@@ -2100,7 +2100,7 @@ void EW::material_ic( vector<Sarray>& a_mtrl )
 }
 
 //-----------------------------------------------------------------------
-void EW::perturb_velocities( vector<Sarray>& a_vs, vector<Sarray>& a_vp )
+void EW::perturb_velocities( std::vector<Sarray>& a_vs, std::vector<Sarray>& a_vp )
 {
    int g = mNumberOfGrids-1;
    int p = m_random_dist/mGridSize[g]+1;

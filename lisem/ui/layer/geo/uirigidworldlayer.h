@@ -101,6 +101,7 @@ public:
 
     inline void OnDraw(OpenGLCLManager * m, GeoWindowState state) override
     {
+
         //first synchronize existing objects and their locations/rotations/velocities
         SyncAssets();
 
@@ -122,6 +123,8 @@ public:
 
                 QList<RigidPhysicsObject * > objects = m_RigidWorld->GetObjectList();
 
+                std::cout << "has changes " <<  objects.length() << std::endl;
+
                 for(int i = m_Visualizers.length()-1; i>-1; i--)
                 {
                     UIRigidObjectVisualizer* vis = m_Visualizers.at(i);
@@ -142,12 +145,10 @@ public:
                         //destroy resources
 
 
-
-
-
-
                     }
                 }
+
+
 
                 for(int i = 0; i < objects.length(); i++)
                 {
@@ -157,6 +158,7 @@ public:
                         UIRigidObjectVisualizer* vis;
                         if(obj->GetCustomPtr() == nullptr)
                         {
+                            std::cout << "new visualizer" << std::endl;
                             //add new object
                             vis = new UIRigidObjectVisualizer(obj);
                             m_Visualizers.append(vis);
@@ -181,8 +183,8 @@ public:
                             vis = (UIRigidObjectVisualizer*)(obj->GetCustomPtr());
                         }
 
-
                         //update object properties
+                        std::cout << "update position" << std::endl;
                         vis->m_Position = obj->GetPosition();
                         vis->m_RotationMatrix = obj->GetRotationMatrix();
 
@@ -215,6 +217,8 @@ public:
 
     inline void OnDraw3DGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
     {
+
+
         //actually draw 3d object representing rigid body physics world
 
         LSMVector2 offset = m_RigidWorld->GetSimpleGeoOrigin();
@@ -544,6 +548,12 @@ public:
                 }
             }
         }
+
+
+        std::cout << "draw 3d rigid done" << std::endl;
+
+
+
     }
 
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
@@ -566,11 +576,8 @@ public:
                 //draw black dot on cursor location
                 m->m_ShapePainter->DrawLine(CursorX-size,CursorY,CursorX+size,CursorY,width_black,LSMVector4(0.0,0.0,0.0,1.0));
                 m->m_ShapePainter->DrawLine(CursorX,CursorY-size,CursorX,CursorY+size,width_black,LSMVector4(0.0,0.0,0.0,1.0));
-
-
             }
         }
-
     }
 
     inline void OnPrepare(OpenGLCLManager * m,GeoWindowState s) override

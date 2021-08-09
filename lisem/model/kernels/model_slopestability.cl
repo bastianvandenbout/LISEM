@@ -226,10 +226,10 @@ int dim0,
 				__write_only image2d_t GW_WFN,
 				__write_only image2d_t GW_USN,
 				__write_only image2d_t GW_SN,		
-                                __write_only image2d_t DEMN,
-                                __write_only image2d_t OUTPUT_UI,
-                                int ui_image,
-                                int do_initialstability
+                __write_only image2d_t DEMN,
+                __write_only image2d_t OUTPUT_UI,
+                int ui_image,
+                int do_initialstability
 				)
 {
 

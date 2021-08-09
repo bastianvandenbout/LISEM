@@ -345,10 +345,10 @@ bool SeisImage3D::timeToWrite( double time, int cycle, double dt )
 }
 
 //-----------------------------------------------------------------------
-void SeisImage3D::update_image( int a_cycle, double a_time, double a_dt, vector<Sarray>& a_U, 
-			    vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			    vector<Sarray>& a_gRho, vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda,
-			    vector<Sarray>& a_Qp, vector<Sarray>& a_Qs,
+void SeisImage3D::update_image( int a_cycle, double a_time, double a_dt, std::vector<Sarray>& a_U,
+                std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+                std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+               std::vector<Sarray>& a_Qp, std::vector<Sarray>& a_Qs,
 			    std::string a_path, Sarray& a_Z )
 {
    if( timeToWrite( a_time, a_cycle, a_dt ) )
@@ -359,10 +359,10 @@ void SeisImage3D::update_image( int a_cycle, double a_time, double a_dt, vector<
 }
                             
 //-----------------------------------------------------------------------
-void SeisImage3D::force_write_image( double a_time, int a_cycle, vector<Sarray>& a_U, 
-			    vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			    vector<Sarray>& a_gRho, vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda,
-			    vector<Sarray>& a_Qp, vector<Sarray>& a_Qs,
+void SeisImage3D::force_write_image( double a_time, int a_cycle, std::vector<Sarray>& a_U,
+                std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+                std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+                std::vector<Sarray>& a_Qp, std::vector<Sarray>& a_Qs,
 			    std::string a_path, Sarray& a_Z )
 {
   compute_image( a_U, a_Rho, a_Mu, a_Lambda, a_gRho, a_gMu, a_gLambda, a_Qp, a_Qs );
@@ -370,11 +370,11 @@ void SeisImage3D::force_write_image( double a_time, int a_cycle, vector<Sarray>&
 }
                             
 //-----------------------------------------------------------------------
-void SeisImage3D::compute_image( vector<Sarray>& a_U, vector<Sarray>& a_Rho,
-			     vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			     vector<Sarray>& a_gRho, vector<Sarray>& a_gMu,
-			     vector<Sarray>& a_gLambda,
-  			     vector<Sarray>& a_Qp, vector<Sarray>& a_Qs )
+void SeisImage3D::compute_image( std::vector<Sarray>& a_U, std::vector<Sarray>& a_Rho,
+                 std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+                 std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu,
+                 std::vector<Sarray>& a_gLambda,
+                 std::vector<Sarray>& a_Qp, std::vector<Sarray>& a_Qs )
 {
 // Introduce 'st' to simplify the variable name
    int st = mImageSamplingFactor;
@@ -681,7 +681,7 @@ void SeisImage3D::write_image( int cycle, std::string &path, double t,
 
       time_t realtime;
       time(&realtime);
-      string strtime;
+      std::string strtime;
       strtime += asctime(localtime(&realtime));
       char strtimec[25];
 
@@ -777,7 +777,7 @@ void SeisImage3D::write_image( int cycle, std::string &path, double t,
 }
 
 //-----------------------------------------------------------------------
-void EW::read_volimage( std::string &path, std::string &fname, vector<Sarray>& data )
+void EW::read_volimage( std::string &path, std::string &fname, std::vector<Sarray>& data )
 {
   //File format: 
   //
@@ -796,7 +796,7 @@ void EW::read_volimage( std::string &path, std::string &fname, vector<Sarray>& d
   // timeofday - String describing the creation date of the file, max 25 bytes.
   //
 
-   vector<Parallel_IO*> parallel_io;
+   std::vector<Parallel_IO*> parallel_io;
    define_parallel_io( parallel_io );
 
    int ng = mNumberOfGrids;
@@ -937,7 +937,7 @@ void EW::read_volimage( std::string &path, std::string &fname, vector<Sarray>& d
 }
 
 //-----------------------------------------------------------------------
-void EW::define_parallel_io( vector<Parallel_IO*>& parallel_io )
+void EW::define_parallel_io( std::vector<Parallel_IO*>& parallel_io )
 {
    parallel_io.resize(mNumberOfGrids);
    for( int g=0 ; g < mNumberOfGrids ; g++ )

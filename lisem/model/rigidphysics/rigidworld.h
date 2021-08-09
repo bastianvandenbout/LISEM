@@ -74,13 +74,14 @@ public:
     cTMap * m_HCorrected = nullptr;
     cTMap * m_BlockLDD = nullptr;
 
-    bool m_HasTerrain;
+    bool m_HasTerrain = false;
 
     QList<RigidPhysicsObject * > m_DEMObjects;
 
     cTMap * m_FlowBlockX1 = nullptr;
     cTMap * m_FlowBlockY1 = nullptr;
 
+    bool m_DeleteAfter = false;
     cTMap * m_HF = nullptr;
     cTMap * m_HS = nullptr;
     cTMap * m_USX = nullptr;
@@ -114,7 +115,7 @@ public:
         m_Solver = chrono_types::make_shared<ChSolverPSOR>();
         m_Solver->SetMaxIterations(100);
         m_Solver->EnableWarmStart(true);
-        //m_system.Set_G_acc(ChVector<double>(0.0,0.0,0.0));
+        m_system.Set_G_acc(ChVector<double>(0.0,-9.81,0.0));
         m_system.SetSolver(m_Solver);
         m_system.SetMaxPenetrationRecoverySpeed(1.0);
         //m_system.SetTimestepperType(ChTimestepper::Type::RUNGEKUTTA45);
@@ -154,13 +155,19 @@ public:
     void SetTerrain(cTMap * DEM);
 
     void RunSingleStep(double dt, double t);
-    void SetInteractTwoPhaseFlow(cTMap * HF,cTMap * UF,cTMap * VF,cTMap * HS,cTMap * US, cTMap * VS, cTMap * DS)
+    void SetInteractTwoPhaseFlow(cTMap * HF,cTMap * UF,cTMap * VF,cTMap * HS,cTMap * US, cTMap * VS, cTMap * DS, bool delete_after = false)
     {
+        if(m_DeleteAfter)
+        {
+            delete m_HF;
+            delete m_UFX;
+            delete m_UFY;
+        }
         m_HF = HF;
         m_UFX = UF;
         m_UFY = VF;
 
-
+        m_DeleteAfter = delete_after;
     }
 
     cTMap * GetUpdatedUFX()
@@ -259,7 +266,18 @@ public:
     void           AS_ReleaseRef        ();
     bool           AS_IsFromScript = false;
     RigidPhysicsWorld *     AS_Assign   (RigidPhysicsWorld *other);
+    cTMap * AS_GetFlowBlockX();
+    cTMap * AS_GetFlowBlockY();
+    cTMap * AS_GetFlowBlockFX();
+    cTMap * AS_GetFlowBlockFY();
+    cTMap * AS_GetFlowBlockCX();
+    cTMap * AS_GetFlowBlockCY();
+    cTMap * AS_GetFlowHCorrect();
 
+    void AS_Step(float dt);
+    void AS_SetElevation(cTMap * dem);
+    void AS_SetFlow(cTMap * h , cTMap * ux, cTMap * uy ,cTMap * dens);
+    std::vector<cTMap *> AS_GetFlowCoupling();
 
     //add or remove objects
     void AS_AddObj(RigidPhysicsObject*obj);
@@ -378,3 +396,105 @@ inline RigidPhysicsObject* RigidPhysicsWorld::AS_GetObj(int i)
     return obj;
 
 }
+
+inline static std::vector<cTMap *> AS_GetFlowCoupling(RigidPhysicsWorld* w)
+{
+    std::vector<cTMap *> ret;
+
+    if(w->m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    ret.push_back(w->m_BlockX->GetCopy());
+    ret.push_back(w->m_BlockY->GetCopy());
+    ret.push_back(w->m_BlockFX->GetCopy());
+    ret.push_back(w->m_BlockFY->GetCopy());
+    ret.push_back(w->m_BlockCaptureX->GetCopy());
+    ret.push_back(w->m_BlockCaptureY->GetCopy());
+
+    return ret;
+
+}
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowBlockX()
+{
+
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_BlockX->GetCopy();
+}
+
+
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowBlockY()
+{
+
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_BlockY->GetCopy();
+}
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowBlockFX()
+{
+
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_BlockFX->GetCopy();
+}
+
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowBlockFY()
+{
+
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_BlockFY->GetCopy();
+}
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowBlockCX()
+{
+
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_BlockCaptureX->GetCopy();
+}
+
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowBlockCY()
+{
+
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_BlockCaptureY->GetCopy();
+}
+
+inline cTMap * RigidPhysicsWorld::AS_GetFlowHCorrect()
+{
+    if(m_BlockX == nullptr)
+    {
+        LISEMS_ERROR("Could not get coupling feedback as no flow has been set, and no step ran");
+        throw 1;
+    }
+    return m_HCorrected->GetCopy();
+}
+
+

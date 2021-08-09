@@ -94,10 +94,10 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
 }
 
 
+/*
+#include "seismic/EW.h"
 
-   //#include "seismic/EW.h"
-
-
+#include "geo/raster/field.h"
 #include <cstring>
 #include <string>
 #include <sstream>
@@ -106,54 +106,165 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
 #include <iomanip>
 #include <mpi.h>
 
-
-//Seismic wave simulation using SW4
-
-// for( g = 0 ; g < mNumberOfGrids; g++ )
-// {   for(k=m_kStart[g]; k<= m_kEnd[g]; k++ )
-//     {   for(j=m_jStart[g]; j<= m_jEnd[g]; j++ )
-//         {   for(i=m_iStart[g]; i<= m_iEnd[g]; i++ )
-//             {
-//                  mu_tmp = mMu[g](i,j,k);
-
-//the grids are the refinement grids, with higer detail at the top.
-//each refinement decreases resolution by a factor 2
-//the grids are cartesian normally, but in case of topography, there is a curvlinear grid at the top.
-//curvilinear grid maintains lateral extens, but changes vertical grid cell size.
-//our cartesian data cubes represent the sub-surface
-inline static std::vector<cTMap *> AS_SeismicWave( std::vector<cTMap *> state, std::vector<cTMap *> Dens, std::vector<cTMap *> velP, std::vector<cTMap *> velS, float dt)
+class LISEM_API SeismicModel
 {
+public:
 
 
-     int myRank = 0, nProcs = 0;
-
-     // Initialize MPI...
-     int initialized = false;
-     MPI_Initialized(&initialized);
-     if(!initialized)
-     {
-         MPI_Init(nullptr, nullptr);
-     }
+    int myRank = 0, nProcs = 0;
+    bool first_step = false;
 
 
-     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-     MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+    //Seismic wave simulation using SW4
+
+    // for( g = 0 ; g < mNumberOfGrids; g++ )
+    // {   for(k=m_kStart[g]; k<= m_kEnd[g]; k++ )
+    //     {   for(j=m_jStart[g]; j<= m_jEnd[g]; j++ )
+    //         {   for(i=m_iStart[g]; i<= m_iEnd[g]; i++ )
+    //             {
+    //                  mu_tmp = mMu[g](i,j,k);
+
+    //the grids are the refinement grids, with higer detail at the top.
+    //each refinement decreases resolution by a factor 2
+    //the grids are cartesian normally, but in case of topography, there is a curvlinear grid at the top.
+    //curvilinear grid maintains lateral extens, but changes vertical grid cell size.
+    //our cartesian data cubes represent the sub-surface
+
+    EW *m_Simulation;
+
 
     // Save the source description here
-    //vector<Source*> GlobalSources;
+    vector<Source*> GlobalSources;
     // Save the time series here
-    //vector<STimeSeries*> GlobalTimeSeries;
-
-    /*EW simulation(fileName, GlobalSources, GlobalTimeSeries);
-
-    simulation.setupRun( GlobalSources );
-    simulation.solve( GlobalSources, GlobalTimeSeries );*/
+    vector<STimeSeries*> GlobalTimeSeries;
 
 
-    MPI_Abort(MPI_COMM_WORLD, 1);
+    inline SeismicModel()
+    {
 
-    return {nullptr};
-}
+
+    }
+
+    inline ~SeismicModel()
+    {
+
+        MPI_Abort(MPI_COMM_WORLD, 1);
+
+    }
+
+
+
+    inline void AddVelocityModel(Field * vp, Field * vs, Field * dens)
+    {
+
+
+    }
+
+    inline void SetRefinementDepths(std::vector<float> depths)
+    {
+
+    }
+
+    inline void AddSourcePoint()
+    {
+
+    }
+    inline void AddSourceTensor()
+    {
+
+    }
+    inline void GetFullFields()
+    {
+
+    }
+
+    inline void FillField(bool nearest, )
+    {
+
+    }
+
+    inline void Step()
+    {
+
+        if(first_step)
+        {
+            first_step = false;
+
+            // Initialize MPI...
+            int initialized = false;
+            MPI_Initialized(&initialized);
+            if(!initialized)
+            {
+                MPI_Init(nullptr, nullptr);
+            }
+
+
+            MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+            MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+
+
+            std::stringstream ss;
+
+            ss << "Test file " << std::endl;
+            ss << "line 2" << std::endl;
+
+            m_Simulation = new EW(ss, GlobalSources, GlobalTimeSeries);
+
+
+            m_Simulation->setupRun( GlobalSources);
+
+            //do part of the solve function that is preparation
+
+
+
+        }
+
+
+        //we require a custom solve that only does the single timestep we want
+        m_Simulation->solve( GlobalSources, GlobalTimeSeries );
+
+
+
+
+    }
+
+
+    inline void CopyFrom(SeismicModel* )
+    {
+
+
+
+
+    }
+
+    int AS_RefCount = 1;
+
+    inline void AS_ReleaseRef()
+    {
+        AS_RefCount -= 1;
+        if(AS_RefCount == 0)
+        {
+            delete this;
+        }
+    }
+    inline void AS_AddRef()
+    {
+        AS_RefCount += 1;
+    }
+
+
+    inline SeismicModel * AS_Assign(SeismicModel * other)
+    {
+        this->CopyFrom(other);
+
+        return this;
+    }
+};
+
+inline static SeismicModel *AS_SeismicModelFactory()
+{
+    return new SeismicModel();
+}*/
 
 
 #endif // RASTERSEISMIC_H

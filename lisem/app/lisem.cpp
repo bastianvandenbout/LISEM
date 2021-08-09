@@ -261,6 +261,7 @@ int SPHazard::execute(int argc, char *argv[])
             m_InterfaceWindow->SetScriptFunctions(m_ScriptManager);
 
             m_OpenGLCLManager->ProcessEvents(); //QTimer::singleShot(0,m_OpenGLCLManager,SLOT(ProcessEvents));
+            std::cout << "execute qt app " << std::endl;
             int qreturn = m_App->exec();
 
             m_App->processEvents();

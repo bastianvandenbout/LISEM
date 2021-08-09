@@ -38,8 +38,6 @@
 
 class EW;
 
-using namespace std;
-
 class MaterialRfile : public MaterialData
 {
  public:
@@ -80,10 +78,10 @@ class MaterialRfile : public MaterialData
 
    int m_npatches;
    // Index range of patch in file coordinate system
-   vector<int> m_ifirst, m_ilast, m_jfirst, m_jlast, m_kfirst, m_klast, m_ni, m_nj, m_nk;
+   std::vector<int> m_ifirst, m_ilast, m_jfirst, m_jlast, m_kfirst, m_klast, m_ni, m_nj, m_nk;
 
   // file coordinate system is x=(i-1)*m_hx[gr] + m_xmin[gr], in SW4 coordinates.
-   vector<double> m_z0, m_hh, m_hv;
+   std::vector<double> m_z0, m_hh, m_hv;
    double m_x0, m_y0;
 
    // xminloc, xmaxloc, etc. is the bounding box for the set of data patches in this processor.
@@ -92,8 +90,8 @@ class MaterialRfile : public MaterialData
    int m_bufsize;
 
 // 3-dimensional Sarrays
-   vector<Sarray> mMaterial;
-   vector<bool> m_isempty;
+   std::vector<Sarray> mMaterial;
+   std::vector<bool> m_isempty;
    //   int m_nlat, m_nlon, m_nmaxdepth, m_nx, m_ny;
    //   int m_nstenc;
    //   double m_h, m_dlon, m_dlat;

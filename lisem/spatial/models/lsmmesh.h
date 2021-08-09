@@ -162,6 +162,7 @@ public:
      Face GetFace(int i);
      void SetMaterial(ModelMaterial m);
      float RayCast(LSMVector3 O, LSMVector3 Dir);
+     bool IsPointInside(LSMVector3 O);
 
      void CalculateNormalsAndTangents();
      void CalcIsConvex();

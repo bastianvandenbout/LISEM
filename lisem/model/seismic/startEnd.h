@@ -31,7 +31,8 @@
 // # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA 
 #ifndef EW_STARTEND_H
 #define EW_STARTEND_H
-bool endswith(string end, string& mystr);
+#include <string>
+bool endswith(std::string end, std::string& mystr);
 bool startswith(const char begin[], char *line);
 #endif
 

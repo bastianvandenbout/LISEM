@@ -95,12 +95,33 @@ public:
         //
 
         glad_glBindTexture(GL_TEXTURE_3D, m_texgl);
-        glad_glGenerateMipmap(GL_TEXTURE_3D);
+        //glad_glGenerateMipmap(GL_TEXTURE_3D);
 
         glad_glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glad_glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glad_glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glad_glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glad_glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glad_glBindTexture(GL_TEXTURE_3D, 0);
+    }
+
+    inline void UpdateDataFromField(Field * f)
+    {
+        std::vector<float> data(f->nrCols()*f->nrRows()*f->nrLevels() , 0.5);
+
+        for(int i = 0; i < f->nrLevels(); i++)
+        {
+            for(int r = 0; r < f->nrRows(); r++)
+            {
+                for(int c = 0; c < f->nrCols(); c++)
+                {
+                    float val = f->ValueAt(i,r,c);
+                    data[i * f->nrRows() * f->nrCols() + r *f->nrCols() + c] = f->ValueAt(i,r,c);
+                }
+            }
+        }
+        glad_glBindTexture(GL_TEXTURE_3D, m_texgl);
+        glad_glTexSubImage3D(GL_TEXTURE_3D, 0, 0,0,0, f->nrCols(),f->nrRows(),f->nrLevels(), GL_RED, GL_FLOAT,data.data());
+        //glad_glGenerateMipmap(GL_TEXTURE_3D);
         glad_glBindTexture(GL_TEXTURE_3D, 0);
     }
 

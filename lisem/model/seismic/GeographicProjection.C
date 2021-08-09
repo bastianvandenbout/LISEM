@@ -30,7 +30,7 @@
 // # along with this program; if not, write to the Free Software
 // # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA 
 #include <mpi.h>
-
+#include "defines.h"
 #include <cstring>
 #include <cstdio>
 #include "GeographicProjection.h"
@@ -50,7 +50,7 @@ GeographicProjection::GeographicProjection( double lon_origin, double lat_origin
    m_latlong = pj_init_plus("+proj=latlong +datum=NAD83");
    CHECK_INPUT( m_latlong != 0, "ERRROR: Init of latlong projection failed with message: " << pj_strerrno(pj_errno) );
 
-   m_deg2rad = M_PI/180;
+   m_deg2rad = LISEM_PI/180;
 
    double x0 = lon_origin*DEG_TO_RAD;
    double y0 = lat_origin*DEG_TO_RAD;

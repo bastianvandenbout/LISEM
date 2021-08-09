@@ -1,9 +1,10 @@
 #include "rigidworld.h"
 #include "geometry/triangleintersect.h"
-
+#include "defines.h"
 
 void RigidPhysicsWorld::CopyFrom(RigidPhysicsWorld * w)
 {
+    std::cout << "copy from start "<< std::endl;
     //create a new system
 
     m_system.Set_G_acc(w->m_system.Get_G_acc());
@@ -13,14 +14,24 @@ void RigidPhysicsWorld::CopyFrom(RigidPhysicsWorld * w)
 
     for(int i = 0; i < w->m_Objects.length(); i++)
     {
+        std::cout << "object i " << i << std::endl;
         RigidPhysicsObject * obj =w->m_Objects.at(i)->GetCopy();
+        std::cout << "copied object, adding"<< std::endl;
         this->AddObject(obj);
-        if(w->m_Objects.at(i)->m_IsTerrain)
+        if(w->m_Objects.at(i)->m_IsTerrain && m_HasTerrain == false)
         {
+            std::cout << "copy dem" <<std::endl;
+            //m_DEM = w->m_DEM->GetCopy();
             m_HasTerrain = true;
+        }else if(w->m_Objects.at(i)->m_IsTerrain)
+        {
             m_DEMObjects.append(obj);
         }
+
+
     }
+
+                 std::cout <<" copy from end "<< std::endl;
 }
 
 
@@ -121,8 +132,9 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
         float dtreal = 0.01;
 
          //do interactions with fluid
-         if(m_HasTerrain)
+         if(m_HasTerrain && m_HF != nullptr)
          {
+             std::cout << "make maps, there is flow "<< std::endl;
              //make sure we have all relevant maps in the right dimensionality
 
              if(m_BlockX == nullptr || !(m_BlockX->nrCols() == m_DEM->nrCols() && m_BlockX->nrRows() == m_DEM->nrRows()))
@@ -143,8 +155,6 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                  m_BlockY = new cTMap();
                  m_BlockY->MakeMap(m_DEM,0.0);
              }
-
-
              if(m_BlockFX == nullptr || !(m_BlockFX->nrCols() == m_DEM->nrCols() && m_BlockFX->nrRows() == m_DEM->nrRows()))
              {
                  if(m_BlockFX != nullptr)
@@ -163,8 +173,6 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                  m_BlockFY = new cTMap();
                  m_BlockFY->MakeMap(m_DEM,0.0);
              }
-
-
              if(m_BlockCaptureX == nullptr || !(m_BlockCaptureX->nrCols() == m_DEM->nrCols() && m_BlockCaptureX->nrRows() == m_DEM->nrRows()))
              {
                  if(m_BlockCaptureX != nullptr)
@@ -714,7 +722,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                          if(obj->IsConvex())
                          {
 
-                             double equivalent_LSMere_area = 4.0 * M_PI * std::pow(vol_total * 3.0/(M_PI*4.0),2.0/3.0);
+                             double equivalent_LSMere_area = 4.0 * LISEM_PI * std::pow(vol_total * 3.0/(LISEM_PI*4.0),2.0/3.0);
                              concavity = area_total/equivalent_LSMere_area;
                              area_proj_x_total += area_proj_x / std::max(1.0,concavity);
                             area_proj_z_total += area_proj_z / std::max(1.0,concavity);
@@ -1224,11 +1232,11 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                  RigidPhysicsObject * obj = m_Objects.at(i);
                  if(!obj->IsTerrain())
                  {
-                     obj->m_chBody->SetPos_dt(ChVector<double>(-15.0 *cos(tmodel/5.0),0.0,0.0));
-                     obj->m_chBody->SetRot(ChQuaternion<double>(1.0,0.0,0.0,0.0));
-                     obj->m_chBody->SetWvel_loc(obj->m_chBody->GetWvel_loc()*0.98);
+                     //obj->m_chBody->SetPos_dt(ChVector<double>(-15.0 *cos(tmodel/5.0),0.0,0.0));
+                     //obj->m_chBody->SetRot(ChQuaternion<double>(1.0,0.0,0.0,0.0));
+                     //obj->m_chBody->SetWvel_loc(obj->m_chBody->GetWvel_loc()*0.98);
 
-                     obj->m_chBody->Empty_forces_accumulators();
+                     //obj->m_chBody->Empty_forces_accumulators();
 
                      BoundingBox3D extent = obj->GetAABB();
                       double csx = m_DEM->cellSizeX();
@@ -1499,6 +1507,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
              }
          }
 
+         std::cout << "step model " << std::endl;
          m_system.DoStepDynamics(dtreal);
          t = t + dtreal;
          iter ++;
@@ -1533,4 +1542,28 @@ void RigidPhysicsWorld::UnLockMutex()
 QList<RigidPhysicsObject * > RigidPhysicsWorld::GetObjectList()
 {
     return m_Objects;
+}
+
+
+
+void RigidPhysicsWorld::AS_Step(float dt)
+{
+    this->RunSingleStep(dt,0.0);
+}
+void RigidPhysicsWorld::AS_SetElevation(cTMap * dem)
+{
+    m_DEM = dem->GetCopy();
+    m_DEMObjects =RigidPhysicsObject::RigidPhysicsObject_AsHeightField(m_DEM,true);
+    for(int i = 0; i < m_DEMObjects.length(); i++)
+    {
+        AddObject(m_DEMObjects.at(i));
+    }
+
+    m_HasTerrain = true;
+}
+
+void RigidPhysicsWorld::AS_SetFlow(cTMap * h , cTMap * ux, cTMap * uy ,cTMap * dens)
+{
+    SetInteractTwoPhaseFlow(h->GetCopy(),ux->GetCopy(),uy->GetCopy(),nullptr,nullptr,nullptr,nullptr, true);
+
 }

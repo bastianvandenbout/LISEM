@@ -40,7 +40,7 @@
 #include "raster/rasterseismic.h"
 #include "geo/marchingcubes.h"
 #include "scriptarrayhelpers.h"
-
+#include "raster/rasterseismic.h"
 
 inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 {
@@ -220,6 +220,7 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     engine->RegisterGlobalSTDFunction("Object @MarchingCubes(const Field &in f, float value)", GetFuncConvert(MarchingCubesF));
 
+    //engine->Register
 }
 
 

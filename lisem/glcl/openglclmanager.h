@@ -808,7 +808,7 @@ public slots:
                 DoQTLoopCallbackPrivate();
             }
 
-            QTimer::singleShot(5,this,&OpenGLCLManager::ProcessEvents);
+            QTimer::singleShot(30,this,&OpenGLCLManager::ProcessEvents);
 
         }
     }

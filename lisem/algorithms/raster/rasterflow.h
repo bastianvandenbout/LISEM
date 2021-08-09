@@ -293,6 +293,314 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
 }
 
 
+
+static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY, cTMap * HN,cTMap * VXN,cTMap * VYN, cTMap * BLOCKX, cTMap * BLOCKY, cTMap * BLOCKFX, cTMap * BLOCKFY, cTMap * BLOCKVELX, cTMap * BLOCKVELY, cTMap * HCorrect,cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float dt = 0.1)
+{
+
+    int dim0 = DEM->nrCols();
+    int dim1 = DEM->nrRows();
+    float dx = DEM->cellSize();
+
+    float tx = dt/dx;
+
+
+
+    for(int r = 0; r < DEM->nrRows(); r++)
+    {
+        for (int c = 0; c < DEM->nrCols(); c++)
+        {
+            if(!pcr::isMV(DEM->data[r][c]))
+            {
+                int x = r;
+                int y = c;
+                const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
+                const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
+
+                const int gx_x1 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx - 1 )));
+                const int gx_x11 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx - 2 )));
+                const int gy_x1 = gy;
+                const int gx_x2 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx + 1)));
+                const int gx_x22 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx + 2)));
+                const int gy_x2 = gy;
+                const int gx_y1 = gx;
+                const int gy_y1 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy - 1)));
+                const int gy_y11 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy - 2)));
+                const int gx_y2 = gx;
+                const int gy_y2 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy + 1)));
+                const int gy_y22 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy + 2)));
+
+
+                float blockx = BLOCKX->data[gy][gx];
+                float blocky = BLOCKY->data[gy][gx];
+
+                float blockfx = BLOCKFX->data[gy][gx];
+                float blockfy = BLOCKFY->data[gy][gx];
+
+                float blockvelx = BLOCKVELX->data[gy][gx];
+                float blockvely = BLOCKVELY->data[gy][gx];
+
+                float blockx_x1 = BLOCKX->data[gy][gx_x1];
+                float blockx_x2 = BLOCKX->data[gy][gx_x2];
+                float blocky_y1 = BLOCKY->data[gy_y1][gx];;
+                float blocky_y2 = BLOCKY->data[gy_y2][gx];
+
+                float blockvelx_x1 = BLOCKVELX->data[gy][gx_x1];
+                float blockvelx_x2 = BLOCKVELX->data[gy][gx_x2];
+                float blockvely_y1 = BLOCKVELY->data[gy_y1][gx];
+                float blockvely_y2 = BLOCKVELY->data[gy_y1][gx];
+
+                float blockvely_x1 = BLOCKVELY->data[gy][gx_x1];
+                float blockvely_x2 = BLOCKVELY->data[gy][gx_x2];
+                float blockvelx_y1 = BLOCKVELX->data[gy_y1][gx];
+                float blockvelx_y2 = BLOCKVELX->data[gy_y2][gx];
+
+                float capture_x = std::max(0.0f,std::min(1.0f,blockx));//max(0.0f,min(1.0f,blockx - (1.0f-blockx)));
+                float capture_y = std::max(0.0f,std::min(1.0f,blocky));//max(0.0f,min(1.0f,blocky - (1.0f-blocky)));
+
+                float capture_x1 = std::max(0.0f,std::min(1.0f,blockx_x1));//max(0.0f,min(1.0f,blockx_x1 - (1.0f-blockx_x1)));
+                float capture_y1 = std::max(0.0f,std::min(1.0f,blocky_y1));//max(0.0f,min(1.0f,blocky_y1 - (1.0f-blocky_y1)));
+                float capture_x2 = std::max(0.0f,std::min(1.0f,blockx_x2));//max(0.0f,min(1.0f,blockx_x2 - (1.0f-blockx_x2)));
+                float capture_y2 = std::max(0.0f,std::min(1.0f,blocky_y2));//max(0.0f,min(1.0f,blocky_y2 - (1.0f-blocky_y2)));
+                float zhc = HCorrect->data[gy][gx];
+
+
+                float zhc_x1 = HCorrect->data[gy][gx_x1];
+                float zhc_x2 = HCorrect->data[gy][gx_x2];
+                float zhc_y1 = HCorrect->data[gy_y1][gx];
+                float zhc_y2 = HCorrect->data[gy_y1][gx];
+
+                float z = DEM->data[gy][gx];
+                float n = std::max(0.00001f,N->data[gy][gx]);
+
+                z = z + zhc;
+
+                float z_x1 = zhc_x1 + DEM->data[gy][gx_x1];
+                float z_x2 = zhc_x2 + DEM->data[gy][gx_x2];
+                float z_y1 = zhc_y1 + DEM->data[gy_y1][gx];
+                float z_y2 = zhc_y2 +DEM->data[gy_y2][gx];
+
+
+                if(gx + 1 > dim0-1)
+                {
+                    z_x2 = -99999;
+                }
+                if(gx - 1 < 0)
+                {
+                    z_x1 = -99999;
+                }
+                if(gy + 1 > dim1-1)
+                {
+                    z_y2 = -99999;
+                }
+                if(gy - 1 < 0)
+                {
+                    z_y1 = -99999;
+                }
+                float zc_x1 = z_x1 < -1000? z : z_x1;
+                float zc_x2 = z_x2 < -1000? z : z_x2;
+                float zc_y1 = z_y1 < -1000? z : z_y1;
+                float zc_y2 = z_y2 < -1000? z : z_y2;
+
+                float zcc_x1 =std::max(z,zc_x1);
+                float zcc_x2 =std::max(z,zc_x2);
+                float zcc_y1 =std::max(z,zc_y1);
+                float zcc_y2 =std::max(z,zc_y2);
+
+                float h = std::max(0.0f,H->data[gy][gx]);
+                float h_x1 = std::max(0.0f,H->data[gy][gx_x1]);
+                float h_x2 = std::max(0.0f,H->data[gy][gx_x2]);
+                float h_y1 = std::max(0.0f,H->data[gy_y1][gx]);
+                float h_y2 = std::max(0.0f,H->data[gy_y2][gx]);
+
+                float h_x11 = std::max(0.0f,H->data[gy][gx_x11]);
+                float h_x22 = std::max(0.0f,H->data[gy][gx_x22]);
+                float h_y11 = std::max(0.0f,H->data[gy_y11][gx]);
+                float h_y22 = std::max(0.0f,H->data[gy_y22][gx]);
+
+                float h_corr_x1 =  std::max(0.0f,(h_x1 - std::max(0.0f,z - zc_x1)));
+                float h_corr_x1b =  std::max(0.0f,(h - std::max(0.0f,zc_x1-z)));
+                float h_corr_x2 =  std::max(0.0f,(h - std::max(0.0f,zc_x2 - z)));
+                float h_corr_x2b =  std::max(0.0f,(h_x2 - std::max(0.0f,z - zc_x2)));
+                float h_corr_y1 =  std::max(0.0f,(h_y1 - std::max(0.0f,z - zc_y1)));
+                float h_corr_y1b =  std::max(0.0f,(h - std::max(0.0f,zc_y1 - z)));
+                float h_corr_y2 =  std::max(0.0f,(h - std::max(0.0f,zc_y2 - z)));
+                float h_corr_y2b =  std::max(0.0f,(h_y2 - std::max(0.0f,z - zc_y2)));
+
+                float vmax = 0.1 * dx/dt;
+
+                float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
+                float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
+
+                float vx_x1 = std::min(vmax,std::max(-vmax,VX->data[gy][gx_x1]));
+                float vy_x1 = std::min(vmax,std::max(-vmax,VY->data[gy][gx_x1]));
+                float vx_x2 = std::min(vmax,std::max(-vmax,VX->data[gy][gx_x2]));
+                float vy_x2 = std::min(vmax,std::max(-vmax,VY->data[gy][gx_x2]));
+                float vx_y1 = std::min(vmax,std::max(-vmax,VX->data[gy_y1][gx]));
+                float vy_y1 = std::min(vmax,std::max(-vmax,VY->data[gy_y1][gx]));
+                float vx_y2 = std::min(vmax,std::max(-vmax,VX->data[gy_y2][gx]));
+                float vy_y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx]));
+
+                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_x2 + h_x2-z - h)/dx)));
+                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_y1 - h_y1)/dx)));
+                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_x1 - h_x1)/dx)));
+                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_y2 + h_y2-z - h)/dx)));
+
+                float sx_zh = std::min(1.0f,std::max(-1.0f,minmod(sx_zh_x1,sx_zh_x2)));
+                float sy_zh = std::min(1.0f,std::max(-1.0f,minmod(sy_zh_y1,sy_zh_y2)));
+
+
+                float vx_adaptl = blockvelx < 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_x * std::fabs(blockvelx) /dx))*vx + std::min(0.5f,dt * capture_x *std::fabs(blockvelx) /dx) * blockvelx : vx;
+                float vy_adaptl = blockvely < 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_y *std::fabs(blockvely) /dx))*vy + std::min(0.5f,dt * capture_y *std::fabs(blockvely) /dx) * blockvely : vy;
+                float vx_adaptr = blockvelx > 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_x * std::fabs(blockvelx) /dx))*vx + std::min(0.5f,dt * capture_x *std::fabs(blockvelx) /dx) * blockvelx : vx;
+                float vy_adaptr = blockvely > 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_y *std::fabs(blockvely) /dx))*vy + std::min(0.5f,dt * capture_y *std::fabs(blockvely) /dx) * blockvely : vy;
+                float vx_adapt_x1 = blockvelx_x1 > 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_x1 * std::fabs(blockvelx_x1) /dx))*vx_x1 + std::min(0.5f,dt * capture_x1 *std::fabs(blockvelx_x1) /dx) * blockvelx_x1 : vx_x1;
+                float vy_adapt_y1 = blockvely_y1 > 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_y1 *std::fabs(blockvely_y1) /dx))*vy_y1 + std::min(0.5f,dt * capture_y1 *std::fabs(blockvely_y1) /dx) * blockvely_y1 : vy_y1;
+                float vx_adapt_x2 = blockvelx_x2 < 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_x2 * std::fabs(blockvelx_x2) /dx))*vx_x2 + std::min(0.5f,dt * capture_x2 *std::fabs(blockvelx_x2) /dx) * blockvelx_x2 : vx_x2;
+                float vy_adapt_y2 = blockvely_y2 < 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_y2 *std::fabs(blockvely_y2) /dx))*vy_y2 + std::min(0.5f,dt * capture_y2 *std::fabs(blockvely_y2) /dx) * blockvely_y2 : vy_y2;
+
+                /*float h_corr_x1 = std::max(0.0f,(h_x1 -std::max(0.0f,z - z_x1)));
+                float h_corr_x1b = std::max(0.0f,(h -std::max(0.0f,z_x1-z)));
+                float h_corr_x2 = std::max(0.0f,(h -std::max(0.0f,z_x2 - z)));
+                float h_corr_x2b = std::max(0.0f,(h_x2 -std::max(0.0f,z - z_x2)));
+                float h_corr_y1 = std::max(0.0f,(h_y1 -std::max(0.0f,z - z_y1)));
+                float h_corr_y1b = std::max(0.0f,(h -std::max(0.0f,z_y1 - z)));
+                float h_corr_y2 = std::max(0.0f,(h -std::max(0.0f,z_y2 - z)));
+                float h_corr_y2b = std::max(0.0f,(h_y2 -std::max(0.0f,z - z_y2)));
+                */
+
+                float factor_flowx1b = h_x1 < h_x2 ? 1.0-blockx : 1.0;
+                float factor_flowy1b = h_y1 < h_y2 ? 1.0-blocky : 1.0;
+                float factor_flowx2b = h_x1 < h_x2 ? 1.0 :  1.0-blockx;
+                float factor_flowy2b = h_y1 < h_y2 ? 1.0 : 1.0-blocky;
+
+                float factor_flowx1bt = h_x11 < h ? 1.0 : 1.0-blockx_x1;
+                float factor_flowy1bt = h_y11 < h ? 1.0 : 1.0-blocky_y1;
+                float factor_flowx2bt = h < h_x22 ? 1.0-blockx_x2 : 1.0;
+                float factor_flowy2bt = h < h_y22 ? 1.0-blocky_y2 : 1.0;
+
+                float factor_flowx1f = 1.0-std::min(1.0f,std::max(0.0f,z-z_x1)/std::max(1e-6f,h_x1));
+                float factor_flowy1f = 1.0-std::min(1.0f,std::max(0.0f,z-z_y1)/std::max(1e-6f,h_y1));
+                float factor_flowx2f = 1.0-std::min(1.0f,std::max(0.0f,z-z_x2)/std::max(1e-6f,h_x2));
+                float factor_flowy2f = 1.0-std::min(1.0f,std::max(0.0f,z-z_y2)/std::max(1e-6f,h_y2));
+
+                float factor_flowx1t = 1.0-std::min(1.0f,std::max(0.0f,z_x1-z)/std::max(1e-6f,h));
+                float factor_flowy1t = 1.0-std::min(1.0f,std::max(0.0f,z_y1-z)/std::max(1e-6f,h));
+                float factor_flowx2t = 1.0-std::min(1.0f,std::max(0.0f,z_x2-z)/std::max(1e-6f,h));
+                float factor_flowy2t = 1.0-std::min(1.0f,std::max(0.0f,z_y2-z)/std::max(1e-6f,h));
+
+
+                float fb_x1 = std::max(0.0f,std::min(factor_flowx1bt,factor_flowx1b));
+                float fb_x2 = std::max(0.0f,std::min(factor_flowx2bt,factor_flowx2b));
+                float fb_y1 = std::max(0.0f,std::min(factor_flowy1bt,factor_flowy1b));
+                float fb_y2 = std::max(0.0f,std::min(factor_flowy2bt,factor_flowy2b));
+
+                LSMVector3 hll_x1 = z_x1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_adapt_x1,vy_x1,h_corr_x1b,vx_adaptl,vy);
+                LSMVector3 hll_x2 = z_x2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx_adaptr,vy,h_corr_x2b,vx_adapt_x2,vy_x2);
+                LSMVector3 hll_y1 = z_y1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_adapt_y1,vx_y1,h_corr_y1b,vy_adaptl,vx);
+                LSMVector3 hll_y2 = z_y2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy_adaptr,vx,h_corr_y2b,vy_adapt_y2,vx_y2);
+
+                //float3 hll_x1 = z_x1 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_x1,vx_adapt_x1,vy_x1,fb_x1, h_corr_x1b,vx_adaptl,vy, fb_x1);
+                //float3 hll_x2 = z_x2 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_x2,vx_adaptr,vy,fb_x2,h_corr_x2b,vx_adapt_x2,vy_x2,fb_x2);
+                //float3 hll_y1 = z_y1 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_y1,vy_adapt_y1,vx_y1,fb_y1,h_corr_y1b,vy_adaptl,vx,fb_y1);
+                //float3 hll_y2 = z_y2 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_y2,vy_adaptr,vx,fb_y2,h_corr_y2b,vy_adapt_y2,vx_y2,fb_y2);
+
+
+                float C = 0.1f;
+                float fluxo_x1 = +tx*(hll_x1.x) + (blockvelx < 0? h * dt * capture_x * blockvelx/dx : 0.0) + (blockvelx_x1 > 0? h_x1 * dt *capture_x1 * blockvelx_x1/dx : 0.0);
+                float fluxo_x2 = -tx*(hll_x2.x) + (blockvelx > 0? -h * dt *capture_x * blockvelx/dx : 0.0) + (blockvelx_x2 < 0? -h_x2 * dt *capture_x2 * blockvelx_x2/dx : 0.0);
+                float fluxo_y1 = +tx*(hll_y1.x) + (blockvely < 0? h * dt *capture_y * blockvely/dx : 0.0) + (blockvely_y1 > 0? h_y1 * dt *capture_y1 * blockvely_y1/dx : 0.0);
+                float fluxo_y2 = -tx*(hll_y2.x) + (blockvely > 0? -h * dt *capture_y * blockvely/dx : 0.0) + (blockvely_y2 < 0? -h_y2 * dt *capture_y2 * blockvely_y2/dx : 0.0);
+
+                float flux_x1 = z_x1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowx1t * C,std::min((float)(fluxo_x1),h_x1 *factor_flowx1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x2 = z_x2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowx2t * C,std::min((float)(fluxo_x2),h_x2 *factor_flowx2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y1 = z_y1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowy1t * C,std::min((float)(fluxo_y1),h_y1 *factor_flowy1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y2 = z_y2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowy2t * C,std::min((float)(fluxo_y2),h_y2 *factor_flowy2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+
+                float fluxor_x1 = 1.0;//min(1.0f,max(-1.0f,flux_x1/maxmod(1e-4f,fluxo_x1)));
+                float fluxor_x2 = 1.0;// min(1.0f,max(-1.0f,flux_x2/maxmod(1e-4f,fluxo_x2)));
+                float fluxor_y1 = 1.0;// min(1.0f,max(-1.0f,flux_y1/maxmod(1e-4f,fluxo_y1)));
+                float fluxor_y2 = 1.0;// min(1.0f,max(-1.0f,flux_y2/maxmod(1e-4f,fluxo_y2)));
+
+                int edges = ((z_x1 < -1000)?1:0) +((z_x2 < -1000)?1:0)+((z_y1 < -1000)?1:0)+((z_y2 < -1000)?1:0);
+
+                bool edge = (z_x1 < -1000 || z_x2 < -1000 || z_y1 < -1000 || z_y2 < -1000);
+                float hold = h;
+                float hn = ((std::max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
+
+
+                float f_centre_x = 0.5 * GRAV*(h)*(((h - h_corr_x2) - (h - h_corr_x1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_x2) - (h - h_corr_x1));
+                float f_centre_y = 0.5 * GRAV*(h)*(((h - h_corr_y2) - (h - h_corr_y1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_y2) - (h - h_corr_y1));
+
+
+                float fluxmc_x1x = (blockvelx < 0? h * dt *capture_x * blockvelx* blockvelx/dx : 0.0) + (blockvelx_x1 > 0? h_x1 * dt *capture_x1 * blockvelx_x1* blockvelx_x1/dx : 0.0);
+                float fluxmc_x2x = (blockvelx > 0? -h * dt *capture_x * blockvelx* blockvelx/dx : 0.0) + (blockvelx_x2 < 0? -h_x2 * dt *capture_x2 * blockvelx_x2 *blockvelx_x2/dx : 0.0);
+                float fluxmc_y1x = (blockvely < 0? h * dt *capture_y * blockvely* blockvelx/dx : 0.0) + (blockvely_y1 > 0? h_y1 * dt *capture_y1 * blockvelx_y1* blockvely_y1/dx : 0.0);
+                float fluxmc_y2x = (blockvely > 0? -h * dt *capture_y * blockvely* blockvelx/dx : 0.0) + (blockvely_y2 < 0? -h_y2 * dt *capture_y2 * blockvelx_y2* blockvely_y2/dx : 0.0);
+
+                float fluxmc_x1y = (blockvelx < 0? h * dt *capture_x * blockvelx * blockvely/dx : 0.0) + (blockvelx_x1 > 0? h_x1 * dt *capture_x1 * blockvely_x1* blockvely_y1/dx : 0.0);
+                float fluxmc_x2y = (blockvelx > 0? -h * dt *capture_x * blockvelx * blockvely/dx : 0.0) + (blockvelx_x2 < 0? -h_x2 * dt *capture_x2 * blockvely_x2* blockvely_y2/dx : 0.0);
+                float fluxmc_y1y = (blockvely < 0? h * dt *capture_y * blockvely* blockvely/dx : 0.0) + (blockvely_y1 > 0? h_y1 * dt *capture_y1 * blockvely_y1* blockvely_y1/dx : 0.0);
+                float fluxmc_y2y = (blockvely > 0? -h * dt *capture_y * blockvely* blockvely/dx : 0.0) + (blockvely_y2 < 0? -h_y2 * dt *capture_y2 * blockvely_y2* blockvely_y2/dx : 0.0);
+
+                float qxn = h * vx - tx*(fluxor_x2 *hll_x2.y - fluxor_x1 *hll_x1.y + f_centre_x)  - tx*(fluxor_y2*hll_y2.z - fluxor_y1*hll_y1.z);// + fluxmc_x1x + fluxmc_x2x + fluxmc_y1x + fluxmc_y2x ;//- 0.5 * GRAV *hn*sx_z * dt
+                float qyn = h * vy - tx*(fluxor_x2 *hll_x2.z - fluxor_x1 *hll_x1.z) - tx*(fluxor_y2 *hll_y2.y - fluxor_y1 *hll_y1.y + f_centre_y);// + fluxmc_x1y + fluxmc_x2y + fluxmc_y1y + fluxmc_y2y ;//- 0.5 * GRAV *hn*sy_z * dt
+
+                float vsq = sqrt((float)(vx * vx + vy * vy));
+                float nsq1 = (0.001+n)*(0.001+n)*GRAV/std::max(0.01f,pow((float)(hn),(float)(4.0/3.0)));
+                float nsq = nsq1*vsq*dt;
+
+                float vxn = std::max(0.5,(1.0 -  dt * capture_x * std::fabs(blockvelx)/dx)) *(float)((qxn/(1.0f+nsq)))/std::max(0.01f,(float)(hn)) + std::min(0.5,1.0 * dt * capture_x *blockvelx* std::fabs(blockvelx)/dx) + blockfx * dt/(std::max(0.01f * dx,hn)*dx*dx * 1000.0);
+                float vyn = std::max(0.5,(1.0 -  dt * capture_y * std::fabs(blockvely)/dx)) *(float)((qyn/(1.0f+nsq)))/std::max(0.01f,(float)(hn)) + std::min(0.5,1.0 * dt * capture_y *blockvely* std::fabs(blockvely)/dx) + blockfy * dt/(std::max(0.01f * dx,hn)*dx*dx * 1000.0);
+
+                float threshold = 0.01 * dx;
+                if(hn < threshold)
+                {
+                    float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
+                    float acc_eff = (vxn -vx)/std::max(0.0001f,dt);
+
+                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
+
+                    vxn = kinfac * v_kin + vxn*(1.0f-kinfac);
+
+                }
+
+                if(hn < threshold)
+                {
+                    float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
+                    float acc_eff = (vyn -vy)/std::max(0.0001f,dt);
+
+                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
+
+                    vyn = kinfac * v_kin + vyn*(1.0f-kinfac);
+
+                }
+
+                hn = edges > 2? 0.0f:(isnan(hn)? 0.0:hn);
+                vxn = edges > 2? 0.0f:isnan(vxn)? 0.0:vxn;
+                vyn = edges > 2? 0.0f:isnan(vyn)? 0.0:vyn;
+
+
+                //write output
+                HN->data[gy][gx] = hn;
+                VXN->data[gy][gx] = vxn;
+                VYN->data[gy][gx] = vyn;
+
+                if(QX1 != nullptr && QX2 != nullptr && QY1 != nullptr && QY2 != nullptr)
+                {
+
+                    QX1->data[gy][gx] =  flux_x1 *(dx*dx);
+                    QX2->data[gy][gx] =  flux_x2 *(dx*dx);
+                    QY1->data[gy][gx] =  flux_y1 *(dx*dx);
+                    QY2->data[gy][gx] =  flux_y2 *(dx*dx);
+                }
+            }
+        }
+    }
+    return;
+}
+
+
+
 static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY, cTMap * HN,cTMap * VXN,cTMap * VYN,cTMap * HO, cTMap * VXO,cTMap * VYO, cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float dt = 0.1)
 {
 
@@ -559,6 +867,71 @@ inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap
 
         //then update fluxes
         flow_saintvenant(DEM,N,H,VX,VY,HN,VXN,VYN,nullptr,nullptr,nullptr,nullptr,dt);
+
+        t = t+dt;
+        iter ++;
+
+        for(int r = 0; r < H->nrRows(); r++)
+        {
+            for(int c = 0; c < H->nrCols(); c++)
+            {
+                H->Drc = HN->Drc;
+                VX->Drc = VXN->Drc;
+                VY->Drc = VYN->Drc;
+
+
+            }
+        }
+    }
+
+
+
+    return {HN,VXN,VYN};
+}
+
+
+inline std::vector<cTMap*> AS_DynamicWaveRigid(cTMap * DEM,cTMap * N,cTMap * H, cTMap * VX, cTMap * VY, cTMap * BlockX, cTMap * BlockY, cTMap * BlockFX, cTMap * BlockFY, cTMap * BlockVelX, cTMap * BlockVelY, cTMap * HCorrect, float _dt, float courant)
+{
+    if(!(DEM->data.nr_rows() == N->data.nr_rows() && DEM->data.nr_cols() == N->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for N");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == H->data.nr_rows() && DEM->data.nr_cols() == H->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for H");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == VX->data.nr_rows() && DEM->data.nr_cols() == VX->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for VX");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == VY->data.nr_rows() && DEM->data.nr_cols() == VY->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for VY");
+       throw -1;
+    }
+
+    cTMap * HN = H->GetCopy();
+    cTMap * VXN = VX->GetCopy();
+    cTMap * VYN = VY->GetCopy();
+
+    double t = 0;
+    double t_end = _dt;
+
+
+    int iter = 0;
+    while(t < t_end)
+    {
+
+        //first update flow heights
+        double dt = flow_saintvenantdt(DEM,N,H,VX,VY,HN,VXN,VYN,nullptr,nullptr,nullptr,nullptr);
+
+        dt = std::min(t_end - t,std::max(dt,1e-6));
+
+        //then update fluxes
+        flow_saintvenant_rigid(DEM,N,H,VX,VY,HN,VXN,VYN,BlockX, BlockY, BlockFX, BlockFY, BlockVelX, BlockVelY, HCorrect, nullptr,nullptr,nullptr,nullptr,dt);
 
         t = t+dt;
         iter ++;
@@ -1007,6 +1380,55 @@ inline std::vector<cTMap*> AS_NavierStokesWave(cTMap * DENS, cTMap * VX, cTMap *
 
 
 #include "navierstokes/StableFluid3d.h"
+#include "geo/raster/field.h"
+
+inline Field * AS_FieldMaskDem(Field * map,cTMap * DEM, float value)
+{
+
+
+    std::vector<cTMap*> maps = map->GetMapList();
+
+    Field * res = map->GetCopy();
+
+     for(int i = 0; i < maps.size(); i++)
+     {
+         if(!(maps.at(i)->data.nr_rows() == DEM->data.nr_rows() && maps.at(i)->data.nr_cols() == DEM->data.nr_cols()))
+         {
+            LISEMS_ERROR("Numbers of rows and column do not match for dem and input state");
+            throw -1;
+         }
+
+     }
+
+     float z_min = map->m_ZStart;
+     float z_max = map->m_ZStart + map->m_dz * ((float)( map->nrLevels()));
+
+
+     //estimate blocking based on DEM Geometry!
+     for(int r = 0; r < DEM->nrRows(); r++)
+     {
+         for(int c = 0;c < DEM->nrCols(); c++)
+         {
+             if(!pcr::isMV(DEM->data[r][c]))
+             {
+                 for(int i = 0;i < maps.size(); i++)
+                 {
+
+                     float z = z_min + ((float)(i) * (z_max-z_min));
+
+                     if(z < DEM->data[r][c])
+                     {
+                         res->at(i)->data[r][c] = value;
+                     }
+                 }
+             }
+         }
+     }
+
+     return res;
+}
+
+
 
 inline std::vector<cTMap *> AS_VoxelMaskDem(std::vector<cTMap *> maps, float z_min, float z_max,cTMap * DEM)
 {

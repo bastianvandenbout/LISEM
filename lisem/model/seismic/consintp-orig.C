@@ -331,8 +331,8 @@ void EW::consintp( Sarray& Uf, Sarray& Unextf, Sarray& Bf, Sarray& Muf, Sarray& 
    } // end while jacerr > eps
    
    if( jacerr > m_citol && proc_zero() )
-      cout << "EW::consintp, Warning, no convergence. err = " << jacerr << " tol= " << m_citol << endl;
+      std::cout << "EW::consintp, Warning, no convergence. err = " << jacerr << " tol= " << m_citol << std::endl;
       
    if( proc_zero() && mVerbose >= 4 )
-      cout << "EW::consintp, no of iterations= " << it << " Jac iteration error= " << jacerr << endl;
+      std::cout << "EW::consintp, no of iterations= " << it << " Jac iteration error= " << jacerr << std::endl;
 }

@@ -51,8 +51,6 @@ int SeisImage::MODES=40;
 
 SeisImage* SeisImage::nil=static_cast<SeisImage*>(0);
 
-using namespace std;
-
 SeisImage::SeisImage(EW * a_ew,
              double time, 
              double timeInterval, 
@@ -158,7 +156,7 @@ SeisImage::SeisImage(EW * a_ew,
 }
 
 //-----------------------------------------------------------------------
-void SeisImage::associate_gridfiles( vector<SeisImage*>& imgs )
+void SeisImage::associate_gridfiles( std::vector<SeisImage*>& imgs )
 {
    // Only if a curvilinear grid is needed
    if( mEW->topographyExists() && (mLocationType == SeisImage::X || mLocationType == SeisImage::Y) &&
@@ -187,7 +185,7 @@ void SeisImage::associate_gridfiles( vector<SeisImage*>& imgs )
       if( m_gridimage == SeisImage::nil )
       {
 	 mGridinfo = -1; // Failed to find grid
-         cout << "WARNING: Image::associate_gridfiles did not find compatible grid images" << endl;
+         std::cout << "WARNING: Image::associate_gridfiles did not find compatible grid images" << std::endl;
       }
       else
 	 mGridinfo = mStoreGrid ? 1 : 2 ; // Found grid_images
@@ -604,8 +602,8 @@ void SeisImage::allocatePlane()
 } // end Image::allocatePlane()
 
 //-----------------------------------------------------------------------
-void SeisImage::computeImageDivCurl( vector<Sarray> &a_Up, vector<Sarray>& a_U,
-				 vector<Sarray> &a_Um, double dt, int dminus )
+void SeisImage::computeImageDivCurl( std::vector<Sarray> &a_Up, std::vector<Sarray>& a_U,
+                 std::vector<Sarray> &a_Um, double dt, int dminus )
 {
    ASSERT(m_isDefinedMPIWriters);
    ASSERT( mMode == SeisImage::DIV || mMode == SeisImage::CURLMAG || mMode == SeisImage::DIVDT
@@ -624,7 +622,7 @@ void SeisImage::computeImageDivCurl( vector<Sarray> &a_Up, vector<Sarray>& a_U,
       }
       if( mMode == SeisImage::DIV )
       {
-	 vector<double*> div(mEW->mNumberOfGrids);
+     std::vector<double*> div(mEW->mNumberOfGrids);
 	 for( int g=gmin ; g <= gmax ; g++ )
 	 {
 	    int npts=(mWindow[g][1]-mWindow[g][0]+1)*(mWindow[g][3]-mWindow[g][2]+1)*(mWindow[g][5]-mWindow[g][4]+1);
@@ -645,7 +643,7 @@ void SeisImage::computeImageDivCurl( vector<Sarray> &a_Up, vector<Sarray>& a_U,
       }
       else if( mMode == SeisImage::CURLMAG )
       {
-	 vector<double*> curl(mEW->mNumberOfGrids);
+     std::vector<double*> curl(mEW->mNumberOfGrids);
 	 for( int g=gmin ; g <= gmax ; g++ )
 	 {
 	    int npts=(mWindow[g][1]-mWindow[g][0]+1)*(mWindow[g][3]-mWindow[g][2]+1)*(mWindow[g][5]-mWindow[g][4]+1);
@@ -668,7 +666,7 @@ void SeisImage::computeImageDivCurl( vector<Sarray> &a_Up, vector<Sarray>& a_U,
       }
       else if( mMode == SeisImage::DIVDT )
       {
-	 vector<double*> div(mEW->mNumberOfGrids), divm(mEW->mNumberOfGrids);
+     std::vector<double*> div(mEW->mNumberOfGrids), divm(mEW->mNumberOfGrids);
 	 for( int g=gmin ; g <= gmax ; g++ )
 	 {
 	    int npts=(mWindow[g][1]-mWindow[g][0]+1)*(mWindow[g][3]-mWindow[g][2]+1)*(mWindow[g][5]-mWindow[g][4]+1);
@@ -702,7 +700,7 @@ void SeisImage::computeImageDivCurl( vector<Sarray> &a_Up, vector<Sarray>& a_U,
       }
       else if( mMode == SeisImage::CURLMAGDT )
       {
-	 vector<double*> curl(mEW->mNumberOfGrids), curlm(mEW->mNumberOfGrids);
+     std::vector<double*> curl(mEW->mNumberOfGrids), curlm(mEW->mNumberOfGrids);
 	 for( int g=gmin ; g <= gmax ; g++ )
 	 {
 	    int npts=(mWindow[g][1]-mWindow[g][0]+1)*(mWindow[g][3]-mWindow[g][2]+1)*(mWindow[g][5]-mWindow[g][4]+1);
@@ -1020,7 +1018,7 @@ void SeisImage::writeImagePlane_2(int cycle, std::string &path, double t )
    off_t offset = 2*sizeof(int) + 2*sizeof(double) + 3*sizeof(int) + 25*sizeof(char) +
       (ghigh-glow)*(2*sizeof(double)+4*sizeof(int));
    int fid=-1;
-   stringstream s, fileSuffix;
+   std::stringstream s, fileSuffix;
    int prec, nPatches, globalPlaneSize[4];
    if( iwrite )
    {
@@ -1042,20 +1040,20 @@ void SeisImage::writeImagePlane_2(int cycle, std::string &path, double t )
 	 VERIFY2(0, "ERROR: Image::writeImagePlane_2, error opening file " << s.str() << " for writing header");
       }  
 
-      cout << "writing image plane on file " << s.str() << endl;// " (msg from proc # " << m_rankWriter << ")" << endl;
+      std::cout << "writing image plane on file " << s.str() << std::endl;// " (msg from proc # " << m_rankWriter << ")" << endl;
       prec = m_double ? 8 : 4;
       size_t ret=write(fid,&prec,sizeof(int));
       if( ret != sizeof(int) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write precision" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write precision" << std::endl;
 
       nPatches = mLocationType == SeisImage::Z ? 1 : mEW->mNumberOfGrids;
       ret = write(fid,&nPatches,sizeof(int));
       if( ret != sizeof(int) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write number of patches" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write number of patches" << std::endl;
 
       ret = write(fid,&t,sizeof(double));
       if( ret != sizeof(double) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write time" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write time" << std::endl;
 
       int ltype;
       if( mLocationType == SeisImage::X )
@@ -1067,7 +1065,7 @@ void SeisImage::writeImagePlane_2(int cycle, std::string &path, double t )
 
       ret = write(fid,&ltype,sizeof(int));
       if( ret != sizeof(int) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write plane type" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write plane type" << std::endl;
 
       double coordvalue = (m_gridPtIndex[0]-1)*mEW->mGridSize[glow];
       if( mLocationType == SeisImage::Z )
@@ -1075,37 +1073,37 @@ void SeisImage::writeImagePlane_2(int cycle, std::string &path, double t )
 
       ret = write(fid,&coordvalue,sizeof(double));
       if( ret != sizeof(double) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write coordinate value" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write coordinate value" << std::endl;
 
       int imode = static_cast<int>(mMode);
       ret = write(fid,&imode,sizeof(int));
       if( ret != sizeof(int) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write imode" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write imode" << std::endl;
 
       ret = write(fid,&mGridinfo,sizeof(int));
       if( ret != sizeof(int) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write gridinfo" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write gridinfo" << std::endl;
 
       time_t realtime;
       time(&realtime);
-      string strtime;
+      std::string strtime;
       strtime += asctime(localtime(&realtime));
       char strtimec[25];
       strncpy(strtimec,strtime.c_str(),25);
       strtimec[24] ='\0';
       ret = write(fid,strtimec,25*sizeof(char));
       if( ret != 25*sizeof(char) )
-	 cout << "ERROR: Image::writeImagePlane_2 could not write strtimec" << endl;
+     std::cout << "ERROR: Image::writeImagePlane_2 could not write strtimec" << std::endl;
       
       for(int g = glow; g < ghigh ;g++)
       {
 	 ret = write(fid,&mEW->mGridSize[g],sizeof(double));
          if( ret != sizeof(double) )
-	    cout << "ERROR: Image::writeImagePlane_2 could not write h for grid " << g << endl;
+        std::cout << "ERROR: Image::writeImagePlane_2 could not write h for grid " << g << std::endl;
 
 	 ret = write(fid,&mEW->m_zmin[g],sizeof(double));
          if( ret != sizeof(double) )
-	    cout << "ERROR: Image::writeImagePlane_2 could not write zmin for grid " << g << endl;
+        std::cout << "ERROR: Image::writeImagePlane_2 could not write zmin for grid " << g << std::endl;
 
 	   // should hold the global number of interior points
 	 if(mLocationType == SeisImage::X)
@@ -1131,7 +1129,7 @@ void SeisImage::writeImagePlane_2(int cycle, std::string &path, double t )
 	 }
 	 ret = write(fid,globalPlaneSize,4*sizeof(int));
          if( ret != 4*sizeof(int) )
-	    cout << "ERROR: Image::writeImagePlane_2 could not write dimensions of grid " << g << endl;
+        std::cout << "ERROR: Image::writeImagePlane_2 could not write dimensions of grid " << g << std::endl;
       }
       fsync(fid);
    }
@@ -1244,9 +1242,9 @@ void SeisImage::add_grid_filenames_to_file( const char* fname )
 {
    if( m_pio[0]->proc_zero() )
    {
-      stringstream str1;
+      std::stringstream str1;
       m_gridimage->compute_file_suffix( str1, 0 );
-      string img1str = str1.str();
+      std::string img1str = str1.str();
       int fid = open( fname, O_WRONLY, 0660 ); 
       if (fid == -1 )
 	 VERIFY2(0, "ERROR: Image::add_grid_filenames_to_file, error opening file " << fname );
@@ -1254,17 +1252,17 @@ void SeisImage::add_grid_filenames_to_file( const char* fname )
       int n = img1str.length();
       nr = write(fid,&n,sizeof(int) );
       if( nr != sizeof(int) )
-	 cout << "ERROR: Image::add_grid_filenames_to file, could not write n1 " << endl;
+     std::cout << "ERROR: Image::add_grid_filenames_to file, could not write n1 " << std::endl;
 
       nr = write(fid,str1.str().c_str(),sizeof(char)*n);
       if( nr != n*sizeof(char) )
-	 cout << "ERROR: Image::add_grid_filenames_to file, could not write name1 " << endl;
+     std::cout << "ERROR: Image::add_grid_filenames_to file, could not write name1 " << std::endl;
       close(fid);
    }
 }
 
 //-----------------------------------------------------------------------
-void SeisImage::compute_file_suffix( stringstream& fileSuffix, int cycle )
+void SeisImage::compute_file_suffix( std::stringstream& fileSuffix, int cycle )
 {
    fileSuffix << mFilePrefix << ".cycle=";
    int temp = static_cast<int>(pow(10.0, mPreceedZeros - 1));
@@ -1283,7 +1281,7 @@ void SeisImage::compute_file_suffix( stringstream& fileSuffix, int cycle )
 }
 
 //-----------------------------------------------------------------------
-void SeisImage::update_maxes_hVelMax( vector<Sarray> &a_Up, vector<Sarray> &a_Um,
+void SeisImage::update_maxes_hVelMax( std::vector<Sarray> &a_Up, std::vector<Sarray> &a_Um,
 				  double dt )
 {
    static bool firstHVM = true;
@@ -1308,7 +1306,7 @@ void SeisImage::update_maxes_hVelMax( vector<Sarray> &a_Up, vector<Sarray> &a_Um
 	 double velNS, velEW;
 	 double Ux, Uy, nrm;
 	 double xP, yP, latitude, latOrigin=mEW->getLatOrigin();
-	 double deg2rad = M_PI/180.0, cphi, sphi, calpha, salpha, thxnrm, thynrm;
+     double deg2rad = LISEM_PI/180.0, cphi, sphi, calpha, salpha, thxnrm, thynrm;
 	 double az = deg2rad*mEW->getGridAzimuth(); // Note that mGeoAz is in degrees
 	 double metersPerDeg = mEW->getMetersPerDegree();
 
@@ -1335,8 +1333,8 @@ void SeisImage::update_maxes_hVelMax( vector<Sarray> &a_Up, vector<Sarray> &a_Um
 		  cphi = cos(latitude*deg2rad);
 		  sphi = sin(latitude*deg2rad);
 
-		  thxnrm = salpha + (xP*salpha+yP*calpha)/cphi/metersPerDeg * (M_PI/180.0) * sphi * calpha;
-		  thynrm = calpha - (xP*salpha+yP*calpha)/cphi/metersPerDeg * (M_PI/180.0) * sphi * salpha;
+          thxnrm = salpha + (xP*salpha+yP*calpha)/cphi/metersPerDeg * (LISEM_PI/180.0) * sphi * calpha;
+          thynrm = calpha - (xP*salpha+yP*calpha)/cphi/metersPerDeg * (LISEM_PI/180.0) * sphi * salpha;
 
 		  nrm = sqrt( thxnrm*thxnrm + thynrm*thynrm );
 		  thxnrm /= nrm;
@@ -1432,7 +1430,7 @@ void SeisImage::update_maxes_vVelMax(std::vector<Sarray> &a_Up, std::vector<Sarr
 }
 
 //-----------------------------------------------------------------------
-void SeisImage::update_maxes_hMax( vector<Sarray> &a_U )
+void SeisImage::update_maxes_hMax( std::vector<Sarray> &a_U )
 			
 {
    static bool firstHM = true;
@@ -2057,7 +2055,7 @@ void SeisImage::computeCurl( std::vector<Sarray>& a_U, std::vector<double*>& a_c
 }
 
 //-----------------------------------------------------------------------
-void SeisImage::computeImageMagdt( vector<Sarray> &a_Up, vector<Sarray> &a_Um,
+void SeisImage::computeImageMagdt( std::vector<Sarray> &a_Up, std::vector<Sarray> &a_Um,
 			       double dt )
 {
    // dt is distance between Up and Um.
@@ -2098,7 +2096,7 @@ void SeisImage::computeImageMagdt( vector<Sarray> &a_Up, vector<Sarray> &a_Um,
 } 
 
 //-----------------------------------------------------------------------
-void SeisImage::computeImageMag( vector<Sarray> &a_U )
+void SeisImage::computeImageMag( std::vector<Sarray> &a_U )
 {
    // dt is distance between Up and Um.
    ASSERT(m_isDefinedMPIWriters);
@@ -2136,7 +2134,7 @@ void SeisImage::computeImageMag( vector<Sarray> &a_U )
 } 
 
 //-----------------------------------------------------------------------
-void SeisImage::computeImageHmagdt(vector<Sarray> &a_Up, vector<Sarray> &a_Um,
+void SeisImage::computeImageHmagdt(std::vector<Sarray> &a_Up, std::vector<Sarray> &a_Um,
 			       double dt )
 {
    // dt is distance between Up and Um.
@@ -2176,7 +2174,7 @@ void SeisImage::computeImageHmagdt(vector<Sarray> &a_Up, vector<Sarray> &a_Um,
 } 
 
 //-----------------------------------------------------------------------
-void SeisImage::computeImageHmag( vector<Sarray> &a_U )
+void SeisImage::computeImageHmag( std::vector<Sarray> &a_U )
 {
    // dt is distance between Up and Um.
    ASSERT(m_isDefinedMPIWriters);
@@ -2212,8 +2210,8 @@ void SeisImage::computeImageHmag( vector<Sarray> &a_U )
 } 
 
 //-----------------------------------------------------------------------
-void SeisImage::compute_image_gradp( vector<Sarray>& a_gLambda, vector<Sarray>& a_Mu,
-				 vector<Sarray>& a_Lambda, vector<Sarray>& a_Rho )
+void SeisImage::compute_image_gradp( std::vector<Sarray>& a_gLambda, std::vector<Sarray>& a_Mu,
+                 std::vector<Sarray>& a_Lambda, std::vector<Sarray>& a_Rho )
 {
    ASSERT(m_isDefinedMPIWriters);
 
@@ -2249,8 +2247,8 @@ void SeisImage::compute_image_gradp( vector<Sarray>& a_gLambda, vector<Sarray>& 
 }
 
 //-----------------------------------------------------------------------
-void SeisImage::compute_image_grads( vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda, 
-				 vector<Sarray>& a_Mu, vector<Sarray>& a_Rho )
+void SeisImage::compute_image_grads( std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+                 std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Rho )
 {
    ASSERT(m_isDefinedMPIWriters);
 
@@ -2287,10 +2285,10 @@ void SeisImage::compute_image_grads( vector<Sarray>& a_gMu, vector<Sarray>& a_gL
 
 //-----------------------------------------------------------------------
 void SeisImage::update_image( int a_cycle, double a_time, double a_dt,
-			  vector<Sarray>& a_Up,  vector<Sarray>& a_U, vector<Sarray>& a_Um,
-			  vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			  vector<Sarray>& a_gRho, vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda,
-                          vector<Source*>& a_sources, int a_dminus )
+              std::vector<Sarray>& a_Up,  std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um,
+              std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+              std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+                          std::vector<Source*>& a_sources, int a_dminus )
 {
    if( mMode == HMAXDUDT)
    {
@@ -2325,10 +2323,10 @@ void SeisImage::update_image( int a_cycle, double a_time, double a_dt,
 
 //-----------------------------------------------------------------------
 void SeisImage::output_image( int a_cycle, double a_time, double a_dt,
-			  vector<Sarray>& a_Up,  vector<Sarray>& a_U, vector<Sarray>& a_Um,
-			  vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			  vector<Sarray>& a_gRho, vector<Sarray>& a_gMu, vector<Sarray>& a_gLambda,
-                          vector<Source*>& a_sources, int a_dminus )
+              std::vector<Sarray>& a_Up,  std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um,
+              std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+             std::vector<Sarray>& a_gRho, std::vector<Sarray>& a_gMu, std::vector<Sarray>& a_gLambda,
+                          std::vector<Source*>& a_sources, int a_dminus )
 {
 
 
@@ -2365,8 +2363,8 @@ void SeisImage::output_image( int a_cycle, double a_time, double a_dt,
    if( mMode == UXEXACT || mMode == UYEXACT || mMode == UZEXACT ||
        mMode == UXERR || mMode == UYERR || mMode == UZERR )
    {
-      vector<Sarray> Uex(mEW->mNumberOfGrids);
-      vector<Sarray*> alpha; //dummy, the array is not used in routine exactSol.
+      std::vector<Sarray> Uex(mEW->mNumberOfGrids);
+      std::vector<Sarray*> alpha; //dummy, the array is not used in routine exactSol.
       for( int g=0 ; g < mEW->mNumberOfGrids ; g++ )
 	 Uex[g].define(3,mEW->m_iStart[g],mEW->m_iEnd[g],mEW->m_jStart[g],mEW->m_jEnd[g],mEW->m_kStart[g],mEW->m_kEnd[g]);
       mEW->exactSol( a_time, Uex, alpha, a_sources );
@@ -2429,7 +2427,7 @@ void SeisImage::output_image( int a_cycle, double a_time, double a_dt,
 // write the image plane on file    
    double t[2];
    t[0] = t[1] = MPI_Wtime();
-   string path = mEW->getPath();
+   std::string path = mEW->getPath();
    writeImagePlane_2( a_cycle-td, path, a_time-td*a_dt );
    t[1] = MPI_Wtime();
       
@@ -2444,16 +2442,16 @@ void SeisImage::output_image( int a_cycle, double a_time, double a_dt,
       MPI_Reduce( tmp, t, 2, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
       if( mEW->proc_zero() )
       {
-	 cout << "Maximum write time:";
-	 cout << " (using Bjorn's I/O library) " << t[1] << " seconds. (<=" << m_pio[0]->n_writers() << " procs writing)";
-	 cout << endl;
+     std::cout << "Maximum write time:";
+     std::cout << " (using Bjorn's I/O library) " << t[1] << " seconds. (<=" << m_pio[0]->n_writers() << " procs writing)";
+     std::cout << std::endl;
       } // end if proc_zero
    } // end if iotiming      
 }
 
 
 //-----------------------------------------------------------------------
-void SeisImage::computeImageQuantityDiff( vector<Sarray>& a_U, vector<Sarray>& a_Uex,
+void SeisImage::computeImageQuantityDiff( std::vector<Sarray>& a_U, std::vector<Sarray>& a_Uex,
 				      int comp )
 {
    ASSERT(m_isDefinedMPIWriters);

@@ -390,8 +390,8 @@ void Source::limit_frequency( int ppw, double minvsoh )
        mTimeDependence == iVerySmoothBump || mTimeDependence == iSmoothWave || 
        mTimeDependence == iLiu || mTimeDependence == iC6SmoothBump )
    {
-      if( mFreq > 2*M_PI*freqlim )
-	 mFreq = 2*M_PI*freqlim;
+      if( mFreq > 2*LISEM_PI*freqlim )
+     mFreq = 2*LISEM_PI*freqlim;
    }
    else
    {

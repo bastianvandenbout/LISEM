@@ -33,7 +33,6 @@
 #ifndef SECOND_ORDER_SECTION_H
 #define SECOND_ORDER_SECTION_H
 
-using namespace std;
 #include "Polynomial.h"
 
 class SecondOrderSection{

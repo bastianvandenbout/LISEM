@@ -33,7 +33,7 @@
 #include "impose_cartesian_bc.h"
 //#include "impose_curvilinear_bc.h"
 #include "F77_FUNC.h"
-
+#include "defines.h"
 #define SQR(x) ((x)*(x))
 extern "C" {
    void tw_aniso_free_surf_z(int ifirst, int ilast, int jfirst, int jlast, int kfirst, int klast,
@@ -227,13 +227,13 @@ void F77_FUNC(addsgd6c,ADDSGD6C) (double* dt, double *a_Up, double*a_U, double*a
 
 
 //--------------------------------------------------------------------
-void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries )
+void EW::solve( std::vector<Source*> & a_Sources, std::vector<STimeSeries*> & a_TimeSeries )
 {
 // solution arrays
-  vector<Sarray> F, Lu, Uacc, Up, Um, U;
-  vector<Sarray*> AlphaVE, AlphaVEm, AlphaVEp;
+  std::vector<Sarray> F, Lu, Uacc, Up, Um, U;
+  std::vector<Sarray*> AlphaVE, AlphaVEm, AlphaVEp;
 // vectors of pointers to hold boundary forcing arrays in each grid
-  vector<double **> BCForcing;
+  std::vector<double **> BCForcing;
 
   BCForcing.resize(mNumberOfGrids);
   F.resize(mNumberOfGrids);
@@ -315,7 +315,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
      mImageFiles[fIndex]->initializeTime();
    
 // the Source objects get discretized into GridPointSource objects
-  vector<GridPointSource*> point_sources;
+  std::vector<GridPointSource*> point_sources;
 
 // Transfer source terms to each individual grid as point sources at grid points.
   for( unsigned int i=0 ; i < a_Sources.size() ; i++ )
@@ -410,7 +410,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
 // end tmp
        
 //building the file name...
-       string filename;
+       std::string filename;
        if( mPath != "." )
 	 filename += mPath;
        filename += "g1.dat";	 
@@ -436,7 +436,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
 
   if( !mQuiet && mVerbose && proc_zero() )
   {
-    cout << endl << "***  Starting solve ***" << endl;
+    std::cout << std::endl << "***  Starting solve ***" << std::endl;
   }
   printPreamble(a_Sources);
 
@@ -456,7 +456,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
   initialData(mTstart-mDt, Um, AlphaVEm );
   
   if ( !mQuiet && mVerbose && proc_zero() )
-    cout << "  Initial data has been assigned" << endl;
+    std::cout << "  Initial data has been assigned" << std::endl;
 
 // // Assign Up to make it possible to output velDiv and velCurl images of the initial data
 //   for( g=0 ; g<mNumberOfCartesianGrids; g++ )
@@ -480,7 +480,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
   if (m_twilight_forcing && getVerbosity() >= 3) // only do these tests if verbose>=3
   {
     if ( !mQuiet && proc_zero() )
-      cout << "***Twilight Testing..." << endl;
+      std::cout << "***Twilight Testing..." << std::endl;
 
 // output some internal flags        
     for(int g=0; g<mNumberOfGrids; g++)
@@ -665,12 +665,12 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
     test_sources( point_sources, a_Sources, F );
 
 // save initial data on receiver records
-  vector<double> uRec;
+  std::vector<double> uRec;
   for (int ts=0; ts<a_TimeSeries.size(); ts++)
   {
 // can't compute a 2nd order accurate time derivative at this point
 // therefore, don't record anything related to velocities for the initial data
-    if (a_TimeSeries[ts]->getMode() != TimeSeries::Velocity && a_TimeSeries[ts]->myPoint())
+    if (a_TimeSeries[ts]->getMode() != STimeSeries::Velocity && a_TimeSeries[ts]->myPoint())
     {
       int i0 = a_TimeSeries[ts]->m_i0;
       int j0 = a_TimeSeries[ts]->m_j0;
@@ -692,9 +692,9 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
 // open file for saving norm of error
   if ( (m_lamb_test || m_point_source_test || m_rayleigh_wave_test || m_error_log) && proc_zero() )
   {
-    string path=getPath();
+    std::string path=getPath();
 
-    stringstream fileName;
+    std::stringstream fileName;
     if( path != "." )
       fileName << path;
     
@@ -730,7 +730,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
    }
    
   if ( !mQuiet && proc_zero() )
-    cout << "  Begin time stepping..." << endl;
+    std::cout << "  Begin time stepping..." << std::endl;
 
 // Begin time stepping loop
   for( int currentTimeStep = beginCycle; currentTimeStep <= mNumberOfTimeSteps; currentTimeStep++)
@@ -968,7 +968,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
   } // end time stepping loop
 
   if ( !mQuiet && proc_zero() )
-    cout << "  Time stepping finished..." << endl;
+    std::cout << "  Time stepping finished..." << std::endl;
 
 //   delete[] wk;
 
@@ -1018,7 +1018,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
       
       if( m_twilight_forcing && m_use_attenuation )
       {
-         vector<Sarray> Aex(mNumberOfGrids), A(mNumberOfGrids);
+         std::vector<Sarray> Aex(mNumberOfGrids), A(mNumberOfGrids);
          for( int g=0 ; g < mNumberOfGrids ; g++ )
 	 {
 	    Aex[g].copy(AlphaVEp[g][0]);
@@ -1054,7 +1054,7 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
   }
 
    finalizeIO();
-   cout.flush(); cerr.flush();
+   std::cout.flush(); std::cerr.flush();
 
    // Give back memory
    for( int g = 0; g <mNumberOfGrids; g++ )
@@ -1076,8 +1076,8 @@ void EW::solve( vector<Source*> & a_Sources, vector<TimeSeries*> & a_TimeSeries 
 } // end EW::solve()
 
 //------------------------------------------------------------------------
-void EW::cycleSolutionArrays(vector<Sarray> & a_Um, vector<Sarray> & a_U, vector<Sarray> & a_Up, 
-			     vector<Sarray*> & a_AlphaVEm, vector<Sarray*> & a_AlphaVE, vector<Sarray*> & a_AlphaVEp)
+void EW::cycleSolutionArrays(std::vector<Sarray> & a_Um, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Up,
+                 std::vector<Sarray*> & a_AlphaVEm, std::vector<Sarray*> & a_AlphaVE, std::vector<Sarray*> & a_AlphaVEp)
  {
   for (int g=0; g<mNumberOfGrids; g++)
   {
@@ -1096,8 +1096,8 @@ void EW::cycleSolutionArrays(vector<Sarray> & a_Um, vector<Sarray> & a_U, vector
 }
 
 //---------------------------------------------------------------------------
-void EW::enforceBC( vector<Sarray> & a_U, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-		    double t, vector<double **> & a_BCForcing )
+void EW::enforceBC( std::vector<Sarray> & a_U, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+            double t, std::vector<double **> & a_BCForcing )
 {
   int g, ifirst, ilast, jfirst, jlast, kfirst, klast, nx, ny, nz;
   double *u_ptr, *mu_ptr, *la_ptr, h;
@@ -1223,8 +1223,8 @@ void EW::enforceBC( vector<Sarray> & a_U, vector<Sarray>& a_Mu, vector<Sarray>& 
 }
 
 //---------------------------------------------------------------------------
-void EW::enforceBCanisotropic( vector<Sarray> & a_U, vector<Sarray>& a_C,
-		    double t, vector<double **> & a_BCForcing )
+void EW::enforceBCanisotropic( std::vector<Sarray> & a_U, std::vector<Sarray>& a_C,
+            double t, std::vector<double **> & a_BCForcing )
 {
   int g, ifirst, ilast, jfirst, jlast, kfirst, klast, nx, ny, nz;
   double *u_ptr, *c_ptr, h;
@@ -1302,7 +1302,7 @@ void EW::enforceBCanisotropic( vector<Sarray> & a_U, vector<Sarray>& a_C,
 }
 
 //-----------------------------------------------------------------------
-void EW::update_curvilinear_cartesian_interface( vector<Sarray>& a_U )
+void EW::update_curvilinear_cartesian_interface( std::vector<Sarray>& a_U )
 {
    if (topographyExists())
    {
@@ -1330,9 +1330,9 @@ void EW::update_curvilinear_cartesian_interface( vector<Sarray>& a_U )
    }
 }
 //--------------------Mesh refinement interface condition for 4th order predictor-corrector scheme----------------------------
-void EW::enforceIC( vector<Sarray>& a_Up, vector<Sarray> & a_U, vector<Sarray> & a_Um,
-                    vector<Sarray*>& a_AlphaVEp, vector<Sarray*>& a_AlphaVE, vector<Sarray*>& a_AlphaVEm, 
-		    double time, bool predictor, vector<GridPointSource*> point_sources )
+void EW::enforceIC( std::vector<Sarray>& a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
+                    std::vector<Sarray*>& a_AlphaVEp, std::vector<Sarray*>& a_AlphaVE, std::vector<Sarray*>& a_AlphaVEm,
+            double time, bool predictor, std::vector<GridPointSource*> point_sources )
 {
    for( int g = 0 ; g < mNumberOfCartesianGrids-1 ; g++ )
    {
@@ -1467,9 +1467,9 @@ void EW::enforceIC( vector<Sarray>& a_Up, vector<Sarray> & a_U, vector<Sarray> &
 }
 
 //-----------------------Special case for 2nd order time stepper----------------------------------------------------
-void EW::enforceIC2( vector<Sarray>& a_Up, vector<Sarray> & a_U, vector<Sarray> & a_Um,
-                     vector<Sarray*>& a_AlphaVEp,
-                     double time, vector<GridPointSource*> point_sources )
+void EW::enforceIC2( std::vector<Sarray>& a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
+                     std::vector<Sarray*>& a_AlphaVEp,
+                     double time, std::vector<GridPointSource*> point_sources )
 {
    bool predictor = false;   // or true???
    for( int g = 0 ; g < mNumberOfCartesianGrids-1 ; g++ )
@@ -1611,10 +1611,10 @@ void EW::check_corrector( Sarray& Uf, Sarray& Uc, Sarray& Unextf, Sarray& Unextc
    double pc = ( 9*(pci+pcip)-(pcim+pcipp))/16;
 
    double pcj = (9*(Uc(c,ic,jc,kc)+Uc(c,ic,jc+1,kc))-(Uc(c,ic,jc-1,kc)+Uc(c,ic,jc+2,kc)))/16;
-   cout <<"check " << Uf(c,i,j,kf) << " " << Uc(c,ic,jc,kc) << " " << pci << " " << Uf(c,i,j,kf)-pci << endl;
+   std::cout <<"check " << Uf(c,i,j,kf) << " " << Uc(c,ic,jc,kc) << " " << pci << " " << Uf(c,i,j,kf)-pci << std::endl;
    //   cout << "  next " << Unextf(c,i,j,kf) << " " << Unextc(c,ic,jc,kc) << endl;
    double pcni   = (9*(Unextc(c,ic,jc,kc)+Unextc(c,ic+1,jc,kc))-(Unextc(c,ic-1,jc,kc)+Unextc(c,ic+2,jc,kc)))/16;
-     cout << "  check next " << Unextf(c,i,j,kf) << " " << Unextc(c,ic,jc,kc) << " " << pcni << " " << Unextf(c,i,j,kf)-pcni << endl;
+     std::cout << "  check next " << Unextf(c,i,j,kf) << " " << Unextc(c,ic,jc,kc) << " " << pcni << " " << Unextf(c,i,j,kf)-pcni << std::endl;
    //   cout << " check " << Uc(c,ic-2,jc,kc) << " " << Unextc(c,ic-2,jc,kc) << endl;
    //   cout << "       " << Uc(c,ic-1,jc,kc) << " " << Unextc(c,ic-1,jc,kc) << endl;
    //   cout << "       " << Uc(c,ic,jc,kc)  << " " << Unextc(c,ic,jc,kc) << endl;
@@ -1662,7 +1662,7 @@ void EW::check_displacement_continuity( Sarray& Uf, Sarray& Uc, int gf, int gc )
    l2err_global = sqrt(l2err_global);
 
    if (proc_zero())
-      cout << "Fine-coarse displacement missmatch = " << l2err_global << endl;
+      std::cout << "Fine-coarse displacement missmatch = " << l2err_global << std::endl;
                
    // //   cout <<"check " << Uf(c,i,j,kf) << " " << Uc(c,ic,jc,kc) << " " << Uf(c,i,j,kf)-Uc(c,ic,jc,kc) << endl;
    // //   cout << "  next " << Unextf(c,i,j,kf) << " " << Unextc(c,ic,jc,kc) << endl;
@@ -2138,7 +2138,7 @@ void EW::gridref_initial_guess( Sarray& u, int g, bool upper )
 //-----------------------------------------------------------------------
 void EW::compute_preliminary_corrector( Sarray& a_Up, Sarray& a_U, Sarray& a_Um,
                                         Sarray* a_AlphaVEp, Sarray* a_AlphaVE, Sarray* a_AlphaVEm, Sarray& Utt,
-                                        Sarray& Unext, int g, int kic, double t, vector<GridPointSource*> point_sources )
+                                        Sarray& Unext, int g, int kic, double t, std::vector<GridPointSource*> point_sources )
 {
    //
    // NOTE: This routine is called by enforceIC() after the predictor stage to calculate the interior contribution to
@@ -2268,7 +2268,7 @@ void EW::compute_preliminary_corrector( Sarray& a_Up, Sarray& a_U, Sarray& a_Um,
 
 //-----------------------------------------------------------------------
 void EW::compute_preliminary_predictor( Sarray& a_Up, Sarray& a_U, Sarray* a_AlphaVEp, Sarray& Unext,
-					int g, int kic, double t, vector<GridPointSource*> point_sources )
+                    int g, int kic, double t, std::vector<GridPointSource*> point_sources )
 {
    //
    // NOTE: This routine is called by enforceIC() after the corrector stage to calculate the interior contribution to
@@ -2486,8 +2486,8 @@ void EW::add_ve_stresses( Sarray& a_Up, Sarray& B, int g, int kic, int a_mech, d
 }
 
 //------------------------------------------------------------------------------
-void EW::cartesian_bc_forcing(double t, vector<double **> & a_BCForcing,
-			      vector<Source*>& a_sources )
+void EW::cartesian_bc_forcing(double t, std::vector<double **> & a_BCForcing,
+                  std::vector<Source*>& a_sources )
 // assign the boundary forcing arrays a_BCForcing[g][side]
 {
   int g, ifirst, ilast, jfirst, jlast, kfirst, klast, nx, ny, nz;
@@ -2537,7 +2537,7 @@ void EW::cartesian_bc_forcing(double t, vector<double **> & a_BCForcing,
 
       // need to store all the phase angle constants somewhere
       for (int i=0; i<21; i++)
-         phc[i] = i*10*M_PI/180;
+         phc[i] = i*10*LISEM_PI/180;
 
 // the following code can probably be improved by introducing a loop over all sides,
 // but bStressFree is only implemented for side=4 and 5, so there must be some special cases
@@ -2597,7 +2597,7 @@ void EW::cartesian_bc_forcing(double t, vector<double **> & a_BCForcing,
          if( m_anisotropic )
          {
 // curvilinear anisotropic case is not yet implemented
-            CHECK_INPUT (!curvilinear, "cartesian_bc_forcing> bStressFree not implemented for anisotropic materials and curvilinear grids" <<endl);
+            CHECK_INPUT (!curvilinear, "cartesian_bc_forcing> bStressFree not implemented for anisotropic materials and curvilinear grids" <<std::endl);
 
             tw_aniso_free_surf_z( ifirst, ilast, jfirst, jlast, kfirst, klast, k, t, om, cv, ph, omm, phc, bforce_side4_ptr, h, m_zmin[g] );            
          }
@@ -2713,7 +2713,7 @@ void EW::cartesian_bc_forcing(double t, vector<double **> & a_BCForcing,
          if( m_anisotropic )
          {
 // curvilinear anisotropic case is not yet implemented
-            CHECK_INPUT (!curvilinear, "cartesian_bc_forcing> bStressFree not implemented for anisotropic materials and curvilinear grids" <<endl);
+            CHECK_INPUT (!curvilinear, "cartesian_bc_forcing> bStressFree not implemented for anisotropic materials and curvilinear grids" <<std::endl);
 
             tw_aniso_free_surf_z( ifirst, ilast, jfirst, jlast, kfirst, klast, k, t, om, cv, ph, omm, phc, bforce_side5_ptr, h, m_zmin[g] );            
          }
@@ -3018,8 +3018,8 @@ void eval_curvilinear_bc_stress(Sarray & a_u, double ** bcForcing, Sarray & a_x,
 }
 
 //-----------------------------------------------------------------------
-void EW::test_sources( vector<GridPointSource*>& a_point_sources,
-		       vector<Source*>& a_global_unique_sources, vector<Sarray>& a_F )
+void EW::test_sources( std::vector<GridPointSource*>& a_point_sources,
+               std::vector<Source*>& a_global_unique_sources, std::vector<Sarray>& a_F )
 {
 // Check the source discretization
   int kx[3] = {0,0,0};
@@ -3032,9 +3032,9 @@ void EW::test_sources( vector<GridPointSource*>& a_point_sources,
 
   if( proc_zero() )
   {
-     cout << "Source test " << endl;
-     cout << "source size = " << a_global_unique_sources.size() << endl;
-     cout << "grid point source size = " << nsources << endl;
+     std::cout << "Source test " << std::endl;
+     std::cout << "source size = " << a_global_unique_sources.size() << std::endl;
+     std::cout << "grid point source size = " << nsources << std::endl;
   }
   for( int c=0; c <= 7 ; c++ )
   {
@@ -3046,8 +3046,8 @@ void EW::test_sources( vector<GridPointSource*>& a_point_sources,
      if( proc_zero() )
      {
         for( int comp = 0 ; comp < 3 ; comp++ )
-           cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
-              " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << endl;
+           std::cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
+              " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << std::endl;
      }
   }  
   kx[0] = 1;
@@ -3064,8 +3064,8 @@ void EW::test_sources( vector<GridPointSource*>& a_point_sources,
   if( proc_zero() )
   {
      for( int comp = 0 ; comp < 3 ; comp++ )
-        cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
-           " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << endl;
+        std::cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
+           " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << std::endl;
   }
   kx[0] = 3;
   ky[0] = 2;
@@ -3081,8 +3081,8 @@ void EW::test_sources( vector<GridPointSource*>& a_point_sources,
   if( proc_zero() )
   {
      for( int comp = 0 ; comp < 3 ; comp++ )
-        cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
-           " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << endl;
+        std::cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
+           " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << std::endl;
   }
   kx[0] = 4;
   ky[0] = 3;
@@ -3098,16 +3098,16 @@ void EW::test_sources( vector<GridPointSource*>& a_point_sources,
   if( proc_zero() )
   {
      for( int comp = 0 ; comp < 3 ; comp++ )
-        cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
-           " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << endl;
+        std::cout << kx[comp] << " " << ky[comp] << " " << kz[comp] << " computed " << moments[comp] <<
+           " exact " << momexact[comp] << " difference = " << moments[comp]-momexact[comp] << std::endl;
   }
 }
 
 //-----------------------------------------------------------------------
 void EW::testSourceDiscretization( int kx[3], int ky[3], int kz[3],
 				   double moments[3],
-				   vector<GridPointSource*>& point_sources,
-				   vector<Sarray>& F )
+                   std::vector<GridPointSource*>& point_sources,
+                   std::vector<Sarray>& F )
 {
    // Evaluate sources at a large time (assume that the time function is=1 at t=infinity)
    // Compute moments, integrals of the source times polynomials of degree (kx,ky,kz).
@@ -3156,24 +3156,24 @@ void EW::testSourceDiscretization( int kx[3], int ky[3], int kz[3],
 }
 
 //-----------------------------------------------------------------------
-void EW::extractRecordData(TimeSeries::receiverMode mode, int i0, int j0, int k0, int g0, 
-			   vector<double> &uRec, vector<Sarray> &Um2, vector<Sarray> &U)
+void EW::extractRecordData(STimeSeries::receiverMode mode, int i0, int j0, int k0, int g0,
+               std::vector<double> &uRec, std::vector<Sarray> &Um2, std::vector<Sarray> &U)
 {
-  if (mode == TimeSeries::Displacement)
+  if (mode == STimeSeries::Displacement)
   {
     uRec.resize(3);
     uRec[0] = U[g0](1, i0, j0, k0);
     uRec[1] = U[g0](2, i0, j0, k0);
     uRec[2] = U[g0](3, i0, j0, k0);
   }
-  else if (mode == TimeSeries::Velocity)
+  else if (mode == STimeSeries::Velocity)
   {
     uRec.resize(3);
     uRec[0] = (U[g0](1, i0, j0, k0) - Um2[g0](1, i0, j0, k0))/(2*mDt);
     uRec[1] = (U[g0](2, i0, j0, k0) - Um2[g0](2, i0, j0, k0))/(2*mDt);
     uRec[2] = (U[g0](3, i0, j0, k0) - Um2[g0](3, i0, j0, k0))/(2*mDt);
   }
-  else if(mode == TimeSeries::Div)
+  else if(mode == STimeSeries::Div)
   {
     uRec.resize(1);
     if (g0 < mNumberOfCartesianGrids) // must be a Cartesian grid
@@ -3195,7 +3195,7 @@ void EW::extractRecordData(TimeSeries::receiverMode mode, int i0, int j0, int k0
 		     mMetric(4,i0,j0,k0)*(U[g0](3,i0,j0,k0+1) - U[g0](3,i0,j0,k0-1))  )*factor);
     }
   } // end div
-  else if(mode == TimeSeries::Curl)
+  else if(mode == STimeSeries::Curl)
   {
     uRec.resize(3);
     if (g0 < mNumberOfCartesianGrids) // must be a Cartesian grid
@@ -3258,7 +3258,7 @@ void EW::extractRecordData(TimeSeries::receiverMode mode, int i0, int j0, int k0
 //       }
     }
   } // end Curl
-  else if(mode == TimeSeries::Strains )
+  else if(mode == STimeSeries::Strains )
   {
      uRec.resize(6);
     if (g0 < mNumberOfCartesianGrids) // must be a Cartesian grid
@@ -3313,7 +3313,7 @@ void EW::extractRecordData(TimeSeries::receiverMode mode, int i0, int j0, int k0
       uRec[5] = ( 0.5*(duydz+duzdy) );
    }
   } // end Strains
-  else if(mode == TimeSeries::DisplacementGradient )
+  else if(mode == STimeSeries::DisplacementGradient )
   {
      uRec.resize(9);
      if (g0 < mNumberOfCartesianGrids) // must be a Cartesian grid
@@ -3379,8 +3379,8 @@ void EW::extractRecordData(TimeSeries::receiverMode mode, int i0, int j0, int k0
 }
 
 //---------------------------------------------------------------------------
-void EW::addSuperGridDamping(vector<Sarray> & a_Up, vector<Sarray> & a_U,
-			     vector<Sarray> & a_Um, vector<Sarray> & a_Rho )
+void EW::addSuperGridDamping(std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U,
+                 std::vector<Sarray> & a_Um, std::vector<Sarray> & a_Rho )
 {
   int ifirst, ilast, jfirst, jlast, kfirst, klast;
   double *up_ptr, *u_ptr, *um_ptr, dt2i;
@@ -3433,7 +3433,7 @@ void EW::addSuperGridDamping(vector<Sarray> & a_Up, vector<Sarray> & a_U,
 }
 
 //---------------------------------------------------------------------------
-void EW::simpleAttenuation( vector<Sarray> & a_Up )
+void EW::simpleAttenuation( std::vector<Sarray> & a_Up )
 {
   int ifirst, ilast, jfirst, jlast, kfirst, klast;
   double *up_ptr, cfreq, dt;
@@ -3462,8 +3462,8 @@ void EW::simpleAttenuation( vector<Sarray> & a_Up )
 }
 
 //-----------------------------------------------------------------------
-void EW::enforceBCfreeAtt2( vector<Sarray>& a_Up, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-                            vector<Sarray*>& a_AlphaVEp, vector<double **>& a_BCForcing ) 
+void EW::enforceBCfreeAtt2( std::vector<Sarray>& a_Up, std::vector<Sarray>& a_Mu,std::vector<Sarray>& a_Lambda,
+                            std::vector<Sarray*>& a_AlphaVEp, std::vector<double **>& a_BCForcing )
 {
 // AP: Apr. 3, 2017: Decoupled enforcement of the free surface bc with PC time stepping for memory variables
    int sg = usingSupergrid();

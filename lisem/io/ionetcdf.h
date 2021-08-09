@@ -188,6 +188,9 @@ inline bool WriteFieldList(std::vector<Field*> fields, std::vector<float> times,
         t_vals.push_back(i);
    }
 
+   std::cout << "write field dims data " << fields.at(0)->GetMapList().at(0)->cellSizeX() << "  " << fields.at(0)->GetMapList().at(0)->cellSizeY() << std::endl;
+
+
    //nc_put_att_text(ncid, lat_varid, UNITS, strlen(DEGREES_NORTH), DEGREES_NORTH)
 
    retval = nc_put_var_float(ncid, x_varid, &x_vals[0]);
@@ -324,13 +327,17 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
         int temp_var_natts;
         int temp_rh_dimids[NC_MAX_VAR_DIMS];
         char temp_var_name[ NC_MAX_NAME + 1];
-        int temp_varid = 0;
+        int temp_varid = i;
         //get properties of this variable
         nc_inq_var(ncid,temp_varid,temp_var_name,&temp_xtype,&temp_var_ndims,temp_rh_dimids,&temp_var_natts);
+
+        std::cout << "found var " << temp_var_name << " " << temp_var_ndims << std::endl;
+
         for(int j = 0; j < var_ndims; j++)
         {
             if(temp_var_ndims == 1 && temp_rh_dimids[0] == rh_dimids[j])
             {
+                std::cout << "set var as dim var "<< std::endl;
                 dim_var[j] = temp_varid;
                 break;
             }
@@ -396,6 +403,9 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
             }
 
         }
+
+        std::cout << "read field2 " << dx << "  " << dy << std::endl;
+
 
         MaskedRaster<float> raster_data(length_y, length_x,y0, x0, dx,dy);
         cTMap *m = new cTMap(std::move(raster_data),p.GetWKT(),"");
@@ -466,6 +476,8 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
             }
         }
 
+        std::cout << "read field " << dx << "  " << dy << std::endl;
+
         std::vector<cTMap*> levels;
         for(int i = 0; i < length_z; i++)
         {
@@ -520,6 +532,7 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
         float dz = 1.0;
         float dt = 1.0;
 
+        std::cout << "dim vars " << dim_var[0] << " " << dim_var[2] << " " << dim_var[3] << std::endl;
         //get the ulc and cellsize from the x and y coordinate data
         if(dim_var[1] > -1 && dim_var[2] > -1 && dim_var[3] > -1 )
         {
@@ -557,6 +570,8 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
                 dt = (tdata[length_t-1] - t0)/((float)(length_t-1));
             }
         }
+        std::cout << "read field4 " << dx << "  " << dy << std::endl;
+
 
         for(int j = 0; j < length_t; j++)
         {

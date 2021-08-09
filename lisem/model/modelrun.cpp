@@ -153,7 +153,7 @@ void LISEMModel::DoModelRun()
                 {
                     m_CLProgram_Infiltration->PlaceArgument(3, (float)(dt));
                     m_CLProgram_Infiltration->PlaceArgument(16, uimap);
-                    m_CLProgram_Infiltration->PlaceArgument(17, 0.0);
+                    m_CLProgram_Infiltration->PlaceArgument(17, (float)0.0);
 
                     m_CLProgram_Infiltration->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
                     m_CLProgram_Infiltration2->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
@@ -163,7 +163,7 @@ void LISEMModel::DoModelRun()
                 {
                     m_CLProgram_Hydrology->PlaceArgument(3, (float)(dt));
                     m_CLProgram_Hydrology->PlaceArgument(37, uimap);
-                    m_CLProgram_Hydrology->PlaceArgument(38, 0.0);
+                    m_CLProgram_Hydrology->PlaceArgument(38,  (float)0.0);
 
                     //do hydrology
                     m_CLProgram_Hydrology->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);
@@ -543,7 +543,7 @@ void LISEMModel::DoModelRun()
 
                                     m_CLProgram_Erosion->PlaceArgument(3, (float)(dt_flow_act));
                                     m_CLProgram_Erosion->PlaceArgument(60, uimap);
-                                    m_CLProgram_Erosion->PlaceArgument(81, 0.0);
+                                    m_CLProgram_Erosion->PlaceArgument(81, (float)0.0);
                                     m_CLProgram_Erosion2->PlaceArgument(3, (float)(dt_flow_act));
 
                                     m_CLProgram_Erosion->Run(m_OpenGLCLManager->context,m_OpenGLCLManager->q);

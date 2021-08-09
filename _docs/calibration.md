@@ -45,27 +45,46 @@ Gradient descent attempts to follow the shape of the function f, and steadily de
 
 When more parameters are active, gradient descent still works fine, with the exponential increase in required simulations:
 
-![Model](/assets/img/model_calibration2.png)
+![Model](/assets/img/model_calibration2d.png)
 
 Below is a script that shows how to carry out calibration for two parameters (cohesion and internal friction angle) on a simulation with LISEM. There are comments in the script that describe what each line means.
 
 ```
+//this function is the error function. It takes a list of parameters (2) and returns the model error 
 double Calibrate(array<double> params)
 {​​​
+	//run the LISEM model, by calling a run file within the working directory.
+	//The second argument is a string containing the options is the following format: "name=value|name2=value2"
+	//the names can be found within the run-files. Add _cal_mult to a name to get the calibration multiplier.
+	//Here, we set the calibration multiplier for internal friction angle and cohesion.
+	
 	RunModel("run/Couli_AutoCalib.run","Internal Friction Angle_cal_mult="+ToString(params[0])+"|" + "Cohesion Bottom_cal_mult="+ToString(params[1]));
 
+
+	//load the impact and inventory maps
 	Map impact = LoadMap("res/safetyfactor.map");
 	Map inventory = 1.0-LoadMap("maps/inventory.tif");
+	
+	//calculate error value through Cohens Kappa
 	double errorval = MapContinuousCohensKappa(inventory,impact,1.0);
 
+	//print info to output window
 	Print("Running model with ifa= " + ToString(params[0]) +"& coh= " + ToString(params[1]) + " score = " + ToString(1.0-errorval));
 
+	//actual error is 1.0- Cohens Kappa
 	return (1.0-errorval);
 }​​​
 
 
 void main()
 {​​​
-OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05);
+	//Optimize custom will minimize the error for a function
+	//the function Calibrate is defined above
+	//we start with two parameters of value 1.0 that must be positive.
+	//finite step size = 0.01, gradient step size  = 0.05
+	//gradient step size might need to be lowered for stable convergence.
+	OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05);
 }​​​
 ```
+
+Typically, the script will require some 30 iterations for a 2 or 3 parameter calibration. Do check the result in the display to alter the gradient step if neccesary.

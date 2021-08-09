@@ -40,11 +40,11 @@ public:
          m_Parameters->AddParameter("IsSurface",m_IsSurface,false);
     }
 
-    inline UIFieldLayer(Field*g,QString name, bool is_file, QString file_name) : UIGeoLayer(GeoProjection(),BoundingBox(g->GetBoundingBox().GetMinX(),g->GetBoundingBox().GetMaxX(),g->GetBoundingBox().GetMinY(),g->GetBoundingBox().GetMaxY()),QString("3D Object"),false,QString(""),false)
+    inline UIFieldLayer(Field*g,QString name, bool is_file, QString file_name, bool native = false) : UIGeoLayer(GeoProjection(),BoundingBox(g->GetBoundingBox().GetMinX(),g->GetBoundingBox().GetMaxX(),g->GetBoundingBox().GetMinY(),g->GetBoundingBox().GetMaxY()),QString("3D Object"),false,QString(""),false)
     {
          g->GetMinMax(&m_Val_Min,&m_Val_Max, &m_Val_Avg);
          m_Field = g;
-         m_IsNative = false;
+         m_IsNative = native;
          m_IsUser = true;
          m_IsLayerSaveAble = true;
          m_Style.m_StyleSimpleGradient = true;
@@ -67,6 +67,36 @@ public:
         return "UIFieldLayer";
     }
 
+    inline bool IsLayerDirectReplaceable(Field * maps)
+    {
+
+        if(m_Field->nrLevels() != maps->nrLevels() || m_Field->nrCols() != maps->nrCols() || m_Field->nrRows() != maps->nrRows())
+        {
+            return false;
+        }
+        return true;
+
+    }
+
+    inline void DirectReplace(Field * maps)
+    {
+        std::cout << "doing direct replace " << std::endl;
+
+        if(m_IsPrepared)
+        {
+            delete m_Field;
+
+            maps->GetMinMax(&m_Val_Min,&m_Val_Max, &m_Val_Avg);
+            m_Field = maps;
+
+            m_Texture->UpdateDataFromField(maps);
+        }else
+        {
+            maps->GetMinMax(&m_Val_Min,&m_Val_Max, &m_Val_Avg);
+            m_Field = maps;
+        }
+
+    }
 
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
     {

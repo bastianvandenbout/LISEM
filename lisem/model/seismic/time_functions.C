@@ -32,6 +32,7 @@
 #include <cmath>
 #include "Require.h"
 #include <iostream>
+#include "defines.h"
 
 double VerySmoothBump(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
@@ -174,7 +175,7 @@ double VerySmoothBump_ttomom(double freq, double t, double* par, int npar, int* 
 
 double RickerWavelet(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
     return (2*factor - 1)*exp(-factor);
   else
@@ -183,45 +184,45 @@ double RickerWavelet(double freq, double t, double* par, int npar, int* ipar, in
 
 double RickerWavelet_t(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return pow(M_PI*freq,2)*t*( 6 - 4*factor )*exp(-factor);
+     return pow(LISEM_PI*freq,2)*t*( 6 - 4*factor )*exp(-factor);
   else
     return 0;
 }
 
 double RickerWavelet_om(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return M_PI*M_PI*freq*t*t*( 6 - 4*factor )*exp(-factor);
+     return LISEM_PI*LISEM_PI*freq*t*t*( 6 - 4*factor )*exp(-factor);
   else
     return 0;
 }
 
 double RickerWavelet_tt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return M_PI*M_PI*freq*freq*( 6-24*factor+8*factor*factor)*exp(-factor);
+     return LISEM_PI*LISEM_PI*freq*freq*( 6-24*factor+8*factor*factor)*exp(-factor);
   else
     return 0;
 }
 
 double RickerWavelet_ttt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return pow(M_PI*freq,4)*t*( -60+80*factor-16*factor*factor)*exp(-factor);
+     return pow(LISEM_PI*freq,4)*t*( -60+80*factor-16*factor*factor)*exp(-factor);
   else
     return 0;
 }
 
 double RickerWavelet_omtt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return M_PI*M_PI*freq*(12-108*factor+96*factor*factor-16*factor*factor*factor)*exp(-factor);
+     return LISEM_PI*LISEM_PI*freq*(12-108*factor+96*factor*factor-16*factor*factor*factor)*exp(-factor);
  
   else
     return 0;
@@ -229,7 +230,7 @@ double RickerWavelet_omtt(double freq, double t, double* par, int npar, int* ipa
 
 double RickerInt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
     return -t*exp(-factor);
   else
@@ -238,7 +239,7 @@ double RickerInt(double freq, double t, double* par, int npar, int* ipar, int ni
 
 double RickerInt_t(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
      return (2*factor-1)*exp(-factor);
   else
@@ -247,36 +248,36 @@ double RickerInt_t(double freq, double t, double* par, int npar, int* ipar, int 
 
 double RickerInt_om(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return 2*t*t*t*freq*M_PI*M_PI*exp(-factor);
+     return 2*t*t*t*freq*LISEM_PI*LISEM_PI*exp(-factor);
   else
     return 0;
 }
 
 double RickerInt_tt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return M_PI*M_PI*freq*freq*t*(6-4*factor)*exp(-factor);
+     return LISEM_PI*LISEM_PI*freq*freq*t*(6-4*factor)*exp(-factor);
   else
     return 0;
 }
 
 double RickerInt_ttt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return M_PI*M_PI*freq*freq*(6-24*factor+8*factor*factor)*exp(-factor);
+     return LISEM_PI*LISEM_PI*freq*freq*(6-24*factor+8*factor*factor)*exp(-factor);
   else
     return 0;
 }
 
 double RickerInt_omtt(double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-  double factor = pow(M_PI*freq*t,2);
+  double factor = pow(LISEM_PI*freq*t,2);
   if( -factor > par[0] )
-     return t*M_PI*M_PI*freq*(12-28*factor+8*factor*factor)*exp(-factor);
+     return t*LISEM_PI*LISEM_PI*freq*(12-28*factor+8*factor*factor)*exp(-factor);
   else
     return 0;
 }
@@ -285,7 +286,7 @@ double Gaussian(double freq, double t, double* par, int npar, int* ipar, int nip
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-    return freq / sqrt(2*M_PI)*exp(-factor);
+    return freq / sqrt(2*LISEM_PI)*exp(-factor);
   else
     return 0;
 }
@@ -294,7 +295,7 @@ double Gaussian_t(double freq, double t, double* par, int npar, int* ipar, int n
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-    return -freq*freq*freq*t / sqrt(2*M_PI)*exp(-factor);
+    return -freq*freq*freq*t / sqrt(2*LISEM_PI)*exp(-factor);
   else
     return 0;
 }
@@ -303,7 +304,7 @@ double Gaussian_om(double freq, double t, double* par, int npar, int* ipar, int 
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return (1-2*factor)/ sqrt(2*M_PI)*exp(-factor);
+     return (1-2*factor)/ sqrt(2*LISEM_PI)*exp(-factor);
   else
     return 0;
 }
@@ -312,7 +313,7 @@ double Gaussian_tt(double freq, double t, double* par, int npar, int* ipar, int 
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq / sqrt(2*M_PI)* freq*freq*(2*factor-1)*exp(-factor);
+     return freq / sqrt(2*LISEM_PI)* freq*freq*(2*factor-1)*exp(-factor);
   else
     return 0;
 }
@@ -321,7 +322,7 @@ double Gaussian_tom(double freq, double t, double* par, int npar, int* ipar, int
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq*freq*t / sqrt(2*M_PI)*(-3 + 2*factor)*exp(-factor);
+     return freq*freq*t / sqrt(2*LISEM_PI)*(-3 + 2*factor)*exp(-factor);
   else
     return 0;
 }
@@ -330,7 +331,7 @@ double Gaussian_omom(double freq, double t, double* par, int npar, int* ipar, in
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq*t*t / sqrt(2*M_PI)*(-3 + 2*factor)*exp(-factor);
+     return freq*t*t / sqrt(2*LISEM_PI)*(-3 + 2*factor)*exp(-factor);
   else
     return 0;
 }
@@ -339,7 +340,7 @@ double Gaussian_ttt(double freq, double t, double* par, int npar, int* ipar, int
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq*freq*freq*freq*freq*t / sqrt(2*M_PI)*(3-2*factor)*exp(-factor);
+     return freq*freq*freq*freq*freq*t / sqrt(2*LISEM_PI)*(3-2*factor)*exp(-factor);
   else
     return 0;
 }
@@ -348,7 +349,7 @@ double Gaussian_omtt(double freq, double t, double* par, int npar, int* ipar, in
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq*freq*(12*factor-3-4*factor*factor)/sqrt(2*M_PI)*exp(-factor);
+     return freq*freq*(12*factor-3-4*factor*factor)/sqrt(2*LISEM_PI)*exp(-factor);
   else
     return 0;
 }
@@ -357,7 +358,7 @@ double Gaussian_tttt(double freq, double t, double* par, int npar, int* ipar, in
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq*freq*freq*freq*freq / sqrt(2*M_PI)*(3-12*factor + 4*factor*factor)*exp(-factor);
+     return freq*freq*freq*freq*freq / sqrt(2*LISEM_PI)*(3-12*factor + 4*factor*factor)*exp(-factor);
   else
     return 0;
 }
@@ -366,7 +367,7 @@ double Gaussian_tttom(double freq, double t, double* par, int npar, int* ipar, i
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq*freq*freq*freq*t / sqrt(2*M_PI)*(15-20*factor + 4*factor*factor)*exp(-factor);
+     return freq*freq*freq*freq*t / sqrt(2*LISEM_PI)*(15-20*factor + 4*factor*factor)*exp(-factor);
   else
     return 0;
 }
@@ -375,7 +376,7 @@ double Gaussian_ttomom(double freq, double t, double* par, int npar, int* ipar, 
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq / sqrt(2*M_PI)*(-6+54*factor-48*factor*factor+8*factor*factor*factor)*exp(-factor);
+     return freq / sqrt(2*LISEM_PI)*(-6+54*factor-48*factor*factor+8*factor*factor*factor)*exp(-factor);
   else
     return 0;
 }
@@ -389,7 +390,7 @@ double Erf_t(double freq, double t, double* par, int npar, int* ipar, int nipar 
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-    return freq / sqrt(2*M_PI)*exp(-factor);
+    return freq / sqrt(2*LISEM_PI)*exp(-factor);
   else
     return 0;
 }
@@ -398,7 +399,7 @@ double Erf_om(double freq, double t, double* par, int npar, int* ipar, int nipar
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-    return t / sqrt(2*M_PI)*exp(-factor);
+    return t / sqrt(2*LISEM_PI)*exp(-factor);
   else
     return 0;
 }
@@ -407,7 +408,7 @@ double Erf_tt( double freq, double t, double* par, int npar, int* ipar, int nipa
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-    return -freq / sqrt(2*M_PI)* freq*freq*t*exp(-factor);
+    return -freq / sqrt(2*LISEM_PI)* freq*freq*t*exp(-factor);
   else
     return 0;
 }
@@ -416,7 +417,7 @@ double Erf_ttt(double freq, double t, double* par, int npar, int* ipar, int nipa
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return freq / sqrt(2*M_PI)* freq*freq*(2*factor-1)*exp(-factor);
+     return freq / sqrt(2*LISEM_PI)* freq*freq*(2*factor-1)*exp(-factor);
   else
     return 0;
 }
@@ -425,7 +426,7 @@ double Erf_omtt(double freq, double t, double* par, int npar, int* ipar, int nip
 {
   double factor=pow(t*freq,2) / 2;
   if( -factor > par[0] )
-     return t / sqrt(2*M_PI)* freq*freq*(2*factor-3)*exp(-factor);
+     return t / sqrt(2*LISEM_PI)* freq*freq*(2*factor-3)*exp(-factor);
   else
     return 0;
 }
@@ -438,7 +439,7 @@ double Ramp(double freq, double t, double* par, int npar, int* ipar, int nipar )
   else if (t*freq > 1)
     tmp = 1.0;
   else
-    tmp = 0.5*(1 - cos(M_PI*t*freq));
+    tmp = 0.5*(1 - cos(LISEM_PI*t*freq));
   
   return tmp;
 }
@@ -451,7 +452,7 @@ double Ramp_t(double freq, double t, double* par, int npar, int* ipar, int nipar
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = 0.5*M_PI*freq*sin(M_PI*t*freq);
+    tmp = 0.5*LISEM_PI*freq*sin(LISEM_PI*t*freq);
   
   return tmp;
 }
@@ -464,7 +465,7 @@ double Ramp_om(double freq, double t, double* par, int npar, int* ipar, int nipa
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = 0.5*M_PI*t*sin(M_PI*t*freq);
+    tmp = 0.5*LISEM_PI*t*sin(LISEM_PI*t*freq);
   
   return tmp;
 }
@@ -477,7 +478,7 @@ double Ramp_tt(double freq, double t, double* par, int npar, int* ipar, int nipa
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = 0.5*M_PI*M_PI*freq*freq*cos(M_PI*t*freq);
+    tmp = 0.5*LISEM_PI*LISEM_PI*freq*freq*cos(LISEM_PI*t*freq);
   
   return tmp;
 }
@@ -490,7 +491,7 @@ double Ramp_ttt(double freq, double t, double* par, int npar, int* ipar, int nip
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = -0.5*M_PI*M_PI*M_PI*freq*freq*freq*sin(M_PI*t*freq);
+    tmp = -0.5*LISEM_PI*LISEM_PI*LISEM_PI*freq*freq*freq*sin(LISEM_PI*t*freq);
   
   return tmp;
 }
@@ -503,7 +504,7 @@ double Ramp_omtt(double freq, double t, double* par, int npar, int* ipar, int ni
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = M_PI*M_PI*freq*(cos(M_PI*t*freq)-0.5*M_PI*t*freq*sin(M_PI*t*freq));
+     tmp = LISEM_PI*LISEM_PI*freq*(cos(LISEM_PI*t*freq)-0.5*LISEM_PI*t*freq*sin(LISEM_PI*t*freq));
   
   return tmp;
 }
@@ -516,7 +517,7 @@ double Triangle(double freq, double t, double* par, int npar, int* ipar, int nip
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = 2*freq*8./pow(M_PI,2)*(sin(M_PI*(t*freq)) - sin(3*M_PI*(t*freq))/9 + sin(5*M_PI*(t*freq))/25 - sin(7*M_PI*(t*freq))/49);
+    tmp = 2*freq*8./pow(LISEM_PI,2)*(sin(LISEM_PI*(t*freq)) - sin(3*LISEM_PI*(t*freq))/9 + sin(5*LISEM_PI*(t*freq))/25 - sin(7*LISEM_PI*(t*freq))/49);
 
   return tmp; 
 }
@@ -529,7 +530,7 @@ double Triangle_t(double freq, double t, double* par, int npar, int* ipar, int n
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = 2*freq*8./pow(M_PI,2)*M_PI*freq*(cos(M_PI*(t*freq)) - cos(3*M_PI*(t*freq))/3 + cos(5*M_PI*(t*freq))/5 - cos(7*M_PI*(t*freq))/7);
+    tmp = 2*freq*8./pow(LISEM_PI,2)*LISEM_PI*freq*(cos(LISEM_PI*(t*freq)) - cos(3*LISEM_PI*(t*freq))/3 + cos(5*LISEM_PI*(t*freq))/5 - cos(7*LISEM_PI*(t*freq))/7);
 
   return tmp; 
 }
@@ -542,7 +543,7 @@ double Triangle_om(double freq, double t, double* par, int npar, int* ipar, int 
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 2*8./pow(M_PI,2)*(M_PI*freq*t*(cos(M_PI*(t*freq)) - cos(3*M_PI*(t*freq))/3 + cos(5*M_PI*(t*freq))/5 - cos(7*M_PI*(t*freq))/7) + (sin(M_PI*(t*freq)) - sin(3*M_PI*(t*freq))/9 + sin(5*M_PI*(t*freq))/25 - sin(7*M_PI*(t*freq))/49) );
+     tmp = 2*8./pow(LISEM_PI,2)*(LISEM_PI*freq*t*(cos(LISEM_PI*(t*freq)) - cos(3*LISEM_PI*(t*freq))/3 + cos(5*LISEM_PI*(t*freq))/5 - cos(7*LISEM_PI*(t*freq))/7) + (sin(LISEM_PI*(t*freq)) - sin(3*LISEM_PI*(t*freq))/9 + sin(5*LISEM_PI*(t*freq))/25 - sin(7*LISEM_PI*(t*freq))/49) );
 
   return tmp; 
 }
@@ -555,9 +556,9 @@ double Triangle_tt(double freq, double t, double* par, int npar, int* ipar, int 
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 2*freq*8./pow(M_PI,2)*(-M_PI*M_PI*freq*freq)*
-	( sin(M_PI*(t*freq)) - sin(3*M_PI*(t*freq)) + 
-          sin(5*M_PI*(t*freq)) - sin(7*M_PI*(t*freq)) );
+     tmp = 2*freq*8./pow(LISEM_PI,2)*(-LISEM_PI*LISEM_PI*freq*freq)*
+    ( sin(LISEM_PI*(t*freq)) - sin(3*LISEM_PI*(t*freq)) +
+          sin(5*LISEM_PI*(t*freq)) - sin(7*LISEM_PI*(t*freq)) );
 
   return tmp; 
 }
@@ -570,9 +571,9 @@ double Triangle_ttt(double freq, double t, double* par, int npar, int* ipar, int
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 2*freq*8./pow(M_PI,2)*(-M_PI*M_PI*M_PI*freq*freq*freq)*
-	( cos(M_PI*(t*freq)) - 3*cos(3*M_PI*(t*freq)) + 
-          5*cos(5*M_PI*(t*freq)) - 7*cos(7*M_PI*(t*freq)) );
+     tmp = 2*freq*8./pow(LISEM_PI,2)*(-LISEM_PI*LISEM_PI*LISEM_PI*freq*freq*freq)*
+    ( cos(LISEM_PI*(t*freq)) - 3*cos(3*LISEM_PI*(t*freq)) +
+          5*cos(5*LISEM_PI*(t*freq)) - 7*cos(7*LISEM_PI*(t*freq)) );
 
   return tmp; 
 }
@@ -585,11 +586,11 @@ double Triangle_omtt(double freq, double t, double* par, int npar, int* ipar, in
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 2*freq*freq*M_PI*M_PI*8/pow(M_PI,2)*( 
-	(-3)*( sin(M_PI*(t*freq)) - sin(3*M_PI*(t*freq)) + 
-	       sin(5*M_PI*(t*freq)) - sin(7*M_PI*(t*freq)) ) 
-	-freq*t*M_PI*(cos(M_PI*(t*freq)) - 3*cos(3*M_PI*(t*freq)) + 
-		 5*cos(5*M_PI*(t*freq)) - 7*cos(7*M_PI*(t*freq)) ));
+     tmp = 2*freq*freq*LISEM_PI*LISEM_PI*8/pow(LISEM_PI,2)*(
+    (-3)*( sin(LISEM_PI*(t*freq)) - sin(3*LISEM_PI*(t*freq)) +
+           sin(5*LISEM_PI*(t*freq)) - sin(7*LISEM_PI*(t*freq)) )
+    -freq*t*LISEM_PI*(cos(LISEM_PI*(t*freq)) - 3*cos(3*LISEM_PI*(t*freq)) +
+         5*cos(5*LISEM_PI*(t*freq)) - 7*cos(7*LISEM_PI*(t*freq)) ));
   return tmp; 
 }
 
@@ -601,7 +602,7 @@ double Sawtooth(double freq, double t, double* par, int npar, int* ipar, int nip
   else if (t*freq > 1)
     tmp = 0.0;
   else
-    tmp = 8./pow(M_PI,2)*(sin(M_PI*(2*t*freq)) - sin(3*M_PI*(2*t*freq))/9 + sin(5*M_PI*(2*t*freq))/25 - sin(7*M_PI*(2*t*freq))/49);
+    tmp = 8./pow(LISEM_PI,2)*(sin(LISEM_PI*(2*t*freq)) - sin(3*LISEM_PI*(2*t*freq))/9 + sin(5*LISEM_PI*(2*t*freq))/25 - sin(7*LISEM_PI*(2*t*freq))/49);
 
   return tmp; 
 }
@@ -614,7 +615,7 @@ double Sawtooth_t(double freq, double t, double* par, int npar, int* ipar, int n
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 8./pow(M_PI,2)*(2*M_PI*freq)*(cos(M_PI*(2*t*freq)) - cos(3*M_PI*(2*t*freq))/3 + cos(5*M_PI*(2*t*freq))/5 - cos(7*M_PI*(2*t*freq))/7);
+     tmp = 8./pow(LISEM_PI,2)*(2*LISEM_PI*freq)*(cos(LISEM_PI*(2*t*freq)) - cos(3*LISEM_PI*(2*t*freq))/3 + cos(5*LISEM_PI*(2*t*freq))/5 - cos(7*LISEM_PI*(2*t*freq))/7);
 
   return tmp; 
 }
@@ -627,7 +628,7 @@ double Sawtooth_om(double freq, double t, double* par, int npar, int* ipar, int 
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 8./pow(M_PI,2)*(2*M_PI*t)*(cos(M_PI*(2*t*freq)) - cos(3*M_PI*(2*t*freq))/3 + cos(5*M_PI*(2*t*freq))/5 - cos(7*M_PI*(2*t*freq))/7);
+     tmp = 8./pow(LISEM_PI,2)*(2*LISEM_PI*t)*(cos(LISEM_PI*(2*t*freq)) - cos(3*LISEM_PI*(2*t*freq))/3 + cos(5*LISEM_PI*(2*t*freq))/5 - cos(7*LISEM_PI*(2*t*freq))/7);
 
   return tmp; 
 }
@@ -640,9 +641,9 @@ double Sawtooth_tt(double freq, double t, double* par, int npar, int* ipar, int 
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = 8./pow(M_PI,2)*(-M_PI*M_PI*2*2*freq*freq)*
-              (sin(M_PI*(2*t*freq)) - sin(3*M_PI*(2*t*freq)) +
-	       sin(5*M_PI*(2*t*freq)) - sin(7*M_PI*(2*t*freq)));
+     tmp = 8./pow(LISEM_PI,2)*(-LISEM_PI*LISEM_PI*2*2*freq*freq)*
+              (sin(LISEM_PI*(2*t*freq)) - sin(3*LISEM_PI*(2*t*freq)) +
+           sin(5*LISEM_PI*(2*t*freq)) - sin(7*LISEM_PI*(2*t*freq)));
 
   return tmp; 
 }
@@ -655,9 +656,9 @@ double Sawtooth_ttt(double freq, double t, double* par, int npar, int* ipar, int
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = -64.*(M_PI*freq*freq*freq)*
-              (cos(M_PI*(2*t*freq)) - 3*cos(3*M_PI*(2*t*freq)) +
-	       5*cos(5*M_PI*(2*t*freq)) - 7*cos(7*M_PI*(2*t*freq)));
+     tmp = -64.*(LISEM_PI*freq*freq*freq)*
+              (cos(LISEM_PI*(2*t*freq)) - 3*cos(3*LISEM_PI*(2*t*freq)) +
+           5*cos(5*LISEM_PI*(2*t*freq)) - 7*cos(7*LISEM_PI*(2*t*freq)));
 
   return tmp; 
 }
@@ -670,11 +671,11 @@ double Sawtooth_omtt(double freq, double t, double* par, int npar, int* ipar, in
   else if (t*freq > 1)
     tmp = 0.0;
   else
-     tmp = -64*freq*(sin(M_PI*(2*t*freq)) - sin(3*M_PI*(2*t*freq)) +
-		     sin(5*M_PI*(2*t*freq)) - sin(7*M_PI*(2*t*freq))) 
-          -64*M_PI*freq*freq*t*
-               (cos(M_PI*(2*t*freq)) - 3*cos(3*M_PI*(2*t*freq)) +
-		5*cos(5*M_PI*(2*t*freq)) - 7*cos(7*M_PI*(2*t*freq)));
+     tmp = -64*freq*(sin(LISEM_PI*(2*t*freq)) - sin(3*LISEM_PI*(2*t*freq)) +
+             sin(5*LISEM_PI*(2*t*freq)) - sin(7*LISEM_PI*(2*t*freq)))
+          -64*LISEM_PI*freq*freq*t*
+               (cos(LISEM_PI*(2*t*freq)) - 3*cos(3*LISEM_PI*(2*t*freq)) +
+        5*cos(5*LISEM_PI*(2*t*freq)) - 7*cos(7*LISEM_PI*(2*t*freq)));
 
   return tmp; 
 }
@@ -1135,7 +1136,7 @@ double GaussianWindow_omtt( double freq, double t, double* par, int npar, int* i
 
 double Liu( double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-   double tau = 2*M_PI/freq;
+   double tau = 2*LISEM_PI/freq;
    double tau1 = 0.13*tau;
    double tau2 = tau-tau1;
    if( t < 0 )
@@ -1144,21 +1145,21 @@ double Liu( double freq, double t, double* par, int npar, int* ipar, int nipar )
       return 1;
    else
    {
-      double ipi = 1.0/M_PI;
+      double ipi = 1.0/LISEM_PI;
       double cn = 1.0/(1.4*tau1+1.2*tau1*ipi + 0.3*tau2);
       if( t <= tau1 )
-	 return cn*(0.7*t-0.7*tau1*ipi*sin(M_PI*t/tau1)-1.2*tau1*ipi*(cos(0.5*M_PI*t/tau1)-1));
+     return cn*(0.7*t-0.7*tau1*ipi*sin(LISEM_PI*t/tau1)-1.2*tau1*ipi*(cos(0.5*LISEM_PI*t/tau1)-1));
       else if( t <= 2*tau1 )
-	 return cn*(1.0*t-0.3*tau1+1.2*tau1*ipi - 0.7*tau1*ipi*sin(M_PI*t/tau1)+0.3*tau2*ipi*sin(M_PI*(t-tau1)/tau2));
+     return cn*(1.0*t-0.3*tau1+1.2*tau1*ipi - 0.7*tau1*ipi*sin(LISEM_PI*t/tau1)+0.3*tau2*ipi*sin(LISEM_PI*(t-tau1)/tau2));
       else if( t <= tau )
-	 return cn*(0.3*t+1.1*tau1+1.2*tau1*ipi+0.3*tau2*ipi*sin(M_PI*(t-tau1)/tau2));
+     return cn*(0.3*t+1.1*tau1+1.2*tau1*ipi+0.3*tau2*ipi*sin(LISEM_PI*(t-tau1)/tau2));
    }
    return 0.; // should never get here, but keeps compiler happy
 }
 
 double Liu_t( double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-   double tau = 2*M_PI/freq;
+   double tau = 2*LISEM_PI/freq;
    double tau1 = 0.13*tau;
    double tau2 = tau-tau1;
    if( t < 0 )
@@ -1167,21 +1168,21 @@ double Liu_t( double freq, double t, double* par, int npar, int* ipar, int nipar
       return 0;
    else
    {
-      double ipi = 1.0/M_PI;
+      double ipi = 1.0/LISEM_PI;
       double cn = 1.0/(1.4*tau1+1.2*tau1*ipi + 0.3*tau2);
       if( t <= tau1 )
-	 return cn*(0.7-0.7*cos(M_PI*t/tau1)+0.6*sin(0.5*M_PI*t/tau1));
+     return cn*(0.7-0.7*cos(LISEM_PI*t/tau1)+0.6*sin(0.5*LISEM_PI*t/tau1));
       else if( t <= 2*tau1 )
-	 return cn*(1-0.7*cos(M_PI*t/tau1)+0.3*cos(M_PI*(t-tau1)/tau2));
+     return cn*(1-0.7*cos(LISEM_PI*t/tau1)+0.3*cos(LISEM_PI*(t-tau1)/tau2));
       else if( t <= tau )
-	 return cn*(0.3+0.3*cos(M_PI*(t-tau1)/tau2));
+     return cn*(0.3+0.3*cos(LISEM_PI*(t-tau1)/tau2));
    }
    return 0.; // should never get here, but keeps compiler happy
 }
 
 double Liu_om( double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-   double tau = 2*M_PI/freq;
+   double tau = 2*LISEM_PI/freq;
    double tau1 = 0.13*tau;
    double tau2 = tau-tau1;
    if( t < 0 )
@@ -1190,21 +1191,21 @@ double Liu_om( double freq, double t, double* par, int npar, int* ipar, int nipa
       return 0;
    else
    {
-      double ipi = 1.0/M_PI;
+      double ipi = 1.0/LISEM_PI;
       double cn = t*1.0/(1.4*tau1+1.2*tau1*ipi + 0.3*tau2)/freq;
       if( t <= tau1 )
-	 return cn*(0.7-0.7*cos(M_PI*t/tau1)+0.6*sin(0.5*M_PI*t/tau1));
+     return cn*(0.7-0.7*cos(LISEM_PI*t/tau1)+0.6*sin(0.5*LISEM_PI*t/tau1));
       else if( t <= 2*tau1 )
-	 return cn*(1-0.7*cos(M_PI*t/tau1)+0.3*cos(M_PI*(t-tau1)/tau2));
+     return cn*(1-0.7*cos(LISEM_PI*t/tau1)+0.3*cos(LISEM_PI*(t-tau1)/tau2));
       else if( t <= tau )
-	 return cn*(0.3+0.3*cos(M_PI*(t-tau1)/tau2));
+     return cn*(0.3+0.3*cos(LISEM_PI*(t-tau1)/tau2));
    }
    return 0.; // should never get here, but keeps compiler happy
 }
 
 double Liu_tt( double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-   double tau = 2*M_PI/freq;
+   double tau = 2*LISEM_PI/freq;
    double tau1 = 0.13*tau;
    double tau2 = tau-tau1;
    if( t < 0 )
@@ -1213,21 +1214,21 @@ double Liu_tt( double freq, double t, double* par, int npar, int* ipar, int nipa
       return 0;
    else
    {
-      double ipi = 1.0/M_PI;
+      double ipi = 1.0/LISEM_PI;
       double cn = 1.0/(1.4*tau1+1.2*tau1*ipi + 0.3*tau2);
       if( t <= tau1 )
-	 return cn*(0.7*M_PI*sin(M_PI*t/tau1)+0.3*M_PI*cos(0.5*M_PI*t/tau1))/tau1;
+     return cn*(0.7*LISEM_PI*sin(LISEM_PI*t/tau1)+0.3*LISEM_PI*cos(0.5*LISEM_PI*t/tau1))/tau1;
       else if( t <= 2*tau1 )
-	 return cn*(0.7*M_PI*sin(M_PI*t/tau1)/tau1-0.3*M_PI*sin(M_PI*(t-tau1)/tau2)/tau2);
+     return cn*(0.7*LISEM_PI*sin(LISEM_PI*t/tau1)/tau1-0.3*LISEM_PI*sin(LISEM_PI*(t-tau1)/tau2)/tau2);
       else if( t <= tau )
-	 return cn*(-0.3*M_PI*sin(M_PI*(t-tau1)/tau2))/tau2;
+     return cn*(-0.3*LISEM_PI*sin(LISEM_PI*(t-tau1)/tau2))/tau2;
    }
    return 0.; // should never get here, but keeps compiler happy
 }
 
 double Liu_ttt( double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-   double tau = 2*M_PI/freq;
+   double tau = 2*LISEM_PI/freq;
    double tau1 = 0.13*tau;
    double tau2 = tau-tau1;
    if( t < 0 )
@@ -1236,21 +1237,21 @@ double Liu_ttt( double freq, double t, double* par, int npar, int* ipar, int nip
       return 0;
    else
    {
-      double ipi = 1.0/M_PI;
+      double ipi = 1.0/LISEM_PI;
       double cn = 1.0/(1.4*tau1+1.2*tau1*ipi + 0.3*tau2);
       if( t <= tau1 )
-	 return cn*(0.7*M_PI*M_PI*cos(M_PI/tau1*t)-0.15*M_PI*M_PI*sin(0.5*M_PI/tau1*t))/(tau1*tau1);
+     return cn*(0.7*LISEM_PI*LISEM_PI*cos(LISEM_PI/tau1*t)-0.15*LISEM_PI*LISEM_PI*sin(0.5*LISEM_PI/tau1*t))/(tau1*tau1);
       else if( t <= 2*tau1 )
-	 return cn*(0.7*M_PI*M_PI*cos(M_PI*t/tau1)/(tau1*tau1)-0.3*M_PI*M_PI*cos(M_PI*(t-tau1)/tau2)/(tau2*tau2));
+     return cn*(0.7*LISEM_PI*LISEM_PI*cos(LISEM_PI*t/tau1)/(tau1*tau1)-0.3*LISEM_PI*LISEM_PI*cos(LISEM_PI*(t-tau1)/tau2)/(tau2*tau2));
       else if( t <= tau )
-	 return cn*(-0.3*M_PI*M_PI*cos(M_PI*(t-tau1)/tau2))/(tau2*tau2);
+     return cn*(-0.3*LISEM_PI*LISEM_PI*cos(LISEM_PI*(t-tau1)/tau2))/(tau2*tau2);
    }
    return 0.; // should never get here, but keeps compiler happy
 }
 
 double Liu_omtt( double freq, double t, double* par, int npar, int* ipar, int nipar )
 {
-   double tau = 2*M_PI/freq;
+   double tau = 2*LISEM_PI/freq;
    double tau1 = 0.13*tau;
    double tau2 = tau-tau1;
    if( t < 0 )
@@ -1259,16 +1260,16 @@ double Liu_omtt( double freq, double t, double* par, int npar, int* ipar, int ni
       return 0;
    else
    {
-      double ipi = 1.0/M_PI;
+      double ipi = 1.0/LISEM_PI;
       double cn = 1.0/(1.4*tau1+1.2*tau1*ipi + 0.3*tau2)/freq;
       if( t <= tau1 )
-	 return cn*(2*(0.7*M_PI*sin(M_PI/tau1*t)+0.3*M_PI*cos(0.5*M_PI/tau1*t)) + 
-        (0.7*M_PI*M_PI*t/tau1*cos(M_PI/tau1*t)-0.15*M_PI*M_PI*t/tau1*sin(0.5*M_PI/tau1*t)) )/(tau1);
+     return cn*(2*(0.7*LISEM_PI*sin(LISEM_PI/tau1*t)+0.3*LISEM_PI*cos(0.5*LISEM_PI/tau1*t)) +
+        (0.7*LISEM_PI*LISEM_PI*t/tau1*cos(LISEM_PI/tau1*t)-0.15*LISEM_PI*LISEM_PI*t/tau1*sin(0.5*LISEM_PI/tau1*t)) )/(tau1);
       else if( t <= 2*tau1 )
-	 return cn*(2*(0.7*M_PI*sin(M_PI*t/tau1)/tau1-0.3*M_PI*sin(M_PI*(t-tau1)/tau2)/tau2) + 
-		    t*(0.7*M_PI*M_PI*cos(M_PI*t/tau1)/(tau1*tau1)-0.3*M_PI*M_PI*cos(M_PI*(t-tau1)/tau2)/(tau2*tau2)));
+     return cn*(2*(0.7*LISEM_PI*sin(LISEM_PI*t/tau1)/tau1-0.3*LISEM_PI*sin(LISEM_PI*(t-tau1)/tau2)/tau2) +
+            t*(0.7*LISEM_PI*LISEM_PI*cos(LISEM_PI*t/tau1)/(tau1*tau1)-0.3*LISEM_PI*LISEM_PI*cos(LISEM_PI*(t-tau1)/tau2)/(tau2*tau2)));
       else if( t <= tau )
-	 return -0.3*M_PI*cn*( 2*sin(M_PI*(t-tau1)/tau2)/tau2 + M_PI*t*cos(M_PI*(t-tau1)/tau2)/(tau2*tau2) );
+     return -0.3*LISEM_PI*cn*( 2*sin(LISEM_PI*(t-tau1)/tau2)/tau2 + LISEM_PI*t*cos(LISEM_PI*(t-tau1)/tau2)/(tau2*tau2) );
    }
    return 0.; // should never get here, but keeps compiler happy
 }

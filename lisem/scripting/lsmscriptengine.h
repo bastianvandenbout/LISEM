@@ -872,6 +872,18 @@ public:
 
     }
 
+    template<typename R, typename... Args>
+    inline  int            RegisterObjectSTDMethod(const char *obj, const char *declaration, std::function<R(Args...)> funcPointer)
+    {
+        int r = m_ASEngine->RegisterObjectMethod(obj,declaration, asMETHOD(decltype(funcPointer), operator()),  asCALL_CDECL_OBJFIRST);
+        if( r < 0)
+        {
+            LISEM_DEBUG("Error in registering object method: " + QString(obj) + " " + QString(declaration));
+        }
+        return r;
+    }
+
+
     inline  asUINT             GetGlobalFunctionCount() const { return m_ASEngine->GetGlobalFunctionCount();}
     inline  asIScriptFunction *GetGlobalFunctionByIndex(asUINT index) const { return m_ASEngine->GetGlobalFunctionByIndex(index);}
     inline  asIScriptFunction *GetGlobalFunctionByDecl(const char *declaration) const { return m_ASEngine->GetGlobalFunctionByDecl(declaration) ;}

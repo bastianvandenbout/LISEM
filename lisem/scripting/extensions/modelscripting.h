@@ -6,6 +6,9 @@
 #include "scriptmanager.h"
 #include "openglclmanager.h"
 #include "QPixmap"
+#include "raster/rasterseismic.h"
+
+//#include "extensions/scriptarrayhelpers.h"
 
 //AS_MODELRESULT RequestStartAndWait(QList<QString> options, RigidPhysicsWorld * world = nullptr);
 //AS_MODELRESULT RequestStartAndWait(QString file, QString add_options, RigidPhysicsWorld * world = nullptr);
@@ -124,7 +127,7 @@ inline AS_MODELRESULT StartModelFromRunFile(QString file, RigidPhysicsWorld * rm
 }
 
 
-inline void RegisterModelScriptFunctions(asIScriptEngine *sm)
+inline void RegisterModelScriptFunctions(LSMScriptEngine *sm)
 {
     //register a structure containing some model results and properties
 
@@ -179,15 +182,27 @@ inline void RegisterModelScriptFunctions(asIScriptEngine *sm)
     sm->RegisterObjectMethod("RigidObject", "RigidObject& opAssign(RigidObject &in m)", asMETHODPR(RigidPhysicsObject,AS_Assign,(RigidPhysicsObject *),RigidPhysicsObject*), asCALL_THISCALL); assert( r >= 0 );
     //sm->RegisterObjectMethod("RigidObject", "vec3 Position()", asMETHODPR(RigidPhysicsObject,GetPosition,(),SPHVector3), asCALL_THISCALL); assert( r >= 0 );
 
-
+    sm->RegisterGlobalFunction("RigidObject @RigidObjectSphere(float size, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsSphere),  asCALL_CDECL); assert( r >= 0 );
+    sm->RegisterGlobalFunction("RigidObject @RigidObjectEllipsoid(vec3 size= {1.0,1.0,1.0}, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsEllipsoid),  asCALL_CDECL); assert( r >= 0 );
+    sm->RegisterGlobalFunction("RigidObject @RigidObjectDEM(Map &in dem, bool relative = false,double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsHeightField),  asCALL_CDECL); assert( r >= 0 );
     sm->RegisterGlobalFunction("RigidObject @RigidObjectBox(vec3 size= {1.0,1.0,1.0}, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsBox),  asCALL_CDECL); assert( r >= 0 );
     sm->RegisterGlobalFunction("RigidObject @RigidObjectCilinder(double radius, double length, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsCilinder),  asCALL_CDECL); assert( r >= 0 );
+    sm->RegisterGlobalFunction("RigidObject @RigidObjectMesh(Object &in model, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsASMesh),  asCALL_CDECL); assert( r >= 0 );
 
     sm->RegisterObjectMethod("RigidModel","void AddObject(RigidObject &in)", asMETHOD(RigidPhysicsWorld,AS_AddObj),asCALL_THISCALL);
     sm->RegisterObjectMethod("RigidModel","int GetObjectCount()", asMETHOD(RigidPhysicsWorld,AS_GetObjCount),asCALL_THISCALL);
     sm->RegisterObjectMethod("RigidModel","RigidObject @GetObject(int n)", asMETHOD(RigidPhysicsWorld,AS_GetObj),asCALL_THISCALL);
 
-
+    sm->RegisterObjectMethod("RigidModel","void Step(float dt)", asMETHOD(RigidPhysicsWorld,AS_Step),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","void SetElevation(Map &in m)", asMETHOD(RigidPhysicsWorld,AS_SetElevation),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","void SetFlow(Map &in h, Map &in ux,Map &in uy, Map &in density)", asMETHOD(RigidPhysicsWorld,AS_SetFlow),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowBlockX()", asMETHOD(RigidPhysicsWorld,AS_GetFlowBlockX),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowBlockY()", asMETHOD(RigidPhysicsWorld,AS_GetFlowBlockY),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowBlockFX()", asMETHOD(RigidPhysicsWorld,AS_GetFlowBlockFX),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowBlockFY()", asMETHOD(RigidPhysicsWorld,AS_GetFlowBlockFY),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowBlockCX()", asMETHOD(RigidPhysicsWorld,AS_GetFlowBlockCX),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowBlockCY()", asMETHOD(RigidPhysicsWorld,AS_GetFlowBlockCY),asCALL_THISCALL);
+    sm->RegisterObjectMethod("RigidModel","Map @GetFlowHCorrect()", asMETHOD(RigidPhysicsWorld,AS_GetFlowHCorrect),asCALL_THISCALL);
 
     //register functions that allow the user to run the model from the scripting environment
 
@@ -196,6 +211,21 @@ inline void RegisterModelScriptFunctions(asIScriptEngine *sm)
 
     sm->RegisterGlobalFunction("ModelRes RunModel(string runfile, RigidModel &in rm, string additional_options = \"\")", asFUNCTIONPR(StartModelFromRunFile,(QString,RigidPhysicsWorld *,QString),AS_MODELRESULT),  asCALL_CDECL); assert( r >= 0 );
 
+
+/*
+    //register object type
+    sm->RegisterObjectType("SeismicModel",0,asOBJ_REF );// | asGetTypeTraits<cTMap>()
+
+    //register constructors by using factory functions
+    sm->RegisterObjectBehaviour("SeismicModel",asBEHAVE_FACTORY,"SeismicModel@ C0()",asFUNCTIONPR(AS_SeismicModelFactory,(),SeismicModel * ),asCALL_CDECL); assert( r >= 0 );
+
+    //register reference counting for garbage collecting
+    sm->RegisterObjectBehaviour("SeismicModel",asBEHAVE_ADDREF,"void f()",asMETHOD(SeismicModel,AS_AddRef),asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectBehaviour("SeismicModel",asBEHAVE_RELEASE,"void f()",asMETHOD(SeismicModel,AS_ReleaseRef),asCALL_THISCALL); assert( r >= 0 );
+
+    sm->RegisterObjectMethod("SeismicModel", "SeismicModel& opAssign(SeismicModel &in m)", asMETHODPR(SeismicModel,AS_Assign,(SeismicModel *),SeismicModel*), asCALL_THISCALL); assert( r >= 0 );
+
+*/
 }
 
 

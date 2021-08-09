@@ -1414,6 +1414,7 @@ void LISEMModel::SetKernelInput()
             m_CLProgram_Hydrology->PlaceArgument(35, T_CHHN);
             m_CLProgram_Hydrology->PlaceArgument(36, T_UI);
             m_CLProgram_Hydrology->PlaceArgument(37, 0);
+            m_CLProgram_Hydrology->PlaceArgument(38, (float) 0.0);
 
             //m_CLProgram_Hydrology2->SetRunDims((int)dim0, (int)dim1);
             m_CLProgram_Hydrology2->SetRunDims((int)m_NCells,0,0);

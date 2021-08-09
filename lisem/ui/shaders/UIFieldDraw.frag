@@ -256,7 +256,7 @@ void main() {
         //now we can do some marching
         //do the volume render equations, see also gpu gems
 
-        float value = length(dr)/maxlength;
+        float value = length(dr)/min(abs(ObjScale.x),min(abs(ObjScale.y),abs(ObjScale.z)));//maxlength;
         vec4 color = vec4(0.0f,0.0f,0.0f,0.0f);
         float dt = value/(float(MarchingSteps) - 4.0f);
 
@@ -368,8 +368,9 @@ void main() {
             const float eps = 0.001;
             vec3 normal =normalize(vec3
                 (    -(texture(iTex3D,posmax + vec3(0, 0, eps)    ).r - texture(iTex3D,posmax - vec3(0, 0, eps)).r),
-                    -(texture(iTex3D,posmax + vec3(0, eps, 0)    ).r - texture(iTex3D,posmax - vec3(0, eps, 0)).r),
-                    -(texture(iTex3D,posmax + vec3(eps, 0, 0)    ).r - texture(iTex3D,posmax - vec3(eps, 0, 0)).r)
+                     -(texture(iTex3D,posmax + vec3(eps, 0, 0)    ).r - texture(iTex3D,posmax - vec3(eps, 0, 0)).r),
+                    -(texture(iTex3D,posmax + vec3(0, eps, 0)    ).r - texture(iTex3D,posmax - vec3(0, eps, 0)).r)
+
                 )
             );
 

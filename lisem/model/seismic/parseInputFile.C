@@ -170,23 +170,17 @@ void EW::deprecatedOption(const string& command,
 // Make all these functions private!
 //
 bool EW::parseInputFile( vector<Source*> & a_GlobalUniqueSources,
-			 vector<TimeSeries*> & a_GlobalTimeSeries )
+             vector<STimeSeries*> & a_GlobalTimeSeries )
 {
   char buffer[2048];
-  ifstream inputFile;
   int blockCount=0;
   int ablockCount=0;
 
   MPI_Barrier(MPI_COMM_WORLD);
   double time_start = MPI_Wtime();
 
-  inputFile.open(mName.c_str());
-  if (!inputFile.is_open())
-  {
-    if (m_myRank == 0)
-      cerr << endl << "ERROR OPENING INPUT FILE: " << mName << endl << endl;
-    return false;
-  }
+ stringstream inputFile;
+ inputFile << mName.rdbuf();
   
   bool foundGrid = false;
 
@@ -289,7 +283,7 @@ bool EW::parseInputFile( vector<Source*> & a_GlobalUniqueSources,
   {
     if (m_myRank == 0)
     {
-      cerr << "Error: No grid found in input file: " << mName << endl;
+      cerr << "Error: No grid found in input file: " << "LISEM-SW4" << endl;
       return false; // unsuccessful
     }
     
@@ -524,7 +518,6 @@ bool EW::parseInputFile( vector<Source*> & a_GlobalUniqueSources,
   if (m_myRank == 0)
      cout << endl;
 
-  inputFile.close();
 
 // tmp:
   // if (m_myRank == 0)
@@ -960,7 +953,7 @@ void EW::processGrid(char* buffer)
 //         double gridLat = mLatOrigin;
 // 	   double gridLon = mLonOrigin;
 //         double metersPerDegree = mMetersPerDegree;
-//         double deg2rad = M_PI/180;
+//         double deg2rad = LISEM_PI/180;
 //         double phi = mGeoAz*deg2rad;
 // 	double x = metersPerDegree*( cos(phi)*(ibclat-gridLat) + cos(ibclat*deg2rad)*(ibclon-gridLon)*sin(phi));
 // 	double y = metersPerDegree*(-sin(phi)*(ibclat-gridLat) + cos(ibclat*deg2rad)*(ibclon-gridLon)*cos(phi));
@@ -1394,7 +1387,7 @@ void EW::processAttenuation(char* buffer)
    }
 
    m_number_mechanisms = nmech;
-   m_velo_omega = velofreq*2*M_PI;
+   m_velo_omega = velofreq*2*LISEM_PI;
    m_use_attenuation=true;
    m_att_use_max_frequency = (m_att_ppw <= 0);
   
@@ -2178,7 +2171,7 @@ void EW::processTestRayleigh(char* buffer)
   
   if (proc_zero())
   {
-    double Lwave = 2*M_PI/m_rayleigh_wave_test->m_omega;
+    double Lwave = 2*LISEM_PI/m_rayleigh_wave_test->m_omega;
     double Period = Lwave/m_rayleigh_wave_test->m_cr;
     
     printf("TestRayleigh: rho=%e, cp=%e, cs=%e, cr=%e, Wave length=%e, Period=%e\n", 
@@ -5171,7 +5164,7 @@ void EW::processSource(char* buffer, vector<Source*> & a_GlobalUniqueSources )
   // if strike, dip and rake have been given we need to convert into M_{ij} form
   if ( strikeDipRake )
     {
-      double radconv = M_PI / 180.;
+      double radconv = LISEM_PI / 180.;
       double S, D, R;
       strike -= mGeoAz; // subtract off the grid azimuth
       S = strike*radconv; D = dip*radconv; R = rake*radconv;
@@ -5501,7 +5494,7 @@ void EW::processRupture(char* buffer, vector<Source*> & a_GlobalUniqueSources )
 	z = dep * 1e3;
 
 // convert strike, dip, rake to Mij
-	double radconv = M_PI / 180.;
+    double radconv = LISEM_PI / 180.;
 	double S, D, R;
 	stk -= mGeoAz; // subtract off the grid azimuth
 	S = stk*radconv; D = dip*radconv; R = rake*radconv;
@@ -6259,7 +6252,7 @@ void EW::processAnisotropicMaterialBlock( char* buffer,  int & blockCount )
 }   
 
 //-----------------------------------------------------------------------
-void EW::processReceiver(char* buffer, vector<TimeSeries*> & a_GlobalTimeSeries)
+void EW::processReceiver(char* buffer, vector<STimeSeries*> & a_GlobalTimeSeries)
 {
   double x=0.0, y=0.0, z=0.0;
   double lat = 0.0, lon = 0.0, depth = 0.0;
@@ -6273,7 +6266,7 @@ void EW::processReceiver(char* buffer, vector<TimeSeries*> & a_GlobalTimeSeries)
   bool topodepth = false;
 
   bool usgsformat = 0, sacformat=1; // default is to write sac files
-  TimeSeries::receiverMode mode=TimeSeries::Displacement;
+  STimeSeries::receiverMode mode=STimeSeries::Displacement;
 
   char* token = strtok(buffer, " \t");
   bool nsew=false; 
@@ -6432,34 +6425,34 @@ void EW::processReceiver(char* buffer, vector<TimeSeries*> & a_GlobalTimeSeries)
 
        if( strcmp("displacement",token)==0 )
        {
-	 mode = TimeSeries::Displacement;
+     mode = STimeSeries::Displacement;
        }
        else if( strcmp("velocity",token)==0 )
        {
-	 mode = TimeSeries::Velocity;
+     mode = STimeSeries::Velocity;
        }
        else if( strcmp("div",token)==0 )
        {
-	 mode = TimeSeries::Div;
+     mode = STimeSeries::Div;
        }
        else if( strcmp("curl",token)==0 )
        {
-	 mode = TimeSeries::Curl;
+     mode = STimeSeries::Curl;
        }
        else if( strcmp("strains",token)==0 )
        {
-	 mode = TimeSeries::Strains;
+     mode = STimeSeries::Strains;
        }
        else if( strcmp("displacementgradient",token)==0 )
        {
-	 mode = TimeSeries::DisplacementGradient;
+     mode = STimeSeries::DisplacementGradient;
        }
        else
        {
 	 if (proc_zero())
 	   cout << "receiver command: variables=" << token << " not understood" << endl
 		<< "using default mode (displacement)" << endl << endl;
-	 mode = TimeSeries::Displacement;
+     mode = STimeSeries::Displacement;
        }
        
      }
@@ -6519,7 +6512,7 @@ void EW::processReceiver(char* buffer, vector<TimeSeries*> & a_GlobalTimeSeries)
   }
   else
   {
-    TimeSeries *ts_ptr = new TimeSeries(this, fileName, staName, mode, sacformat, usgsformat, x, y, depth, 
+    STimeSeries *ts_ptr = new STimeSeries(this, fileName, staName, mode, sacformat, usgsformat, x, y, depth,
 					topodepth, writeEvery, !nsew);
 // include the receiver in the global list
     a_GlobalTimeSeries.push_back(ts_ptr);
@@ -6527,7 +6520,7 @@ void EW::processReceiver(char* buffer, vector<TimeSeries*> & a_GlobalTimeSeries)
 }
 
 //-----------------------------------------------------------------------
-void EW::processObservation( char* buffer, vector<TimeSeries*> & a_GlobalTimeSeries)
+void EW::processObservation( char* buffer, vector<STimeSeries*> & a_GlobalTimeSeries)
 {
   double x=0.0, y=0.0, z=0.0;
   double lat = 0.0, lon = 0.0, depth = 0.0;
@@ -6552,7 +6545,7 @@ void EW::processObservation( char* buffer, vector<TimeSeries*> & a_GlobalTimeSer
   string sacfile1, sacfile2, sacfile3;
 
   bool usgsformat = 1, sacformat=0;
-  TimeSeries::receiverMode mode=TimeSeries::Displacement;
+  STimeSeries::receiverMode mode=STimeSeries::Displacement;
   double winl, winr;
   bool winlset=false, winrset=false;
   char exclstr[4]={'\0','\0','\0','\0'};
@@ -6850,7 +6843,7 @@ void EW::processObservation( char* buffer, vector<TimeSeries*> & a_GlobalTimeSer
   }
   else
   {
-    TimeSeries *ts_ptr = new TimeSeries(this, fileName, staName, mode, sacformat, usgsformat, x, y, depth, 
+    STimeSeries *ts_ptr = new STimeSeries(this, fileName, staName, mode, sacformat, usgsformat, x, y, depth,
 					topodepth, writeEvery );
     // Read in file. 
     // ignore_utc=true, ignores UTC read from file, instead uses the default utc = simulation utc as reference.

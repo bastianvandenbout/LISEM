@@ -34,6 +34,7 @@
 #define EW_H
 
 
+#include "defines.h"
 #include "wfunctions.h"
 #include <mpi.h>
 
@@ -68,20 +69,18 @@
 #include "DataPatches.h"
 
 
-using namespace std;
-
 class EW 
 {
 public:
-EW(const string& name, vector<Source*> & a_GlobalUniqueSources, 
-   vector<STimeSeries*> & a_GlobalTimeSeries, bool invproblem=false );
+EW(std::stringstream &input, std::vector<Source*> & a_GlobalUniqueSources,
+   std::vector<STimeSeries*> & a_GlobalTimeSeries, bool invproblem=false );
 ~EW();
 bool wasParsingSuccessful();
 bool isInitialized();
 
 void set_output_options( bool output_load, bool output_detailed_timing );
-void setGMTOutput(string filename, string wppfilename);
-void saveGMTFile( vector<Source*> & a_GlobalUniqueSources );
+void setGMTOutput(std::string filename, std::stringstream &wppfilename);
+void saveGMTFile( std::vector<Source*> & a_GlobalUniqueSources );
 void allocateCartesianSolverArrays(double a_global_zmax);
 void setGoalTime(double t);
 //double getCurrentTime(){return mTime;}
@@ -89,37 +88,37 @@ void setGoalTime(double t);
 void setNumberSteps(int steps); // remove???
 int getNumberOfSteps() const;
 
-void setupRun( vector<Source*> & a_GlobalUniqueSources );
+void setupRun( std::vector<Source*> & a_GlobalUniqueSources );
 
-void solve( vector<Source*> & a_GlobalSources, vector<STimeSeries*> & a_GlobalTimeSeries );
-void solve_backward( vector<Source*> & a_Sources, vector<STimeSeries*> & a_TimeSeries, double gradient[11], double hessian[121] );
-void solve_allpars( vector<Source*> & a_GlobalSources, vector<Sarray>& a_Rho, vector<Sarray>& a_Mu,
-            vector<Sarray>& a_Lambda, vector<STimeSeries*> & a_GlobalTimeSeries,
-		    vector<Sarray>& a_U, vector<Sarray>& a_Um, vector<DataPatches*>& Upred_saved_sides,
-		    vector<DataPatches*>& Ucorr_saved_sides, bool save_sides );
+void solve( std::vector<Source*> & a_GlobalSources, std::vector<STimeSeries*> & a_GlobalTimeSeries );
+void solve_backward( std::vector<Source*> & a_Sources, std::vector<STimeSeries*> & a_TimeSeries, double gradient[11], double hessian[121] );
+void solve_allpars( std::vector<Source*> & a_GlobalSources, std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu,
+            std::vector<Sarray>& a_Lambda, std::vector<STimeSeries*> & a_GlobalTimeSeries,
+            std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um, std::vector<DataPatches*>& Upred_saved_sides,
+            std::vector<DataPatches*>& Ucorr_saved_sides, bool save_sides );
 
-void solve_backward_allpars( vector<Source*> & a_GlobalSources, vector<Sarray>& a_Rho, vector<Sarray>& a_Mu,
-            vector<Sarray>& a_Lambda, vector<STimeSeries*> & a_GlobalTimeSeries,
-		    vector<Sarray>& a_U, vector<Sarray>& a_Um, vector<DataPatches*>& Upred_saved_sides,
-			     vector<DataPatches*>& Ucorr_saved_sides, double gradients[11], 
-			     vector<Sarray>& gRho, vector<Sarray>& gMu, vector<Sarray>& gLambda );
+void solve_backward_allpars( std::vector<Source*> & a_GlobalSources, std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu,
+            std::vector<Sarray>& a_Lambda, std::vector<STimeSeries*> & a_GlobalTimeSeries,
+            std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um, std::vector<DataPatches*>& Upred_saved_sides,
+                 std::vector<DataPatches*>& Ucorr_saved_sides, double gradients[11],
+                 std::vector<Sarray>& gRho, std::vector<Sarray>& gMu, std::vector<Sarray>& gLambda );
    //int nmpar, double* gradientm );
 
-bool parseInputFile( vector<Source*> & a_GlobalSources, vector<STimeSeries*> & a_GlobalTimeSeries );
+bool parseInputFile( std::vector<Source*> & a_GlobalSources, std::vector<STimeSeries*> & a_GlobalTimeSeries );
 void parsedate( char* datestr, int& year, int& month, int& day, int& hour, int& minute,
 		int& second, int& msecond, int& fail );
 
 void extractRecordData(STimeSeries::receiverMode mode, int i0, int j0, int k0, int grid0,
-		       vector<double> &uRec, vector<Sarray> &Um2, vector<Sarray> &U);
+               std::vector<double> &uRec, std::vector<Sarray> &Um2, std::vector<Sarray> &U);
 
 // some (all?) of these functions are called from parseInputFile() and should be made private
-void badOption(string name, char* option) const;
+void badOption(std::string name, char* option) const;
 bool startswith(const char begin[], char *line);
 void processGrid(char* buffer);
 void processRefinement(char* buffer);
-void deprecatedOption(const string& command, 
-		      const string& oldone, 
-		      const string& newone);
+void deprecatedOption(const std::string& command,
+              const std::string& oldone,
+              const std::string& newone);
 void processTime(char* buffer);
 void processTwilight(char* buffer);
 void processFileIO(char* buffer);
@@ -131,8 +130,8 @@ void processTestRayleigh(char* buffer);
 void processTestLamb(char* buffer);
 void processTestEnergy(char* buffer);
 bool checkTestEnergyPeriodic(char* buffer);
-void processSource(char* buffer, vector<Source*> & a_GlobalUniqueSources);
-void processRupture(char* buffer, vector<Source*> & a_GlobalUniqueSources);
+void processSource(char* buffer, std::vector<Source*> & a_GlobalUniqueSources);
+void processRupture(char* buffer, std::vector<Source*> & a_GlobalUniqueSources);
 void processMaterial( char* buffer );
 void processMaterialIfile( char* buffer );
 void processMaterialBlock( char* buffer, int & blockCount );
@@ -142,8 +141,8 @@ void processMaterialVimaterial(char* buffer);
 void processMaterialInvtest(char* buffer);
 void processMaterialRfile(char* buffer);
 void processAnisotropicMaterialBlock( char* buffer, int & ablockCount );
-void processReceiver(char* buffer, vector<STimeSeries*> & a_GlobalTimeSeries);
-void processObservation(char* buffer, vector<STimeSeries*> & a_GlobalTimeSeries);
+void processReceiver(char* buffer, std::vector<STimeSeries*> & a_GlobalTimeSeries);
+void processObservation(char* buffer, std::vector<STimeSeries*> & a_GlobalTimeSeries);
 void processBoundaryConditions(char *buffer);
 void processPrefilter(char* buffer);
 void processGMT(char* buffer);
@@ -167,104 +166,104 @@ void setDebugIO(bool onoff) { mDebugIO = onoff; }
 //void setDampingCFL(double d4_cfl) { m_d4_cfl = d4_cfl; }
 
 void printTime(int cycle, double t, bool force=false ) const;
-void printPreamble(vector<Source*> & a_Sources) const;
+void printPreamble(std::vector<Source*> & a_Sources) const;
 void switch_on_checkfornan();
 void switch_on_error_log();
-void set_energylog( string logfile, bool print, bool elog );
+void set_energylog( std::string logfile, bool print, bool elog );
 void set_inner_loop( int loopnr );
 void set_cflnumber( double cfl );
 void set_testing_mode(bool a_testing){m_testing = a_testing;}
 bool get_testing_mode(){return m_testing;}
 
 void default_bcs( );
-void update_curvilinear_cartesian_interface( vector<Sarray>& a_U );
+void update_curvilinear_cartesian_interface( std::vector<Sarray>& a_U );
 
 void set_twilight_forcing( ForcingTwilight* a_forcing );
 // perhaps these functions should be in the ForcingTwilight class? 
 // but how will they get access to the material properties and grid sizes?
-void initialData(double a_t, vector<Sarray> & a_U, vector<Sarray*> & a_AlphaVE);
-bool exactSol(double a_t, vector<Sarray> & a_U, vector<Sarray*> & a_AlphaVE, vector<Source*>& source );
-void exactRhsTwilight(double a_t, vector<Sarray> & a_F);
-void exactAccTwilight(double a_t, vector<Sarray> & a_Uacc);
-void Force(double a_t, vector<Sarray> & a_F, vector<GridPointSource*> point_sources );
-void Force_tt(double a_t, vector<Sarray> & a_F, vector<GridPointSource*> point_sources );
+void initialData(double a_t, std::vector<Sarray> & a_U, std::vector<Sarray*> & a_AlphaVE);
+bool exactSol(double a_t, std::vector<Sarray> & a_U, std::vector<Sarray*> & a_AlphaVE, std::vector<Source*>& source );
+void exactRhsTwilight(double a_t, std::vector<Sarray> & a_F);
+void exactAccTwilight(double a_t, std::vector<Sarray> & a_Uacc);
+void Force(double a_t, std::vector<Sarray> & a_F, std::vector<GridPointSource*> point_sources );
+void Force_tt(double a_t, std::vector<Sarray> & a_F, std::vector<GridPointSource*> point_sources );
 
-void normOfDifference( vector<Sarray> & a_Uex,  vector<Sarray> & a_U, double &diffInf, double &diffL2, double &xInf,
-		       vector<Source*>& a_globalSources );
-void normOfDifferenceGhostPoints( vector<Sarray> & a_Uex,  vector<Sarray> & a_U, double &diffInf, double &diffL2 );
-void normOfSurfaceDifference( vector<Sarray> & a_Uex,  vector<Sarray> & a_U, double &diffInf, 
-			      double &diffL2, double &solInf, double &solL2, vector<Source*> & a_globalSources);
+void normOfDifference( std::vector<Sarray> & a_Uex,  std::vector<Sarray> & a_U, double &diffInf, double &diffL2, double &xInf,
+               std::vector<Source*>& a_globalSources );
+void normOfDifferenceGhostPoints( std::vector<Sarray> & a_Uex,  std::vector<Sarray> & a_U, double &diffInf, double &diffL2 );
+void normOfSurfaceDifference( std::vector<Sarray> & a_Uex,  std::vector<Sarray> & a_U, double &diffInf,
+                  double &diffL2, double &solInf, double &solL2, std::vector<Source*> & a_globalSources);
 
-void test_sources( vector<GridPointSource*>& a_point_sources, vector<Source*>& a_global_unique_sources,
-		   vector<Sarray>& F );
+void test_sources( std::vector<GridPointSource*>& a_point_sources, std::vector<Source*>& a_global_unique_sources,
+           std::vector<Sarray>& F );
 void testSourceDiscretization( int kx[3], int ky[3], int kz[3],
-			       double moments[3], vector<GridPointSource*>& point_sources, vector<Sarray>& F );
+                   double moments[3], std::vector<GridPointSource*>& point_sources, std::vector<Sarray>& F );
 
 void setupSBPCoeff( );
 
 // time stepping routines
-void simpleAttenuation( vector<Sarray> & a_Up );
-void enforceBC( vector<Sarray> & a_U, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-		double t, vector<double **> & a_BCForcing );
+void simpleAttenuation( std::vector<Sarray> & a_Up );
+void enforceBC( std::vector<Sarray> & a_U, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+        double t, std::vector<double **> & a_BCForcing );
 
-void enforceBCfreeAtt( vector<Sarray>& a_Up, vector<Sarray>& a_U, vector<Sarray>& a_Um, 
-			   vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			   vector<Sarray*>& a_AlphaVEp, vector<Sarray*>& a_AlphaVEm,
-		       vector<double **>& a_BCForcing, double bop[5], double a_t );
+void enforceBCfreeAtt( std::vector<Sarray>& a_Up, std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um,
+               std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+               std::vector<Sarray*>& a_AlphaVEp, std::vector<Sarray*>& a_AlphaVEm,
+               std::vector<double **>& a_BCForcing, double bop[5], double a_t );
 
-   void enforceBCfreeAtt2( vector<Sarray>& a_Up, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-			   vector<Sarray*>& a_AlphaVEp, vector<double **>& a_BCForcing );
+   void enforceBCfreeAtt2( std::vector<Sarray>& a_Up, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+               std::vector<Sarray*>& a_AlphaVEp, std::vector<double **>& a_BCForcing );
 
-void enforceBCanisotropic( vector<Sarray> & a_U, vector<Sarray>& a_C, 
-			   double t, vector<double **> & a_BCForcing );
+void enforceBCanisotropic( std::vector<Sarray> & a_U, std::vector<Sarray>& a_C,
+               double t, std::vector<double **> & a_BCForcing );
    
-void addAttToFreeBcForcing( vector<Sarray*>& AlphaVEp, vector<double**>& BCForcing, double bop[5] );
+void addAttToFreeBcForcing( std::vector<Sarray*>& AlphaVEp, std::vector<double**>& BCForcing, double bop[5] );
 
-void cartesian_bc_forcing( double t, vector<double **> & a_BCForcing, vector<Source*>& a_Source );
+void cartesian_bc_forcing( double t, std::vector<double **> & a_BCForcing, std::vector<Source*>& a_Source );
 
-void evalRHS(vector<Sarray> & a_U, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda, vector<Sarray> & a_Lu,
-	     vector<Sarray*>& a_Alpha );
+void evalRHS(std::vector<Sarray> & a_U, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda, std::vector<Sarray> & a_Lu,
+         std::vector<Sarray*>& a_Alpha );
 
-void evalRHSanisotropic(vector<Sarray> & a_U, vector<Sarray>& a_C, 
-			vector<Sarray> & a_Uacc );
+void evalRHSanisotropic(std::vector<Sarray> & a_U, std::vector<Sarray>& a_C,
+            std::vector<Sarray> & a_Uacc );
 
-void evalPredictor(vector<Sarray> & a_Up, vector<Sarray> & a_U, vector<Sarray> & a_Um,
-		   vector<Sarray>& a_Rho, vector<Sarray> & a_Lu, vector<Sarray> & a_F );
+void evalPredictor(std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
+           std::vector<Sarray>& a_Rho, std::vector<Sarray> & a_Lu, std::vector<Sarray> & a_F );
 
-void evalDpDmInTime(vector<Sarray> & a_Up, vector<Sarray> & a_U, vector<Sarray> & a_Um,
-		    vector<Sarray> & a_Uacc );
+void evalDpDmInTime(std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
+            std::vector<Sarray> & a_Uacc );
 
-void evalCorrector(vector<Sarray> & a_Up, vector<Sarray>& a_Rho, vector<Sarray> & a_Lu, vector<Sarray> & a_F );
+void evalCorrector(std::vector<Sarray> & a_Up, std::vector<Sarray>& a_Rho, std::vector<Sarray> & a_Lu, std::vector<Sarray> & a_F );
 
-void updateMemVarPred( vector<Sarray*>& a_AlphaVEp, vector<Sarray*>& a_AlphaVEm, vector<Sarray>& a_U, double a_t );
+void updateMemVarPred( std::vector<Sarray*>& a_AlphaVEp, std::vector<Sarray*>& a_AlphaVEm, std::vector<Sarray>& a_U, double a_t );
 
-void updateMemVarCorr( vector<Sarray*>& a_AlphaVEp, vector<Sarray*>& a_AlphaVEm, vector<Sarray>& a_Up,
-                       vector<Sarray>& a_U, vector<Sarray>& a_Um, double a_t );
+void updateMemVarCorr( std::vector<Sarray*>& a_AlphaVEp, std::vector<Sarray*>& a_AlphaVEm, std::vector<Sarray>& a_Up,
+                       std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um, double a_t );
    
 void updateMemVarCorrNearInterface( Sarray& a_AlphaVEp, Sarray& a_AlphaVEm,
                                     Sarray & a_Up,  Sarray & a_U, Sarray & a_Um, double a_t, int a_mech, int a_grid );
    
-// void updateMemoryVariables( vector<Sarray*>& a_AlphaVEp,
-// 			    vector<Sarray*>& a_AlphaVEm,
-// 			    vector<Sarray>& a_Up, vector<Sarray>& a_U, vector<Sarray>& a_Um, double a_t );
-// void updateMemoryVariablesBndry( vector<Sarray*>& a_AlphaVEp,
-// 			    vector<Sarray*>& a_AlphaVEm,
-// 			    vector<Sarray>& a_Up, vector<Sarray>& a_U, vector<Sarray>& a_Um );
-void evalDpDmInTimeAtt( vector<Sarray*>& a_AlphaVEp, vector<Sarray*>& a_AlphaVE,
-                            vector<Sarray*>& a_AlphaVEm );
+// void updateMemoryVariables( std::vector<Sarray*>& a_AlphaVEp,
+// 			    std::vector<Sarray*>& a_AlphaVEm,
+// 			    std::vector<Sarray>& a_Up, std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um, double a_t );
+// void updateMemoryVariablesBndry( std::vector<Sarray*>& a_AlphaVEp,
+// 			    std::vector<Sarray*>& a_AlphaVEm,
+// 			    std::vector<Sarray>& a_Up, std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um );
+void evalDpDmInTimeAtt( std::vector<Sarray*>& a_AlphaVEp, std::vector<Sarray*>& a_AlphaVE,
+                            std::vector<Sarray*>& a_AlphaVEm );
 
-void addSuperGridDamping(vector<Sarray> & a_Up, vector<Sarray> & a_U, vector<Sarray> & a_Um, vector<Sarray>& a_Rho );
+void addSuperGridDamping(std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um, std::vector<Sarray>& a_Rho );
 
-void cycleSolutionArrays(vector<Sarray> & a_Um, vector<Sarray> & a_U, vector<Sarray> & a_Up, 
-			 vector<Sarray*> & a_AlphaVEm, vector<Sarray*> & a_AlphaVE, vector<Sarray*> & a_AlphaVEp);
-void cycleSolutionArrays(vector<Sarray> & a_Um, vector<Sarray> & a_U, vector<Sarray> & a_Up ); 
+void cycleSolutionArrays(std::vector<Sarray> & a_Um, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Up,
+             std::vector<Sarray*> & a_AlphaVEm, std::vector<Sarray*> & a_AlphaVE, std::vector<Sarray*> & a_AlphaVEp);
+void cycleSolutionArrays(std::vector<Sarray> & a_Um, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Up );
 
-void bndryInteriorDifference( vector<Sarray> & a_Uex,  vector<Sarray> & a_U, 
+void bndryInteriorDifference( std::vector<Sarray> & a_Uex,  std::vector<Sarray> & a_U,
 			      double lowZ[3], double interiorZ[3], double highZ[3] );
-void test_RhoUtt_Lu( vector<Sarray> & a_Uacc, vector<Sarray> & a_Lu, vector<Sarray> & a_F, 
+void test_RhoUtt_Lu( std::vector<Sarray> & a_Uacc, std::vector<Sarray> & a_Lu, std::vector<Sarray> & a_F,
 		     double lowZ[3], double interiorZ[3], double highZ[3] );
 
-void setRestartInfo(int fromCycle, int dumpInterval, const string& filePrefix);
+void setRestartInfo(int fromCycle, int dumpInterval, const std::string& filePrefix);
 void computeDT();
 void computeDTanisotropic();
    //bool inTestSourceMode() { return mTestSource; }
@@ -273,22 +272,21 @@ bool proc_zero() const;
 int no_of_procs() const;
 void create_output_directory();
 void initialize_image_files();
-void update_images( int Nsteps, double time, vector<Sarray> & a_Up, vector<Sarray>& a_U, vector<Sarray>& a_Um,
-		    vector<Sarray>& a_Rho, vector<Sarray>& a_Mu, vector<Sarray>& a_Lambda,
-		    vector<Source*> & a_sources, int dminus );
+void update_images( int Nsteps, double time, std::vector<Sarray> & a_Up, std::vector<Sarray>& a_U, std::vector<Sarray>& a_Um,
+            std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu, std::vector<Sarray>& a_Lambda,
+            std::vector<Source*> & a_sources, int dminus );
 
 void initialize_SAC_files(); // going away
 void update_SACs( int Nsteps ); // going away
 
 void print_execution_times( double times[7] );
-void print_execution_time( double t1, double t2, string msg );
+void print_execution_time( double t1, double t2, std::string msg );
 void finalizeIO();
-string bc_name( const boundaryConditionType bc ) const;
-int mkdirs(const string& path);
-void setOutputPath(const string& path);
-const string& getOutputPath() { return mPath; }; // Consider getPath instead! This function has caused grief in the past
-const string& getObservationPath() { return mObsPath; };
-const string& getName() { return mName; };
+std::string bc_name( const boundaryConditionType bc ) const;
+int mkdirs(const std::string& path);
+void setOutputPath(const std::string& path);
+const std::string& getOutputPath() { return mPath; }; // Consider getPath instead! This function has caused grief in the past
+const std::string& getObservationPath() { return mObsPath; };
 void set_global_bcs(boundaryConditionType bct[6]); // assigns the global boundary conditions
 
 void add_mtrl_block( MaterialData* md ){ m_mtrlblocks.push_back( md ); };
@@ -334,12 +332,12 @@ void coarsen1d( int& n, int& ifirst, int& ilast, int periodic );
 void allocateCurvilinearArrays();
 void generate_grid();
 void setup_metric();
-void check_min_max_int( vector<Sarray>& a_U );
+void check_min_max_int( std::vector<Sarray>& a_U );
 
 void setupMPICommunications();
 void setup2D_MPICommunications();
 void communicate_array( Sarray& u, int grid );
-void communicate_arrays( vector<Sarray>& u );
+void communicate_arrays( std::vector<Sarray>& u );
 void communicate_array_2dfinest( Sarray& u );
 void communicate_array_2d( Sarray& u, int g, int k );
 void communicate_array_2d_asym( Sarray& u, int g, int k );
@@ -352,9 +350,9 @@ void setup_viscoelastic();
 void setup_viscoelastic_tw();
 
 void extrapolateInZ(int g, Sarray& field, bool lowk, bool highk );
-void extrapolateInXY( vector<Sarray>& field );
+void extrapolateInXY( std::vector<Sarray>& field );
 void extrapolateInZvector(int g, Sarray& field, bool lowk, bool highk );
-void extrapolateInXYvector( vector<Sarray>& field );
+void extrapolateInXYvector( std::vector<Sarray>& field );
 void extrapolateTopo(Sarray& field);
 void checkTopo(Sarray& field);
 
@@ -363,12 +361,13 @@ void addImage3D(SeisImage3D* i);
 void setIO_timing(bool iotiming);
 void setParallel_IO(bool pfs, int nwriters);
 
-void extractTopographyFromGridFile(string a_topoFileName);
-void extractTopographyFromImageFile(string a_topoFileName);
-void extractTopographyFromCartesianFile(string a_topoFileName);
+void extractTopographyFromGridFile(std::string a_topoFileName);
+void extractTopographyFromImageFile(std::string a_topoFileName);
+void extractTopographyFromCartesianFile(std::string a_topoFileName);
+void extractTopographyFromcTMap();
 
 void setEtreeFile(EtreeFile* efile); 
-void extractTopographyFromEfile(string a_topoFileName, string a_topoExtFileName, string a_QueryType,
+void extractTopographyFromEfile(std::string a_topoFileName, std::string a_topoExtFileName, std::string a_QueryType,
                                 double a_EFileResolution);
 void extractTopographyFromRfile( std::string a_topoFileName );
 
@@ -376,22 +375,22 @@ void smoothTopography(int maxIter);
 
 void buildGaussianHillTopography(double amp, double Lx, double Ly, double x0, double y0);
 
-void extractSurfaceFromGridFile(string a_surfaceFileName);
-void extractSurfaceFromCartesianFile(string a_surfaceFileName);
+void extractSurfaceFromGridFile(std::string a_surfaceFileName);
+void extractSurfaceFromCartesianFile(std::string a_surfaceFileName);
 
 void computeCartesianCoord(double &x, double &y, double lon, double lat);
 void computeGeographicCoord(double x, double y, double & longitude, double & latitude);
 
 void initializeSystemTime();
-void compute_epicenter( vector<Source*> & a_GlobalUniqueSources );
+void compute_epicenter( std::vector<Source*> & a_GlobalUniqueSources );
 void set_epicenter(double epiLat, double epiLon, double epiDepth, double earliestTime); 
 void get_epicenter(double &epiLat, double &epiLon, double &epiDepth, double &earliestTime); 
    
-// void update_all_boundaries(vector<Sarray> &U, vector<Sarray> &UM, double t,
-// 			   vector<Sarray*> &AlphaVE );
+// void update_all_boundaries(std::vector<Sarray> &U, std::vector<Sarray> &UM, double t,
+// 			   std::vector<Sarray*> &AlphaVE );
 
-// void impose_physical_bc(vector<Sarray> &U, vector<Sarray> &UM, double t,
-// 			vector<Sarray*> &AlphaVE );
+// void impose_physical_bc(std::vector<Sarray> &U, std::vector<Sarray> &UM, double t,
+// 			std::vector<Sarray*> &AlphaVE );
 
 /* void bc_dirichlet( Sarray& u, int g, double t, int side, */
 /*  		   Forcing* forcing, double h ); */
@@ -438,10 +437,10 @@ void convert_material_to_mulambda();
 
 void check_materials(); // verify that the density is positive on the grid
 
-void computeSolutionError(vector<Sarray> &U, double t, vector<Sarray*> &Alpha );
+void computeSolutionError(std::vector<Sarray> &U, double t, std::vector<Sarray*> &Alpha );
 
-double localMin(vector<Sarray> & a_field);
-double localMax(vector<Sarray> & a_field);
+double localMin(std::vector<Sarray> & a_field);
+double localMax(std::vector<Sarray> & a_field);
 double localMinVp();
 double localMaxVp(); 
 double localMinVs(); 
@@ -454,8 +453,8 @@ bool usingAttenuation(){return m_use_attenuation;};
 
 bool is_onesided( int g, int side ) const;
 
-void interpolate_between_grids( vector<Sarray>& u, vector<Sarray>& um, double t, 
-  			        vector<Sarray*> &AlphaVE );
+void interpolate_between_grids( std::vector<Sarray>& u, std::vector<Sarray>& um, double t,
+                    std::vector<Sarray*> &AlphaVE );
 
 bool interpolate_topography( double q, double r, double & Z0, bool smoothed);
 
@@ -478,26 +477,26 @@ void set_resolution( int ppw );
 
 void set_prefilter( SeisFilterType passband, int order, int passes, double fc1, double fc2 );
 
-void set_scenario(const string& scenario );
+void set_scenario(const std::string& scenario );
 
 void set_conservative_interpolation( bool onoff, double ctol, int cmaxit );
 
-void set_geodyn_data( string filename, int nx, int nz, double h, double origin[3],
+void set_geodyn_data( std::string filename, int nx, int nz, double h, double origin[3],
 		      double dt, int nsteps, int faces );
 
-void impose_geodyn_ibcdata( vector<Sarray> &u, vector<Sarray> &um, double t );
+void impose_geodyn_ibcdata( std::vector<Sarray> &u, std::vector<Sarray> &um, double t );
 
-void get_geodyn_timelevel( vector<Sarray>& geodyndata );
+void get_geodyn_timelevel( std::vector<Sarray>& geodyndata );
 
-void copy_geodyn_timelevel( vector<Sarray>& geodyndata1,
-			    vector<Sarray>& geodyndata2 );
+void copy_geodyn_timelevel( std::vector<Sarray>& geodyndata1,
+                std::vector<Sarray>& geodyndata2 );
 
 void integrate_source( );
 
-void compute_energy( double dt, bool write_file, vector<Sarray>& Um,
-		     vector<Sarray>& U, vector<Sarray>& Up, int step );
+void compute_energy( double dt, bool write_file, std::vector<Sarray>& Um,
+             std::vector<Sarray>& U, std::vector<Sarray>& Up, int step );
 
-   double scalarProduct( vector<Sarray>& U, vector<Sarray>& V);
+   double scalarProduct( std::vector<Sarray>& U, std::vector<Sarray>& V);
 
 void get_gridgen_info( int& order, double& zetaBreak ) const;
 
@@ -546,8 +545,8 @@ double SmoothWave(double t, double R, double c);
 double Gaussian(double t, double R, double c,double f);
 
 // Lamb's problem
-void get_exact_lamb( vector<Sarray> & a_U, double a_t, Source& a_source );
-void get_exact_lamb2( vector<Sarray> & a_U, double a_t, Source& a_source );
+void get_exact_lamb( std::vector<Sarray> & a_U, double a_t, Source& a_source );
+void get_exact_lamb2( std::vector<Sarray> & a_U, double a_t, Source& a_source );
 double G4_Integral(double T, double t, double r, double beta);
 double G3_Integral(double iT, double it, double ir, double ibeta);
 double G2_Integral(double iT, double it, double ir, double ibeta);
@@ -555,7 +554,7 @@ double G2_Integral(double iT, double it, double ir, double ibeta);
 
 void getGlobalBoundingBox(double bbox[6]);
 
-string getPath(){ return mPath; }
+std::string getPath(){ return mPath; }
 void set_utcref( STimeSeries& ts );
 void print_utc();
 
@@ -563,36 +562,36 @@ void print_utc();
 void processCG(char* buffer );
 void processScaleFactors(char* buffer );
 void average_speeds( double& cp, double& cs );
-void layered_speeds( vector<double>& cp, vector<double>& z );
-void testsourcediff( vector<Source*> GlobalSources, double gradient[11], double hessian[121] );
+void layered_speeds( std::vector<double>& cp, std::vector<double>& z );
+void testsourcediff( std::vector<Source*> GlobalSources, double gradient[11], double hessian[121] );
 void get_scalefactors( double sf[11] ); 
 bool compute_sf();
 void compute_guess( bool& guesspos, bool& guesst0fr, bool& guessmom, bool& guessshifts, bool& output_seismograms );
 void get_cgparameters( int& maxit, int& maxrestart, double& tolerance, bool& fletcherreeves,
 		       int& stepselection, bool& do_linesearch, int& varcase, bool& testing );
-void parameters_to_material( int nmpar, double* xm, vector<Sarray>& rho,
-			     vector<Sarray>& mu, vector<Sarray>& lambda );
-void material_to_parameters( int nmpar, double* xm, vector<Sarray>& rho,
-			     vector<Sarray>& mu, vector<Sarray>& lambda );
+void parameters_to_material( int nmpar, double* xm, std::vector<Sarray>& rho,
+                 std::vector<Sarray>& mu, std::vector<Sarray>& lambda );
+void material_to_parameters( int nmpar, double* xm, std::vector<Sarray>& rho,
+                 std::vector<Sarray>& mu, std::vector<Sarray>& lambda );
 void get_material_parameter( int nmpar, double* xm );
 void get_scale_factors( int nmpar, double* xm );
 
 #ifdef ENABLE_OPT
 void material_correction( int nmpar, double* xm );
 
-void project_material( vector<Sarray>& a_rho, vector<Sarray>& a_mu,
-		       vector<Sarray>& a_lambda, int& info );
+void project_material( std::vector<Sarray>& a_rho, std::vector<Sarray>& a_mu,
+               std::vector<Sarray>& a_lambda, int& info );
 
-void check_material( vector<Sarray>& a_rho, vector<Sarray>& a_mu,
-		     vector<Sarray>& a_lambda, int& ok );
+void check_material( std::vector<Sarray>& a_rho, std::vector<Sarray>& a_mu,
+             std::vector<Sarray>& a_lambda, int& ok );
 #endif
 
-void check_anisotropic_material( vector<Sarray>& rho, vector<Sarray>& c );
+void check_anisotropic_material( std::vector<Sarray>& rho, std::vector<Sarray>& c );
 
 void get_nr_of_material_parameters( int& nmvar );
-void add_to_grad( vector<Sarray>& K, vector<Sarray>& Kacc, vector<Sarray>& Um, 
-		  vector<Sarray>& U, vector<Sarray>& Up, vector<Sarray>& Uacc,
-		  vector<Sarray>& gRho, vector<Sarray>& gMu, vector<Sarray>& gLambda );
+void add_to_grad( std::vector<Sarray>& K, std::vector<Sarray>& Kacc, std::vector<Sarray>& Um,
+          std::vector<Sarray>& U, std::vector<Sarray>& Up, std::vector<Sarray>& Uacc,
+          std::vector<Sarray>& gRho, std::vector<Sarray>& gMu, std::vector<Sarray>& gLambda );
 
 void get_optmethod( int& method, int& bfgs_m );
 void get_utc( int utc[7] ) const;
@@ -600,23 +599,23 @@ void get_utc( int utc[7] ) const;
 void perturb_mtrl();
 void perturb_mtrl( int peri, int perj, int perk, double h, int grid, int var );
 
-void perturb_velocities( vector<Sarray>& a_vs, vector<Sarray>& a_vp );
+void perturb_velocities( std::vector<Sarray>& a_vs, std::vector<Sarray>& a_vp );
 
 void metric_derivatives_test();
 
-void material_ic( vector<Sarray>& a_mtrl );
+void material_ic( std::vector<Sarray>& a_mtrl );
 
 void gettopowgh( double ai, double wgh[8] ) const;
 
 void smooth_grid( int maxIter );
 
-void enforceDirichlet5( vector<Sarray> & a_U );
+void enforceDirichlet5( std::vector<Sarray> & a_U );
 
-bool check_for_nan( vector<Sarray>& a_U, int verbose, string name );
+bool check_for_nan( std::vector<Sarray>& a_U, int verbose, std::string name );
 
-void define_parallel_io( vector<Parallel_IO*>& parallel_io );
+void define_parallel_io( std::vector<Parallel_IO*>& parallel_io );
 
-void read_volimage( std::string &path, std::string &fname, vector<Sarray>& data );
+void read_volimage( std::string &path, std::string &fname, std::vector<Sarray>& data );
 
 void interpolate( int nx, int ny, int nz, double xmin, double ymin, double zmin, double hx,
 		  double hy, double hz, Sarray& rho, Sarray& mu, Sarray& lambda,
@@ -624,23 +623,23 @@ void interpolate( int nx, int ny, int nz, double xmin, double ymin, double zmin,
 
 void interpolate_to_coarse( int nx, int ny, int nz, double xmin, double ymin,
 			    double zmin, double hx, double hy, double hz,
-			    Sarray& rho, Sarray& mu, Sarray& lambda, vector<Sarray>& rhogrid, 
-			    vector<Sarray>& mugrid, vector<Sarray>& lambdagrid );
+                Sarray& rho, Sarray& mu, Sarray& lambda, std::vector<Sarray>& rhogrid,
+                std::vector<Sarray>& mugrid, std::vector<Sarray>& lambdagrid );
 
 void interpolation_gradient( int nx, int ny, int nz, double xmin, double ymin, double zmin, double hx,
 			     double hy, double hz, Sarray& gradrho, Sarray& gradmu, Sarray& gradlambda,
 			     int grid, Sarray& gradrhogrid, Sarray& gradmugrid, Sarray& gradlambdagrid );
 
 // Functions to impose conditions at grid refinement interface:
-   // void enforceIC( std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
-   //                 vector<Sarray*>& a_AlphaVEp,
-   //      	   double t, bool predictor, std::vector<GridPointSource*> point_sources );
+   // void enforceIC( std::std::vector<Sarray> & a_Up, std::std::vector<Sarray> & a_U, std::std::vector<Sarray> & a_Um,
+   //                 std::vector<Sarray*>& a_AlphaVEp,
+   //      	   double t, bool predictor, std::std::vector<GridPointSource*> point_sources );
 // NEW June 14, 2017
    void enforceIC( std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
-                   vector<Sarray*>& a_AlphaVEp, vector<Sarray*>& a_AlphaVE, vector<Sarray*>& a_AlphaVEm,
-		   double t, bool predictor, std::vector<GridPointSource*> point_sources );
+                   std::vector<Sarray*>& a_AlphaVEp, std::vector<Sarray*>& a_AlphaVE, std::vector<Sarray*>& a_AlphaVEm,
+           double t, bool predictor, std::vector<GridPointSource*> point_sources );
    void enforceIC2( std::vector<Sarray> & a_Up, std::vector<Sarray> & a_U, std::vector<Sarray> & a_Um,
-                    vector<Sarray*>& a_AlphaVEp,
+                    std::vector<Sarray*>& a_AlphaVEp,
                     double t, std::vector<GridPointSource*> point_sources );
    void dirichlet_hom_ic( Sarray& U, int g, int k, bool inner );
    void dirichlet_twilight_ic( Sarray& U, int g, int kic, double t);
@@ -654,10 +653,10 @@ void interpolation_gradient( int nx, int ny, int nz, double xmin, double ymin, d
                                        int g, int kic, double t, std::vector<GridPointSource*> point_sources );
    // void compute_preliminary_corrector( Sarray& a_Up, Sarray& a_U, Sarray& a_Um,
    //                                     Sarray& Utt, Sarray& Unext,
-   //                                     int g, int kic, double t, std::vector<GridPointSource*> point_sources );
+   //                                     int g, int kic, double t, std::std::vector<GridPointSource*> point_sources );
 
    void compute_preliminary_predictor( Sarray& a_Up, Sarray& a_U, Sarray* a_AlphaVEp, Sarray& Unext,
-                                       int g, int kic, double t, vector<GridPointSource*> point_sources );
+                                       int g, int kic, double t, std::vector<GridPointSource*> point_sources );
    
    void compute_icstresses( Sarray& a_Up, Sarray& B, int g, int kic, double* a_str_x, double* a_str_y);
    void add_ve_stresses( Sarray& a_Up, Sarray& B, int g, int kic, int a_a, double* a_str_x, double* a_str_y);
@@ -684,29 +683,29 @@ const double NO_TOPO;
 int mNumberOfGrids, mNumberOfCartesianGrids;
 
 // grid sizes are needed by the Source and Image classes, so should be kept public
-vector<double> mGridSize;
+std::vector<double> mGridSize;
 
 // part of global array on each processor, including ghost points = all points
-vector<int> m_iStart, m_iEnd, m_jStart, m_jEnd, m_kStart, m_kEnd; 
+std::vector<int> m_iStart, m_iEnd, m_jStart, m_jEnd, m_kStart, m_kEnd;
 
    // Active subcube is the part of the domain where the material is
    // variable in material inversion.
-   vector<int> m_iStartAct, m_iEndAct, m_jStartAct, m_jEndAct, m_kStartAct, m_kEndAct; 
-   vector<int> m_iStartActGlobal, m_iEndActGlobal, m_jStartActGlobal, m_jEndActGlobal;
-   vector<int>  m_kStartActGlobal, m_kEndActGlobal; 
+   std::vector<int> m_iStartAct, m_iEndAct, m_jStartAct, m_jEndAct, m_kStartAct, m_kEndAct;
+   std::vector<int> m_iStartActGlobal, m_iEndActGlobal, m_jStartActGlobal, m_jEndActGlobal;
+   std::vector<int>  m_kStartActGlobal, m_kEndActGlobal;
 
 // global number of grid points on each refinement level, without ghost points
-vector<int> m_global_nx, m_global_ny, m_global_nz; 
+std::vector<int> m_global_nx, m_global_ny, m_global_nz;
 
 // part of global array on each processor, excluding ghost points and parallel overlap points = interior points
-vector<int> m_iStartInt, m_iEndInt, m_jStartInt, m_jEndInt, m_kStartInt, m_kEndInt; 
+std::vector<int> m_iStartInt, m_iEndInt, m_jStartInt, m_jEndInt, m_kStartInt, m_kEndInt;
 
 // Note that the m_paddingCells array is no longer needed to get the range of internal grid points 
 // Instead use m_iStartInt[g], m_iEndInt[g], etc, 
 int m_paddingCells[4]; // indexing is [0] = low-i, [1] = high-i, [2] = low-j, [3] = high-j
 
 // For the Cartesian grid, we only need to offset in z
-vector<double> m_zmin; // needed by the Source and Image classes
+std::vector<double> m_zmin; // needed by the Source and Image classes
 
 // for the curvilinear grid, we also store the cartesian coordinates of the grid points
 Sarray mX, mY, mZ; // needed by the Source class, so must be public
@@ -731,20 +730,20 @@ int m_opttest;
    Sarray mTopo, mTopoGridExt;
 
 // material description used with material surfaces and the ifile command
-vector<MaterialProperty*> m_materials;
+std::vector<MaterialProperty*> m_materials;
 MPI_Comm m_cartesian_communicator;
 
-ofstream msgStream;
+std::ofstream msgStream;
 
 // vectors of Sarrays hold material properties on all grids. 
-vector<Sarray> mMu;
-vector<Sarray> mLambda;
-vector<Sarray> mRho;
-vector<Sarray> mC; // Anisotropic material parameters
+std::vector<Sarray> mMu;
+std::vector<Sarray> mLambda;
+std::vector<Sarray> mRho;
+std::vector<Sarray> mC; // Anisotropic material parameters
 Sarray mCcurv; // Anisotropic material with metric (on curvilinear grid).
 
 private:
-void preprocessSources( vector<Source*> & a_GlobalSources );
+void preprocessSources( std::vector<Source*> & a_GlobalSources );
 void revvector( int npts, double* v );
 // epicenter
 double m_epi_lat, m_epi_lon, m_epi_depth, m_epi_t0;
@@ -760,12 +759,12 @@ TestEnergy* m_energy_test;
 TestLamb* m_lamb_test;
 TestRayleighWave* m_rayleigh_wave_test;
 
-vector<MaterialData*> m_mtrlblocks;
-vector<AnisotropicMaterial*> m_anisotropic_mtrlblocks;
+std::vector<MaterialData*> m_mtrlblocks;
+std::vector<AnisotropicMaterial*> m_anisotropic_mtrlblocks;
   
 // index convention: [0]: low-x, [1]: high-x, [2]: low-y, [3]: high-y; [4]: low-z, [5]: high-z  
 boundaryConditionType mbcGlobalType[6]; // these are the boundary conditions for the global problem
-vector<boundaryConditionType*> m_bcType;  // these are the boundary conditions for each grid on the local processor, with bProcessor conditions
+std::vector<boundaryConditionType*> m_bcType;  // these are the boundary conditions for each grid on the local processor, with bProcessor conditions
 double mTstart;
 double mDt;
 EtreeFile * mEtreeFile;
@@ -799,7 +798,7 @@ double m_zetaBreak;
 // metric of the curvilinear grid
 double m_minJacobian, m_maxJacobian;
 
-string m_scenario;
+std::string m_scenario;
 
 // command limitfrequency
 double m_frequency_limit;
@@ -818,16 +817,16 @@ int m_sg_damping_order; // 4 or 6 order dissipation operator
 double m_supergrid_damping_coefficient;
 double m_supergrid_width; // width in physical units
 bool m_use_sg_width; // use width instead of gp
-vector<SuperGrid> m_supergrid_taper_x, m_supergrid_taper_y;
-vector<SuperGrid> m_supergrid_taper_z;
+std::vector<SuperGrid> m_supergrid_taper_x, m_supergrid_taper_y;
+std::vector<SuperGrid> m_supergrid_taper_z;
 
-string mPath, mObsPath, mTempPath;
+std::string mPath, mObsPath, mTempPath;
 
 // number of boundary points on each side
-vector<int *> m_NumberOfBCPoints;
+std::vector<int *> m_NumberOfBCPoints;
 
 // ghost point index window for each side of the boundary on each grid
-vector<int *> m_BndryWindow;
+std::vector<int *> m_BndryWindow;
 
 
 // attenuation variables (only allocated if attenuation is enabled)
@@ -836,10 +835,10 @@ int m_number_mechanisms;
 double m_velo_omega, m_min_omega, m_max_omega, m_att_max_frequency, m_att_ppw;
 double m_qmultiplier;
 
-vector<Sarray> mQp, mQs;
-vector<Sarray*> mMuVE, mLambdaVE;
+std::vector<Sarray> mQp, mQs;
+std::vector<Sarray*> mMuVE, mLambdaVE;
 // relaxation frequencies
-vector<double> mOmegaVE;
+std::vector<double> mOmegaVE;
 
 // Anisotropic material
 bool m_anisotropic;
@@ -871,10 +870,10 @@ int mMaterialExtrapolate;
 // variables from the old FileInput class
 int m_nx_base, m_ny_base, m_nz_base;
 double m_h_base;
-vector<bool> m_iscurvilinear;
-vector<double> m_refinementBoundaries;
+std::vector<bool> m_iscurvilinear;
+std::vector<double> m_refinementBoundaries;
 InputMode m_topoInputStyle;
-string m_topoFileName, m_topoExtFileName, m_QueryType;
+std::string m_topoFileName, m_topoExtFileName, m_QueryType;
 bool mTopoImageFound;
 double m_topo_zmax;
 int m_maxIter;
@@ -885,9 +884,9 @@ double m_EFileResolution;
 //-------------------------------------------
 int m_myRank, m_nProcs;
 
-string mName;
+std::stringstream mName;
 //string mWPPFileName;
-string mGMTFileName;
+std::string mGMTFileName;
 
 
 bool mWriteGMTOutput;
@@ -904,8 +903,8 @@ bool mCompareSACFiles;
 float mSACFileErrorTolerance;
 
 // Image file info
-vector<SeisImage*> mImageFiles;
-vector<SeisImage3D*> mImage3DFiles;
+std::vector<SeisImage*> mImageFiles;
+std::vector<SeisImage3D*> mImage3DFiles;
 bool m_iotiming;
 
 // time data
@@ -927,13 +926,13 @@ int mOrder;
 double mCFL, mCFLmax;
 
 // info on SBP boundary operators, or not.
-vector<int*> m_onesided; 
+std::vector<int*> m_onesided;
 double m_curlcoeff, m_d4coeff, m_d4_cfl; // these should go away
 
 // storage for the 1-D damping coefficients
-vector<double*> m_sg_dc_x, m_sg_dc_y, m_sg_dc_z;
-vector<double*> m_sg_str_x, m_sg_str_y, m_sg_str_z;
-vector<double*> m_sg_corner_x, m_sg_corner_y, m_sg_corner_z;
+std::vector<double*> m_sg_dc_x, m_sg_dc_y, m_sg_dc_z;
+std::vector<double*> m_sg_str_x, m_sg_str_y, m_sg_str_z;
+std::vector<double*> m_sg_corner_x, m_sg_corner_y, m_sg_corner_z;
 
 //-------------------------------------------
 // restart data
@@ -947,8 +946,8 @@ vector<double*> m_sg_corner_x, m_sg_corner_y, m_sg_corner_z;
 //----------------------------------------
 bool m_energy_log, m_energy_print;
 double m_saved_energy;
-string m_energy_logfile;
-vector<double> m_energy; // *
+std::string m_energy_logfile;
+std::vector<double> m_energy; // *
 
 //-------------------------------------------
 // Measure wall clock time variables
@@ -965,7 +964,7 @@ bool m_checkfornan;
 // testing
 double m_max_error[3], m_l2_error[3];
 
-string m_error_log_file;
+std::string m_error_log_file;
 bool m_error_log, m_error_print;
 int m_inner_loop;
 
@@ -976,10 +975,10 @@ bool m_matrices_decomposed;
 double m_citol, m_cirelfact;
 int m_cimaxiter;
 
-vector<double*> m_cimat1;
-vector<double*> m_cimat2;
-vector<int*> m_ciipiv1;
-vector<int*> m_ciipiv2;
+std::vector<double*> m_cimat1;
+std::vector<double*> m_cimat2;
+std::vector<int*> m_ciipiv1;
+std::vector<int*> m_ciipiv2;
 
 EW(const EW&);
 EW& operator=(const EW&);
@@ -1014,7 +1013,7 @@ double m_perturb;
 int m_iperturb, m_jperturb, m_kperturb, m_pervar;
 
 // Number of grid points per wave length, P = min Vs/(f*h) 
-vector<double> mMinVsOverH;
+std::vector<double> mMinVsOverH;
 
 int m_ext_ghost_points;
 int m_ghost_points;
@@ -1028,18 +1027,18 @@ int m_ppadding;
    double m_acof_no_gp[384], m_ghcof_no_gp[6], m_sbop_no_gp[6];
 
    int m_neighbor[4];
-   vector<MPI_Datatype> m_send_type1;
-   vector<MPI_Datatype> m_send_type3;
-   vector<MPI_Datatype> m_send_type4; // metric
-   vector<MPI_Datatype> m_send_type21; // anisotropic
+   std::vector<MPI_Datatype> m_send_type1;
+   std::vector<MPI_Datatype> m_send_type3;
+   std::vector<MPI_Datatype> m_send_type4; // metric
+   std::vector<MPI_Datatype> m_send_type21; // anisotropic
    MPI_Datatype m_send_type_2dfinest[2];
    MPI_Datatype m_send_type_2dfinest_ext[2];
-   vector<MPI_Datatype> m_send_type_2dx;
-   vector<MPI_Datatype> m_send_type_2dy;
-   vector<MPI_Datatype> m_send_type_2dx3p;
-   vector<MPI_Datatype> m_send_type_2dy3p;
-   vector<MPI_Datatype> m_send_type_2dx1p;
-   vector<MPI_Datatype> m_send_type_2dy1p;
+   std::vector<MPI_Datatype> m_send_type_2dx;
+   std::vector<MPI_Datatype> m_send_type_2dy;
+   std::vector<MPI_Datatype> m_send_type_2dx3p;
+   std::vector<MPI_Datatype> m_send_type_2dy3p;
+   std::vector<MPI_Datatype> m_send_type_2dx1p;
+   std::vector<MPI_Datatype> m_send_type_2dy1p;
    bool m_topography_exists;
 
 // UTC time corresponding to simulation time 0.

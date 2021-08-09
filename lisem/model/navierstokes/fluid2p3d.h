@@ -151,7 +151,7 @@ public:
     char interpMethd = 0;
     char do_redistance = 1;
     char do_volumeCorrection = 1;
-    char solver_mode = 0;
+    char solver_mode = 2;
     float maxdist = DIST;
     float volume0 = 0.0;
     float y_volume0 = 0.0;
@@ -1203,7 +1203,7 @@ public:
             {
                 for(int k = 0; k < gz; k++)
                 {
-                    if(block->data[i][j])
+                    if(block->data[i][j][k])
                     {
                         dists->data[i][j][k] = 1.0;
                     }
@@ -1556,7 +1556,13 @@ public:
                 }
             }
             if( sum ) {
-                _q->data[i][j][k] = sumq / sum;
+                if(block->data[i][j][k])
+                {
+                    _q->data[i][j][k] = 0.0;
+                }else
+                {
+                    _q->data[i][j][k] = sumq / sum;
+                }
             }
             unknowns.pop();
             computed[i][j][k] = 1;

@@ -172,6 +172,24 @@ public:
         return res;
     }
 
+    inline bool IsPointInside(LSMVector3 O)
+    {
+        //extension of algorithm for polygon
+        //we do a ray-triangle intersection from the point in any direction and count the number of intersections
+        //if the mesh is closed, an even number of intersections means outside, and an uneven number means inside the object.
+        //if we use this for rasterization of 3d object spaces, our ray-tracing better be fast!!
+        for(int i = 0; i < meshes.size(); i++)
+        {
+            bool in = meshes.at(i).IsPointInside(O);
+            if(in)
+            {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
 
     void processNode(aiNode *node, const aiScene *scene)
     {

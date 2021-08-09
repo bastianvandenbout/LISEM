@@ -30,7 +30,7 @@
 // # along with this program; if not, write to the Free Software
 // # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA 
 #include <math.h>
-
+#include "defines.h"
 #include "TestRayleighWave.h"
 #include "F77_FUNC.h"
 
@@ -44,7 +44,7 @@ TestRayleighWave:: TestRayleighWave( double rho, double cs, double cp, int nwl, 
 {
 // calculate wave length and wave number
   double Lwave = xmax/(cos(m_alpha)*nwl);
-  m_omega = 2*M_PI/Lwave;
+  m_omega = 2*LISEM_PI/Lwave;
 
 // calculate the phase velocity
   double xi;

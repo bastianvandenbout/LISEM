@@ -33,6 +33,7 @@
 #ifndef TEST_ENERGY_H
 #define TEST_ENERGY_H
 
+#include "wfunctions.h"
 #include <stdlib.h>
 
 class TestEnergy
@@ -48,7 +49,7 @@ public:
       srand48( m_seed );
    }
 
-   void record_data( double energy, int step, bool write_file, int myrank, string path )
+   void record_data( double energy, int step, bool write_file, int myrank, std::string path )
    {
       m_energyvector.push_back(energy);
       if( myrank == 0 )
@@ -56,7 +57,7 @@ public:
 	 if( (m_write_every>0 && step % m_write_every == 0) || write_file )
 	 {
  
-            stringstream filewpath;
+            std::stringstream filewpath;
             if( path != "." )
 	       filewpath << path;
 	    filewpath << m_filename;

@@ -36,7 +36,6 @@
 #include <vector>
 #include "SecondOrderSection.h"
 
-using namespace std;
 // support for derived quantities of the time derivative are not yet implemented
 enum SeisFilterType{lowPass, bandPass};
 
@@ -69,7 +68,7 @@ void a2d(double n[3], double d[3], Polynomial &b, Polynomial &a);
 SeisFilterType m_type;
 double m_dt, m_f1, m_f2;
 unsigned int m_passes, m_poles;
-vector<SecondOrderSection*> m_SOSp;
+std::vector<SecondOrderSection*> m_SOSp;
 int m_numberOfSOS;
 int m_real_poles, m_complex_pairs;
 bool m_initialized;

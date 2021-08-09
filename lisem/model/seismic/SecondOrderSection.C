@@ -36,7 +36,6 @@
 
 #include "SecondOrderSection.h"
 
-using namespace std;
 
 SecondOrderSection::SecondOrderSection()
 {

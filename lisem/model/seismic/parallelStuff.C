@@ -131,7 +131,7 @@ void EW::decomp1d( int nglobal, int myid, int nproc, int& s, int& e )
 void EW::setup2D_MPICommunications()
 {
    if (mVerbose >= 2 && proc_zero())
-      cout << "***inside setup2D_MPICommunications***"<< endl;
+      std::cout << "***inside setup2D_MPICommunications***"<< std::endl;
 // Define MPI datatypes for communication across processor boundaries
 // finest grid (curvilinear) only
 // get the size from the top Cartesian grid
@@ -180,7 +180,7 @@ void EW::setup2D_MPICommunications()
 void EW::setupMPICommunications()
 {
    if (mVerbose >= 2 && proc_zero())
-      cout << "***inside setupMPICommunications***"<< endl;
+      std::cout << "***inside setupMPICommunications***"<< std::endl;
 // Define MPI datatypes for communication across processor boundaries
    m_send_type1.resize(2*mNumberOfGrids);
    m_send_type3.resize(2*mNumberOfGrids);
@@ -376,7 +376,7 @@ void EW::communicate_array( Sarray& u, int grid )
 }
 
 //-----------------------------------------------------------------------
-void EW::communicate_arrays( vector<Sarray>& u )
+void EW::communicate_arrays( std::vector<Sarray>& u )
 {
    for( int g= 0 ; g < u.size() ; g++ )
       communicate_array( u[g], g );
