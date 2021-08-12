@@ -164,6 +164,23 @@ public:
         return fabs((m_MaxZ - m_MinZ));
     }
 
+    inline bool Overlaps(BoundingBox3D b)
+    {
+        if((b.m_MinX <= m_MinX && b.m_MaxX >= m_MaxX) || (b.m_MaxX <= m_MaxX && b.m_MaxX >= m_MinX) || (b.m_MinX >= m_MinX && b.m_MinX <= m_MaxX))
+        {
+            if((b.m_MinY <= m_MinY && b.m_MaxY >= m_MaxY) || (b.m_MaxY <= m_MaxY && b.m_MaxY >= m_MinY) || (b.m_MinY >= m_MinY && b.m_MinY <= m_MaxY))
+            {
+                if((b.m_MinZ <= m_MinZ && b.m_MaxZ >= m_MaxZ) || (b.m_MaxZ <= m_MaxZ && b.m_MaxZ >= m_MinZ) || (b.m_MinZ >= m_MinZ && b.m_MinZ <= m_MaxZ))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+
 };
 
 class LISEM_API BoundingBox

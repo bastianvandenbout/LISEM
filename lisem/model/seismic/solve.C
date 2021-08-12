@@ -226,6 +226,306 @@ void F77_FUNC(addsgd6c,ADDSGD6C) (double* dt, double *a_Up, double*a_U, double*a
 }
 
 
+void EW::solve_prestep( std::vector<Source*> & a_Sources, std::vector<STimeSeries*> & a_TimeSeries )
+{
+
+
+    m_BCForcing.resize(mNumberOfGrids);
+    m_F.resize(mNumberOfGrids);
+    m_Lu.resize(mNumberOfGrids);
+    m_Uacc.resize(mNumberOfGrids);
+    m_Up.resize(mNumberOfGrids);
+    m_Um.resize(mNumberOfGrids);
+    m_U.resize(mNumberOfGrids);
+
+  // Allocate pointers, even if attenuation not used, to avoid segfault in parameter list with mMuVE[g], etc...
+    m_AlphaVE.resize(mNumberOfGrids);
+    m_AlphaVEm.resize(mNumberOfGrids);
+    m_AlphaVEp.resize(mNumberOfGrids);
+    if (m_use_attenuation && m_number_mechanisms > 0)
+    {
+      for( int g = 0; g <mNumberOfGrids; g++ )
+      {
+        m_AlphaVE[g]  = new Sarray[m_number_mechanisms];
+        m_AlphaVEp[g] = new Sarray[m_number_mechanisms];
+        m_AlphaVEm[g] = new Sarray[m_number_mechanisms];
+      }
+    }
+
+    int ifirst, ilast, jfirst, jlast, kfirst, klast;
+    for( int g = 0; g <mNumberOfGrids; g++ )
+    {
+      m_BCForcing[g] = new double *[6];
+      for (int side=0; side < 6; side++)
+      {
+        m_BCForcing[g][side]=NULL;
+        if (m_bcType[g][side] == bStressFree || m_bcType[g][side] == bDirichlet || m_bcType[g][side] == bSuperGrid)
+        {
+          m_BCForcing[g][side] = new double[3*m_NumberOfBCPoints[g][side]];
+        }
+
+      }
+
+      ifirst = m_iStart[g];
+      ilast = m_iEnd[g];
+
+      jfirst = m_jStart[g];
+      jlast = m_jEnd[g];
+
+      kfirst = m_kStart[g];
+      klast = m_kEnd[g];
+
+      m_F[g].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_Lu[g].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_Uacc[g].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_Up[g].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_Um[g].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_U[g].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      if (m_use_attenuation && m_number_mechanisms > 0)
+      {
+        for (int a=0; a<m_number_mechanisms; a++)
+        {
+      m_AlphaVE[g][a].define( 3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_AlphaVEp[g][a].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+      m_AlphaVEm[g][a].define(3,ifirst,ilast,jfirst,jlast,kfirst,klast);
+        }
+      }
+    }
+
+
+    // the Source objects get discretized into GridPointSource objects
+      std::vector<GridPointSource*> m_point_sources;
+
+    // Transfer source terms to each individual grid as point sources at grid points.
+      for( unsigned int i=0 ; i < a_Sources.size() ; i++ )
+          a_Sources[i]->set_grid_point_sources4( this, m_point_sources );
+
+
+
+      std::cout << std::endl << "***  Starting solve ***" << std::endl;
+
+      printPreamble(a_Sources);
+
+
+    // Assign initial data
+      initialData(mTstart, m_U, m_AlphaVE);
+      initialData(mTstart-mDt, m_Um, m_AlphaVEm );
+
+      if ( !mQuiet && mVerbose && proc_zero() )
+        std::cout << "  Initial data has been assigned" << std::endl;
+
+
+
+
+     std::cout << "you can Begin time stepping..." << std::endl;
+
+
+
+}
+
+double EW::solve_singlestep( std::vector<Source*> & a_Sources, std::vector<STimeSeries*> & a_TimeSeries, double t )
+{
+
+    // this is the time level
+      //double t=mTstart;
+
+    // Set up timers
+      double time_start_solve = MPI_Wtime();
+      double time_measure[7];
+      double time_sum[7]={0,0,0,0,0,0,0};
+      double bc_time_measure[5]={0,0,0,0,0};
+
+      int beginCycle = 1; // also set in setupRun(), perhaps make member variable?
+ int currentTimeStep = beginCycle;
+
+
+    //for( int currentTimeStep = beginCycle; currentTimeStep <= mNumberOfTimeSteps; currentTimeStep++)
+    {
+      time_measure[0] = MPI_Wtime();
+
+  // all types of forcing...
+      Force( t, m_F, m_point_sources );
+
+      if( m_checkfornan )
+      {
+         check_for_nan( m_F, 1, "F" );
+         check_for_nan( m_U, 1, "U" );
+      }
+
+  // evaluate right hand side
+      if( m_anisotropic )
+         evalRHSanisotropic( m_U, mC, m_Lu );
+      else
+         evalRHS( m_U, mMu, mLambda, m_Lu, m_AlphaVE ); // save Lu in composite grid 'Lu'
+
+      if( m_checkfornan )
+         check_for_nan( m_Lu, 1, "Lu pred. " );
+
+  // take predictor step, store in Up
+      evalPredictor( m_Up, m_U, m_Um, mRho, m_Lu, m_F );
+
+      time_measure[1] = MPI_Wtime();
+      time_measure[2] = MPI_Wtime();
+
+  // communicate across processor boundaries
+      for(int g=0 ; g < mNumberOfGrids ; g++ )
+         communicate_array( m_Up[g], g );
+
+  // calculate boundary forcing at time t+mDt
+      cartesian_bc_forcing( t+mDt, m_BCForcing, a_Sources );
+
+  // NEW (Apr. 3, 2017) PC-time stepping for the memory variable
+      if( m_use_attenuation && m_number_mechanisms > 0 )
+         updateMemVarPred( m_AlphaVEp, m_AlphaVEm, m_U, t );
+
+  // update ghost points in Up
+      if( m_anisotropic )
+         enforceBCanisotropic( m_Up, mC, t+mDt, m_BCForcing );
+      else
+         enforceBC( m_Up, mMu, mLambda, t+mDt, m_BCForcing );
+
+  // NEW
+  // Impose un-coupled free surface boundary condition with visco-elastic terms
+      if( m_use_attenuation && m_number_mechanisms > 0 )
+         enforceBCfreeAtt2( m_Up, mMu, mLambda, m_AlphaVEp, m_BCForcing );
+
+      if( m_checkfornan )
+         check_for_nan( m_Up, 1, "U pred. " );
+
+  // Grid refinement interface conditions:
+  // *** 2nd order in TIME
+      if (mOrder == 2)
+      {
+  // add super-grid damping terms before enforcing interface conditions
+  // (otherwise, Up doesn't have the correct values on the interface)
+         if (usingSupergrid())
+         {
+        addSuperGridDamping( m_Up, m_U, m_Um, mRho );
+         }
+  // Also add Arben's simplified attenuation
+         if (m_use_attenuation && m_number_mechanisms == 0)
+         {
+       simpleAttenuation( m_Up );
+         }
+  // should this timer be here?
+  //       time_measure[4] = MPI_Wtime();
+
+  // interface conditions for 2nd order in time
+         enforceIC2( m_Up, m_U, m_Um, m_AlphaVEp, t, m_point_sources );
+      }
+      else
+      {
+  // *** 4th order in TIME interface conditions for the predictor
+  // June 14, 2017: adding AlphaVE & AlphaVEm
+         enforceIC( m_Up, m_U, m_Um, m_AlphaVEp, m_AlphaVE, m_AlphaVEm, t, true, m_point_sources );
+      }
+
+  // should these timers be here?
+      time_measure[3] = time_measure[4] = MPI_Wtime();
+
+  //
+  // corrector step for
+  // *** 4th order in time ***
+  //
+      if (mOrder == 4)
+      {
+         Force_tt( t, m_F, m_point_sources );
+         evalDpDmInTime( m_Up, m_U, m_Um, m_Uacc ); // store result in Uacc
+
+         if( m_checkfornan )
+        check_for_nan( m_Uacc, 1, "uacc " );
+
+  // July 22,  4th order update for memory variables
+         if( m_use_attenuation && m_number_mechanisms > 0 )
+           updateMemVarCorr( m_AlphaVEp, m_AlphaVEm, m_Up, m_U, m_Um, t );
+
+         if( m_use_attenuation && m_number_mechanisms > 0 )
+            evalDpDmInTimeAtt( m_AlphaVEp, m_AlphaVE, m_AlphaVEm ); // store AlphaVEacc in AlphaVEm
+
+         if( m_anisotropic )
+        evalRHSanisotropic( m_Uacc, mC, m_Lu );
+         else
+        evalRHS( m_Uacc, mMu, mLambda, m_Lu, m_AlphaVEm );
+
+         if( m_checkfornan )
+        check_for_nan( m_Lu, 1, "L(uacc) " );
+
+         evalCorrector( m_Up, mRho, m_Lu, m_F );
+  // add in super-grid damping terms
+         if (usingSupergrid())
+         {
+        addSuperGridDamping( m_Up, m_U, m_Um, mRho );
+         }
+
+  // Arben's simplified attenuation
+         if (m_use_attenuation && m_number_mechanisms == 0)
+         {
+       simpleAttenuation( m_Up );
+         }
+         time_measure[4] = MPI_Wtime();
+
+  // communicate across processor boundaries
+         for(int g=0 ; g < mNumberOfGrids ; g++ )
+        communicate_array( m_Up[g], g );
+
+  // calculate boundary forcing at time t+mDt (do we really need to call this fcn again???)
+         cartesian_bc_forcing( t+mDt, m_BCForcing, a_Sources );
+
+  // update ghost points in Up
+         if( m_anisotropic )
+        enforceBCanisotropic( m_Up, mC, t+mDt, m_BCForcing );
+         else
+        enforceBC( m_Up, mMu, mLambda, t+mDt, m_BCForcing );
+
+  // NEW (Apr. 4, 2017)
+  // Impose un-coupled free surface boundary condition with visco-elastic terms for 'Up'
+         if( m_use_attenuation && (m_number_mechanisms > 0) )
+         {
+            enforceBCfreeAtt2( m_Up, mMu, mLambda, m_AlphaVEp, m_BCForcing );
+         }
+
+  // interface conditions for the corrector
+  // June 14, 2017: adding AlphaVE & AlphaVEm
+         enforceIC(m_Up, m_U, m_Um, m_AlphaVEp, m_AlphaVE, m_AlphaVEm, t, false, m_point_sources );
+
+      }// end if mOrder == 4
+
+
+      if( m_checkfornan )
+         check_for_nan( m_Up, 1, "Up" );
+
+  // increment time
+      t += mDt;
+
+      time_measure[5] = MPI_Wtime();
+
+  // periodically, print time stepping info to stdout
+      printTime( currentTimeStep, t, currentTimeStep == mNumberOfTimeSteps );
+
+
+  // // Energy evaluation, requires all three time levels present, do before cycle arrays.
+      if( m_energy_test )
+         compute_energy( mDt, currentTimeStep == mNumberOfTimeSteps, m_Um, m_U, m_Up, currentTimeStep  );
+
+  // cycle the solution arrays
+      cycleSolutionArrays(m_Um, m_U, m_Up, m_AlphaVEm, m_AlphaVE, m_AlphaVEp);
+
+      time_measure[6] = MPI_Wtime();
+
+      time_sum[0] += time_measure[1]-time_measure[0] + time_measure[4]-time_measure[3]; // step
+      time_sum[1] += time_measure[2]-time_measure[1] + time_measure[5]-time_measure[4]; // bcs
+      time_sum[2] += time_measure[6]-time_measure[5]; // image & sac
+      time_sum[3] += time_measure[6]-time_measure[0];//  total
+
+    }
+
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    return mDt;
+}
+
+
 //--------------------------------------------------------------------
 void EW::solve( std::vector<Source*> & a_Sources, std::vector<STimeSeries*> & a_TimeSeries )
 {

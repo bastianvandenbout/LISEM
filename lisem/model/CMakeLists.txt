@@ -10,6 +10,7 @@ file(
   *.cl
   *.c
   *.f
+  *.f90
   *.C
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)

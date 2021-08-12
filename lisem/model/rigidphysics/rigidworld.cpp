@@ -71,7 +71,7 @@ int RigidPhysicsWorld::GetObjectCount( bool has_mutex )
 
 }
 
-void RigidPhysicsWorld::AddObject(RigidPhysicsObject*obj , bool has_mutex )
+void RigidPhysicsWorld::AddObject(RigidPhysicsObject*obj , bool has_mutex, bool add_geo )
 {
     if(!has_mutex)
     {
@@ -81,6 +81,14 @@ void RigidPhysicsWorld::AddObject(RigidPhysicsObject*obj , bool has_mutex )
     if(obj->AS_IsScript())
     {
         obj->AS_AddRef();
+    }
+    LSMVector2 geo = this->GetSimpleGeoOrigin();
+    if(add_geo && !obj->IsTerrain())
+    {
+        LSMVector3 pos = obj->GetPosition();
+        LSMVector3 posn = LSMVector3(pos.x - geo.x,pos.y,pos.z -geo.y);
+        obj->m_chBody->SetPos(ChVector<double>(posn.x,posn.y,posn.z));
+
     }
     m_Objects.append(obj);
     m_system.AddBody(obj->GetChBody());
@@ -1236,7 +1244,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                      //obj->m_chBody->SetRot(ChQuaternion<double>(1.0,0.0,0.0,0.0));
                      //obj->m_chBody->SetWvel_loc(obj->m_chBody->GetWvel_loc()*0.98);
 
-                     //obj->m_chBody->Empty_forces_accumulators();
+                     obj->m_chBody->Empty_forces_accumulators();
 
                      BoundingBox3D extent = obj->GetAABB();
                       double csx = m_DEM->cellSizeX();
@@ -1417,7 +1425,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                                                 LSMVector3 F3 = NormalWater * 1000.0 * (area_this/std::max(0.001,area_fulltotal)) *(1.0-(area_this/std::max(0.001,area_fulltotal)))* area_this * std::max(0.0,-NormalWater.dot(Normal)) * std::max(0.0,-NormalWater.dot(vel_FLoc));
 
                                                 float depht_floc = std::max(0.0f,h + hf - FLoc.y);// + (dhfdx + dhdx)*(FLoc.x - extenthor.GetCenterX()) + (dhfdy + dhdy)*(FLoc.z - extenthor.GetCenterY())  - FLoc.y);
-                                                float FHydro = -Normal.y*depht_floc *-1500.0 * 9.81 * area_this;
+                                                float FHydro = -Normal.y*depht_floc *-1000.0 * 9.81 * area_this;
                                                 ////std::cout << " drag force " << F.length() << "  " << vel_tangent.length() << std::endl;
                                                 if(std::isfinite(F.x) && std::isfinite(F.y) && std::isfinite(F.z) )
                                                 {
@@ -1494,8 +1502,6 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                     //temporary solution now: set the torque manually to be transformed
                     obj->m_chBody->Accumulate_torque(obj->m_chBody->Dir_World2Body(obj->m_chBody->Get_accumulated_torque())-obj->m_chBody->Get_accumulated_torque(),true);
 
-
-
                     //now do fluid to object interactions
 
 
@@ -1553,10 +1559,29 @@ void RigidPhysicsWorld::AS_Step(float dt)
 void RigidPhysicsWorld::AS_SetElevation(cTMap * dem)
 {
     m_DEM = dem->GetCopy();
-    m_DEMObjects =RigidPhysicsObject::RigidPhysicsObject_AsHeightField(m_DEM,true);
+    m_DEMObjects =RigidPhysicsObject::RigidPhysicsObject_AsHeightField(m_DEM,false);
+
+
+    LSMVector2 geo_old = GetSimpleGeoOrigin();
+
     for(int i = 0; i < m_DEMObjects.length(); i++)
     {
         AddObject(m_DEMObjects.at(i));
+    }
+
+
+    SetSimpleGeoOrigin(LSMVector2(dem->west(),dem->north()));
+
+    LSMVector2 geo = GetSimpleGeoOrigin();
+
+    for(int i = 0; i < m_Objects.size(); i++)
+    {
+        if(!(m_Objects.at(i)->IsTerrain()))
+        {
+            LSMVector3 pos = m_Objects.at(i)->GetPosition();
+            LSMVector3 posn = LSMVector3(pos.x + geo_old.x - geo.x,pos.y,pos.z + geo_old.y -geo.y);
+            m_Objects.at(i)->m_chBody->SetPos(ChVector<double>(posn.x,posn.y,posn.z));
+        }
     }
 
     m_HasTerrain = true;
@@ -1565,5 +1590,275 @@ void RigidPhysicsWorld::AS_SetElevation(cTMap * dem)
 void RigidPhysicsWorld::AS_SetFlow(cTMap * h , cTMap * ux, cTMap * uy ,cTMap * dens)
 {
     SetInteractTwoPhaseFlow(h->GetCopy(),ux->GetCopy(),uy->GetCopy(),nullptr,nullptr,nullptr,nullptr, true);
+
+}
+
+
+std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref)
+{
+
+    //
+    //It is important to note that the Field extend the Map data structure, and
+    //uses x-y directions as horizontal axes.
+    //The rigid physics and mesh stuff follow the usual convension
+    //of having y in the vertical direction
+    //here, we have to convert between the two
+    // (x,y,z)->(x,z,y)
+
+
+    //set all blocking and velocity to 0
+
+    Field * Block = ref->GetCopy0();
+    Field * BlockU = ref->GetCopy0();
+    Field * BlockV = ref->GetCopy0();
+    Field * BlockW = ref->GetCopy0();
+
+    //get all cell centers and check if they are contained in one of the objects of the rigid simulation
+
+    QList<RigidPhysicsObject *> objs = world->GetObjectList();
+    for(int i = 0; i < objs.size(); i++)
+    {
+        RigidPhysicsObject * obj= objs.at(i);
+
+        if(obj->IsTerrain())
+        {
+            continue;
+        }
+
+        BoundingBox3D bb = obj->GetAABB();
+
+        LSMVector2 geo_simple = world->GetSimpleGeoOrigin();
+
+        BoundingBox3D fieldbb = Block->GetAABB();
+
+        fieldbb = BoundingBox3D(fieldbb.GetMinX()- geo_simple.x,fieldbb.GetMaxX()- geo_simple.x,fieldbb.GetMinY(),fieldbb.GetMaxY(),fieldbb.GetMinZ()- geo_simple.y,fieldbb.GetMaxZ()- geo_simple.y);
+
+        std::cout << "obj " << i << " " << fieldbb.GetMinX() <<  " " << fieldbb.GetMaxX() << " " << bb.GetMinX() << " " << bb.GetMaxX() <<  std::endl;
+        std::cout << "obj " << i << " " << fieldbb.GetMinY() <<  " " << fieldbb.GetMaxY() << " " << bb.GetMinY() << " " << bb.GetMaxY() <<  std::endl;
+        std::cout << "obj " << i << " " << fieldbb.GetMinZ() <<  " " << fieldbb.GetMaxZ() << " " << bb.GetMinZ() << " " << bb.GetMaxZ() <<  std::endl;
+
+        //overlaps with bounding box of the Field?
+        if(bb.Overlaps(fieldbb))
+        {
+
+            std::cout << "overlaps " << i << std::endl;
+
+            //if contained, get local linear velocity of the body
+
+            int lstart = (bb.GetMinY() - Block->GetBottom())/Block->cellSizeZ();
+            int cstart = (bb.GetMinX() + geo_simple.x - Block->GetWest())/Block->cellSizeX();
+            int rstart = (bb.GetMinZ() + geo_simple.y - Block->GetNorth())/Block->cellSizeY();
+
+            int lend = (bb.GetMaxY() - Block->GetBottom())/Block->cellSizeZ();
+            int cend = (bb.GetMaxX() + geo_simple.x - Block->GetWest())/Block->cellSizeX();
+            int rend = (bb.GetMaxZ() + geo_simple.y - Block->GetNorth())/Block->cellSizeY();
+
+            lstart = std::max(0,std::min(Block->nrLevels()-1,lstart));
+            cstart = std::max(0,std::min(Block->nrCols()-1,cstart));
+            rstart = std::max(0,std::min(Block->nrRows()-1,rstart));
+
+            lend = std::max(0,std::min(Block->nrLevels()-1,lend));
+            cend = std::max(0,std::min(Block->nrCols()-1,cend));
+            rend = std::max(0,std::min(Block->nrRows()-1,rend));
+
+            if(rstart > rend)
+            {
+                int temp = rstart;
+                rstart = rend;
+                rend = temp;
+            }
+            if(cstart > cend)
+            {
+                int temp = cstart;
+                cstart = cend;
+                cend = temp;
+            }
+            if(lstart > lend)
+            {
+                int temp = lstart;
+                lstart = lend;
+                lend = temp;
+            }
+
+            std::cout << lstart<< " " << lend << " " << cstart << " " << cend << " " << rstart << " " << rend << std::endl;
+
+            for(int l = lstart; l < lend +1; l++)
+            {
+                for(int r = rstart; r < rend +1; r++)
+                {
+                    for(int c = cstart; c < cend +1; c++)
+                    {
+                        float x = Block->GetWest() - geo_simple.x + Block->cellSizeX() * ((float)(c));
+                        float y = Block->GetBottom() + Block->cellSizeZ() * ((float)(l));
+                        float z = Block->GetNorth() - geo_simple.y + Block->cellSizeY() * ((float)(r));
+
+                        if(obj->Contains(LSMVector3(x,y,z)))
+                        {
+                            std::cout << "contains! " << std::endl;
+                            LSMVector3 vel = obj->GetLocalLinearVelocity(LSMVector3(x,y,z));
+                            Block->at(l)->data[r][c] = 1.0f;
+                            BlockU->at(l)->data[r][c] = vel.x;
+                            BlockV->at(l)->data[r][c] = vel.y;
+                            BlockW->at(l)->data[r][c] = vel.z;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return {Block,BlockU,BlockV,BlockW};
+}
+
+void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field * P)
+{
+    //for each object, get bounding box
+
+    BoundingBox3D fieldbb = Block->GetAABB();
+
+    //loop over all pixels within the bounding box
+
+    //if a pixel is blocked by the object, but a neighboring pixel contains a pressure value
+    //we apply that pressure as a boundary force
+
+    QList<RigidPhysicsObject *> objs = world->GetObjectList();
+    for(int i = 0; i < objs.size(); i++)
+    {
+        RigidPhysicsObject * obj= objs.at(i);
+
+        if(obj->IsTerrain())
+        {
+            continue;
+        }
+
+        obj->m_chBody->Empty_forces_accumulators();
+
+        BoundingBox3D bb = obj->GetAABB();
+
+
+        LSMVector2 geo_simple = world->GetSimpleGeoOrigin();
+
+        //overlaps with bounding box of the Field?
+        if(bb.Overlaps(fieldbb))
+        {
+            //if contained, get local linear velocity of the body
+
+            int lstart = (bb.GetMinY() - Block->GetBottom())/Block->cellSizeZ();
+            int cstart = (bb.GetMinX() + geo_simple.x - Block->GetWest())/Block->cellSizeX();
+            int rstart = (bb.GetMinZ() + geo_simple.y - Block->GetNorth())/Block->cellSizeY();
+
+            int lend = (bb.GetMaxY() - Block->GetBottom())/Block->cellSizeZ();
+            int cend = (bb.GetMaxX() + geo_simple.x - Block->GetWest())/Block->cellSizeX();
+            int rend = (bb.GetMaxZ() + geo_simple.y - Block->GetNorth())/Block->cellSizeY();
+
+            lstart = std::max(0,std::min(Block->nrLevels()-1,lstart));
+            cstart = std::max(0,std::min(Block->nrCols()-1,cstart));
+            rstart = std::max(0,std::min(Block->nrRows()-1,rstart));
+
+            lend = std::max(0,std::min(Block->nrLevels()-1,lend));
+            cend = std::max(0,std::min(Block->nrCols()-1,cend));
+            rend = std::max(0,std::min(Block->nrRows()-1,rend));
+
+            if(rstart > rend)
+            {
+                int temp = rstart;
+                rstart = rend;
+                rend = temp;
+            }
+            if(cstart > cend)
+            {
+                int temp = cstart;
+                cstart = cend;
+                cend = temp;
+            }
+            if(lstart > lend)
+            {
+                int temp = lstart;
+                lstart = lend;
+                lend = temp;
+            }
+
+            for(int l = lstart; l < lend +1; l++)
+            {
+                for(int r = rstart; r < rend +1; r++)
+                {
+                    for(int c = cstart; c < cend +1; c++)
+                    {
+                        float x = Block->GetWest() - geo_simple.x + Block->cellSizeX() * ((float)(c));
+                        float y = Block->GetBottom() + Block->cellSizeZ() * ((float)(l));
+                        float z = Block->GetNorth() - geo_simple.y + Block->cellSizeY() * ((float)(r));
+
+                        if(Block->at(l)->data[r][c] > 0.5f)
+                        {
+                            if(l-1 > 0)
+                            {
+                                if(Block->at(l-1)->data[r][c] < 0.5f)
+                                {
+                                    float pressure = P->at(l-1)->data[r][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,pressure,0.0),ChVector<double>(x,y,x),false);
+                                }
+                            }
+
+                            if(l+1 < Block->nrLevels())
+                            {
+                                if(Block->at(l+1)->data[r][c] < 0.5f)
+                                {
+                                    float pressure = P->at(l+1)->data[r][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,-pressure,0.0),ChVector<double>(x,y,x),false);
+                                }
+                            }
+
+                            if(r-1 > 0)
+                            {
+                                if(Block->at(l)->data[r-1][c] < 0.5f)
+                                {
+                                    float pressure = P->at(l)->data[r-1][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,0.0,pressure),ChVector<double>(x,y,x),false);
+                                }
+                            }
+
+                            if(r+1 < Block->nrRows())
+                            {
+                                if(Block->at(l)->data[r+1][c] < 0.5f)
+                                {
+                                    float pressure = P->at(l)->data[r+1][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,0.0,-pressure),ChVector<double>(x,y,x),false);
+                                }
+                            }
+
+
+                            if(c-1 > 0)
+                            {
+                                if(Block->at(l)->data[r][c-1] < 0.5f)
+                                {
+                                    float pressure = P->at(l)->data[r][c-1];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(pressure,0.0,0.0),ChVector<double>(x,y,x),false);
+                                }
+                            }
+
+                            if(c+1 < Block->nrCols())
+                            {
+                                if(Block->at(l)->data[r][c+1] < 0.5f)
+                                {
+                                    float pressure = P->at(l)->data[r][c+1];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(-pressure,0.0,0.0),ChVector<double>(x,y,x),false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //TEST, IS THERE SOME ERROR WITH THE TORQUE FRAME OF REFERENCE IN PROJECT CHRONO?????
+            //APPARENTLY THERE IS, the Accumulate_force function with local = false sets torque in global frame
+            //later, it is used as local frame value.
+            //the Accumulate_torque does transform correctly.
+            //temporary solution now: set the torque manually to be transformed
+            obj->m_chBody->Accumulate_torque(obj->m_chBody->Dir_World2Body(obj->m_chBody->Get_accumulated_torque())-obj->m_chBody->Get_accumulated_torque(),true);
+
+
+        }
+    }
+
 
 }

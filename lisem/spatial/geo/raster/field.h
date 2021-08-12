@@ -180,9 +180,43 @@ public:
 
     }
 
+
     inline float cellSizeZ()
     {
         return m_dz;
+    }
+
+
+
+    inline float cellSizeY()
+    {
+        if(m_Maps.size() > 0)
+        {
+            return m_Maps.at(0)->cellSizeY();
+        }else
+        {
+            return 0.0;
+        }
+    }
+
+
+
+    inline float cellSizeX()
+    {
+        if(m_Maps.size() > 0)
+        {
+            return m_Maps.at(0)->cellSizeX();
+        }else
+        {
+            return 0.0;
+        }
+    }
+
+
+
+    inline BoundingBox3D GetAABB()
+    {
+        return BoundingBox3D(GetWest(),GetWest() + GetSizeX(),GetBottom(),GetBottom()+GetSizeZ(),GetNorth(),GetSizeY());
     }
     inline cTMap * at(int i)
     {

@@ -190,7 +190,7 @@ public:
         return m_UFX;
     }
 
-    void AddObject(RigidPhysicsObject * object,bool has_mutex = false);
+    void AddObject(RigidPhysicsObject * object,bool has_mutex = false, bool add_geo = false);
     void RemoveObject(RigidPhysicsObject * object,bool has_mutex = false);
     int GetObjectCount(bool has_mutex);
     void LockMutex();
@@ -350,7 +350,7 @@ inline void RigidPhysicsWorld::AS_AddObj(RigidPhysicsObject*obj)
     std::cout << "add obj 2" << std::endl;
     if(!m_Objects.contains(obj))
     {
-        AddObject(obj,true);
+        AddObject(obj,true, true);
     }
     std::cout << "add obj done2" << std::endl;
     {
@@ -497,4 +497,8 @@ inline cTMap * RigidPhysicsWorld::AS_GetFlowHCorrect()
     return m_HCorrected->GetCopy();
 }
 
+#include "geo/raster/field.h"
 
+
+LISEM_API std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref);
+LISEM_API void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field * P);

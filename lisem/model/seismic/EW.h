@@ -67,13 +67,13 @@
 #include "MaterialProperty.h"
 #include "GeographicProjection.h"
 #include "DataPatches.h"
-
+#include "geo/raster/map.h"
 
 class EW 
 {
 public:
 EW(std::stringstream &input, std::vector<Source*> & a_GlobalUniqueSources,
-   std::vector<STimeSeries*> & a_GlobalTimeSeries, bool invproblem=false );
+   std::vector<STimeSeries*> & a_GlobalTimeSeries, bool invproblem=false, cTMap * topo = nullptr);
 ~EW();
 bool wasParsingSuccessful();
 bool isInitialized();
@@ -91,6 +91,9 @@ int getNumberOfSteps() const;
 void setupRun( std::vector<Source*> & a_GlobalUniqueSources );
 
 void solve( std::vector<Source*> & a_GlobalSources, std::vector<STimeSeries*> & a_GlobalTimeSeries );
+void solve_prestep( std::vector<Source*> & a_GlobalSources, std::vector<STimeSeries*> & a_GlobalTimeSeries);
+double solve_singlestep( std::vector<Source*> & a_GlobalSources, std::vector<STimeSeries*> & a_GlobalTimeSeries, double t);
+
 void solve_backward( std::vector<Source*> & a_Sources, std::vector<STimeSeries*> & a_TimeSeries, double gradient[11], double hessian[121] );
 void solve_allpars( std::vector<Source*> & a_GlobalSources, std::vector<Sarray>& a_Rho, std::vector<Sarray>& a_Mu,
             std::vector<Sarray>& a_Lambda, std::vector<STimeSeries*> & a_GlobalTimeSeries,
@@ -511,7 +514,7 @@ void get_gridgen_info( int& order, double& zetaBreak ) const;
 // functions from the old FileInput class
 void cleanUpRefinementLevels();
 
-enum InputMode { UNDEFINED, Efile, GaussianHill, GridFile, CartesianGrid, TopoImage, Rfile};
+enum InputMode { UNDEFINED, Efile, GaussianHill, GridFile, CartesianGrid, TopoImage, Rfile, LISEM};
 
 // access functions needed by the Image (and perhaps other) classes
 int getNumberOfCartesianGrids(){return mNumberOfCartesianGrids;};
@@ -843,6 +846,8 @@ std::vector<double> mOmegaVE;
 // Anisotropic material
 bool m_anisotropic;
 
+cTMap * m_Topo;
+
 // Randomization of the material
 bool m_randomize;
 int m_random_seed[3];
@@ -1044,6 +1049,13 @@ int m_ppadding;
 // UTC time corresponding to simulation time 0.
 //bool m_utc0set, m_utc0isrefevent;
    int m_utc0[7];
+
+   std::vector<GridPointSource*> m_point_sources;
+
+   std::vector<Sarray> m_F, m_Lu, m_Uacc, m_Up, m_Um, m_U;
+   std::vector<Sarray*> m_AlphaVE, m_AlphaVEm, m_AlphaVEp;
+ // vectors of pointers to hold boundary forcing arrays in each grid
+   std::vector<double **> m_BCForcing;
 
 // Error handling facility
 //ErrorChecking* m_error_checking;

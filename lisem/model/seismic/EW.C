@@ -262,7 +262,7 @@ using namespace std;
 
 // constructor
 EW::EW(std::stringstream &fileName, vector<Source*> & a_GlobalSources,
-       vector<STimeSeries*> & a_GlobalTimeSeries, bool a_invproblem ):
+       vector<STimeSeries*> & a_GlobalTimeSeries, bool a_invproblem , cTMap * topo):
   m_epi_lat(0.0), m_epi_lon(0.0), m_epi_depth(0.0), m_epi_t0(0.0),
   m_topo_zmax(0.0),
   m_topoInputStyle(UNDEFINED), 
@@ -434,6 +434,8 @@ EW::EW(std::stringstream &fileName, vector<Source*> & a_GlobalSources,
   m_anisotropic(false),
   NO_TOPO(1e38)
 {
+
+   m_Topo = topo;
 
    mName << fileName.rdbuf();
   
@@ -5147,10 +5149,46 @@ void EW::extractTopographyFromcTMap()
     Sarray gridElev;
     double *yv, *xv;
 
+    Nx = m_Topo->nrCols() +1;
+    Ny = m_Topo->nrRows() +1;
 
-    gridElev.define(1,1,Nx,1,Ny,1,1);
-    gridElev(1,i,j,1) = 1.0;
+    yv = new double[Ny+2];
+    xv = new double[Nx+2];
+    gridElev.define(1,1,Nx+1,1,Ny+1,1,1);
 
+    std::cout << "define topo "<< std::endl;
+    for (j=1; j<=Ny+1; j++)
+    {
+       for (i=1; i<=Nx+1; i++)
+       {
+           int i_c = std::max(0,std::min(m_Topo->nrCols(),i));
+           int j_r = std::max(0,std::min(m_Topo->nrRows(),j));
+
+           if(m_Topo->cellSizeX() > 0.0)
+           {
+               xv[i] = m_Topo->cellSizeX() * ((float)(i-1));
+           }else
+           {
+               xv[i] = std::fabs(m_Topo->cellSizeX()) * ((float)(i-1));
+               i_c = std::max(0,std::min(m_Topo->nrCols(),m_Topo->nrCols()-1 -i));
+               //xv[i] = ((float)(m_Topo->nrCols())) * m_Topo->cellSizeX() - m_Topo->cellSizeX() * ((float)(i));
+           }
+           if(m_Topo->cellSizeY() > 0.0)
+           {
+               yv[j] = m_Topo->cellSizeY() * ((float)(j-1));
+           }else
+           {
+               yv[j] = std::fabs(m_Topo->cellSizeY()) * ((float)(j-1));
+               j_r = std::max(0,std::min(m_Topo->nrRows(),m_Topo->nrRows()-1-j));
+               //yv[j] = ((float)(m_Topo->nrRows())) * m_Topo->cellSizeY() - m_Topo->cellSizeY() * ((float)(j));
+           }
+
+           gridElev(1,i,j,1) = m_Topo->data[j_r][i_c];
+       }
+    }
+
+
+    std::cout << "define topo done "<< std::endl;
 
     double xMax=-999e10, xMin=999e10, yMax=-999e10, yMin=999e10, elevMax=-1e10, elevMin=1e10;
     for (i=1; i<=Nx; i++)
@@ -5371,7 +5409,7 @@ void EW::extractTopographyFromCartesianFile(string a_topoFileName)
    int Nx, Ny, i, j;
    Sarray gridElev;
    double *yv, *xv;
-  
+
    FILE *gridfile = fopen(a_topoFileName.c_str(),"r");
   
    fscanf(gridfile, "%i %i", &Nx, &Ny);

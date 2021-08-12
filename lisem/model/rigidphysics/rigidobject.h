@@ -193,6 +193,28 @@ public:
         return 0.0;
     }
 
+    inline bool Contains(LSMVector3 pos)
+    {
+        //get the rotation and position of this body
+
+
+        //transform pos to local coordinate system
+        ChVector<double> relpos = m_chBody->Point_World2Body(ChVector<double>(pos.x,pos.y,pos.z));
+
+        std::cout << "rel pos " << relpos[0] << " " << relpos[1] << " " << relpos[2] << std::endl;
+        //ask triangulated model
+        return this->m_TriangulatedModel->IsPointInside(LSMVector3(relpos[0],relpos[1],relpos[2]));
+    }
+
+    inline LSMVector3 GetLocalLinearVelocity(LSMVector3 pos)
+    {
+
+        ChVector<double> relpos = m_chBody->Point_World2Body(ChVector<double>(pos.x,pos.y,pos.z));
+        ChVector<double> absvel = m_chBody->PointSpeedLocalToParent(relpos);
+
+        return LSMVector3(absvel[0],absvel[1],absvel[2]);
+
+    }
 
     inline double GetConfinedVolume(BoundingBox & region, float h, float dhdx, float dhdz)
     {
@@ -486,7 +508,7 @@ public:
         ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
         LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
-        ret->m_TriangulatedModel = gmodel;
+        ret->m_TriangulatedModel = gmodel->GetCopy();
         return ret;
 
     }

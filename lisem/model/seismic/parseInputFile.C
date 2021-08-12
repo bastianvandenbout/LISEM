@@ -343,6 +343,9 @@ bool EW::parseInputFile( vector<Source*> & a_GlobalUniqueSources,
      else if (m_topoInputStyle == EW::TopoImage)
      {
  	extractTopographyFromImageFile(m_topoFileName);
+     }else if (m_topoInputStyle == EW::LISEM)
+     {
+    extractTopographyFromcTMap();
      }
      else if (m_topoInputStyle == EW::GaussianHill) // assumed to populate all grid points
      {
@@ -1501,7 +1504,11 @@ void EW::processTopography(char* buffer)
 	  {
 	     m_topoInputStyle=GaussianHill;
 	     m_topography_exists=true;
-	  }
+      }else if (strcmp("LISEM", token) == 0)
+      {
+         m_topoInputStyle=LISEM;
+         m_topography_exists=true;
+      }
 	  else
 	  {
 	     badOption("topography> input", token);

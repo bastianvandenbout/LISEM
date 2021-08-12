@@ -7,8 +7,7 @@
 #include "openglclmanager.h"
 #include "QPixmap"
 #include "raster/rasterseismic.h"
-
-//#include "extensions/scriptarrayhelpers.h"
+#include "extensions/scriptarrayhelpers.h"
 
 //AS_MODELRESULT RequestStartAndWait(QList<QString> options, RigidPhysicsWorld * world = nullptr);
 //AS_MODELRESULT RequestStartAndWait(QString file, QString add_options, RigidPhysicsWorld * world = nullptr);
@@ -211,8 +210,13 @@ inline void RegisterModelScriptFunctions(LSMScriptEngine *sm)
 
     sm->RegisterGlobalFunction("ModelRes RunModel(string runfile, RigidModel &in rm, string additional_options = \"\")", asFUNCTIONPR(StartModelFromRunFile,(QString,RigidPhysicsWorld *,QString),AS_MODELRESULT),  asCALL_CDECL); assert( r >= 0 );
 
+    sm->RegisterGlobalSTDFunction("array<Field> @RigidWorldToField(const RigidModel &in rm, Field &in ref)", GetFuncConvert(RigidWorldToField)); assert( r >= 0 );
+    sm->RegisterGlobalSTDFunction("void RigidWorldApplyPressure(const RigidModel &in rm, Field &in Block, Field &in Pressure)", GetFuncConvert(RigidWorldApplyPressureField)); assert( r >= 0 );
 
-/*
+
+
+
+
     //register object type
     sm->RegisterObjectType("SeismicModel",0,asOBJ_REF );// | asGetTypeTraits<cTMap>()
 
@@ -224,8 +228,12 @@ inline void RegisterModelScriptFunctions(LSMScriptEngine *sm)
     sm->RegisterObjectBehaviour("SeismicModel",asBEHAVE_RELEASE,"void f()",asMETHOD(SeismicModel,AS_ReleaseRef),asCALL_THISCALL); assert( r >= 0 );
 
     sm->RegisterObjectMethod("SeismicModel", "SeismicModel& opAssign(SeismicModel &in m)", asMETHODPR(SeismicModel,AS_Assign,(SeismicModel *),SeismicModel*), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("SeismicModel", "void Step(float dt)", asMETHODPR(SeismicModel,Step,(float),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("SeismicModel", "void AddVelocityModel(const Field &in vp, const Field &in vs, const Field &in dens)", asMETHODPR(SeismicModel,AddVelocityModel,(Field *, Field*, Field*),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("SeismicModel", "void SetTopography(const Map &in dem)", asMETHODPR(SeismicModel,SetTopography,(cTMap*),void), asCALL_THISCALL); assert( r >= 0 );
 
-*/
+    sm->RegisterObjectMethod("SeismicModel", "void AddPointSource(float x, float y, float z, float Mxx, float Myy, float Mzz, float Mxy, float Mxz, float Myz, float t, float freq, string type = \"C6SmoothBump\")", asMETHOD(SeismicModel,AddSourcePoint), asCALL_THISCALL); assert( r >= 0 );
+
 }
 
 
