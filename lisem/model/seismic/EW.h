@@ -745,7 +745,7 @@ std::vector<Sarray> mRho;
 std::vector<Sarray> mC; // Anisotropic material parameters
 Sarray mCcurv; // Anisotropic material with metric (on curvilinear grid).
 
-private:
+public:
 void preprocessSources( std::vector<Source*> & a_GlobalSources );
 void revvector( int npts, double* v );
 // epicenter

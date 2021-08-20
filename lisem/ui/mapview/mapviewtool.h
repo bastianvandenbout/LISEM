@@ -963,6 +963,7 @@ public:
                         m_WorldWindow->m_UILayerMutex.lock();
                         std::cout << "do direct replace " << std::endl;
                         lrs->DirectReplace(m->GetCopy());
+
                         m_WorldWindow->m_UILayerMutex.unlock();
                         return;
                     }

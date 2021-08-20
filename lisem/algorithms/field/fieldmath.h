@@ -140,37 +140,399 @@ inline Field * AS_Fieldismv(Field * Other)
 }
 
 
+inline Field * AS_FieldXCoord(Field * Other)
+{
+    Field *nmap;
+    nmap = Other->GetCopy();
 
-/*
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] = Other->GetWest() + Other->cellSizeX() * (float(c));
+                }
+            }
+        }
+    }
+
+    return nmap;
+
+}
+
+inline Field * AS_FieldYCoord(Field * Other)
+{
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] = Other->GetNorth() + Other->cellSizeY() * (float(r));
+                }
+            }
+        }
+    }
+
+    return nmap;
+
+}
+
+inline Field * AS_FieldZCoord(Field * Other)
+{
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] = Other->GetBottom() + Other->cellSizeZ() * (float(i));
+                }
+            }
+        }
+    }
+
+    return nmap;
+
+}
+
 
 inline Field * AS_FieldIf(Field * Other, Field * iftrue, Field * iffalse)
 {
-    return ApplySingleFunctionToField(Other,[](float x){return sinf(x);});
+
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other->at(i)->data[r][c])? iftrue->at(i)->data[r][c]:iffalse->at(i)->data[r][c];
+                }
+            }
+        }
+    }
+
+    return nmap;
+
 }
 
 inline Field * AS_FieldIf(Field * Other, float iftrue, Field * iffalse)
 {
-    return ApplySingleFunctionToField(Other,[](float x){return sinf(x);});
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other->at(i)->data[r][c])? iftrue:iffalse->at(i)->data[r][c];
+                }
+            }
+        }
+    }
+
+    return nmap;
 }
 
 inline Field * AS_FieldIf(Field * Other, Field * iftrue, float iffalse)
 {
-    return ApplySingleFunctionToField(Other,[](float x){return sinf(x);});
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other->at(i)->data[r][c])? iftrue->at(i)->data[r][c]:iffalse;
+                }
+            }
+        }
+    }
+
+    return nmap;
 }
+
+inline Field * AS_FieldIf(Field * Other, float iftrue, float iffalse)
+{
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other->at(i)->data[r][c])? iftrue:iffalse;
+                }
+            }
+        }
+    }
+
+    return nmap;
+}
+
 
 inline Field * AS_FieldIf(float Other, Field * iftrue, Field * iffalse)
 {
-    return ApplySingleFunctionToField(Other,[](float x){return sinf(x);});
+    Field *nmap;
+    nmap = iftrue->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < iftrue->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < iftrue->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < iftrue->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(iftrue->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other)? iftrue->at(i)->data[r][c]:iffalse->at(i)->data[r][c];
+                }
+            }
+        }
+    }
+
+    return nmap;
 }
 
 inline Field * AS_FieldIf(float Other, float iftrue, Field * iffalse)
 {
-    return ApplySingleFunctionToField(Other,[](float x){return sinf(x);});
+    Field *nmap;
+    nmap = iffalse->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < iffalse->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < iffalse->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < iffalse->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(iffalse->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other)? iftrue:iffalse->at(i)->data[r][c];
+                }
+            }
+        }
+    }
+
+    return nmap;
 }
 
 inline Field * AS_FieldIf(float Other, Field * iftrue, float iffalse)
 {
-    return ApplySingleFunctionToField(Other,[](float x){return sinf(x);});
-}*/
+    Field *nmap;
+    nmap = iftrue->GetCopy();
+
+
+    //do actual calculation loop
+    for(int i = 0; i < iftrue->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < iftrue->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < iftrue->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(iftrue->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other)? iftrue->at(i)->data[r][c]:iffalse;
+                }
+            }
+        }
+    }
+
+    return nmap;
+}
+
+inline Field * AS_FieldIf(Field* Other, Field * iftrue)
+{
+    Field *nmap;
+    nmap = iftrue->GetCopy();
+
+    float mv = 0.0;
+    pcr::setMV(mv);
+
+    //do actual calculation loop
+    for(int i = 0; i < iftrue->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < iftrue->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < iftrue->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(iftrue->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other->at(i)->data[r][c])? iftrue->at(i)->data[r][c]:mv;
+                }
+            }
+        }
+    }
+
+    return nmap;
+}
+
+
+inline Field * AS_FieldIf(float Other, Field * iftrue)
+{
+    Field *nmap;
+    nmap = iftrue->GetCopy();
+
+    float mv = 0.0;
+    pcr::setMV(mv);
+
+    //do actual calculation loop
+    for(int i = 0; i < iftrue->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < iftrue->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < iftrue->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(iftrue->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other)? iftrue->at(i)->data[r][c]:mv;
+                }
+            }
+        }
+    }
+
+    return nmap;
+}
+
+
+inline Field * AS_FieldIf(Field * Other, float iftrue)
+{
+    Field *nmap;
+    nmap = Other->GetCopy();
+
+    float mv = 0.0;
+    pcr::setMV(mv);
+
+    //do actual calculation loop
+    for(int i = 0; i < Other->nrLevels(); i++)
+    {
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < Other->at(i)->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->at(i)->data.nr_cols();c++)
+            {
+                if(pcr::isMV(Other->at(i)->data[r][c]) )
+                {
+                    pcr::setMV(nmap->at(i)->data[r][c]);
+                }else
+                {
+                    nmap->at(i)->data[r][c] =LISEM_ASMAP_BOOLFROMFLOAT(Other->at(i)->data[r][c])? iftrue:mv;
+                }
+            }
+        }
+    }
+
+    return nmap;
+}
+
+
+
 
 #endif // FIELDMATH_H

@@ -54,7 +54,12 @@ public:
         {
             m_Maps.push_back(f->m_Maps.at(i)->GetCopy());
         }
+        if(m_Maps.size() > 0)
+        {
 
+            this->m_BoundingBox = m_Maps.at(0)->GetBoundingBox();
+            this->m_Projection = m_Maps.at(0)->GetProjection();
+        }
     }
 
     inline void CopyFrom0(Field * f)
@@ -69,7 +74,12 @@ public:
         {
             m_Maps.push_back(f->m_Maps.at(i)->GetCopy0());
         }
+        if(m_Maps.size() > 0)
+        {
 
+            this->m_BoundingBox = m_Maps.at(0)->GetBoundingBox();
+            this->m_Projection = m_Maps.at(0)->GetProjection();
+        }
     }
 
     inline Field * GetCopy()
@@ -115,8 +125,8 @@ public:
             }
         }
         m_Maps = maps;
-        m_ZStart = 0.0;
-        m_dz = 1.0;
+        m_ZStart = z_start;
+        m_dz = dz;
 
     }
     inline float GetWest()
@@ -130,7 +140,7 @@ public:
         }
     }
 
-    inline float ValueAt(int l, int r, int c)
+    inline float &ValueAt(int l, int r, int c)
     {
         return m_Maps.at(l)->data[r][c];
     }
@@ -214,6 +224,48 @@ public:
 
 
 
+    inline void SetCellSizeX(double dx)
+    {
+        for(int i = 0; i < m_Maps.size(); i++)
+        {
+            m_Maps.at(i)->setcellSizeX(dx);
+        }
+
+    }
+    inline void SetCellSizeY(double dy)
+    {
+        for(int i = 0; i < m_Maps.size(); i++)
+        {
+            m_Maps.at(i)->setcellSizeY(dy);
+        }
+
+    }
+    inline void SetCellSizeZ(double dz)
+    {
+        this->m_dz = dz;
+
+    }
+
+    inline void SetWest(double x)
+    {
+        for(int i = 0; i < m_Maps.size(); i++)
+        {
+            m_Maps.at(i)->setwest(x);
+        }
+
+    }
+    inline void SetNorth(double y)
+    {
+        for(int i = 0; i < m_Maps.size(); i++)
+        {
+            m_Maps.at(i)->setnorth(y);
+        }
+
+    }
+    inline void SetBottom(double z)
+    {
+        this->m_ZStart = z;
+    }
     inline BoundingBox3D GetAABB()
     {
         return BoundingBox3D(GetWest(),GetWest() + GetSizeX(),GetBottom(),GetBottom()+GetSizeZ(),GetNorth(),GetSizeY());
@@ -451,6 +503,23 @@ inline static Field * FieldFactory2(int levels, int rows, int cols, float z0, fl
     return f;
 }
 
+
+inline static Field * FieldFromMap(cTMap * m, int layers, float z_start, float dz)
+{
+    std::vector<cTMap *> maps;
+
+    for(int i = 0; i < layers; i++)
+    {
+        maps.push_back(m->GetCopy());
+    }
+
+    Field * f = new Field();
+
+    f->SetFromMapList(maps,z_start,dz,false);
+
+    return f;
+
+}
 
 inline static Field * FieldFromMapList(std::vector<cTMap *> maps, float z_start, float dz)
 {

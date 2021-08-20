@@ -1414,8 +1414,7 @@ inline Field * AS_FieldMaskDem(Field * map,cTMap * DEM, float value)
                  for(int i = 0;i < maps.size(); i++)
                  {
 
-                     float z = z_min + ((float)(i) * (z_max-z_min));
-
+                     float z = z_min + ((float)(i) * (z_max-z_min))/((float)( map->nrLevels()));
                      if(z < DEM->data[r][c])
                      {
                          res->at(i)->data[r][c] = value;

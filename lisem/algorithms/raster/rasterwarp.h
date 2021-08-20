@@ -952,3 +952,46 @@ inline static cTMap * AS_SetRasterULC(cTMap * m, double x, double y)
     return nmap;
 
 }
+
+
+#include "geo/raster/field.h"
+
+inline static LSMVector3 AS_GetFieldCellSize(Field *m)
+{
+    return LSMVector3(m->cellSizeX(),m->cellSizeY(), m->cellSizeZ());
+}
+
+
+inline static LSMVector3 AS_GetFieldULC(Field *m)
+{
+
+    return LSMVector3(m->GetWest(),m->GetNorth(),m->GetBottom());
+}
+
+inline static Field * AS_SetFieldCellSize(Field * m, double dx, double dy, double dz)
+{
+    if(dy == 0.0)
+    {
+        dy = dx;
+    }
+    if(dz == 0.0)
+    {
+        dz = dx;
+    }
+
+    Field * ret = m->GetCopy();
+    ret->SetCellSizeX(dx);
+    ret->SetCellSizeY(dy);
+    ret->SetCellSizeZ(dz);
+    return ret;
+}
+
+inline static Field * AS_SetFieldULC(Field * m, double x, double y, double z)
+{
+    Field * ret = m->GetCopy();
+    ret->SetWest(x);
+    ret->SetNorth(y);
+    ret->SetBottom(z);
+    return ret;
+
+}

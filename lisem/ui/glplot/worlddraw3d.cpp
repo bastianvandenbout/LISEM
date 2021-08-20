@@ -23,6 +23,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glad_glClearColor(0.5,0.5,1.0,1.0);
 
+
     glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_3DFrameBuffer->GetFrameBuffer());
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glad_glDisable(GL_DEPTH_TEST);
@@ -35,8 +36,9 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     }
     glad_glViewport(0,0,s.scr_pixwidth,s.scr_pixheight);
 
-    s.GL_3DFrameBuffer->ClearAll();
+
     s.GL_3DFrameBuffer->SetAsTarget();
+    s.GL_3DFrameBuffer->ClearAll();
 
     DrawBaseLayers3D(s);
 
@@ -403,7 +405,7 @@ void WorldWindow::Draw3DObjects(GeoWindowState s)
                 l->OnPrepare(m_OpenGLCLManager,s);
             }
 
-            if(l->ShouldBeRemoved() == false && l->Exists())
+            if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                     l->OnDraw3DGeo(m_OpenGLCLManager,s, m_TransformManager);
             }
@@ -422,7 +424,7 @@ void WorldWindow::Draw3DObjects(GeoWindowState s)
                 l->OnPrepare(m_OpenGLCLManager,s);
             }
 
-            if(l->ShouldBeRemoved() == false && l->Exists())
+            if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                     l->OnDraw3DGeo(m_OpenGLCLManager,s, m_TransformManager);
             }
@@ -442,7 +444,7 @@ void WorldWindow::Draw3DObjects(GeoWindowState s)
                 l->OnPrepare(m_OpenGLCLManager,s);
             }
 
-            if(l->ShouldBeRemoved() == false && l->Exists())
+            if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                     l->OnDraw3DTransparancyDepthMap(m_OpenGLCLManager,s, m_TransformManager);
             }
@@ -459,7 +461,7 @@ void WorldWindow::Draw3DObjects(GeoWindowState s)
                 l->OnPrepare(m_OpenGLCLManager,s);
             }
 
-            if(l->ShouldBeRemoved() == false && l->Exists())
+            if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                    l->OnDraw3DTransparancyDepthMap(m_OpenGLCLManager,s, m_TransformManager);
             }
@@ -477,7 +479,7 @@ void WorldWindow::Draw3DObjects(GeoWindowState s)
                 l->OnPrepare(m_OpenGLCLManager,s);
             }
 
-            if(l->ShouldBeRemoved() == false && l->Exists())
+            if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                     l->OnDraw3DTransparentLayer(m_OpenGLCLManager,s, m_TransformManager);
             }
@@ -494,7 +496,7 @@ void WorldWindow::Draw3DObjects(GeoWindowState s)
                 l->OnPrepare(m_OpenGLCLManager,s);
             }
 
-            if(l->ShouldBeRemoved() == false && l->Exists())
+            if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                    l->OnDraw3DTransparentLayer(m_OpenGLCLManager,s, m_TransformManager);
             }

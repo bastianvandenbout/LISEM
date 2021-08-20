@@ -233,6 +233,9 @@ inline void RegisterModelScriptFunctions(LSMScriptEngine *sm)
     sm->RegisterObjectMethod("SeismicModel", "void SetTopography(const Map &in dem)", asMETHODPR(SeismicModel,SetTopography,(cTMap*),void), asCALL_THISCALL); assert( r >= 0 );
 
     sm->RegisterObjectMethod("SeismicModel", "void AddPointSource(float x, float y, float z, float Mxx, float Myy, float Mzz, float Mxy, float Mxz, float Myz, float t, float freq, string type = \"C6SmoothBump\")", asMETHOD(SeismicModel,AddSourcePoint), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("SeismicModel", "Field @FillField(Field &in F, string param = \"acc\", bool nearest=false)", asMETHOD(SeismicModel,FillField), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("SeismicModel", "void SetCellSize(float size)", asMETHOD(SeismicModel,SetCellSize), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("SeismicModel", "void SetZMaxFrac(float size)", asMETHOD(SeismicModel,SetZMaxFrac), asCALL_THISCALL); assert( r >= 0 );
 
 }
 

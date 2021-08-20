@@ -14,6 +14,8 @@ inline cTMap * AS_Mapexp(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
+
+#pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -36,6 +38,8 @@ inline cTMap * AS_Maplog(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
+
+#pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -58,6 +62,8 @@ inline cTMap * AS_Maplog10(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
+
+#pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -89,6 +95,8 @@ inline cTMap * AS_Mappow(cTMap * Other,cTMap * Other2)
         MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
         cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
+
+#pragma omp parallel for collapse(2)
         for(int r = 0; r < Other->data.nr_rows();r++)
         {
             for(int c = 0; c < Other->data.nr_cols();c++)
@@ -127,6 +135,8 @@ inline cTMap * AS_Mappow(cTMap * Other,cTMap * Other2)
 
         cTMap * target = nmap;
 
+
+#pragma omp parallel for collapse(2)
         for(int r = 0; r < map1->data.nr_rows();r++)
         {
             for(int c = 0; c < map1->data.nr_cols();c++)
@@ -152,6 +162,8 @@ inline cTMap * AS_Mapsqrt(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
+
+#pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -211,6 +223,7 @@ inline double mapTotal(
     cTMap const& raster)
 {
     double total = 0;
+
     for (int r = 0; r < raster.nrRows(); r++)
     {
         for (int c = 0; c < raster.nrCols(); c++)

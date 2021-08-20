@@ -6,6 +6,7 @@
 #include "QList"
 #include <vector>
 #include <queue>
+#include "linear/lsm_vector3.h"
 
 #define	GRAVITY		9.8
 #define	DT			0.015
@@ -126,17 +127,32 @@ typedef struct cTMap3D
 } cTMap3D;
 
 static inline float hypot3( float a, float b, float c ) {
-    return a*a+b*b+c*c;
+    return std::sqrt(a*a+b*b+c*c);
 }
 
-static void intersect( float x1, float y1, float z1, float x2, float y2,float z2, float &x, float &y, float &z  ) {
+static void intersect( float x1, float y1, float z1, float x2, float y2,float z2, float x3, float y3, float z3, float &x, float &y, float &z  ) {
+
+    //get plane normal
+    LSMVector3 normal  = LSMVector3::CrossProduct(LSMVector3(x1,y1,z1) - LSMVector3(x2,y2,z2),LSMVector3(x3,y3,z3) - LSMVector3(x2,y2,z2)).Normalize();
+
+    LSMVector3 intersect =LSMVector3(x,y,z) -  normal.dot(LSMVector3(x,y,z) - LSMVector3(x1,y1,y2)) * normal;
+    //dot product of plane normal and vector from point on plane to point
+
+    x = intersect.x;
+    y = intersect.y;
+    z = intersect.z;
+}
+
+static void intersect2( float x1, float y1, float z1,float x2, float y2,float z2, float &x, float &y , float &z ) {
     float d = hypot3(x2-x1,y2-y1,z2-z1);
-    float u = ((x-x1)*(x2-x1) + (y-y1)*(y2-y1)+ (z-z1)*(z2-z1))/d;
+    float u = ((x-x1)*(x2-x1) + (y-y1)*(y2-y1) + (z-z1)*(z2-z1))/d;
     u = fmin(1.0,fmax(0.0,u));
     x = x1 + u*(x2-x1);
     y = y1 + u*(y2-y1);
     z = z1 + u*(z2-z1);
 }
+
+
 
 class Fluid2P3D
 {
@@ -148,7 +164,7 @@ public:
     char show_dist = 0;
     char show_grid = 0;
     char show_region = 1;
-    char interpMethd = 0;
+    char interpMethd = 1;
     char do_redistance = 1;
     char do_volumeCorrection = 1;
     char solver_mode = 2;
@@ -161,6 +177,8 @@ public:
     int gy = 0;
     int gz = 0;
     int method = 1;
+
+    double m_DT = DT;
 
     cTMap3D * ux = NULL;		// Access Bracket u[DIM][X][Y] ( Staggered Grid )
     cTMap3D * uy = NULL;
@@ -218,6 +236,19 @@ public:
         }
     };
     typedef std::priority_queue<grid *,std::vector<grid*>,gridComparison> grid_queue;
+
+
+    float m_sx = 1.0;
+    float m_sy = 1.0;
+    float m_sz = 1.0;
+
+    float m_sxr = 1.0;
+    float m_syr = 1.0;
+    float m_szr = 1.0;
+
+    float m_scx = 1.0;
+    float m_scy = 1.0;
+    float m_scz = 1.0;
 
 
     float dx = 1.0;
@@ -308,6 +339,12 @@ public:
 
     }
 
+    inline void SetSizes(float sx, float sy, float sz)
+    {
+        m_sxr = std::fabs(sx);
+        m_syr = std::fabs(sy);
+        m_szr = std::fabs(sz);
+    }
 
     inline void InitializeFromData(std::vector<cTMap *> FH, std::vector<cTMap *> FUx, std::vector<cTMap *> FUy, std::vector<cTMap *> FUz,std::vector<cTMap *> Fp, std::vector<cTMap *> LevelSet, std::vector<cTMap *> Block, std::vector<cTMap *> Blocku, std::vector<cTMap *> Blockv, std::vector<cTMap *> Blockw)
     {
@@ -328,6 +365,10 @@ public:
                 }
             }
         }
+
+        m_sx = 1.0/((float)(gx));
+        m_sy = 1.0/((float)(gy));
+        m_sz = 1.0/((float)(gz));
 
         int nf = 0;
 
@@ -375,7 +416,10 @@ public:
 
         std::cout << "has levelset ? " << has_levelset << " " << nf << std::endl;
         // Redistance...
-        redistance(maxdist);
+        if(!has_levelset)
+        {
+            redistance(maxdist);
+        }
 
         //volume0 = getVolume();
         //y_volume0 = 0.0;
@@ -459,7 +503,7 @@ public:
         uu = (1.0-(x-i))*ux->data[i][j][k] + (x-i)*ux->data[i+1][j][k];
         vv = (1.0-(y-j))*uy->data[i][j][k] + (y-j)*uy->data[i][j+1][k];
         ww = (1.0-(z-k))*uz->data[i][j][k] + (z-k)*uz->data[i][j][k+1];
-        dt = DT;
+        dt = m_DT;
     }
     inline float getVolume() {
         float volume = 0.0;
@@ -531,7 +575,7 @@ public:
                 {
                     if( k>0 && k<gz-1 && (A->data[i][j][k]<0.0 || A->data[i][j][k-1]<0.0))
                     {
-                        uz->data[i][j][k] -= DT * GRAVITY;
+                        uz->data[i][j][k] -= m_DT * GRAVITY;
                     }
                     else
                     {
@@ -609,12 +653,19 @@ public:
         bool updated = false;
 
         // For Neigboring Grids
-        int query[][3] = { {i+1,j,k-1},{i-1,j,k-1},{i,j+1,k-1},{i,j-1,k-1},{i-1,j-1,k-1},{i-1,j+1,k-1},{i+1,j-1,k-1},{i+1,j+1,k-1}, {i+1,j,k},{i-1,j,k},{i,j+1,k},{i,j-1,k},{i-1,j-1,k},{i-1,j+1,k},{i+1,j-1,k},{i+1,j+1,k}, {i+1,j,k+1},{i-1,j,k+1},{i,j+1,k+1},{i,j-1,k+1},{i-1,j-1,k+1},{i-1,j+1,k+1},{i+1,j-1,k+1},{i+1,j+1,k+1},{i,j,k+1},{i,j,k-1}};
+        int query[][3] = { {i+1,j,k-1},{i-1,j,k-1},{i,j+1,k-1},{i,j-1,k-1},
+                           {i-1,j-1,k-1},{i-1,j+1,k-1},{i+1,j-1,k-1},{i+1,j+1,k-1},
+                           {i+1,j,k},{i-1,j,k},{i,j+1,k},{i,j-1,k},
+                           {i-1,j-1,k},{i-1,j+1,k},{i+1,j-1,k},{i+1,j+1,k},
+                           {i+1,j,k+1},{i-1,j,k+1},{i,j+1,k+1},{i,j-1,k+1},
+                           {i-1,j-1,k+1},{i-1,j+1,k+1},{i+1,j-1,k+1},{i+1,j+1,k+1},
+                           {i,j,k+1},{i,j,k-1}};
+
         for( int q=0; q<26; q++ ) {
             int qi = query[q][0];
             int qj = query[q][1];
             int qk = query[q][2];
-            if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz ) {
+            if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz && block->data[qi][qj][qk] < 0.5f ) {
                 float sgn = grids[qi][qj][qk].dist > 0 ? 1.0 : -1.0;
                 // If The Neighborhood Is A Known Grid
                 if( grids[qi][qj][qk].known ) {
@@ -636,6 +687,41 @@ public:
     inline void fastMarch( float tolerance ) {
         // Unknowns
         grid_queue unknowns;
+
+        {
+            int n = 0;
+            int n2 = 0;
+            int n3 = 0;
+            for(int i = 0; i < gx; i++)
+            {
+                for(int j = 0; j < gy; j++)
+                {
+                    for(int k = 0; k < gz; k++)
+                    {
+                        if(grids[i][j][k].known)
+                        {
+                            n++;
+                        }
+
+                        if(grids[i][j][k].known && block->data[i][j][k] > 0.5f)
+                        {
+                            n2 ++;
+                            grids[i][j][k].dist = 1.0;
+
+                        }
+                        if(!grids[i][j][k].known && block->data[i][j][k] > 0.5f)
+                        {
+                            n3 ++;
+                            grids[i][j][k].dist = 1.0;
+                            grids[i][j][k].known = true;
+                        }
+                    }
+                }
+            }
+
+            std::cout << "n flow5a " << n << " " << n2 << " " << n3 << std::endl;
+        }
+
 
         // Compute First Estimate of Distances
         for(int i = 0; i < gx; i++)
@@ -665,25 +751,9 @@ public:
             }
         }
 
-        {
-            int n = 0;
-            for(int i = 0; i < gx; i++)
-            {
-                for(int j = 0; j < gy; j++)
-                {
-                    for(int k = 0; k < gz; k++)
-                    {
-                        if(!std::isfinite(grids[i][j][k].dist))
-                        {
-                            n++;
-                        }
-                    }
-                }
-            }
 
-            std::cout << "n flow5a " << n << std::endl;
-        }
-
+        int nupd = 0;
+        int nins = 0;
 
         // While Unknown Grid Exists
         while( ! unknowns.empty() ) {
@@ -697,23 +767,34 @@ public:
             mingrid->known = true;
 
             // Dilate...
-            int query[][3] = { {i+1,j,k-1},{i-1,j,k-1},{i,j+1,k-1},{i,j-1,k-1},{i-1,j-1,k-1},{i-1,j+1,k-1},{i+1,j-1,k-1},{i+1,j+1,k-1}, {i+1,j,k},{i-1,j,k},{i,j+1,k},{i,j-1,k},{i-1,j-1,k},{i-1,j+1,k},{i+1,j-1,k},{i+1,j+1,k}, {i+1,j,k+1},{i-1,j,k+1},{i,j+1,k+1},{i,j-1,k+1},{i-1,j-1,k+1},{i-1,j+1,k+1},{i+1,j-1,k+1},{i+1,j+1,k+1},{i,j,k+1},{i,j,k-1}};
+            int query[][3] = { {i+1,j,k-1},{i-1,j,k-1},{i,j+1,k-1},{i,j-1,k-1},
+                               {i-1,j-1,k-1},{i-1,j+1,k-1},{i+1,j-1,k-1},{i+1,j+1,k-1},
+                               {i+1,j,k},{i-1,j,k},{i,j+1,k},{i,j-1,k},
+                               {i-1,j-1,k},{i-1,j+1,k},{i+1,j-1,k},{i+1,j+1,k},
+                               {i+1,j,k+1},{i-1,j,k+1},{i,j+1,k+1},{i,j-1,k+1},
+                               {i-1,j-1,k+1},{i-1,j+1,k+1},{i+1,j-1,k+1},{i+1,j+1,k+1},
+                               {i,j,k+1},{i,j,k-1}};
             for( int q=0; q<26; q++ ) {
                 int qi = query[q][0];
                 int qj = query[q][1];
                 int qk = query[q][2];
-                if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz) {
+                if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz && block->data[qi][qj][qk] < 0.5) {
                     if( ! grids[qi][qj][qk].estimated && ! grids[qi][qj][qk].known ) {
                         float pos[3];
                         float dist;
                         if( update_distance(qi,qj,qk,pos,dist)) {
+
                             if( fabs(dist) < tolerance ) {
+                                nupd ++;
                                 grids[qi][qj][qk].dist = dist;
                                 grids[qi][qj][qk].pos[0] = pos[0];
                                 grids[qi][qj][qk].pos[1] = pos[1];
                                 grids[qi][qj][qk].pos[2] = pos[2];
                                 grids[qi][qj][qk].estimated = true;
                                 unknowns.push(&grids[qi][qj][qk]);
+                            }else
+                            {
+                                nins ++;
                             }
                         }
                     }
@@ -738,7 +819,7 @@ public:
                 }
             }
 
-            std::cout << "n flow5b " << n << std::endl;
+            std::cout << "n flow5b " << n <<  " "  << nupd << " " << nins <<  std::endl;
         }
 
 
@@ -891,7 +972,15 @@ public:
                 for(int k = 0; k < gz; k++)
                 {
                     bool farCell = true;
-                    int query[][3] = { {i+1,j,k-1},{i-1,j,k-1},{i,j+1,k-1},{i,j-1,k-1},{i-1,j-1,k-1},{i-1,j+1,k-1},{i+1,j-1,k-1},{i+1,j+1,k-1}, {i+1,j,k},{i-1,j,k},{i,j+1,k},{i,j-1,k},{i-1,j-1,k},{i-1,j+1,k},{i+1,j-1,k},{i+1,j+1,k}, {i+1,j,k+1},{i-1,j,k+1},{i,j+1,k+1},{i,j-1,k+1},{i-1,j-1,k+1},{i-1,j+1,k+1},{i+1,j-1,k+1},{i+1,j+1,k+1},{i,j,k+1},{i,j,k-1}};
+                    int query[][3] = { {i+1,j,k-1},{i-1,j,k-1},{i,j+1,k-1},{i,j-1,k-1},
+                                       {i-1,j-1,k-1},{i-1,j+1,k-1},{i+1,j-1,k-1},{i+1,j+1,k-1},
+
+                                       {i+1,j,k},{i-1,j,k},{i,j+1,k},{i,j-1,k},
+                                       {i-1,j-1,k},{i-1,j+1,k},{i+1,j-1,k},{i+1,j+1,k},
+
+                                       {i+1,j,k+1},{i-1,j,k+1},{i,j+1,k+1},{i,j-1,k+1},
+                                       {i-1,j-1,k+1},{i-1,j+1,k+1},{i+1,j-1,k+1},{i+1,j+1,k+1},
+                                       {i,j,k+1},{i,j,k-1}};
                     int qnum = 26;
                     float pos[qnum][3];
                     bool fnd[qnum];
@@ -900,7 +989,7 @@ public:
                         int qj = query[q][1];
                         int qk = query[q][2];
                         fnd[q] = false;
-                        if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz ) {
+                        if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz && block->data[qi][qj][qk] < 0.5f ) {
                             if( grids[qi][qj][qk].known && grids[qi][qj][qk].dist * grids[i][j][k].dist < 0.0 ) {
                                 farCell = false;
 
@@ -922,10 +1011,16 @@ public:
                     } else {
                         grids[i][j][k].known = true;
                         float mind = 9999.0;
+
+                        //for now, we do not take into account any potential hyperplanes/other shapes that might provide a closer distance to the level set
+                        //then the linear interpolation with direct neighbors.
+                        //the 2d code does this rather nicely
+                        //extending this to 3d would require checking a large number of potential planes
+
                         for ( int q=0; q<qnum; q++ ) {
                             for( int rp=1; rp<26; rp++ ) {
 
-                                if(!((query[q][0]-i == -(query[(q+rp)%qnum][0]-i)) && (query[q][1]-j == -(query[(q+rp)%qnum][1]-j)) && (query[q][2]-k == -(query[(q+rp)%qnum][2]-k))))
+                                /*if(!((query[q][0]-i == -(query[(q+rp)%qnum][0]-i)) && (query[q][1]-j == -(query[(q+rp)%qnum][1]-j)) && (query[q][2]-k == -(query[(q+rp)%qnum][2]-k))))
                                 {
                                     if( fnd[(q+rp)%qnum] && fnd[q] ) {
                                         float x = i*wx;
@@ -942,45 +1037,23 @@ public:
                                         }
                                     }
 
-                                }
+                                }*/
                             }
                         }
 
                         for ( int q=0; q<qnum; q++ ) {
-                            if( !fnd[q])
+                            if( fnd[q])
                             {
-                                bool dothis = true;
-                                for( int rp=1; rp<26; rp++ )
-                                {
-                                    int xd = query[q][0] -  query[(q + rp)%qnum][0];
-                                    int yd = query[q][1] -  query[(q + rp)%qnum][1];
-                                    int zd = query[q][2] -  query[(q + rp)%qnum][2];
-
-                                    if((std::abs(xd) + std::abs(yd) + std::abs(zd)) ==1 )
-                                    {
-                                        if(fnd[(q + rp)%qnum])
-                                        {
-                                            dothis = false;
-                                            break;
-                                        }
-
-                                    }
-
-                                }
-                                if(dothis)
-                                {
-
-                                    float x = pos[(q)][0];
-                                    float y = pos[(q)][1];
-                                    float z = pos[(q)][2];
-                                    float d = hypot3(x-i*wx,y-j*wy,z-k*wz);
-                                    if( d < mind ) {
-                                        mind = d;
-                                        grids[i][j][k].pos[0] = x;
-                                        grids[i][j][k].pos[1] = y;
-                                        grids[i][j][k].pos[2] = z;
-                                        grids[i][j][k].dist = (grids[i][j][k].dist > 0.0 ? 1.0 : -1.0)*fmax(d,1.0e-8);
-                                    }
+                                float x = pos[(q)][0];
+                                float y = pos[(q)][1];
+                                float z = pos[(q)][2];
+                                float d = hypot3(x-i*wx,y-j*wy,z-k*wz);
+                                if( d < mind ) {
+                                    mind = d;
+                                    grids[i][j][k].pos[0] = x;
+                                    grids[i][j][k].pos[1] = y;
+                                    grids[i][j][k].pos[2] = z;
+                                    grids[i][j][k].dist = (grids[i][j][k].dist > 0.0 ? 1.0 : -1.0)*fmax(d,1.0e-8);
                                 }
                             }
                         }
@@ -999,7 +1072,7 @@ public:
                     if( ! grids[i][j][k].known )
                     {
                         grids[i][j][k].dist = 1.0;
-                     }
+                    }
                 }
             }
         }
@@ -1131,6 +1204,14 @@ public:
     }
 
     inline float linear ( cTMap3D *d, float x, float y, float z, int w, int h , int l) {
+        /*x = fmax(0.0,fmin(w,x));
+        y = fmax(0.0,fmin(h,y));
+        int i = std::min(x,((float)(w-2)));
+        int j = std::min(y,((float)(h-2)));
+        int k = std::min(z,((float)(l-2)));
+        return ((i+1-x)*d->data[i][j][k]+(x-i)*d->data[i+1][j][k])*(j+1-y) + ((i+1-x)*d->data[i][j+1][k]+(x-i)*d->data[i+1][j+1][k])*(y-j);
+        */
+
         x = fmax(0.0,fmin(w,x));
         y = fmax(0.0,fmin(h,y));
         z = fmax(0.0,fmin(l,z));
@@ -1234,6 +1315,42 @@ public:
 
         }
 
+        {
+            int n = 0;
+            int n2 = 0;
+            int n4 = 0;
+            int n3 = 0;
+            for(int i = 0; i < gx; i++)
+            {
+                for(int j = 0; j < gy; j++)
+                {
+                    for(int k = 0; k < gz; k++)
+                    {
+
+                        if(grids[i][j][k].dist  == 0.0 && grids[i][j][k].known == true)
+                        {
+                            n++;
+                        }
+                        if(grids[i][j][k].known == true)
+                        {
+                            n3++;
+                        }
+                        if(grids[i][j][k].dist < 0.0 )
+                        {
+                            n4 ++;
+                        }
+                        if(!std::isfinite(grids[i][j][k].dist))
+                        {
+
+                            n2 ++;
+                        }
+                    }
+                }
+            }
+        }
+
+
+
         // Advect
         float wx = 1.0/(gx-1);
         float wy = 1.0/(gy-1);
@@ -1246,14 +1363,14 @@ public:
                 {
                     float x, y,z ;
                     float u, v, w, dt;
-                    x = i*wx;
-                    y = j*wy;
-                    z = k * wz;
+                    x = (i)*wx;//-(1.0/((float(gx))))
+                    y = (j)*wy;
+                    z = (k)*wz;
                     flow( x, y,z, u, v, w,dt );
                     // Semi-Lagragian
-                    x -= dt*u;
-                    y -= dt*v;
-                    z -= dt*w;
+                    x -= dt*u * (1.0/((float(gx-1))*m_sxr)) ;
+                    y -= dt*v * (1.0/((float(gy-1))*m_syr)) ;
+                    z -= dt*w * (1.0/((float(gz-1))*m_szr)) ;
                     x = fmin(1.0,fmax(0.0,x));
                     y = fmin(1.0,fmax(0.0,y));
                     z = fmin(1.0,fmax(0.0,z));
@@ -1298,9 +1415,9 @@ public:
         std::cout << "volume error " << volume0<< "  " << curVolume << std::endl;
 
         float x = (curVolume - volume0)/volume0;
-        y_volume0 += x*DT;
+        y_volume0 += x*m_DT;
 
-        float kp = 2.3 / (25.0 * DT);
+        float kp = 2.3 / (25.0 * m_DT);
         float ki = kp*kp/16.0;
         vdiv = -(kp * x + ki * y_volume0) / (x + 1.0);
     }
@@ -1399,21 +1516,27 @@ public:
     }
 
     inline  void comp_divergence() {
-        float hx = 1.0/gx;
-        float hy = 1.0/gy;
-        float hz = 1.0/gz;
-        std::cout << "do div " << vdiv << std::endl;
+        float hx = m_sx;
+        float hy = m_sy;
+        float hz = m_sz;
+        //std::cout << "do div " << vdiv << std::endl;
         // Swap
 
-        #pragma omp parallel for collapse(3)
+        //#pragma omp parallel for collapse(3)
         for(int i = 0; i < gx; i++)
         {
             for(int j = 0; j < gy; j++)
             {
                 for(int k = 0; k < gz; k++)
                 {
-                    float div = A->data[i][j][k]<0.0 ? (ux->data[i+1][j][k]-ux->data[i][j][k])/(hx) + (uy->data[i][j+1][k]-uy->data[i][j][k])/(hy) + (uz->data[i][j][k+1]-uz->data[i][j][k])/(hz) : 0.0;
-                    d->data[i][j][k] = div - vdiv;
+
+                    float div = A->data[i][j][k]<0.0 ? (ux->data[i+1][j][k]-ux->data[i][j][k])/(m_sxr) + (uy->data[i][j+1][k]-uy->data[i][j][k])/(m_syr) + (uz->data[i][j][k+1]-uz->data[i][j][k])/(m_szr) : 0.0;
+                    d->data[i][j][k] = div;// - vdiv;
+                    if(A->data[i][j][k]<0.0)
+                    {
+                       //std::cout << "vel " << i << "  " << j << " " << k << " " << ux->data[i][j][k] << " " << uy->data[i][j][k] << " " << uz->data[i][j][k] <<  std::endl;
+                       //std::cout << "div " << i << "  " << j << " " << k << " " << div << std::endl;
+                    }
                 }
             }
         }
@@ -1439,9 +1562,9 @@ public:
     }
 
     inline void subtract_pressure() {
-        float hx = 1.0/gx;
-        float hy = 1.0/gy;
-        float hz = 1.0/gz;
+        float hx = m_sx;
+        float hy = m_sy;
+        float hz = m_sz;
 
         #pragma omp parallel for collapse(3)
         for(int i = 0; i < gx+1; i++)
@@ -1458,7 +1581,11 @@ public:
                         pf = A->data[i][j][k] < 0.0 ? p->data[i][j][k] : A->data[i][j][k]/fmin(1.0e-3,A->data[i-1][j][k])*p->data[i-1][j][k];
                         pb = A->data[i-1][j][k] < 0.0 ? p->data[i-1][j][k] : A->data[i-1][j][k]/fmin(1.0e-6,A->data[i][j][k])*p->data[i][j][k];
                     }
-                    ux->data[i][j][k] -= (pf-pb);//(hy*hz);
+
+                    if(!(block->data[i][j][k] > 0.5 || block->data[i-1][j][k] > 0.5))
+                    {
+                    ux->data[i][j][k] -= (pf-pb)/(m_sxr);
+                    }
                 }
 
 
@@ -1482,7 +1609,10 @@ public:
                     pf = A->data[i][j][k] < 0.0 ? p->data[i][j][k] : A->data[i][j][k]/fmin(1.0e-3,A->data[i][j-1][k])*p->data[i][j-1][k];
                     pb = A->data[i][j-1][k] < 0.0 ? p->data[i][j-1][k] : A->data[i][j-1][k]/fmin(1.0e-6,A->data[i][j][k])*p->data[i][j][k];
                 }
-                uy->data[i][j][k] -= (pf-pb);//(hx*hz);
+                if(!(block->data[i][j][k] > 0.5 || block->data[i][j-1][k] > 0.5))
+                {
+                uy->data[i][j][k] -= (pf-pb)/(m_syr);
+                }
             }
             }
             }
@@ -1504,7 +1634,9 @@ public:
                     pf = A->data[i][j][k] < 0.0 ? p->data[i][j][k] : A->data[i][j][k]/fmin(1.0e-3,A->data[i][j][k-1])*p->data[i][j][k-1];
                     pb = A->data[i][j][k-1] < 0.0 ? p->data[i][j][k-1] : A->data[i][j][k-1]/fmin(1.0e-6,A->data[i][j][k])*p->data[i][j][k];
                 }
-                uz->data[i][j][k] -= (pf-pb);//(hy*hx);
+                if(!(block->data[i][j][k] > 0.5 || block->data[i][j][k-1] > 0.5))
+                {uz->data[i][j][k] -= (pf-pb)/(m_szr);
+                }
             }
             }
             }
@@ -1548,7 +1680,7 @@ public:
                 int qi = query[nq][0];
                 int qj = query[nq][1];
                 int qk = query[nq][2];
-                if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz ) {
+                if( qi>=0 && qi<gx && qj>=0 && qj<gy && qk>=0 && qk<gz && block->data[qi][qj][qk] < 0.5f) {
                     if( computed[qi][qj][qk] ) {
                         sumq += _q->data[qi][qj][qk];
                         sum ++;
@@ -1696,16 +1828,18 @@ public:
 
     // Ans = Ax
     inline void compute_Ax( cTMap3D *_A, cTMap3D *_x, cTMap3D *_ans, int nx, int ny, int nz ) {
-        float hx = 1.0/(nx);
-        float hy = 1.0/(ny);
-        float hz = 1.0/(nz);
+        float hx =(m_sxr);
+        float hy =(m_syr);
+        float hz =(m_szr);
+        float h3 = 1.0/(nx*ny*nz);
         for( int i=0; i<nx; i++ ) {
             for( int j=0; j<ny; j++ ) {
                 for( int k=0; k<nz; k++ ) {
                     if( _A->data[i][j][k] < 0.0 ) {
-                        _ans->data[i][j][k] = (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i+1,j,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i-1,j,k,nx,ny,nz))/(hx);
-                        _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j+1,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j-1,k,nx,ny,nz))/(hy);
-                        _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j,k+1,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j,k-1,nx,ny,nz))/(hz);
+                        //_ans->data[i][j][k] = (6.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i+1,j,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i-1,j,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j+1,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j-1,k,nx,ny,nz) -x_ref(_A,_x,i,j,k,i,j,k+1,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j,k-1,nx,ny,nz))/(h3);
+                        _ans->data[i][j][k] = (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i+1,j,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i-1,j,k,nx,ny,nz))/(hx*hx);
+                        _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j+1,k,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j-1,k,nx,ny,nz))/(hy*hy);
+                        _ans->data[i][j][k] += (2.0*_x->data[i][j][k]-x_ref(_A,_x,i,j,k,i,j,k+1,nx,ny,nz)-x_ref(_A,_x,i,j,k,i,j,k-1,nx,ny,nz))/(hz*hz);
 
                     } else {
                         _ans->data[i][j][k] = 0.0;
@@ -1796,7 +1930,7 @@ public:
     }
 
     inline float A_diag( cTMap3D *_A, int i, int j, int k, int nx, int ny, int nz ) {
-        float diag = 8.0;
+        float diag = 6.0;
         if( _A->data[i][j][k] > 0.0 ) return diag;
         int q3[][3] = { {i-1,j,k}, {i+1,j,k}, {i,j-1,k}, {i,j+1,k} , {i,j,k-1}, {i,j,k+1} };
         for( int m=0; m<6; m++ ) {
@@ -1841,7 +1975,7 @@ public:
                         float mtop4 = A_ref(_A,i,j,k-1,i,j,k,nx,ny,nz)*A_ref(_A,i,j-1,k,i,j,k,nx,ny,nz)*A_ref(_A,i,j,k-1,i,j,k,nx,ny,nz)*square(P_ref(_P,i,j,k-1,nx,ny,nz));
 
                         float diag = A_diag( _A, i, j,k, nx,ny ,nz);
-                        float e = diag - square(left) - square(bottom) - square(top)- t*( mleft + mbottom+ mtop1 + mtop2 + mtop3 + mtop4 );
+                        float e = std::max(1e-4f,diag - square(left) - square(bottom) - square(top)- t*( mleft + mbottom+ mtop1 + mtop2 + mtop3 + mtop4 ));
                         if( e < a*diag ) e = diag;
                         _P->data[i][j][k] = 1.0/sqrtf(e);
                         if(!std::isfinite(_P->data[i][j][k]) )
@@ -1942,6 +2076,24 @@ public:
 
     }
 
+
+    inline int  GetCellCount( cTMap3D *_A, int nx, int ny, int nz ) {
+
+        int count = 0;
+        for( int i=0; i<nx; i++ ) {
+            for( int j=0; j<ny; j++ ) {
+                for( int k=0; k<nz; k++ ) {
+                    if( _A->data[i][j][k] < 0.0 )
+                    {
+                        count ++;
+
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
     inline void conjGrad( cTMap3D *_A, cTMap3D *_P, cTMap3D *_x, cTMap3D * _b, int nx,int ny, int nz ) {
         // Pre-allocate Memory
 
@@ -1955,6 +2107,8 @@ public:
         std::cout << "flow3d_conjgrad2 "<< GetMVCells(_A,nx,ny,nz) << " "<< GetMVCells(_P,nx,ny,nz) << " "<< GetMVCells(_x,nx,ny,nz) << " "<< GetMVCells(_b,nx,ny,nz)<<  " "<< GetMVCells(r,nx,ny,nz)<<  " "<< GetMVCells(z,nx,ny,nz)<<  " "<< GetMVCells(s,nx,ny,nz)<< std::endl;
 
 
+        float cellcount = GetCellCount(_A,nx,ny,nz);
+
         float a = product( _A, z, r, nx,ny,nz  );			// a = z . r
         for( int k=0; k<nx*ny*nz; k++ ) {
 
@@ -1964,13 +2118,19 @@ public:
 
             compute_Ax( _A, s, z, nx,ny,nz );				// z = applyA(s)
             std::cout << product( _A, z, s, nx,ny,nz  ) << std::endl;
+
+            float prod = product( _A, z, s, nx,ny,nz  );
+            if(std::fabs(prod) < 1e-20)
+            {
+                break;
+            }
             float alpha = a/product( _A, z, s, nx,ny,nz  );	// alpha = a/(z . s)
             op( _A, _x, s, _x, alpha, nx,ny ,nz );				// p = p + alpha*s
             op( _A, r, z, r, -alpha, nx,ny,nz  );			// r = r - alpha*z;
             float error2 = product( _A, r, r, nx,ny,nz  );	// error2 = r . r
-            std::cout << "error "<< k << "   " << error2/(nx*ny*nz) << std::endl;
+            std::cout << "error "<< k << "   " << error2/(cellcount)  << " " << cellcount << std::endl;
 
-            if( error2/(nx*ny*nz) < 1.0e-6 ) break;
+            if( error2/(cellcount) < 1.0e-10 && k > 35 ) break;
             applyPreconditioner(z,r,_P,_A,nx,ny,nz );			// Apply Conditioner z = f(r)
             float a2 = product( _A, z, r, nx,ny,nz  );		// a2 = z . r
             float beta = a2/a;
@@ -2024,11 +2184,12 @@ public:
     }
 
     inline void semiLagrangian( cTMap3D *_d, cTMap3D*_d0, int width, int height, int length, cTMap3D* u1, cTMap3D * u2,cTMap3D * u3 ) {
-        for( int n=0; n<width*height*length; n++ ) {
-                int i = n%width;
-                int j = (n/width)%height;
-                int k = n/(width*height);
-            _d->data[i][j][k] = interp( _d0, i-gx*u1->data[i][j][k]*DT, j-gy*u2->data[i][j][k]*DT, k-gz*u3->data[i][j][k]*DT,width, height , length);
+        for( int i=0; i<gx; i++ ) {
+            for( int j=0; j<gy; j++ ) {
+                for( int k=0; k<gz; k++ ) {
+            _d->data[i][j][k] = interp( _d0, i-u1->data[i][j][k]*m_DT/m_sxr, j-u2->data[i][j][k]*m_DT/m_syr, k-u3->data[i][j][k]*m_DT/m_szr,width, height , length);
+                }
+            }
         }
     }
 
@@ -2125,47 +2286,40 @@ public:
 
     inline void TimeStep(float dt)
     {
-        std::cout << "flow3d_1 "<< uz->GetAverage() << std::endl;
+        m_scx = m_sxr/m_sx;
+        m_scy = m_syr/m_sy;
+        m_scz = m_szr/m_sz;
+
+        m_DT= dt;
         // Mark Liquid Domain
             markLiquid();
-std::cout << "flow3d_2 "<< uz->GetAverage() << std::endl;
             float av = 0.0;
 
             // Visualize Everything
             //render();
-std::cout << "flow3d_3 "<< uz->GetAverage() << std::endl;
             // Add Gravity Force
             addGravity();
-std::cout << "flow3d_4 "<<uz->GetAverage() <<  std::endl;
             // Compute Volume Error
-            computeVolumeError();
-std::cout << "flow3d_5 "<< uz->GetAverage() << std::endl;
+            //computeVolumeError();
 
             // Solve Fluid
             enforce_boundary();
-std::cout << "flow3d_6 "<< uz->GetAverage() << std::endl;
             comp_divergence();
-std::cout << "flow3d_7 "<<uz->GetAverage() <<  std::endl;
             compute_pressure();
-std::cout << "flow3d_8 "<<uz->GetAverage() <<  std::endl;
             subtract_pressure();
-std::cout << "flow3d_9 "<< uz->GetAverage() << std::endl;
+            comp_divergence();
             enforce_boundary();
-std::cout << "flow3d_10 "<< uz->GetAverage() << std::endl;
             // Extrapolate Quantity
             extrapolateVelocity();
-std::cout << "flow3d_11 "<<uz->GetAverage() <<  std::endl;
             // Advect Flow
             advect_fluid();
-std::cout << "flow3d_12 "<< uz->GetAverage() << std::endl;
             // Advect
             advect();
-std::cout << "flow3d_13"<< uz->GetAverage() << std::endl;
             // Redistancing
             if(do_redistance) {
                 static int wait=0;
                 if(wait++%REDIST==0) {
-                    setMaxDistOfLevelSet();
+                    //setMaxDistOfLevelSet();
                     redistance(maxdist);
                 }
             }

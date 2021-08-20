@@ -1153,11 +1153,13 @@ int n = 0; int n2 = 0;
 
     // Ans = Ax
     inline void compute_Ax( cTMap *_A, cTMap *_x, cTMap *_ans, int nx, int ny ) {
-        float h2 = 1.0/(nx*ny);
+        float hx2 = 1.0/(nx*nx);
+        float hy2 = 1.0/(ny*ny);
         for( int i=0; i<nx; i++ ) {
             for( int j=0; j<ny; j++ ) {
                 if( _A->data[i][j] < 0.0 ) {
-                    _ans->data[i][j] = (4.0*_x->data[i][j]-x_ref(_A,_x,i,j,i+1,j,nx,ny)-x_ref(_A,_x,i,j,i-1,j,nx,ny)-x_ref(_A,_x,i,j,i,j+1,nx,ny)-x_ref(_A,_x,i,j,i,j-1,nx,ny))/h2;
+                    _ans->data[i][j] = (2.0*_x->data[i][j]-x_ref(_A,_x,i,j,i+1,j,nx,ny)-x_ref(_A,_x,i,j,i-1,j,nx,ny))/hx2;
+                    _ans->data[i][j] += (2.0*_x->data[i][j]-x_ref(_A,_x,i,j,i,j+1,nx,ny)-x_ref(_A,_x,i,j,i,j-1,nx,ny))/hy2;
                 } else {
                     _ans->data[i][j] = 0.0;
                 }

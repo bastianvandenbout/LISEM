@@ -105,6 +105,7 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
 #include <iostream>
 #include <iomanip>
 #include <mpi.h>
+#include "linear/lsm_vector3.h"
 
 #define LISEM_SEISMIC_PARAMETER_DENS "DENS"
 #define LISEM_SEISMIC_PARAMETER_VP "VP"
@@ -168,6 +169,12 @@ public:
     std::vector<Field *> m_DENSInputs;
     std::vector<float> m_RefineDepths;
     std::vector<SourcePoint> m_Sources;
+    RasterBandStats topostats;
+    LSMVector3 m_DomainRef;
+
+    float m_CellSize = 0.0;
+    float m_ZMaxFrac = 0.25;
+
     inline SeismicModel()
     {
 
@@ -176,13 +183,24 @@ public:
 
     inline ~SeismicModel()
     {
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Finalize();
     }
 
 
     inline void SetTopography(cTMap * dem)
     {
         m_Topography = dem->GetCopy();
+
+        topostats = m_Topography->GetRasterBandStats(false);
+        if( topostats.n_mv > 0)
+        {
+            LISEMS_ERROR("Can not run seismic simulation for data with missing values");
+            throw 1;
+        }
+        FOR_ROW_COL(m_Topography)
+        {
+           //m_Topography->data[r][c] -= topostats.min + 1e-6;
+        }
     }
 
     inline void AddVelocityModel(Field * vp, Field * vs, Field * dens)
@@ -228,42 +246,232 @@ public:
     {
 
     }
-    inline std::vector<Field *> GetFullFields(QString parameter)
-    {
-
-
-        return {nullptr};
-    }
-
     inline Field * FillField(Field * f,  QString parameter,bool nearest)
     {
 
+        //since there can be many cartesian grids of different sizes, and a curvlinear grid on top,
+        //we must do something more complicated than copying data.
 
+        //Option1: take, for each cell in field, the center, and sample a value.
+        //This is simple but not so ideal for visualizing at lower/higher resolutions
 
+        //Option2!: we go over all the simulation grids, and add to the relevant grid in field (if it exists)
+        //keep count of the number of points actual in the cell.
+        //if this number turns out lower than 2, we do trilinear interpolation
+        //if this number is higher than 2, we average all the contributions of the found values
+        //this works well for alternative resolutions, but will need to go through the full SW4 grids,
+        //even if we are filling only a small field.
+        //Could be made faster by calculating some bounds on the sw4 grid we need to check!
 
-        //by default we do bilinear interpolation
-        for( int g = 0 ; g < m_Simulation->mNumberOfCartesianGrids; g++) // Cartesian grids
+        Field * res = f->GetCopy();
+        Field * resn = f->GetCopy0();
+
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        //only for thread 1, do the memory allocation
+
+        int size = 0;
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+        //get world size
+
+        int worldsize = 1;
+
+        if(worldsize > 1)
         {
-            for( int k = m_Simulation->m_kStart[g]; k <= m_Simulation->m_kEnd[g]; k++ )
+            //we have to get the data from each process
+
+
+                //for each world, get dims
+
+
+
+                //for each world. get data
+
+
+                //for each world, put data in global grid
+
+        }else
+        {
+            std::cout << "sim size " << m_Simulation->m_nz_base <<" " <<  m_Simulation->m_ny_base << " " <<  m_Simulation->m_nx_base <<std::endl;
+
+            //fill the array based on our instance of the EW class
+            for(int g = 0 ; g < m_Simulation->mNumberOfGrids; g++ )
             {
-                  for( int j = m_Simulation->m_jStartInt[g]; j <= m_Simulation->m_jEndInt[g]; j++ )
-                  {
-                        for( int i = m_Simulation->m_iStartInt[g]; i <= m_Simulation->m_iEndInt[g] ; i++ )
-                        {
+                std::cout << "grid " << g << "  " << m_Simulation->m_kStart[g] << " " <<  m_Simulation->m_jEnd[g]<< "  " << m_Simulation->m_jStart[g] << " " <<  m_Simulation->m_kEnd[g]<< "  " << m_Simulation->m_iStart[g] << " " <<  m_Simulation->m_iEnd[g] <<std::endl;
+                for(int k=m_Simulation->m_kStart[g]; k<= m_Simulation->m_kEnd[g]; k++ )
+                     {   for(int j=m_Simulation->m_jStart[g]; j<= m_Simulation->m_jEnd[g]; j++ )
+                         {   for(int i=m_Simulation->m_iStart[g]; i<= m_Simulation->m_iEnd[g]; i++ )
+                            {
+                            if(k < 0 || j < 0 || i < 0)
+                            {
+                                continue;
+                            }
+                            //std::cout << i << " " << j << " " << k << std::endl;
+
+                            double x;
+                            double y;
+                            double z;
+                            double dx;
+                            double dy;
+                            double dz;
+
+                            double val =std::sqrt(m_Simulation->m_Uacc[g](0,i,j,k) * m_Simulation->m_Uacc[g](0,i,j,k) + m_Simulation->m_Uacc[g](1,i,j,k) * m_Simulation->m_Uacc[g](1,i,j,k) + m_Simulation->m_Uacc[g](2,i,j,k) * m_Simulation->m_Uacc[g](2,i,j,k));
 
 
+                            if(g == m_Simulation->mNumberOfGrids-1)
+                            {
+
+                                  x = m_Simulation->mX(i,j,k);
+                                  y = m_Simulation->mY(i,j,k);
+                                  z = m_Simulation->mZ(i,j,k);
+
+                                  dx = m_Simulation->mGridSize[g];
+                                  dy = m_Simulation->mGridSize[g];
+                                  dz = 0.0;
+                                  if(k == m_Simulation->m_kStart[g])
+                                  {
+                                      dz = m_Simulation->mZ(i,j,k+1) - m_Simulation->mZ(i,j,k);
+
+                                  }else if( k == m_Simulation->m_kEnd[g])
+                                  {
+                                      dz = 0.5*(m_Simulation->mZ(i,j,k+1) - m_Simulation->mZ(i,j,k-1));
+                                  }else
+                                  {
+                                      dz = m_Simulation->mZ(i,j,k) - m_Simulation->mZ(i,j,k-1);
+                                  }
+                                  double depth;
+                                  /*if (m_Simulation->m_absoluteDepth)
+                                  {
+                                    depth = z;
+                                  }
+                                  else
+                                  {
+                                      depth = z - m_Simulation->mZ(i,j,1);
+
+                                     }*/
+
+
+                            }else
+                            {
+                                x = (i-1)*m_Simulation->mGridSize[g]                ;
+                                y = (j-1)*m_Simulation->mGridSize[g]                ;
+                                z = m_Simulation->m_zmin[g]+(k-1)*m_Simulation->mGridSize[g];
+
+                                dx = m_Simulation->mGridSize[g];
+                                dy = m_Simulation->mGridSize[g];
+                                dz = m_Simulation->mGridSize[g];
+
+                                double depth;
+                                /*if (m_Simulation->m_absoluteDepth)
+                                {
+                                  depth = z;
+                                }
+                                else
+                                {
+                                    depth = m_Simulation->getDepth(x, y, z, depth);
+                                  }*/
+
+                                //mu_tmp = mMu[g](i,j,k);
+
+                            }
+
+                            //now we emplace it into the field
+                            //convert coordinates to real-world coords
+                            x = x + m_DomainRef.x;
+                            y = y + m_DomainRef.y;
+                            z = z + m_DomainRef.z;
+
+                            //now get indices to the field
+                            int l = (z - res->GetBottom())/(res->cellSizeZ());
+                            int c = (x - res->GetWest())/(res->cellSizeX());
+                            int r = (y - res->GetNorth())/(res->cellSizeY());
+
+                            //increase counter if it is inside
+                            int nl = std::max(1,((int) (0.5+std::fabs(dz/(res->cellSizeZ())))));
+                            int nc = std::max(1,((int) (0.5+std::fabs(dx/(res->cellSizeX())))));
+                            int nr = std::max(1,((int) (0.5+std::fabs(dy/(res->cellSizeY())))));
+
+                            //get window to put the values in
+
+                            int lmin = std::max(0,std::min(res->nrLevels()-1,l - (nl-1)/2));
+                            int lmax = std::max(0,std::min(res->nrLevels(),l + 1 + ((nl)/2)));
+
+                            int rmin = std::max(0,std::min(res->nrRows()-1,r - (nr-1)/2));
+                            int rmax = std::max(0,std::min(res->nrRows(),r + 1 + ((nr)/2)));
+
+                            int cmin = std::max(0,std::min(res->nrCols()-1,c - (nc-1)/2));
+                            int cmax = std::max(0,std::min(res->nrCols(),c + 1 + ((nc)/2)));
+
+                            //loop over this pixel
+
+                            for(int l = lmin; l < lmax; l++)
+                            {
+                                for(int c = cmin; c < cmax; c++)
+                                {
+                                    for(int r = rmin; r < rmax; r++)
+                                    {
+                                        //get the distance
+                                        float xc = (res->GetWest() + ((float)(c)) *res->cellSizeX() - x)/std::max(1e-6,dx);
+                                        float yc = (res->GetNorth() + ((float)(r)) *res->cellSizeY() - y)/std::max(1e-6,dy);
+                                        float zc = (res->GetBottom() + ((float)(l)) *res->cellSizeZ() - z)/std::max(1e-6,dz);
+                                        float dist = sqrt(xc*xc + yc *yc + zc*zc);
+
+                                        //get the weight
+                                        //for bilinear interpolation it is inverse to distance
+                                        //for averaging we can try to estimate the fraction that this value forms of the larger cell
+
+                                        float w;
+                                        if(nl > 1 || nc > 1 || nr > 1)
+                                        {
+                                            w = 1.0f/std::max(1e-10f,dist);
+                                        }else
+                                        {
+                                            w = 1.0;
+                                        }
+                                        resn->at(l)->data[r][c] += w;
+                                        res->at(l)->data[r][c] += w * val;
+
+                                    }
+                                }
+                            }
                         }
                     }
+                }
+            }
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for(int l = 0; l < res->nrLevels(); l++)
+        {
+            for(int c = 0; c < res->nrCols(); c++)
+            {
+                for(int r = 0; r < res->nrRows(); r++)
+                {
+
+
+                }
             }
         }
 
 
 
+        delete resn;
 
-
-        return nullptr;
+        return res;
     }
 
+    inline void SetCellSize(float x)
+    {
+        m_CellSize = x;
+
+    }
+
+    inline void SetZMaxFrac(float x)
+    {
+        m_ZMaxFrac = x;
+    }
     inline void Step(float dt_this)
     {
         if(m_DENSInputs.size() < 1)
@@ -271,13 +479,60 @@ public:
             LISEMS_ERROR("No material model set, at least one material model is required");
             throw 1;
         }
+
+
+
+
+        Field * ref = m_DENSInputs.at(0);
+
+        float min= topostats.min;
+        float max = topostats.max;
+        float bottom = ref->GetBottom();
+        float top = ref->GetBottom() + ref->GetSizeZ();
+
+        if(bottom > top)
+        {
+            float temp = bottom;
+            bottom = top;
+            top = temp;
+        }
+
+        //The Field must be at least lower than the topo bottom
+        //The top of the topo layer might be higher the the field top
+        //The reference of the domain is Field ULX, Field ULY, Topo Bottom Z
+        //the size of the curvlinear layer is equal to (1/5) * TopoBottom - FieldBottom
+
+        //        - Topo Top                   (z= -500 relative to reference of domain)
+        //      -- --
+        //== ---     -----   ==== Field Top
+        //--- Topo Bottom -------              (z= 0 relative to reference of domain)
+        //
+        //~~~~~~~~~~~~~~~~~~~~~~~ Curvlinear ^ (z = 1000 relative to reference of domain)
+        // Field Domain
+        //
+        //======================= Field Bottom (e.g. z= 5000 relative to reference of domain)
+
+        if(min < bottom)
+        {
+            LISEMS_ERROR("Bottom of elevation is lower than elevation")
+            throw 1;
+        }
+
+        float zmax = (min - bottom)* m_ZMaxFrac;
+        float size_z = (min-bottom);
+
+        m_DomainRef = LSMVector3(ref->GetWest(),ref->GetNorth(),min);
+
+        if(m_CellSize < 1e-6)
+        {
+            m_CellSize = std::fabs(ref->cellSizeX());
+        }
+
         //if(m_Time < 1e-20)
         //{
         //    LISEMS_ERROR("Time duration not set or too small for simulation");
         //    throw 1;
         //}
-
-        Field * ref = m_DENSInputs.at(0);
 
         if(first_step)
         {
@@ -306,18 +561,21 @@ public:
             MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
 
 
+
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            std::cout << "bottom " << bottom << " "  << min << " " << max << std::endl;
+
             std::stringstream ss;
 
             //grid
-            ss << "grid nx=" << ref->nrCols() << " ny=" << ref->nrRows() << " nz=" << ref->nrLevels() << " h=" << std::fabs(ref->cellSizeX()) <<  std::endl;
+            ss << "grid x=" << std::fabs(ref->GetSizeX()) << " y=" << std::fabs(ref->GetSizeY()) << " z=" << min - bottom << " h=" << std::fabs(m_CellSize) <<  std::endl;
 
             //time
             ss << "time t=" << 1.0 << std::endl;
 
-
-            float max = m_Topography->GetRasterBandStats(false).max;
             //topography
-            ss << "topography input=LISEM zmax=" << max << " order=3"<<std::endl;
+            ss << "topography input=LISEM zmax=" << zmax << " order=3"<<std::endl;
 
             //material
             //we put a temporary material, later we fill with actual data manually
@@ -345,12 +603,14 @@ public:
             //do part of the solve function that is preparation
 
 
-
+            MPI_Barrier(MPI_COMM_WORLD);
 
 
 
 
         }
+
+        MPI_Barrier(MPI_COMM_WORLD);
 
         std::cout << "step " << std::endl;
         //we require a custom solve that only does the single timestep we want
@@ -360,7 +620,7 @@ public:
 
         m_T += dt;
 
-
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 
 

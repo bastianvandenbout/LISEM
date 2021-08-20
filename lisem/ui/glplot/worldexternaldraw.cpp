@@ -53,6 +53,7 @@ QImage *WorldWindow::DoExternalDraw(GeoWindowState s)
 
         std::cout << "external 3d draw " << External3DRenderTarget->GetFrameBuffer() << std::endl;
 
+        m_CurrentDrawWindowState.GL_FrameBuffer = ExternalTarget;
         m_CurrentDrawWindowState.GL_3DFrameBuffer = External3DRenderTarget;
 
         this->DrawToFrameBuffer3D(m_CurrentDrawWindowState, true);
@@ -63,9 +64,18 @@ QImage *WorldWindow::DoExternalDraw(GeoWindowState s)
     }
 
 
-    ExternalTarget->BlitToTexture();
 
-    QImage * Im = ExternalTarget->ToQImage();
+    QImage * Im;
+
+    //if(s.is_3d)
+    {
+        ExternalTarget->BlitToTexture();
+        Im = ExternalTarget->ToQImage();
+    }/*else
+    {
+        External3DRenderTarget->BlitToTexture();
+        Im = External3DRenderTarget->ToQImage();
+    }*/
 
     glfwMakeContextCurrent(NULL);
 

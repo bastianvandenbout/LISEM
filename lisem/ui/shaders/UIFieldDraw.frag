@@ -34,12 +34,10 @@ uniform highp vec2 cloudSize;
 uniform highp float cloudRoughness;
 uniform highp float cloudOpacity;
 
-uniform sampler2D iChannel0;
-uniform sampler2D iChannel1;
-
-uniform sampler2D iPosX;
-uniform sampler2D iPosY;
-uniform sampler2D iPosZ;
+uniform highp sampler2D ScreenColor;
+uniform highp sampler2D ScreenPosX;
+uniform highp sampler2D ScreenPosY;
+uniform highp sampler2D ScreenPosZ;
 
 uniform sampler3D iTex3D;
 
@@ -182,6 +180,28 @@ vec4 GetColorFromRamp(float val)
 
 bool IsInCube(vec3 boxmin, vec3 boxmax, vec3 pos)
 {
+    //we are working with geo-graphic bounding boxes
+    //the cell sizes might be negative (going in negative direction)
+    //and thus the box size can also be negative!
+        if(boxmin.x > boxmax.x)
+        {
+                float temp = boxmin.x;
+                boxmin.x = boxmax.x;
+                boxmax.x = temp;
+        }
+        if(boxmin.y > boxmax.y)
+        {
+                float temp = boxmin.y;
+                boxmin.y = boxmax.y;
+                boxmax.y = temp;
+        }
+        if(boxmin.z > boxmax.z)
+        {
+                float temp = boxmin.z;
+                boxmin.z = boxmax.z;
+                boxmax.z = temp;
+        }
+
     return (pos.x >= boxmin.x && pos.y >= boxmin.y && pos.z >= boxmin.z)
             && (pos.x <= boxmax.x && pos.y <= boxmax.y && pos.z <= boxmax.z);
 }
@@ -218,6 +238,11 @@ void main() {
 
     vec2 viewportCoord = vec2(gl_FragCoord.x/SResolutionX,gl_FragCoord.y/SResolutionY); //ndc is -1 to 1 in GL. scale for 0 to 1
 
+    vec4 screencolor = texture(ScreenColor,viewportCoord).rgba;
+    vec3 screenwpos = vec3(texture(ScreenPosX,viewportCoord).r,texture(ScreenPosY,viewportCoord).r,texture(ScreenPosZ,viewportCoord).r);
+
+
+
     //get current world position of pixel
     //NOTE: World position is relative to camera in x- and z- directions, as are all positions.
     //this is done to avoid floating point precision artifacts within textures and models
@@ -226,6 +251,12 @@ void main() {
     //see if the camera is inside or outside the box
 
     vec3 wpos =vec3(frag_position.x,frag_position.y-CameraPosition.y,frag_position.z);
+
+
+    float dist_terrain = length(vec3(screenwpos.x,screenwpos.y-CameraPosition.y,screenwpos.z));
+    float dist_flow = length(vec3(wpos.x,wpos.y-CameraPosition.y, wpos.z));
+
+
     vec3 raydir = normalize(wpos);
     float maxlength = sqrt(ObjScale.x*ObjScale.x +ObjScale.y*ObjScale.y +ObjScale.z*ObjScale.z );
 
@@ -243,7 +274,7 @@ void main() {
     vec3 ray_start = cam_in? vec3(0.0,0.0,0.0) : intersects.x * raydir;
 
     //set stopping point of ray
-    vec3 ray_end = intersects.y * raydir;
+    vec3 ray_end = cam_in? intersects.y * raydir : intersects.y * raydir;
 
     vec3 dr = ray_end-ray_start;
 
@@ -256,7 +287,7 @@ void main() {
         //now we can do some marching
         //do the volume render equations, see also gpu gems
 
-        float value = length(dr)/min(abs(ObjScale.x),min(abs(ObjScale.y),abs(ObjScale.z)));//maxlength;
+        float value = 1.0;//length(dr)/min(abs(ObjScale.x),min(abs(ObjScale.y),abs(ObjScale.z)));//maxlength;
         vec4 color = vec4(0.0f,0.0f,0.0f,0.0f);
         float dt = value/(float(MarchingSteps) - 4.0f);
 
@@ -279,6 +310,14 @@ void main() {
 
             //step our ray
             r = r + drstep * step_div;
+
+            //are we still visible due to other drawn objects and terrain?
+            float dist_flow = length(vec3(r.x,r.y, r.z));
+
+            if(((dist_terrain-dist_flow) < 1e-3) && screenwpos.x > -1e20)
+            {
+               break;
+            }
 
 
             //get texture coordinates
@@ -400,13 +439,13 @@ void main() {
             frag_colour = 0.025 *(1.0-color.a) * vec4(value,value,value,value) + (0.975 + 0.025 *(color.a))* vec4(color.r,color.g,color.b,color.a * alpha);
 
         }
-    //float testval = n_colorsteps/5.0f;
+    //float testval = length(screenwpos);
     //frag_colour = vec4(testval,testval,testval,1.0f);
     //frag_colour = vec4(vec3(1.0,0.702,0.278) * (0.4 +0.6 * max(0.0f,dot(normalize(frag_normal),normalize(iSunDir)))),1.0);
 
-    frag_posx = vec4(frag_position.x,frag_position.x,frag_position.x,1.0);
-    frag_posy = vec4(frag_position.y,frag_position.y,frag_position.y,1.0);
-    frag_posz = vec4(frag_position.z,frag_position.z,frag_position.z,1.0) ;
+    frag_posx = vec4(frag_position.x,frag_position.x,frag_position.x,0.0);
+    frag_posy = vec4(frag_position.y,frag_position.y,frag_position.y,0.0);
+    frag_posz = vec4(frag_position.z,frag_position.z,frag_position.z,0.0) ;
 
 
 }

@@ -344,24 +344,31 @@ public:
         glad_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &drawFboId);
         glad_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &readFboId);
 
+        std::vector<GLuint> attachments = std::vector<GLuint>(m_nlayersrgba8 + m_nlayersr32+1);
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+        {
+            GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+i);
+            attachments[i] = colattach;
+        }
+        glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_MSAAId);
+        glad_glDrawBuffers(m_nlayersrgba8 + m_nlayersr32+1,attachments.data());
+
         for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
         {
             if(i == 0)
             {
-                glad_glBindFramebuffer(GL_FRAMEBUFFER,fb_MSAAId);
                 glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glad_glDisable(GL_DEPTH_TEST);
                 glad_glClearColor(0.0,0.0,0.0,0.0);
 
             }else if(i < m_nlayersrgba8+1)
             {
-                glad_glBindFramebuffer(GL_FRAMEBUFFER, fb_Id.at(i));
+                glad_glBindFramebuffer(GL_FRAMEBUFFER, fb_Id.at(i-1));
                 glad_glClear(GL_COLOR_BUFFER_BIT);
                 glad_glDisable(GL_DEPTH_TEST);
                 glad_glClearColor(0.0,0.0,0.0,0.0);
 
             }else {
-                glad_glBindFramebuffer(GL_FRAMEBUFFER, fb_MSAAId);
                 static GLfloat mv[] = {-1e30f, 0.0f, 0.0f, 1.0f};
                 glad_glClearBufferfv(GL_COLOR, i, mv);
             }

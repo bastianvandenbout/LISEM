@@ -92,7 +92,7 @@ inline static QList<cTMap *> CopyQML(QList<cTMap*> in)
      return out;
 }
 
-inline std::vector<Field *> AS_IncompressibleFlow3D(std::vector<Field *> maps,Field* Block, Field* Blockux,Field* Blockuy,Field* Blockuz,float csz, float visc, float diff, float _dt, float courant)
+inline std::vector<Field *> AS_IncompressibleFlow3D(std::vector<Field *> maps,Field* Block, Field* Blockux,Field* Blockuy,Field* Blockuz,float _dt, float visc, float courant)
 {
 
 
@@ -121,8 +121,9 @@ inline std::vector<Field *> AS_IncompressibleFlow3D(std::vector<Field *> maps,Fi
 
     cTMap * HN =DENS.at(0);
 
-    Fluid2P3D f(HN->nrRows(),HN->nrCols(),DENS.size(),std::fabs(HN->cellSizeX()),std::fabs(HN->cellSizeY()),std::fabs(csz));
+    Fluid2P3D f(HN->nrRows(),HN->nrCols(),DENS.size(),std::fabs(HN->cellSizeX()),std::fabs(HN->cellSizeY()),std::fabs(maps.at(0)->cellSizeZ()));
 
+    f.SetSizes(maps.at(0)->cellSizeX(),maps.at(0)->cellSizeY(),maps.at(0)->cellSizeZ());
     f.InitializeFromData(DENS,VX,VY,VZ,P,LS, Block->GetMapList(), Blockux->GetMapList(), Blockuy->GetMapList(), Blockuz->GetMapList());
 
     f.TimeStep(_dt);

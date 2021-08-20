@@ -239,7 +239,7 @@ inline cTMap * AS_MapMinimum(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
-    float min = -1e31;
+    float min = 1e31;
     double n = 0.0;
     bool found = false;
 

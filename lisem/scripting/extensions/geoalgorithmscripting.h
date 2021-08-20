@@ -177,6 +177,12 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @SetULC(const Map &in val, double x, double y)",asFUNCTIONPR( AS_SetRasterULC,(cTMap *,double, double),cTMap *),  asCALL_CDECL);
     r = engine->RegisterGlobalFunction("vec2 ULC(const Map &in val)",asFUNCTIONPR( AS_GetRasterULC,(cTMap *),LSMVector2),  asCALL_CDECL);
 
+    r = engine->RegisterGlobalFunction("Field @SetCellSize(const Field &in val, double dx, double dy=0.0, double dz = 0.0)",asFUNCTIONPR( AS_SetFieldCellSize,(Field *,double, double, double),Field *),  asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("vec3 CellSize(const Field &in val)",asFUNCTIONPR( AS_GetFieldCellSize,(Field *),LSMVector3),  asCALL_CDECL);
+
+    r = engine->RegisterGlobalFunction("Field @SetULC(const Field &in val, double x, double y, double z)",asFUNCTIONPR( AS_SetFieldULC,(Field *,double, double, double),Field *),  asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("vec3 ULC(const Field &in val)",asFUNCTIONPR( AS_GetFieldULC,(Field *),LSMVector3),  asCALL_CDECL);
+
 
     r = engine->RegisterGlobalFunction("Region ClassExtent(const Map &in classes, int classval)",asFUNCTION(AS_GetClassExtent), asCALL_CDECL);
     r = engine->RegisterGlobalFunction("Region ClassCellExtent(const Map &in classes, int classval)",asFUNCTION(AS_GetClassPixelExtent), asCALL_CDECL);

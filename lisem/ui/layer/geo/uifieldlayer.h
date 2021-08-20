@@ -9,6 +9,7 @@
 #include "opengl3dobject.h"
 #include "gl/openglcldatamanager.h"
 #include "openglcltexture3d.h"
+#include "QMutex"
 
 class UIFieldLayer : public UIGeoLayer
 {
@@ -20,6 +21,8 @@ private:
     gl3dObject * m_Actor;
     OpenGLCLTexture3D * m_Texture;
 
+    QMutex m_FieldMutex;
+    bool m_UpdateGLField = false;
     bool m_IsSurface = false;
     double m_Hardness = 10.0;
     float m_Val_Max = 1.0;
@@ -80,28 +83,48 @@ public:
 
     inline void DirectReplace(Field * maps)
     {
-        std::cout << "doing direct replace " << std::endl;
+        m_FieldMutex.lock();
 
         if(m_IsPrepared)
         {
-            delete m_Field;
-
             maps->GetMinMax(&m_Val_Min,&m_Val_Max, &m_Val_Avg);
-            m_Field = maps;
 
-            m_Texture->UpdateDataFromField(maps);
+
+            for(int i = 0; i < maps->nrLevels(); i++)
+            {
+                for(int r = 0; r < maps->nrRows(); r++)
+                {
+                    for(int c = 0; c < maps->nrCols(); c++)
+                    {
+                        m_Field->at(i)->data[r][c] = maps->ValueAt(i,r,c);
+                    }
+                }
+            }
+
         }else
         {
             maps->GetMinMax(&m_Val_Min,&m_Val_Max, &m_Val_Avg);
-            m_Field = maps;
+
+            for(int i = 0; i < maps->nrLevels(); i++)
+            {
+                for(int r = 0; r < maps->nrRows(); r++)
+                {
+                    for(int c = 0; c < maps->nrCols(); c++)
+                    {
+                        m_Field->at(i)->data[r][c] = maps->ValueAt(i,r,c);
+                    }
+                }
+            }
         }
 
+
+        m_UpdateGLField  = true;
+
+
+        m_FieldMutex.unlock();
+
     }
 
-    inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
-    {
-
-    }
     //virtual sub-draw function that is specifically meant for geo-objects
     inline void OnPostDraw3D(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
     {
@@ -115,6 +138,7 @@ public:
 
     inline void OnPrepare(OpenGLCLManager * m,GeoWindowState s) override
     {
+        m_FieldMutex.lock();
         //create cube geometry
         m_Cube = new ModelGeometry();
         LSMMesh me;
@@ -126,17 +150,217 @@ public:
         m_Texture = new OpenGLCLTexture3D();
         m_Texture->CreateFromField(m_Field);
 
+        m_UpdateGLField = false;
+
         m_IsPrepared = true;
 
+        m_FieldMutex.unlock();
     }
-    inline void OnDraw3D(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
+
+    inline void OnDraw(OpenGLCLManager *m, GeoWindowState s) override
     {
+
+        if(m_IsPrepared)
+        {
+            m_FieldMutex.lock();
+
+            m_Texture->UpdateDataFromField(m_Field);
+
+
+            m_UpdateGLField = false;
+
+            m_FieldMutex.unlock();
+
+        }
+
+
+    }
+
+    inline void OnDraw3DTransparentLayer(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
+    {
+
+
+        m_FieldMutex.lock();
+
+        m_Parameters->UpdateParameters();
+
+        std::vector<gl3dMesh *> meshes = m_Actor->GetMeshes();
+
+        glad_glDepthMask(GL_FALSE);
+        glad_glDisable(GL_DEPTH_TEST);
+        glad_glEnable(GL_CULL_FACE);
+        glad_glCullFace(GL_FRONT);
+
+        for(int i = 0; i < meshes.size(); i++)
+        {
+
+            gl3dMesh * mesh = meshes.at(i);
+
+            LSMVector3 camerapos = s.Camera3D->GetPosition();
+            LSMVector3 objpos = LSMVector3(this->m_Field->GetWest(),this->m_Field->GetBottom(),this->m_Field->GetNorth());
+            LSMMatrix4x4 objrotm = LSMMatrix4x4();
+            LSMMatrix4x4 objscale = LSMMatrix4x4();
+            objscale.SetScaling(m_Field->GetSizeX(),m_Field->GetSizeZ(),m_Field->GetSizeY());
+
+
+            LSMMatrix4x4 objtrans;
+            objtrans.Translate(LSMVector3(objpos.x - camerapos.x,objpos.y,objpos.z - camerapos.z));
+            objrotm = objtrans*objrotm *objscale;
+
+            s.GL_3DFrameBuffer->SetAsTarget();
+
+            //check if camera is inside the object
+
+
+            bool cam_in = false;
+
+
+
+            //set shader uniform values
+            OpenGLProgram * program = GLProgram_uifield;
+
+
+            // bind shader
+            glad_glUseProgram(program->m_program);
+
+            glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"OMatrix"),1,GL_FALSE,(float*)(&objrotm));//.GetMatrixDataPtr());
+
+            glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,s.Camera3D->GetProjectionMatrixNoTranslationXZ().GetMatrixDataPtr());
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"SResolutionX"),s.scr_pixwidth);
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"SResolutionY"),s.scr_pixheight);
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"iTime"),s.m_time);
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"isclouds"),0);
+            glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"iSunDir"),s.SunDir.x,s.SunDir.y,s.SunDir.z);
+            glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"ObjTranslate"),objpos.x - camerapos.x,objpos.y,objpos.z  - camerapos.z);
+            glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"ObjScale"),m_Field->GetSizeX(),m_Field->GetSizeZ(),m_Field->GetSizeY());
+
+            glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(0).GetCenterX(),s.Camera3D->GetPosition().y,s.GL_FrameBuffer3DWindow.at(0).GetCenterY());
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"isSurface"),m_IsSurface? 1:0);
+
+
+            LSMStyle style = GetStyle();
+
+            int alpha_loc = glad_glGetUniformLocation(program->m_program,"alpha");
+            glad_glUniform1f(alpha_loc,1.0f-style.GetTransparancy());
+
+            int hard_loc = glad_glGetUniformLocation(program->m_program,"hardness");
+            glad_glUniform1f(hard_loc,m_Hardness);
+
+            for(int i = 0; i <LISEM_GRADIENT_NCOLORS; i++)
+            {
+                QString is = QString::number(i);
+                int colorstop_i_loc = glad_glGetUniformLocation(program->m_program,QString("colorstop_"+ is).toStdString().c_str());
+                int colorstop_ci_loc = glad_glGetUniformLocation(program->m_program,QString("colorstop_c"+ is).toStdString().c_str());
+
+                if(i < style.m_ColorGradientb1.m_Gradient_Stops.length())
+                {
+                    glad_glUniform1f(colorstop_i_loc,style.m_ColorGradientb1.m_Gradient_Stops.at(i));
+                    ColorF c = style.m_ColorGradientb1.m_Gradient_Colors.at(i);
+                    glad_glUniform4f(colorstop_ci_loc,c.r,c.g,c.b,c.a);
+                }else {
+                    glad_glUniform1f(colorstop_i_loc,1e30f);
+                    glad_glUniform4f(colorstop_ci_loc,1.0,1.0,1.0,1.0);
+                }
+            }
+
+
+            float hmax = -1e31f;
+            float hmin = 1e31f;
+
+
+            hmax = m_Val_Max;
+            hmin = m_Val_Min;
+
+            if(!(style.m_Intervalb1.GetMax()  == 0.0f && style.m_Intervalb1.GetMin()  == 0.0f) && style.m_Intervalb1.GetMax()  > style.m_Intervalb1.GetMin() )
+            {
+                hmax = style.m_Intervalb1.GetMax() ;
+                hmin = style.m_Intervalb1.GetMin() ;
+            }
+            int h_max_loc = glad_glGetUniformLocation(program->m_program,"h_max");
+            int h_min_loc = glad_glGetUniformLocation(program->m_program,"h_min");
+
+
+            glad_glUniform1f(h_max_loc,hmax);
+            glad_glUniform1f(h_min_loc,hmin);
+
+
+            glad_glActiveTexture(GL_TEXTURE0);
+            glad_glBindTexture(GL_TEXTURE_3D,m_Texture->m_texgl);
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"iTex3D"),0);
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"ScreenColor"),3);
+            glad_glActiveTexture(GL_TEXTURE3);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(0));
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"ScreenPosX"),4);
+            glad_glActiveTexture(GL_TEXTURE4);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(1));
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"ScreenPosY"),5);
+            glad_glActiveTexture(GL_TEXTURE5);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(2));
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"ScreenPosZ"),6);
+            glad_glActiveTexture(GL_TEXTURE6);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(3));
+
+
+
+            // now render stuff
+            glad_glBindVertexArray(mesh->VAO);
+            glad_glDrawElements(GL_TRIANGLES,mesh->indices.size(),GL_UNSIGNED_INT,0);
+            glad_glBindVertexArray(0);
+
+        }
+
+        glad_glDisable(GL_CULL_FACE);
+        glad_glCullFace(GL_FRONT_AND_BACK);
+
+
+        glad_glDepthMask(GL_TRUE);
+        glad_glEnable(GL_DEPTH_TEST);
+
+
+        m_FieldMutex.unlock();
+
+    }
+
+    inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
+    {
+
+
+        m_FieldMutex.lock();
+
+
+        LSMVector3 ulc = LSMVector3(this->m_Field->GetWest(),this->m_Field->GetBottom(),this->m_Field->GetNorth());
+        LSMVector3 brc = ulc + LSMVector3(m_Field->GetSizeX(),m_Field->GetSizeZ(),m_Field->GetSizeY());
+
+        float ULCX = s.scr_width * ( ulc.x - s.tlx)/s.width;
+        float ULCY = (s.scr_height * (ulc.z - s.tly)/s.height) ;
+        float BRCX = s.scr_width * ( brc.x - s.tlx)/s.width;
+        float BRCY = (s.scr_height * ( brc.z - s.tly)/s.height) ;
+
+        float width_black = std::max(1.0,2.0 * s.ui_scale2d3d);
+
+        //draw black dot on cursor location
+        m->m_ShapePainter->DrawLine(ULCX,ULCY,BRCX,ULCY,width_black,LSMVector4(0.0,0.0,0.0,0.5));
+        m->m_ShapePainter->DrawLine(ULCX,ULCY,ULCX,BRCY,width_black,LSMVector4(0.0,0.0,0.0,0.5));
+        m->m_ShapePainter->DrawLine(BRCX,BRCY,BRCX,ULCY,width_black,LSMVector4(0.0,0.0,0.0,0.5));
+        m->m_ShapePainter->DrawLine(BRCX,BRCY,ULCX,BRCY,width_black,LSMVector4(0.0,0.0,0.0,0.5));
+
+
+        m_FieldMutex.unlock();
 
 
     }
 
     inline void OnDraw3DGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
     {
+
+
+        /*m_FieldMutex.lock();
 
         m_Parameters->UpdateParameters();
 
@@ -246,6 +470,7 @@ public:
 
 
 
+        m_FieldMutex.unlock();*/
 
 
     }
@@ -257,11 +482,6 @@ public:
         m_IsPrepared = false;
     }
 
-    inline void OnDraw(OpenGLCLManager * m,GeoWindowState s) override
-    {
-
-
-    }
 
     inline void OnCRSChanged(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm)
     {

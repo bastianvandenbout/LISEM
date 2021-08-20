@@ -546,7 +546,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowIncompressible(const Map &in M, const Map &in U, const Map &in U, const Map &in P, const Map &in LS, const Map &in Block,const Map &in BlockU,const Map &in BlockV, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(AS_IncompressibleWave));
     r = engine->RegisterGlobalFunction("Map @MVMap(const Map &in M)", asFUNCTIONPR(    AS_MVMap,(cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
-    r = engine->RegisterGlobalSTDFunction("array<Field> @FlowIncompressible3D(array<Field> &in state, Field &in Block,Field &in BlockU,Field &in BlockV,Field &in BlockW, float csz, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(  AS_IncompressibleFlow3D));
+    r = engine->RegisterGlobalSTDFunction("array<Field> @FlowIncompressible3D(array<Field> &in state, Field &in Block,Field &in BlockU,Field &in BlockV,Field &in BlockW, float dt, float visc = 1.0,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(  AS_IncompressibleFlow3D));
 
     engine->RegisterGlobalFunction("Map @Diffusion(const Map&in Value, float coeff, float dt, int iter = 1)", asFUNCTION(AS_Diffusion),  asCALL_CDECL); assert( r >= 0 );;
 

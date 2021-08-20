@@ -9,6 +9,7 @@
 #include "field/fieldtrigonometric.h"
 #include "field/fieldmath.h"
 #include "raster/rasterflow.h"
+#include "field/fieldreduce.h"
 
 inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
 {
@@ -27,6 +28,7 @@ inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
 
     r = engine->RegisterObjectMethod("Field", "Field& opAssign(const Field &in m)", asMETHODPR(Field,Assign,(Field *),Field*), asCALL_THISCALL); assert( r >= 0 );
 
+    r = engine->RegisterGlobalSTDFunction("Field @FieldFromMap(Map &in levels, int levels, float z_start, float dz)", GetFuncConvert(FieldFromMap));
     r = engine->RegisterGlobalSTDFunction("Field @FieldFromMapList(array<Map> &in levels, float z_start, float dz)", GetFuncConvert(FieldFromMapList));
     r = engine->RegisterGlobalSTDFunction("array<Map> @GetMapList(const Field &in field)", GetFuncConvert(MapListFromField));
 
@@ -114,6 +116,22 @@ inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterObjectMethod("Field", "Field& opShrAssign_r(float v)", asMETHODPR(Field,LargerEqualThen_r,(float),Field*), asCALL_THISCALL); assert( r >= 0 );
 
 
+    r = engine->RegisterGlobalFunction("Field @FieldIf(const Field &in m1,const Field &in m2,const Field &in m3)", asFUNCTIONPR( AS_FieldIf,(Field *,Field*,Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(const Field &in m1,const Field &in m2,float)", asFUNCTIONPR( AS_FieldIf,(Field *,Field*,float),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(const Field &in m1,float,const Field &in m3)", asFUNCTIONPR( AS_FieldIf,(Field *,float,Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(float,const Field &in m2,const Field &in m3)", asFUNCTIONPR( AS_FieldIf,(float,Field*,Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(float,float,const Field &in m3)", asFUNCTIONPR( AS_FieldIf,(float,float,Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(const Field &in m1,float,float)", asFUNCTIONPR( AS_FieldIf,(Field *,float,float),Field*),  asCALL_CDECL); assert( r >= 0 );
+
+
+    r = engine->RegisterGlobalFunction("Field @FieldIf(const Field &in m1,const Field &in m2)", asFUNCTIONPR( AS_FieldIf,(Field *,Field*),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(float ,const Field &in m2)", asFUNCTIONPR( AS_FieldIf,(float,Field*),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldIf(const Field &in m1,float)", asFUNCTIONPR( AS_FieldIf,(Field *,float),Field*),  asCALL_CDECL); assert( r >= 0 );
+
+    r = engine->RegisterGlobalFunction("Field @XCoord(const Field &in m1)", asFUNCTIONPR( AS_FieldXCoord,(Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @YCoord(const Field &in m1)", asFUNCTIONPR( AS_FieldYCoord,(Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @ZCoord(const Field &in m1)", asFUNCTIONPR( AS_FieldZCoord,(Field *),Field*),  asCALL_CDECL); assert( r >= 0 );
+
 
 
     //register text conversion for debugging
@@ -155,6 +173,15 @@ inline void RegisterFieldToScriptEngine(LSMScriptEngine *engine)
 
 
     r = engine->RegisterGlobalSTDFunction("Field @FieldMaskDem(Field &in f, const Map &in elevation, float value)", GetFuncConvert( AS_FieldMaskDem));
+
+    r = engine->RegisterGlobalFunction("Map @MaxValueElevation(const Field &in s, float threshold)", asFUNCTION( AS_MaxElevationValueAbove),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @MaxVertical(const Field &in s)", asFUNCTION( AS_MaxValueVertical),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @MinVertical(const Field &in s)", asFUNCTION( AS_MinValueVertical),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @TotalVertical(const Field &in s)", asFUNCTION( AS_VerticalTotal),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Field @FieldCut(const Field &in s, Region r)", asFUNCTION(  AS_FieldSubSection),  asCALL_CDECL); assert( r >= 0 );
+
+    //coordinates and cellsizes
+
 
 
 }
