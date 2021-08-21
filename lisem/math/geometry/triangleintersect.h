@@ -911,10 +911,19 @@ struct Ray
     LSMVector3 orig;
     LSMVector3 dir;
 
-    inline Ray(LSMVector3 begin, LSMVector3 end)
+    inline Ray(LSMVector3 begin, LSMVector3 end, bool is_end = true)
     {
-        orig = begin;
-        dir = end - begin;
+        if(is_end)
+        {
+
+            orig = begin;
+            dir = end - begin;
+        }
+        else
+        {
+            orig = begin;
+            dir = end;
+        }
     }
 };
 

@@ -1633,15 +1633,10 @@ std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref)
 
         fieldbb = BoundingBox3D(fieldbb.GetMinX()- geo_simple.x,fieldbb.GetMaxX()- geo_simple.x,fieldbb.GetMinY(),fieldbb.GetMaxY(),fieldbb.GetMinZ()- geo_simple.y,fieldbb.GetMaxZ()- geo_simple.y);
 
-        std::cout << "obj " << i << " " << fieldbb.GetMinX() <<  " " << fieldbb.GetMaxX() << " " << bb.GetMinX() << " " << bb.GetMaxX() <<  std::endl;
-        std::cout << "obj " << i << " " << fieldbb.GetMinY() <<  " " << fieldbb.GetMaxY() << " " << bb.GetMinY() << " " << bb.GetMaxY() <<  std::endl;
-        std::cout << "obj " << i << " " << fieldbb.GetMinZ() <<  " " << fieldbb.GetMaxZ() << " " << bb.GetMinZ() << " " << bb.GetMaxZ() <<  std::endl;
-
         //overlaps with bounding box of the Field?
         if(bb.Overlaps(fieldbb))
         {
 
-            std::cout << "overlaps " << i << std::endl;
 
             //if contained, get local linear velocity of the body
 
@@ -1694,7 +1689,6 @@ std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref)
 
                         if(obj->Contains(LSMVector3(x,y,z)))
                         {
-                            std::cout << "contains! " << std::endl;
                             LSMVector3 vel = obj->GetLocalLinearVelocity(LSMVector3(x,y,z));
                             Block->at(l)->data[r][c] = 1.0f;
                             BlockU->at(l)->data[r][c] = vel.x;
@@ -1712,6 +1706,20 @@ std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref)
 
 void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field * P)
 {
+
+    //
+    // Currently we approximate the fluid-rigid interface by looking at cell-boundaries.
+    // another more accurate approach is used ofte, where raytracing is done along boundary cells to better approximate the local
+    // normal vector along the surface of the rigid object
+    // this would also allow for a more accurate, sub-cell representation of local volume, although it is not so clear how this
+    // can be easily combined with the current incompressible naviers stokes 3d solver.
+    // a volume of fluid method might be needed to implement this.
+
+
+
+
+
+
     //for each object, get bounding box
 
     BoundingBox3D fieldbb = Block->GetAABB();
@@ -1788,14 +1796,20 @@ void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field
                         float y = Block->GetBottom() + Block->cellSizeZ() * ((float)(l));
                         float z = Block->GetNorth() - geo_simple.y + Block->cellSizeY() * ((float)(r));
 
+                        float signx = Block->cellSizeX() > 0.0? 1.0:-1.0;
+                        float signy = Block->cellSizeY() > 0.0? 1.0:-1.0;
+                        float signz = Block->cellSizeZ() > 0.0? 1.0:-1.0;
+
+
+
                         if(Block->at(l)->data[r][c] > 0.5f)
                         {
                             if(l-1 > 0)
                             {
                                 if(Block->at(l-1)->data[r][c] < 0.5f)
                                 {
-                                    float pressure = P->at(l-1)->data[r][c];
-                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,pressure,0.0),ChVector<double>(x,y,x),false);
+                                    float pressure = signz * P->at(l-1)->data[r][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,pressure,0.0),ChVector<double>(x,y,z),false);
                                 }
                             }
 
@@ -1803,8 +1817,8 @@ void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field
                             {
                                 if(Block->at(l+1)->data[r][c] < 0.5f)
                                 {
-                                    float pressure = P->at(l+1)->data[r][c];
-                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,-pressure,0.0),ChVector<double>(x,y,x),false);
+                                    float pressure = signz * P->at(l+1)->data[r][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,-pressure,0.0),ChVector<double>(x,y,z),false);
                                 }
                             }
 
@@ -1812,8 +1826,8 @@ void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field
                             {
                                 if(Block->at(l)->data[r-1][c] < 0.5f)
                                 {
-                                    float pressure = P->at(l)->data[r-1][c];
-                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,0.0,pressure),ChVector<double>(x,y,x),false);
+                                    float pressure = signy * P->at(l)->data[r-1][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,0.0,pressure),ChVector<double>(x,y,z),false);
                                 }
                             }
 
@@ -1821,8 +1835,8 @@ void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field
                             {
                                 if(Block->at(l)->data[r+1][c] < 0.5f)
                                 {
-                                    float pressure = P->at(l)->data[r+1][c];
-                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,0.0,-pressure),ChVector<double>(x,y,x),false);
+                                    float pressure = signy * P->at(l)->data[r+1][c];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(0.0,0.0,-pressure),ChVector<double>(x,y,z),false);
                                 }
                             }
 
@@ -1831,8 +1845,8 @@ void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field
                             {
                                 if(Block->at(l)->data[r][c-1] < 0.5f)
                                 {
-                                    float pressure = P->at(l)->data[r][c-1];
-                                    obj->m_chBody->Accumulate_force(ChVector<double>(pressure,0.0,0.0),ChVector<double>(x,y,x),false);
+                                    float pressure = signx * P->at(l)->data[r][c-1];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(pressure,0.0,0.0),ChVector<double>(x,y,z),false);
                                 }
                             }
 
@@ -1840,8 +1854,8 @@ void RigidWorldApplyPressureField(RigidPhysicsWorld* world, Field * Block, Field
                             {
                                 if(Block->at(l)->data[r][c+1] < 0.5f)
                                 {
-                                    float pressure = P->at(l)->data[r][c+1];
-                                    obj->m_chBody->Accumulate_force(ChVector<double>(-pressure,0.0,0.0),ChVector<double>(x,y,x),false);
+                                    float pressure = signx* P->at(l)->data[r][c+1];
+                                    obj->m_chBody->Accumulate_force(ChVector<double>(-pressure,0.0,0.0),ChVector<double>(x,y,z),false);
                                 }
                             }
                         }

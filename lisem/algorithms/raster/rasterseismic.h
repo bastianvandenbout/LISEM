@@ -307,7 +307,7 @@ public:
                             {
                                 continue;
                             }
-                            //std::cout << i << " " << j << " " << k << std::endl;
+                            std::cout << i << " " << j << " " << k << std::endl;
 
                             double x;
                             double y;
@@ -319,6 +319,7 @@ public:
                             double val =std::sqrt(m_Simulation->m_Uacc[g](0,i,j,k) * m_Simulation->m_Uacc[g](0,i,j,k) + m_Simulation->m_Uacc[g](1,i,j,k) * m_Simulation->m_Uacc[g](1,i,j,k) + m_Simulation->m_Uacc[g](2,i,j,k) * m_Simulation->m_Uacc[g](2,i,j,k));
 
 
+                                    std::cout << 1 << std::endl;
                             if(g == m_Simulation->mNumberOfGrids-1)
                             {
 
@@ -376,6 +377,8 @@ public:
 
                             }
 
+                            std::cout << 2 << std::endl;
+
                             //now we emplace it into the field
                             //convert coordinates to real-world coords
                             x = x + m_DomainRef.x;
@@ -405,12 +408,15 @@ public:
 
                             //loop over this pixel
 
+                            std::cout <<3 << std::endl;
+
                             for(int l = lmin; l < lmax; l++)
                             {
                                 for(int c = cmin; c < cmax; c++)
                                 {
                                     for(int r = rmin; r < rmax; r++)
                                     {
+                                        std::cout << "inner loop " <<  l  << " "<< r << " " << c << std::endl;
                                         //get the distance
                                         float xc = (res->GetWest() + ((float)(c)) *res->cellSizeX() - x)/std::max(1e-6,dx);
                                         float yc = (res->GetNorth() + ((float)(r)) *res->cellSizeY() - y)/std::max(1e-6,dy);

@@ -248,7 +248,6 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
 
 bool LSMMesh::IsPointInside(LSMVector3 O)
 {
-    std::cout << "is inside mesh?" <<std::endl;
     LSMVector3 Dir = LSMVector3(0.0,1.0,0.0);
     bool found = false;
     float dist_min = 0.0f;
@@ -268,11 +267,12 @@ bool LSMMesh::IsPointInside(LSMVector3 O)
         const LSMVector3& v3 = vertices[i3].position();
 
 
-        float dist = rayTriangleIntersect(Ray(O,Dir),v1,v2,v3);
-        float dist2 = rayTriangleIntersect(Ray(O,Dir),v1,v3,v2);
+        float dist = rayTriangleIntersect(Ray(O,Dir,false),v1,v2,v3);
+        float dist2 = rayTriangleIntersect(Ray(O,Dir,false),v1,v3,v2);
 
         if(std::isfinite(dist))
         {
+
             if(dist > 0.0)
             {
                 n_up ++;
@@ -297,7 +297,6 @@ bool LSMMesh::IsPointInside(LSMVector3 O)
 
     }
 
-    std::cout << n_up << " " << n_down << std::endl;
     if((n_up + n_down) %2 == 0 && n_up %2 == 1 && n_up > 0 && n_down > 0)
     {
         return true;
