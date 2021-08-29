@@ -294,7 +294,7 @@ void EW::solve_prestep( std::vector<Source*> & a_Sources, std::vector<STimeSerie
 
 
     // the Source objects get discretized into GridPointSource objects
-      std::vector<GridPointSource*> m_point_sources;
+      m_point_sources;
 
     // Transfer source terms to each individual grid as point sources at grid points.
       for( unsigned int i=0 ; i < a_Sources.size() ; i++ )

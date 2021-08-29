@@ -1436,9 +1436,9 @@ public:
                     {
                         ux->data[i][j][k] = 0.0;
                     }else {
-                        if(block->data[i+1][j][k] > 0.5f)
+                        if(block->data[i][j][k] > 0.5f)
                         {
-                            ux->data[i][j][k] = std::min(blocku->data[i+1][j][k],ux->data[i][j][k]);
+                            ux->data[i][j][k] = std::min(blocku->data[i][j][k],ux->data[i][j][k]);
 
                         }
                         if(block->data[i-1][j][k] > 0.5f)
@@ -1446,7 +1446,7 @@ public:
                             ux->data[i][j][k] = std::max(blocku->data[i-1][j][k],ux->data[i][j][k]);
 
                         }
-                        if(block->data[i][j][k] > 0.5f)
+                        if(block->data[i][j][k] > 0.5f && block->data[i-1][j][k] > 0.5f)
                         {
                             ux->data[i][j][k] = 0.0;
                         }
@@ -1466,9 +1466,9 @@ public:
                     {
                         uy->data[i][j][k] = 0.0;
                     }else {
-                        if(block->data[i][j+1][k] > 0.5f)
+                        if(block->data[i][j][k] > 0.5f)
                         {
-                            uy->data[i][j][k] = std::min(blockv->data[i][j+1][k],uy->data[i][j][k]);
+                            uy->data[i][j][k] = std::min(blockv->data[i][j][k],uy->data[i][j][k]);
 
                         }
                         if(block->data[i][j-1][k] > 0.5f)
@@ -1476,7 +1476,7 @@ public:
                             uy->data[i][j][k] = std::max(blockv->data[i][j-1][k],uy->data[i][j][k]);
 
                         }
-                        if(block->data[i][j][k] > 0.5f)
+                        if(block->data[i][j][k] > 0.5f && block->data[i][j-1][k] > 0.5f)
                         {
                             uy->data[i][j][k] = 0.0;
                         }
@@ -1495,9 +1495,9 @@ public:
                     {
                         uz->data[i][j][k] = 0.0;
                     }else {
-                        if(block->data[i][j][k+1] > 0.5f)
+                        if(block->data[i][j][k] > 0.5f)
                         {
-                            uz->data[i][j][k] = std::min(blockw->data[i][j][k+1],uz->data[i][j][k]);
+                            uz->data[i][j][k] = std::min(blockw->data[i][j][k],uz->data[i][j][k]);
 
                         }
                         if(block->data[i][j][k-1] > 0.5f)
@@ -1505,7 +1505,7 @@ public:
                             uz->data[i][j][k] = std::max(blockw->data[i][j][k-1],uz->data[i][j][k]);
 
                         }
-                        if(block->data[i][j][k] > 0.5f)
+                        if(block->data[i][j][k] > 0.5f && block->data[i][j][k-1] > 0.5f)
                         {
                             uz->data[i][j][k] = 0.0;
                         }

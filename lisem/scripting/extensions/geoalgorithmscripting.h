@@ -61,9 +61,9 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Shapes @RasterContour(const Map &in s,float interval)", asFUNCTIONPR( AS_RasterContour,(cTMap *,float),ShapeFile*),  asCALL_CDECL);
 
 
-    r = engine->RegisterGlobalSTDFunction("Map @RasterWarp(const Map &in target,array<Map> &in sources, string interpolation = \"linear\")", GetFuncConvert(static_cast<cTMap* (*)(cTMap*,std::vector<cTMap*>,QString)>(&AS_RasterWarp)));
-    r = engine->RegisterGlobalFunction("Map @RasterWarp(const Map &in target,const Map &in sources, string interpolation = \"linear\")", asFUNCTIONPR( AS_RasterWarp,(cTMap *,cTMap*,QString),cTMap *),  asCALL_CDECL);
-
+    r = engine->RegisterGlobalSTDFunction("Map @RasterWarp(const Map &in target,array<Map> &in sources, string interpolation = \"bilinear\")", GetFuncConvert(static_cast<cTMap* (*)(cTMap*,std::vector<cTMap*>,QString)>(&AS_RasterWarp)));
+    r = engine->RegisterGlobalFunction("Map @RasterWarp(const Map &in target,const Map &in sources, string interpolation = \"bilinear\")", asFUNCTIONPR( AS_RasterWarp,(cTMap *,cTMap*,QString),cTMap *),  asCALL_CDECL);
+    r = engine->RegisterGlobalSTDFunction("Map @RasterMerge(array<Map> &in sources, string interpolation = \"bilinear\")", GetFuncConvert(static_cast<cTMap* (*)(std::vector<cTMap*>,QString)>(&AS_RasterMerge)));
 
     r = engine->RegisterGlobalFunction("Shapes @VectorWarp(Shapes &in source,GeoProjection &in CRS)", asFUNCTIONPR( AS_VectorWarp,(ShapeFile*,GeoProjection *),ShapeFile *),  asCALL_CDECL);
     r = engine->RegisterGlobalFunction("Shapes @Segmentize(Shapes &in source,float distancemax)", asFUNCTIONPR( AS_Segmentize,(ShapeFile *,float),ShapeFile *),  asCALL_CDECL);
@@ -199,7 +199,10 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @XSlice(array<Map> &in val, int row, double zmin, double zmax, int levelinterval = 1, int leveloffset = 0)",asFUNCTIONPR( AS_GetXSlice,(std::vector<cTMap*>, int , double , double,int,int),cTMap *),  asCALL_CDECL);
     r = engine->RegisterGlobalFunction("Map @YSlice(array<Map> &in val, int row, double zmin, double zmax, int levelinterval = 1, int leveloffset = 0)",asFUNCTIONPR( AS_GetYSlice,(std::vector<cTMap*>, int , double , double,int,int),cTMap *),  asCALL_CDECL);
 
-    engine->RegisterGlobalFunction("array<Map> @SlopeStabilityIS(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, float sfmax)",asFUNCTIONPR( AS_SlopeStabilityIS,(cTMap*,cTMap*,cTMap*,cTMap*,cTMap*,cTMap*,float),std::vector<cTMap*>),  asCALL_CDECL);
+    engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityIS(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, float sfmax)",GetFuncConvert(AS_SlopeStabilityIS));
+    engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityIFM(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, float sfmax, int iter = 25)",GetFuncConvert(AS_SlopeStabilityIFM));
+    engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityISS(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, const Map&in PGA, float sfmax)", GetFuncConvert(AS_SlopeStabilityISS));
+
     engine->RegisterGlobalFunction("array<Map> @SlopeStabilityRES(const Map & in elevation, const array<Map> &in SoilDepth, const array<Map> &in Cohesion, const array<Map> &in InternalFrictionAngle, const array<Map> &in Density, const array<Map> &in Saturation, const Map&in WaterHeight, float sample_density, float h_min, float h_max, float size_min, float size_max, float size_lat_min, float size_lat_max, float size_vert_min, float size_vert_max, float rot_min, float rot_max, float rot_lat_min, float rot_lat_max, float vol_min)",asFUNCTION( AS_SlopeStabilityRES),  asCALL_CDECL);
 
     engine->RegisterGlobalFunction("Map @TerrainErode(const Map &in DEM, float p_erode, float p_deposit, float p_gravity, float p_tc, float p_evapo, float p_intertia, float p_minslope, float radius)", asFUNCTION(AS_LandscapeErode),asCALL_CDECL);
@@ -207,6 +210,9 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("GeoProjection &GetCRS(const Shapes &in s)",asFUNCTIONPR( AS_GetCRS,(ShapeFile*),GeoProjection*),  asCALL_CDECL);
     engine->RegisterGlobalFunction("Shapes @SetCRS(const Shapes &in s,GeoProjection &in p)",asFUNCTIONPR( AS_SetCRS,(ShapeFile*, GeoProjection*),ShapeFile *),  asCALL_CDECL);
     engine->RegisterGlobalFunction("Region GetRegion(const Shapes &in s)", asFUNCTIONPR( AS_GetRegion,(ShapeFile*),BoundingBox),  asCALL_CDECL); assert( r >= 0 );
+
+
+    engine->RegisterGlobalSTDFunction("array<Map> @GreenAndAmpt(const Map&in WFH, const Map&in Water, const Map&in SoilDepth, const Map&in KSat,  const Map&in ThetaS,  const Map&in Theta,  const Map&in Psi, float dt)", GetFuncConvert(AS_GreenAndAmpt)); assert( r >= 0 );
 
 
     //soil stuff
@@ -220,6 +226,8 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("Map @TextureClass(const Map&in Sand, const Map&in Clay)", asFUNCTION(AS_TextureClass),asCALL_CDECL);
     //wave
     engine->RegisterGlobalFunction("Map @WaveEquation(const Map&in U, const Map&in c, float dt)", asFUNCTION( AS_WaveEquation),  asCALL_CDECL); assert( r >= 0 );
+    engine->RegisterGlobalFunction("Map @GaussianBump(const Map&in m, vec2 point, vec2 size, float intensity, float stdev = 1.0, float time = 0.0)", asFUNCTION( AS_GaussianBump),  asCALL_CDECL); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("Map @SHWaveEquation(const Map&in U, const Map&in SX, const Map&in SY,const Map&in rho, const Map&in mu,float dt)", GetFuncConvert(AS_SHWaveEquation)); assert( r >= 0 );
 
 
     //mesh stuff

@@ -206,6 +206,11 @@ public:
         return this->m_TriangulatedModel->IsPointInside(LSMVector3(relpos[0],relpos[1],relpos[2]));
     }
 
+    inline LSMVector3 GetVelocity()
+    {
+        ChVector<double> vel = m_chBody->GetPos_dt();
+        return LSMVector3(vel[0],vel[1],vel[2]);
+    }
     inline LSMVector3 GetLocalLinearVelocity(LSMVector3 pos)
     {
 
@@ -276,6 +281,7 @@ public:
         ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
         LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+        ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ModelGeometry *model = new ModelGeometry();
         LSMMesh m1;
         m1.SetAsEllipsoidTruncated(1,1,-1,1,0.0,10,10);
@@ -314,6 +320,7 @@ public:
         ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
         LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+        ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ModelGeometry *model = new ModelGeometry();
         LSMMesh m1;
         m1.SetAsEllipsoidTruncated(1,1,-1,1,0.0,10,10);
@@ -353,6 +360,7 @@ public:
         ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
         LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+        ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ModelGeometry *model = new ModelGeometry();
         LSMMesh m1;
         m1.SetAsCone(radius,radius,length/2.0,16);
@@ -392,6 +400,7 @@ public:
         ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
         LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+        ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ModelGeometry *model = new ModelGeometry();
         LSMMesh m1;
         m1.SetAsCube(Size);
@@ -508,6 +517,7 @@ public:
         ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
         LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+        ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ret->m_TriangulatedModel = gmodel->GetCopy();
         return ret;
 
@@ -606,6 +616,7 @@ public:
         ret->m_chBody->SetCollisionModel(cmodel);
         ret->m_chBody->SetCollide(true);
         ret->m_chBody->SetDensity((float)density);
+        //ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ret->m_chBody->SetMass(1.0);
         if(is_static)
         {

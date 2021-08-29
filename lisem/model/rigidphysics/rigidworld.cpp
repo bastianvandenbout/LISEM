@@ -1690,10 +1690,11 @@ std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref)
                         if(obj->Contains(LSMVector3(x,y,z)))
                         {
                             LSMVector3 vel = obj->GetLocalLinearVelocity(LSMVector3(x,y,z));
+
                             Block->at(l)->data[r][c] = 1.0f;
-                            BlockU->at(l)->data[r][c] = vel.x;
-                            BlockV->at(l)->data[r][c] = vel.y;
-                            BlockW->at(l)->data[r][c] = vel.z;
+                            BlockU->at(l)->data[r][c] = vel.x;//Block->cellSizeX()> 0.0?vel.x : -vel.x;
+                            BlockV->at(l)->data[r][c] = vel.z;
+                            BlockW->at(l)->data[r][c] = vel.y;//Block->cellSizeY()> 0.0? vel.y : - vel.y;
                         }
                     }
                 }

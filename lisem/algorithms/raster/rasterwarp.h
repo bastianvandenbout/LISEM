@@ -418,7 +418,7 @@ inline static void RasterWarp(cTMap * target, std::vector<cTMap *> inputmaps, QS
     std::cout << "rasterwarp" << std::endl;
     CPLStringList sl;
     sl.AddString("overwrite");
-    sl.AddNameValue("s",interpolation.toStdString().c_str());
+    sl.AddNameValue("r",interpolation.toStdString().c_str());
 
     GDALWarpAppOptions *warpoptions = GDALWarpAppOptionsNew(sl.List(),nullptr);
 
@@ -517,6 +517,55 @@ inline static cTMap * AS_RasterWarp(cTMap * target, cTMap  * inputmaps, QString 
     return res;
 
 }
+
+inline static cTMap * AS_RasterMerge(std::vector<cTMap *> inputmaps, QString interpolation)
+{
+    //first get a target map that encompasses all the input maps
+
+    if(inputmaps.size() == 0)
+    {
+        LISEMS_ERROR("Can not merge an empty list of maps");
+
+    }
+    BoundingBox b = inputmaps.at(0)->GetBoundingBox();
+    double dx = std::abs(inputmaps.at(0)->cellSizeX());
+    double dy = std::abs(inputmaps.at(0)->cellSizeY());
+    bool dx_is_neg = false;
+    bool dy_is_neg = false;
+    for(int i = 0; i < inputmaps.size(); i++)
+    {
+        b.MergeWith(inputmaps.at(i)->GetBoundingBox());
+
+        if(inputmaps.at(i)->cellSizeX() < 0.0)
+        {
+            dx_is_neg = true;
+        }
+        if(inputmaps.at(i)->cellSizeY() < 0.0)
+        {
+            dy_is_neg = true;
+        }
+
+        dx = std::min(dx,std::abs(inputmaps.at(i)->cellSizeX()));
+        dy = std::min(dy,std::abs(inputmaps.at(i)->cellSizeY()));
+    }
+
+
+    int rows = std::max(1,((int)(b.GetSizeY()/dy)));
+    int cols = std::max(1,((int)(b.GetSizeX()/dx)));
+
+    double west = dx_is_neg? b.GetMaxX():b.GetMinX();
+    double north = dy_is_neg? b.GetMaxY():b.GetMinY();
+    double cell_size = dx_is_neg? -dx:dx;
+    double cell_sizeY  = dy_is_neg? -dy:dy;
+
+    MaskedRaster<float> raster_data(rows,cols, north,west , cell_size, cell_sizeY );
+    cTMap *target = new cTMap(std::move(raster_data),inputmaps.at(0)->GetProjection().GetWKT(),"");
+
+    RasterWarp(target,inputmaps,interpolation);
+
+    return target;
+}
+
 
 inline static std::vector<cTMap *> RasterProject(std::vector<cTMap *> inputmaps, GeoProjection * p, QString interpolation)
 {

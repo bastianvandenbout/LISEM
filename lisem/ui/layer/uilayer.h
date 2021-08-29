@@ -73,6 +73,8 @@ protected:
     QMutex *m_StyleMutex;
     QString m_Name;
 
+    QMutex m_ScriptRefMutex;
+    int m_Scriptref = 0;
 
 
     QString m_File;
@@ -721,5 +723,18 @@ public:
     }
 
 
+    inline void IncreaseScriptRef()
+    {
+        m_ScriptRefMutex.lock();
+        m_Scriptref ++;
+        m_ScriptRefMutex.unlock();
+    }
+
+    inline void DecreaseScriptRef()
+    {
+        m_ScriptRefMutex.lock();
+        m_Scriptref --;
+        m_ScriptRefMutex.unlock();
+    }
 
 };

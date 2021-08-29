@@ -69,12 +69,16 @@ inline static bool PreInitializeGDAL(QString exepath)
         }
     }
 
+    qputenv("HDF5_DISABLE_VERSION_CHECK", "1");
+    qputenv("GDAL_MAX_BAND_COUNT", "1000000");
+
+
     if(found == false)
     {
         QString temp = exepath;
         LISEM_DEBUG("No proj.db found, so setting environment variable PROJ_LIB");
         qputenv("PROJ_LIB",exepath.toStdString().c_str());
-        qputenv("GDAL_MAX_BAND_COUNT", "1000000");
+
         QFileInfo f = QFileInfo(temp + "/proj.db");
         bool exist = f.exists();
         if(exist == true)
@@ -94,6 +98,7 @@ inline static bool InitializeGDAL()
     CPLSetConfigOption("GDAL_DATA",QString(GetSite()+ "//gdal-data").toStdString().c_str());
     CPLSetConfigOption("PROJ_LIB",QString(GetSite()).toStdString().c_str());
     CPLSetConfigOption("GDAL_MAX_BAND_COUNT", "1000000");
+    CPLSetConfigOption("HDF5_DISABLE_VERSION_CHECK", "1");
 
     // GDAL mustn't throw in case of an error.
     CPLSetErrorHandler(GDALERROR);

@@ -21,6 +21,52 @@ static bool UF_OUTORMV(cTMap * map, int r, int c)
     }
     return true;
 }
+static double UF2D_Derivative(cTMap * _dem, int r, int c, int direction,double scale, int calculationside)
+{
+    cTMap * _in = _dem;
+    float _dx = _dem->cellSize();
+    if(UF_OUTORMV(_dem,r,c))
+    {
+        return 0;
+    }
+    if(direction == UF_DIRECTION_X)
+    {
+        if(calculationside == UF_DERIVATIVE_LR)
+        {
+
+            double dx1 = !(UF_OUTORMV(_dem,r,c+1))? _in->data[r][c+1] -_in->Drc :0.0;
+            double dx2 = !(UF_OUTORMV(_dem,r,c-1))? _in->Drc - _in->data[r][c-1] :0.0;
+            return (dx1 + dx2)/(2.0*_dx);
+
+        }else if(calculationside == UF_DERIVATIVE_L)
+        {
+            return (!UF_OUTORMV(_dem,r,c-1))? (_in->Drc -_in->data[r][c-1])/_dx :0.0;
+
+        }else if(calculationside == UF_DERIVATIVE_R)
+        {
+            return (!UF_OUTORMV(_dem,r,c+1))? (_in->data[r][c+1] -_in->Drc)/_dx :0.0;
+
+        }
+    }
+    if(direction == UF_DIRECTION_Y)
+    {
+        if(calculationside == UF_DERIVATIVE_LR)
+        {
+            double dy1 = (!UF_OUTORMV(_dem,r+1,c))? _in->data[r+1][c] -_in->Drc :0.0;
+            double dy2 = (!UF_OUTORMV(_dem,r-1,c))? _in->Drc - _in->data[r-1][c] :0.0;
+            return (dy1 + dy2)/(2.0*_dx);
+
+        }else if(calculationside == UF_DERIVATIVE_L)
+        {
+            return (!UF_OUTORMV(_dem,r-1,c))? (_in->Drc - _in->data[r-1][c])/_dx :0.0;
+
+        }else if(calculationside == UF_DERIVATIVE_R)
+        {
+            return (!UF_OUTORMV(_dem,r+1,c))? (_in->data[r+1][c] -_in->Drc)/_dx :0.0;
+        }
+    }
+    return 0;
+}
 
 static double UF2D_Derivative_scaled(cTMap * _dem, int r, int c, int direction,double scale, int calculationside)
 {

@@ -1041,10 +1041,45 @@ public slots:
 
                 }else if(IsModelFile(file))
                 {
-
+                    //if(loaded > 0)
+                    {
+                        LISEMS_STATUS("3D Model file format");
+                        //LISEMS_STATUS("meshes:    " +QString::number(t->GetNumberOfRows()));
+                        //LISEMS_STATUS("triangles:  " +QString::number(t->GetNumberOfCols()));
+                    }
 
                 }else if(IsFieldFile(file))
                 {
+
+                    std::vector<Field *> f = ReadFieldList(file,"", true);
+
+                    LISEMS_STATUS("Field file format (netcdf-based)");
+
+                    if(f.size() > 0)
+                    {
+                        Field * f0 = f.at(0);
+                        LISEMS_STATUS("fields: " + QString::number(f.size()));
+                        LISEMS_STATUS("field 0 dimensions: ");
+                        LISEMS_STATUS("levels: " +QString::number(f0->nrLevels()));
+                        LISEMS_STATUS("rows: "+QString::number(f0->nrRows()));
+                        LISEMS_STATUS("columns: "+QString::number(f0->nrCols()));
+                        LISEMS_STATUS("ULZ: "+QString::number(f0->GetBottom()));
+                        LISEMS_STATUS("ULY: "+QString::number(f0->GetNorth()));
+                        LISEMS_STATUS("ULX: "+QString::number(f0->GetWest()));
+                        LISEMS_STATUS("DZ: "+QString::number(f0->cellSizeZ()));
+                        LISEMS_STATUS("DY: "+QString::number(f0->cellSizeY()));
+                        LISEMS_STATUS("DX: "+QString::number(f0->cellSizeX()));
+                    }else
+                    {
+                        LISEMS_STATUS("no fields found");
+
+                    }
+
+                    for(int i = 0; i < f.size(); i++)
+                    {
+                        delete f.at(i);
+                    }
+                    f.clear();
 
 
                 }else

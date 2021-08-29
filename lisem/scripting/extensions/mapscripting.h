@@ -35,6 +35,7 @@
 #include "raster/rasterincompressibleflow.h"
 #include "scriptarrayhelpers.h"
 #include "stat/mlsupersampling.h"
+#include "raster/rastermixtureflow.h"
 
 
 inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
@@ -529,6 +530,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDynamic(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, float dt, float courant = 0.1)",GetFuncConvert(AS_DynamicWave));
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDynamicRigid(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, const Map &in BlockX,const Map &in BlockY, const Map &in BlockFx, const Map &in BlockFy, const Map &in Blockvelx, const Map &in Blockvely, const Map &in HCorrect, float dt, float courant = 0.1)",GetFuncConvert(AS_DynamicWaveRigid));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDebris(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, const Map &in HS, const Map &in VXS, const Map&in VYS, const Map &in IFA, const Map &in RS, const Map&in D, float dragmult, float dt, float courant = 0.1)",GetFuncConvert(AS_DebrisWave));
 
 
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowBoussinesq(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, float dt, float courant = 0.1)", GetFuncConvert(AS_BoussinesqWave));

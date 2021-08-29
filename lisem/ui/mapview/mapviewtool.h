@@ -52,6 +52,7 @@
 #include "rigidphysics/rigidworld.h"
 #include "layer/geo/uifieldlayer.h"
 #include "layer/geo/uirigidworldlayer.h"
+#include <functional>
 
 class MapViewTool;
 
@@ -72,21 +73,54 @@ inline static MapViewTool * GetMapViewTool()
 struct ASUILayer
 {
     int m_UniqueID = -1;
+    std::function<void(void)> m_CallBackIncrease;
+    std::function<void(void)> m_CallBackDecrease;
 public:
 
     inline ASUILayer()
     {
 
     }
+    inline ~ASUILayer()
+    {
+        if(m_CallBackDecrease)
+        {
+            m_CallBackDecrease();
+        }
 
-    inline void SetUID(int id)
+    }
+
+    inline void SetUID(int id, std::function<void(void)> fincr, std::function<void(void)> fdecr)
     {
         m_UniqueID = id;
+
+        m_CallBackIncrease = fincr;
+        m_CallBackDecrease = fdecr;
+
+        if(m_CallBackIncrease)
+        {
+            m_CallBackIncrease();
+        }
     }
 
     inline int GetUID()
     {
         return m_UniqueID;
+    }
+
+    inline ASUILayer * Assign(ASUILayer * l)
+    {
+        std::cout << "assign ui layer "<< std::endl;
+        m_UniqueID = l->m_UniqueID;
+        m_CallBackIncrease = l->m_CallBackIncrease;
+        m_CallBackDecrease = l->m_CallBackDecrease;
+
+        if(m_CallBackIncrease)
+        {
+            m_CallBackIncrease();
+        }
+
+        return this;
     }
 };
 static inline void AS_ASUILayerC0(void * mem)
@@ -94,7 +128,12 @@ static inline void AS_ASUILayerC0(void * mem)
 
     new(mem)  ASUILayer();
 }
+static inline void AS_ASUILayerD0(ASUILayer * mem)
+{
+    std::cout << "destruct uilayer " << std::endl;
 
+    mem->~ASUILayer();
+}
 
 class ListWidgetE : public QListWidget
 {
@@ -810,7 +849,7 @@ public:
                     m_WorldWindow->AddUILayer(ret,true);
 
 
-                    lay.SetUID(ret->GetUID());
+                    lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret) );
 
                     std::cout << " added ui raster layer " << std::endl;
                     return lay;
@@ -835,7 +874,7 @@ public:
             HS->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_VECTORUI),true);
             m_WorldWindow->AddUILayer(HS,true);
 
-            lay.SetUID(HS->GetUID());
+            lay.SetUID(HS->GetUID(),std::bind(&UILayer::IncreaseScriptRef,HS),std::bind(&UILayer::DecreaseScriptRef,HS) );
             return lay;
         }
 
@@ -853,7 +892,7 @@ public:
             HS->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_RASTERUI),true);
             m_WorldWindow->AddUILayer(HS,true);
 
-            lay.SetUID(HS->GetUID());
+            lay.SetUID(HS->GetUID(),std::bind(&UILayer::IncreaseScriptRef,HS),std::bind(&UILayer::DecreaseScriptRef,HS) );
             return lay;
         }
 
@@ -872,7 +911,7 @@ public:
 
             m_WorldWindow->AddUILayer(UIP,true);
 
-            lay.SetUID(UIP->GetUID());
+            lay.SetUID(UIP->GetUID(),std::bind(&UILayer::IncreaseScriptRef,UIP),std::bind(&UILayer::DecreaseScriptRef,UIP) );
 
             std::cout << "return view layer " << std::endl;
 
@@ -1016,7 +1055,7 @@ public:
             {
                 //if(l->GetMapCount()>0)
                 {
-                    lay.SetUID(l->GetUID());
+                    lay.SetUID(l->GetUID(),std::bind(&UILayer::IncreaseScriptRef,l),std::bind(&UILayer::DecreaseScriptRef,l) );
                     return lay;
                 }
             }
@@ -1069,7 +1108,10 @@ public:
         std::cout << "add viewlayer calls " << this << std::endl;
 
         int r = sm->m_Engine->RegisterObjectType("UILayer", sizeof(ASUILayer), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUILayer>());
-        sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUILayerC0,(void*),void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+        sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUILayerC0,(void*),void), asCALL_CDECL_OBJLAST);
+        sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUILayerD0), asCALL_CDECL_OBJLAST);
+        sm->m_Engine->RegisterObjectMethod("UILayer", "UILayer& opAssign(const UILayer &in m)", asMETHODPR(ASUILayer,Assign,(ASUILayer *),ASUILayer*), asCALL_THISCALL); assert( r >= 0 );
+
 
         //add layer
         sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );

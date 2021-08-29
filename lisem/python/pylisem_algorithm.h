@@ -265,8 +265,8 @@ inline void init_pylisem_algorithm(py::module &m)
     m.def("RasterContinuousCohensKappa",&AS_RasterContinuousCohensKappa,py::arg("Obsered"),py::arg("Model"),py::arg("Threshold"));
 
 
-    m.def("RasterWarp",py::overload_cast<cTMap*,std::vector<cTMap*>,QString>(&AS_RasterWarp),py::arg("Target"),py::arg("Sources"),py::arg("Interpolation") =QString("linear"));
-    m.def("RasterWarp",py::overload_cast<cTMap*,cTMap*,QString>(&AS_RasterWarp),py::arg("Target"),py::arg("Source"),py::arg("Interpolation") =QString("linear"));
+    m.def("RasterWarp",py::overload_cast<cTMap*,std::vector<cTMap*>,QString>(&AS_RasterWarp),py::arg("Target"),py::arg("Sources"),py::arg("Interpolation") =QString("bilinear"));
+    m.def("RasterWarp",py::overload_cast<cTMap*,cTMap*,QString>(&AS_RasterWarp),py::arg("Target"),py::arg("Source"),py::arg("Interpolation") =QString("bilinear"));
 
     m.def("SupervisedClassify",&AS_SupervisedClassify, py::arg("Input"), py::arg("Training"));
     m.def("UnSupervisedClassify",&AS_UnSupervisedClassify, py::arg("Input"), py::arg("n_Classes"), py::arg("Mask"));

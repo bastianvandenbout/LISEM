@@ -47,6 +47,11 @@ static LSMVector3 F_HLL2FL(float h_L,float u_L,float v_L,float h_R,float u_R,flo
         float t3_2 = std::fabs((float)(sc2));
         float t3 =(sc2* t3_1 - sc1* t3_2)*0.5*tmp;
 
+        if(h_L > 0.0 || h_R > 0.0 )
+        {
+
+            //std::cout << h_L << " " << h_R << " "<< t1 << " "  << t2 << std::endl;
+        }
         ret.x = t1*q_R + t2*q_L - t3*(h_R - h_L);
         ret.y = t1*(q_R*u_R + grav_h_R*h_R*0.5) + t2*(q_L*u_L + grav_h_L*h_L*0.5) - t3*(q_R - q_L);
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
@@ -75,12 +80,12 @@ static inline float flow_saintvenantdt(cTMap * DEM,cTMap * N,cTMap * H,cTMap * V
             const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
             const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
 
-            float vmax = 100.0;
+            float vmax = 1000.0;
 
             float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
             float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
 
-            float dt_req = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
+            float dt_req = 0.25f *dx/( std::min(1000.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
             dt_min = std::min(dt_min,dt_req);
 
         }
@@ -170,10 +175,10 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
                 {
                     z_y1 = -99999;
                 }
-                float zc_x1 = z_x1 < -1000? z : z_x1;
-                float zc_x2 = z_x2 < -1000? z : z_x2;
-                float zc_y1 = z_y1 < -1000? z : z_y1;
-                float zc_y2 = z_y2 < -1000? z : z_y2;
+                float zc_x1 = z_x1 < -99995? z : z_x1;
+                float zc_x2 = z_x2 < -99995? z : z_x2;
+                float zc_y1 = z_y1 < -99995? z : z_y1;
+                float zc_y2 = z_y2 < -99995? z : z_y2;
 
                 float h = std::max(0.0f,H->data[gy][gx]);
                 float h_x1 = std::max(0.0f,H->data[gy][gx_x1]);
@@ -204,36 +209,48 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
                 float vx_y2 = std::min(vmax,std::max(-vmax,VX->data[gy_y2][gx]));
                 float vy_y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx]));
 
-                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_x2 + h_x2-z - h)/dx)));
-                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_y1 - h_y1)/dx)));
-                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_x1 - h_x1)/dx)));
-                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_y2 + h_y2-z - h)/dx)));
+                float zh = z + h;
+                float zh_x1 =std::min(1.0f,h_x1/std::max(0.0001f,h)) * (zc_x1 + h_x1) + (1.0f-std::min(1.0f,h_x1/std::max(0.0001f,h)))*std::min(zh,zc_x1 + h_x1);
+                float zh_x2 =std::min(1.0f,h_x2/std::max(0.0001f,h)) * (zc_x2 + h_x2) + (1.0f-std::min(1.0f,h_x2/std::max(0.0001f,h)))*std::min(zh,zc_x2 + h_x2);
+                float zh_y1 =std::min(1.0f,h_y1/std::max(0.0001f,h)) * (zc_y1 + h_y1) + (1.0f-std::min(1.0f,h_y1/std::max(0.0001f,h)))*std::min(zh,zc_y1 + h_y1);
+                float zh_y2 =std::min(1.0f,h_y2/std::max(0.0001f,h)) * (zc_y2 + h_y2) + (1.0f-std::min(1.0f,h_y2/std::max(0.0001f,h)))*std::min(zh,zc_y2 + h_y2);
 
-                float sx_zh = std::min(1.0f,std::max(-1.0f,minmod(sx_zh_x1,sx_zh_x2)));
-                float sy_zh = std::min(1.0f,std::max(-1.0f,minmod(sy_zh_y1,sy_zh_y2)));
+                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh_x2-zh)/dx)));
+                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh-zh_y1)/dx)));
+                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh-zh_x1)/dx)));
+                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh_y2-zh)/dx)));
 
-                LSMVector3 hll_x1 = z_x1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_x1,vy_x1,h_corr_x1b,vx,vy);
-                LSMVector3 hll_x2 = z_x2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx,vy,h_corr_x2b,vx_x2,vy_x2);
-                LSMVector3 hll_y1 = z_y1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_y1,vx_y1,h_corr_y1b,vy,vx);
-                LSMVector3 hll_y2 = z_y2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy,vx,h_corr_y2b,vy_y2,vx_y2);
+                float sx_zh = std::min(1.0f,std::max(-1.0f,0.5f * (sx_zh_x1 + sx_zh_x2)));
+                float sy_zh = std::min(1.0f,std::max(-1.0f,0.5f * (sy_zh_y1 + sy_zh_y2)));
+
+                LSMVector3 hll_x1 = z_x1 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_x1,vy_x1,h_corr_x1b,vx,vy);
+                LSMVector3 hll_x2 = z_x2 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx,vy,h_corr_x2b,vx_x2,vy_x2);
+                LSMVector3 hll_y1 = z_y1 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_y1,vx_y1,h_corr_y1b,vy,vx);
+                LSMVector3 hll_y2 = z_y2 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy,vx,h_corr_y2b,vy_y2,vx_y2);
 
                 float C = 0.1f;
 
-                float flux_x1 = z_x1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_x1.x)),h_x1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_x2 = z_x2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_x2.x)),h_x2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_y1 = z_y1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_y1.x)),h_y1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_y2 = z_y2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_y2.x)),h_y2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x1 = z_x1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_x1.x)),h_x1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x2 = z_x2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_x2.x)),h_x2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y1 = z_y1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_y1.x)),h_y1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y2 = z_y2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_y2.x)),h_y2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
 
-                int edges = ((z_x1 < -1000)?1:0) +((z_x2 < -1000)?1:0)+((z_y1 < -1000)?1:0)+((z_y2 < -1000)?1:0);
+                int edges = ((z_x1 < -99995)?1:0) +((z_x2 < -99995)?1:0)+((z_y1 < -99995)?1:0)+((z_y2 < -99995)?1:0);
 
-                bool edge = (z_x1 < -1000 || z_x2 < -1000 || z_y1 < -1000 || z_y2 < -1000);
+                bool edge = (z_x1 < -99995 || z_x2 < -99995 || z_y1 < -99995 || z_y2 < -99995);
                 float hold = h;
                 float hn = ((std::max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
 
 
-                float f_centre_x = 0.5 * GRAV*(h)*(((h - h_corr_x2) - (h - h_corr_x1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_x2) - (h - h_corr_x1));
-                float f_centre_y = 0.5 * GRAV*(h)*(((h - h_corr_y2) - (h - h_corr_y1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_y2) - (h - h_corr_y1));
+                float f_centre_x = 0.5 * GRAV*((z<zc_x2?std::min(zc_x2,z + h) : std::min(z,zc_x2 + h_x2)) - (z<zc_x1?std::min(zc_x1,z + h) : std::min(z,zc_x1 + h_x1)))*(h_corr_x1 + h_corr_x2);
+                float f_centre_y = 0.5 * GRAV*((z<zc_y2?std::min(zc_y2,z + h) : std::min(z,zc_y2 + h_y2)) - (z<zc_y1?std::min(zc_y1,z + h) : std::min(z,zc_y1 + h_y1)))*(h_corr_y1 + h_corr_y2);
 
+
+                if(h > 0.01f )
+                {
+                    //std::cout << "h: " << h << " - " << sx_zh << " " << sy_zh << " " << h_x1 << " " << h_x2 << " " << h_corr_x1 << " " << h_corr_x2 << " " << h_corr_x1b << " " << h_corr_x2b << " " << hll_x1.y << "  " << hll_x2.y  <<  " " << zc_x1 << " " << zc_x2 << std::endl;
+                    //std::cout << "f: " << tx*(hll_x2.y - hll_x1.y + f_centre_x) << " " << hll_x2.y - hll_x1.y << " " <<  f_centre_x << " " << hll_y2.z - hll_y1.z << std::endl;
+                }
 
                 float qxn = h * vx - tx*(hll_x2.y - hll_x1.y + f_centre_x) - tx*(hll_y2.z - hll_y1.z);//- 0.5 * GRAV *hn*sx_zh * dt;
                 float qyn = h * vy - tx*(hll_x2.z - hll_x1.z) - tx*(hll_y2.y - hll_y1.y + f_centre_y);//- 0.5 * GRAV *hn*sy_zh * dt;
@@ -245,13 +262,13 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
                 float vxn = (float)((qxn/(1.0f+nsq)))/std::max(0.01f,(float)(hn));
                 float vyn = (float)((qyn/(1.0f+nsq)))/std::max(0.01f,(float)(hn));
 
-                float threshold = 0.01 * dx;
+                float threshold = std::min(0.1f,0.01f * dx);
                 if(hn < threshold)
                 {
                     float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                     float acc_eff = (vxn -vx)/std::max(0.0001f,dt);
 
-                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
+                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
 
                     vxn = kinfac * v_kin + vxn*(1.0f-kinfac);
 
@@ -262,7 +279,7 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
                     float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                     float acc_eff = (vyn -vy)/std::max(0.0001f,dt);
 
-                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
+                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
 
                     vyn = kinfac * v_kin + vyn*(1.0f-kinfac);
 
@@ -396,10 +413,10 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 {
                     z_y1 = -99999;
                 }
-                float zc_x1 = z_x1 < -1000? z : z_x1;
-                float zc_x2 = z_x2 < -1000? z : z_x2;
-                float zc_y1 = z_y1 < -1000? z : z_y1;
-                float zc_y2 = z_y2 < -1000? z : z_y2;
+                float zc_x1 = z_x1 < -99995? z : z_x1;
+                float zc_x2 = z_x2 < -99995? z : z_x2;
+                float zc_y1 = z_y1 < -99995? z : z_y1;
+                float zc_y2 = z_y2 < -99995? z : z_y2;
 
                 float zcc_x1 =std::max(z,zc_x1);
                 float zcc_x2 =std::max(z,zc_x2);
@@ -440,13 +457,19 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 float vx_y2 = std::min(vmax,std::max(-vmax,VX->data[gy_y2][gx]));
                 float vy_y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx]));
 
-                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_x2 + h_x2-z - h)/dx)));
-                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_y1 - h_y1)/dx)));
-                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_x1 - h_x1)/dx)));
-                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_y2 + h_y2-z - h)/dx)));
+                float zh = z + h;
+                float zh_x1 =std::min(1.0f,h_x1/std::max(0.0001f,h)) * (zc_x1 + h_x1) + (1.0f-std::min(1.0f,h_x1/std::max(0.0001f,h)))*std::min(zh,zc_x1 + h_x1);
+                float zh_x2 =std::min(1.0f,h_x2/std::max(0.0001f,h)) * (zc_x2 + h_x2) + (1.0f-std::min(1.0f,h_x2/std::max(0.0001f,h)))*std::min(zh,zc_x2 + h_x2);
+                float zh_y1 =std::min(1.0f,h_y1/std::max(0.0001f,h)) * (zc_y1 + h_y1) + (1.0f-std::min(1.0f,h_y1/std::max(0.0001f,h)))*std::min(zh,zc_y1 + h_y1);
+                float zh_y2 =std::min(1.0f,h_y2/std::max(0.0001f,h)) * (zc_y2 + h_y2) + (1.0f-std::min(1.0f,h_y2/std::max(0.0001f,h)))*std::min(zh,zc_y2 + h_y2);
 
-                float sx_zh = std::min(1.0f,std::max(-1.0f,minmod(sx_zh_x1,sx_zh_x2)));
-                float sy_zh = std::min(1.0f,std::max(-1.0f,minmod(sy_zh_y1,sy_zh_y2)));
+                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh_x2-zh)/dx)));
+                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh-zh_y1)/dx)));
+                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh-zh_x1)/dx)));
+                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh_y2-zh)/dx)));
+
+                float sx_zh = std::min(1.0f,std::max(-1.0f,0.5f * (sx_zh_x1 + sx_zh_x2)));
+                float sy_zh = std::min(1.0f,std::max(-1.0f,0.5f * (sy_zh_y1 + sy_zh_y2)));
 
 
                 float vx_adaptl = blockvelx < 0.0? std::max(0.5f,1.0f-std::min(0.5f,dt * capture_x * std::fabs(blockvelx) /dx))*vx + std::min(0.5f,dt * capture_x *std::fabs(blockvelx) /dx) * blockvelx : vx;
@@ -494,15 +517,15 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 float fb_y1 = std::max(0.0f,std::min(factor_flowy1bt,factor_flowy1b));
                 float fb_y2 = std::max(0.0f,std::min(factor_flowy2bt,factor_flowy2b));
 
-                LSMVector3 hll_x1 = z_x1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_adapt_x1,vy_x1,h_corr_x1b,vx_adaptl,vy);
-                LSMVector3 hll_x2 = z_x2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx_adaptr,vy,h_corr_x2b,vx_adapt_x2,vy_x2);
-                LSMVector3 hll_y1 = z_y1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_adapt_y1,vx_y1,h_corr_y1b,vy_adaptl,vx);
-                LSMVector3 hll_y2 = z_y2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy_adaptr,vx,h_corr_y2b,vy_adapt_y2,vx_y2);
+                LSMVector3 hll_x1 = z_x1 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_adapt_x1,vy_x1,h_corr_x1b,vx_adaptl,vy);
+                LSMVector3 hll_x2 = z_x2 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx_adaptr,vy,h_corr_x2b,vx_adapt_x2,vy_x2);
+                LSMVector3 hll_y1 = z_y1 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_adapt_y1,vx_y1,h_corr_y1b,vy_adaptl,vx);
+                LSMVector3 hll_y2 = z_y2 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy_adaptr,vx,h_corr_y2b,vy_adapt_y2,vx_y2);
 
-                //float3 hll_x1 = z_x1 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_x1,vx_adapt_x1,vy_x1,fb_x1, h_corr_x1b,vx_adaptl,vy, fb_x1);
-                //float3 hll_x2 = z_x2 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_x2,vx_adaptr,vy,fb_x2,h_corr_x2b,vx_adapt_x2,vy_x2,fb_x2);
-                //float3 hll_y1 = z_y1 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_y1,vy_adapt_y1,vx_y1,fb_y1,h_corr_y1b,vy_adaptl,vx,fb_y1);
-                //float3 hll_y2 = z_y2 < -1000? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_y2,vy_adaptr,vx,fb_y2,h_corr_y2b,vy_adapt_y2,vx_y2,fb_y2);
+                //float3 hll_x1 = z_x1 < -99995? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_x1,vx_adapt_x1,vy_x1,fb_x1, h_corr_x1b,vx_adaptl,vy, fb_x1);
+                //float3 hll_x2 = z_x2 < -99995? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_x2,vx_adaptr,vy,fb_x2,h_corr_x2b,vx_adapt_x2,vy_x2,fb_x2);
+                //float3 hll_y1 = z_y1 < -99995? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_y1,vy_adapt_y1,vx_y1,fb_y1,h_corr_y1b,vy_adaptl,vx,fb_y1);
+                //float3 hll_y2 = z_y2 < -99995? float3(0.0,0.0,0.0):F_HLL2FB(h_corr_y2,vy_adaptr,vx,fb_y2,h_corr_y2b,vy_adapt_y2,vx_y2,fb_y2);
 
 
                 float C = 0.1f;
@@ -511,25 +534,26 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 float fluxo_y1 = +tx*(hll_y1.x) + (blockvely < 0? h * dt *capture_y * blockvely/dx : 0.0) + (blockvely_y1 > 0? h_y1 * dt *capture_y1 * blockvely_y1/dx : 0.0);
                 float fluxo_y2 = -tx*(hll_y2.x) + (blockvely > 0? -h * dt *capture_y * blockvely/dx : 0.0) + (blockvely_y2 < 0? -h_y2 * dt *capture_y2 * blockvely_y2/dx : 0.0);
 
-                float flux_x1 = z_x1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowx1t * C,std::min((float)(fluxo_x1),h_x1 *factor_flowx1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_x2 = z_x2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowx2t * C,std::min((float)(fluxo_x2),h_x2 *factor_flowx2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_y1 = z_y1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowy1t * C,std::min((float)(fluxo_y1),h_y1 *factor_flowy1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_y2 = z_y2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowy2t * C,std::min((float)(fluxo_y2),h_y2 *factor_flowy2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x1 = z_x1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowx1t * C,std::min((float)(fluxo_x1),h_x1 *factor_flowx1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x2 = z_x2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowx2t * C,std::min((float)(fluxo_x2),h_x2 *factor_flowx2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y1 = z_y1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowy1t * C,std::min((float)(fluxo_y1),h_y1 *factor_flowy1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y2 = z_y2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h  * factor_flowy2t * C,std::min((float)(fluxo_y2),h_y2 *factor_flowy2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
 
                 float fluxor_x1 = 1.0;//min(1.0f,max(-1.0f,flux_x1/maxmod(1e-4f,fluxo_x1)));
                 float fluxor_x2 = 1.0;// min(1.0f,max(-1.0f,flux_x2/maxmod(1e-4f,fluxo_x2)));
                 float fluxor_y1 = 1.0;// min(1.0f,max(-1.0f,flux_y1/maxmod(1e-4f,fluxo_y1)));
                 float fluxor_y2 = 1.0;// min(1.0f,max(-1.0f,flux_y2/maxmod(1e-4f,fluxo_y2)));
 
-                int edges = ((z_x1 < -1000)?1:0) +((z_x2 < -1000)?1:0)+((z_y1 < -1000)?1:0)+((z_y2 < -1000)?1:0);
+                int edges = ((z_x1 < -99995)?1:0) +((z_x2 < -99995)?1:0)+((z_y1 < -99995)?1:0)+((z_y2 < -99995)?1:0);
 
-                bool edge = (z_x1 < -1000 || z_x2 < -1000 || z_y1 < -1000 || z_y2 < -1000);
+                bool edge = (z_x1 < -99995 || z_x2 < -99995 || z_y1 < -99995 || z_y2 < -99995);
                 float hold = h;
                 float hn = ((std::max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
 
 
-                float f_centre_x = 0.5 * GRAV*(h)*(((h - h_corr_x2) - (h - h_corr_x1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_x2) - (h - h_corr_x1));
-                float f_centre_y = 0.5 * GRAV*(h)*(((h - h_corr_y2) - (h - h_corr_y1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_y2) - (h - h_corr_y1));
+                float f_centre_x = 0.5 * GRAV*((z<zc_x2?std::min(zc_x2,z + h) : std::min(z,zc_x2 + h_x2)) - (z<zc_x1?std::min(zc_x1,z + h) : std::min(z,zc_x1 + h_x1)))*(h_corr_x1 + h_corr_x2);
+                float f_centre_y = 0.5 * GRAV*((z<zc_y2?std::min(zc_y2,z + h) : std::min(z,zc_y2 + h_y2)) - (z<zc_y1?std::min(zc_y1,z + h) : std::min(z,zc_y1 + h_y1)))*(h_corr_y1 + h_corr_y2);
+
 
 
                 float fluxmc_x1x = (blockvelx < 0? h * dt *capture_x * blockvelx* blockvelx/dx : 0.0) + (blockvelx_x1 > 0? h_x1 * dt *capture_x1 * blockvelx_x1* blockvelx_x1/dx : 0.0);
@@ -552,13 +576,13 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 float vxn = std::max(0.5,(1.0 -  dt * capture_x * std::fabs(blockvelx)/dx)) *(float)((qxn/(1.0f+nsq)))/std::max(0.01f,(float)(hn)) + std::min(0.5,1.0 * dt * capture_x *blockvelx* std::fabs(blockvelx)/dx) + blockfx * dt/(std::max(0.01f * dx,hn)*dx*dx * 1000.0);
                 float vyn = std::max(0.5,(1.0 -  dt * capture_y * std::fabs(blockvely)/dx)) *(float)((qyn/(1.0f+nsq)))/std::max(0.01f,(float)(hn)) + std::min(0.5,1.0 * dt * capture_y *blockvely* std::fabs(blockvely)/dx) + blockfy * dt/(std::max(0.01f * dx,hn)*dx*dx * 1000.0);
 
-                float threshold = 0.01 * dx;
+                float threshold = std::min(0.1f,0.01f * dx);
                 if(hn < threshold)
                 {
                     float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                     float acc_eff = (vxn -vx)/std::max(0.0001f,dt);
 
-                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
+                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
 
                     vxn = kinfac * v_kin + vxn*(1.0f-kinfac);
 
@@ -569,7 +593,7 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                     float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                     float acc_eff = (vyn -vy)/std::max(0.0001f,dt);
 
-                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
+                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
 
                     vyn = kinfac * v_kin + vyn*(1.0f-kinfac);
 
@@ -680,10 +704,10 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
                 {
                     z_y1 = -99999;
                 }
-                float zc_x1 = z_x1 < -1000? z : z_x1;
-                float zc_x2 = z_x2 < -1000? z : z_x2;
-                float zc_y1 = z_y1 < -1000? z : z_y1;
-                float zc_y2 = z_y2 < -1000? z : z_y2;
+                float zc_x1 = z_x1 < -99995? z : z_x1;
+                float zc_x2 = z_x2 < -99995? z : z_x2;
+                float zc_y1 = z_y1 < -99995? z : z_y1;
+                float zc_y2 = z_y2 < -99995? z : z_y2;
 
                 float h = std::max(0.0f,H->data[gy][gx]);
                 float h_x1 = std::max(0.0f,H->data[gy][gx_x1]);
@@ -715,30 +739,36 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
                 float vy_y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx]));
 
 
+                float zh = z + h;
+                float zh_x1 =std::min(1.0f,h_x1/std::max(0.0001f,h)) * (zc_x1 + h_x1) + (1.0f-std::min(1.0f,h_x1/std::max(0.0001f,h)))*std::min(zh,zc_x1 + h_x1);
+                float zh_x2 =std::min(1.0f,h_x2/std::max(0.0001f,h)) * (zc_x2 + h_x2) + (1.0f-std::min(1.0f,h_x2/std::max(0.0001f,h)))*std::min(zh,zc_x2 + h_x2);
+                float zh_y1 =std::min(1.0f,h_y1/std::max(0.0001f,h)) * (zc_y1 + h_y1) + (1.0f-std::min(1.0f,h_y1/std::max(0.0001f,h)))*std::min(zh,zc_y1 + h_y1);
+                float zh_y2 =std::min(1.0f,h_y2/std::max(0.0001f,h)) * (zc_y2 + h_y2) + (1.0f-std::min(1.0f,h_y2/std::max(0.0001f,h)))*std::min(zh,zc_y2 + h_y2);
 
-                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_x2 + h_x2-z - h)/dx)));
-                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_y1 - h_y1)/dx)));
-                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((z + h-zc_x1 - h_x1)/dx)));
-                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zc_y2 + h_y2-z - h)/dx)));
+                float sx_zh_x2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh_x2-zh)/dx)));
+                float sy_zh_y1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh-zh_y1)/dx)));
+                float sx_zh_x1 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh-zh_x1)/dx)));
+                float sy_zh_y2 = std::min((float)(0.5),std::max((float)(-0.5),(float)((zh_y2-zh)/dx)));
 
-                float sx_zh = std::min(1.0f,std::max(-1.0f,minmod(sx_zh_x1,sx_zh_x2)));
-                float sy_zh = std::min(1.0f,std::max(-1.0f,minmod(sy_zh_y1,sy_zh_y2)));
+                float sx_zh = std::min(1.0f,std::max(-1.0f,0.5f * (sx_zh_x1 + sx_zh_x2)));
+                float sy_zh = std::min(1.0f,std::max(-1.0f,0.5f * (sy_zh_y1 + sy_zh_y2)));
 
-                LSMVector3 hll_x1 = z_x1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_x1,vy_x1,h_corr_x1b,vx,vy);
-                LSMVector3 hll_x2 = z_x2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx,vy,h_corr_x2b,vx_x2,vy_x2);
-                LSMVector3 hll_y1 = z_y1 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_y1,vx_y1,h_corr_y1b,vy,vx);
-                LSMVector3 hll_y2 = z_y2 < -1000? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy,vx,h_corr_y2b,vy_y2,vx_y2);
+
+                LSMVector3 hll_x1 = z_x1 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x1,vx_x1,vy_x1,h_corr_x1b,vx,vy);
+                LSMVector3 hll_x2 = z_x2 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_x2,vx,vy,h_corr_x2b,vx_x2,vy_x2);
+                LSMVector3 hll_y1 = z_y1 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y1,vy_y1,vx_y1,h_corr_y1b,vy,vx);
+                LSMVector3 hll_y2 = z_y2 < -99995? LSMVector3(0.0,0.0,0.0):F_HLL2FL(h_corr_y2,vy,vx,h_corr_y2b,vy_y2,vx_y2);
 
                 float C = 0.1f;
 
-                float flux_x1 = z_x1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_x1.x)),h_x1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_x2 = z_x2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_x2.x)),h_x2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_y1 = z_y1 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_y1.x)),h_y1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-                float flux_y2 = z_y2 < -1000? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_y2.x)),h_y2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x1 = z_x1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_x1.x)),h_x1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_x2 = z_x2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_x2.x)),h_x2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y1 = z_y1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(+tx*(hll_y1.x)),h_y1 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+                float flux_y2 = z_y2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):std::max(-h * C,std::min((float)(-tx*(hll_y2.x)),h_y2 * C));//std::max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
 
-                int edges = ((z_x1 < -1000)?1:0) +((z_x2 < -1000)?1:0)+((z_y1 < -1000)?1:0)+((z_y2 < -1000)?1:0);
+                int edges = ((z_x1 < -99995)?1:0) +((z_x2 < -99995)?1:0)+((z_y1 < -99995)?1:0)+((z_y2 < -99995)?1:0);
 
-                bool edge = (z_x1 < -1000 || z_x2 < -1000 || z_y1 < -1000 || z_y2 < -1000);
+                bool edge = (z_x1 < -99995 || z_x2 < -99995 || z_y1 < -99995 || z_y2 < -99995);
                 float hold = h;
 
                 float a_disp_x = (1.0/6.0)*h*h*h*UF2D_Derivative3(VX,gy,gx,UF_DIRECTION_X,UF_DERIVATIVE_LR,dx);
@@ -761,8 +791,8 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
 
                 float hn = ((std::max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
 
-                float f_centre_x = 0.5 * GRAV*(h)*(((h - h_corr_x2) - (h - h_corr_x1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_x2) - (h - h_corr_x1));
-                float f_centre_y = 0.5 * GRAV*(h)*(((h - h_corr_y2) - (h - h_corr_y1)) > 0.0? 1.0:-1.0)*std::fabs((h - h_corr_y2) - (h - h_corr_y1));
+                float f_centre_x = 0.5 * GRAV*((z<zc_x2?std::min(zc_x2,z + h) : std::min(z,zc_x2 + h_x2)) - (z<zc_x1?std::min(zc_x1,z + h) : std::min(z,zc_x1 + h_x1)))*(h_corr_x1 + h_corr_x2);
+                float f_centre_y = 0.5 * GRAV*((z<zc_y2?std::min(zc_y2,z + h) : std::min(z,zc_y2 + h_y2)) - (z<zc_y1?std::min(zc_y1,z + h) : std::min(z,zc_y1 + h_y1)))*(h_corr_y1 + h_corr_y2);
 
 
                 float qxn = h * vx - tx*(hll_x2.y - hll_x1.y + f_centre_x) - tx*(hll_y2.z - hll_y1.z) - h*dt*( -a_vdisp_x -a_vdisp_x1 + a_vdisp2_x + a_vdisp2_x2);//- 0.5 * GRAV *hn*sx_zh * dt;
@@ -775,13 +805,13 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
                 float vxn = (float)((qxn/(1.0f+nsq)))/std::max(0.01f,(float)(hn));
                 float vyn = (float)((qyn/(1.0f+nsq)))/std::max(0.01f,(float)(hn));
 
-                float threshold = 0.01 * dx;
+                float threshold = std::min(0.1f,0.01f * dx);
                 if(hn < threshold)
                 {
                     float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                     float acc_eff = (vxn -vx)/std::max(0.0001f,dt);
 
-                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
+                    float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
 
                     vxn = kinfac * v_kin + vxn*(1.0f-kinfac);
 
@@ -792,7 +822,7 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
                     float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                     float acc_eff = (vyn -vy)/std::max(0.0001f,dt);
 
-                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * std::max(0.001f,sqrt(sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
+                    float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
 
                     vyn = kinfac * v_kin + vyn*(1.0f-kinfac);
 
@@ -3462,5 +3492,9 @@ inline cTMap * AS_Diffusion(cTMap * VAL, float coeff, float dt, int iter = 1)
 
 
 }
+
+
+
+
 
 #endif // RASTERFLOW_H

@@ -916,7 +916,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
 
             float3 hlls_x1 = z_x1 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2SF(max(0.0f,hs_x1 -max(0.0f,z - z_x1)),max(0.0f,h_x1 -max(0.0f,z - z_x1)),vsx_x1,vsy_x1,max(0.0f,hs -max(0.0f,z_x1-z)) ,max(0.0f,h -max(0.0f,z_x1-z)),vsx,vsy,sifa, srocksize, sdensity, dragmult);
-            float3 hlls_x2 = z_x2 < -1000.0f? float3(0.0f,0.0,0.0):F_HLL2SF(max(0.0f,hs -max(0.0f,z_x2 - z)),max(0.0f,h -max(0.0f,z_x2 - z)),vsx,vsy,max(0.0f,hs_x2 -max(0.0f,z - z_x2)),max(0.0f,h_x2 -max(0.0f,z - z_x2)),vsx_x2,vsy_x2,sifa, srocksize, sdensity, dragmult);
+            float3 hlls_x2 = z_x2 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2SF(max(0.0f,hs -max(0.0f,z_x2 - z)),max(0.0f,h -max(0.0f,z_x2 - z)),vsx,vsy,max(0.0f,hs_x2 -max(0.0f,z - z_x2)),max(0.0f,h_x2 -max(0.0f,z - z_x2)),vsx_x2,vsy_x2,sifa, srocksize, sdensity, dragmult);
             float3 hlls_y1 = z_y1 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2SF(max(0.0f,hs_y1 -max(0.0f,z - z_y1)),max(0.0f,h_y1 -max(0.0f,z - z_y1)),vsy_y1,vsx_y1,max(0.0f,hs -max(0.0f,z_y1 - z)),max(0.0f,h -max(0.0f,z_y1 - z)),vsy,vsx,sifa, srocksize, sdensity, dragmult);
             float3 hlls_y2 = z_y2 < -1000.0f? float3(0.0f,0.0f,0.0f):F_HLL2SF(max(0.0f,hs -max(0.0f,z_y2 - z)),max(0.0f,h -max(0.0f,z_y2 - z)),vsy,vsx,max(0.0f,hs_y2 -max(0.0f,z - z_y2)),max(0.0f,h_y2 -max(0.0f,z - z_y2)),vsy_y2,vsx_y2,sifa, srocksize, sdensity, dragmult);
 
