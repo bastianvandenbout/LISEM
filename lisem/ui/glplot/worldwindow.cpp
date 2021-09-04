@@ -257,6 +257,11 @@ void WorldWindow::Draw()
     }
 
 
+
+
+
+
+
     if(removed)
     {
         emit OnMapsChanged();

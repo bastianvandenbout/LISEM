@@ -6,7 +6,7 @@
 #include "pybind11/functional.h"
 #include <pybind11/numpy.h>
 #include <functional>
-#include "extensions/modelscripting.h"
+//#include "extensions/modelscripting.h"
 #include <exception>
 namespace py = pybind11;
 

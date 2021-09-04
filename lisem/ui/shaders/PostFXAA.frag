@@ -91,4 +91,9 @@ void main()
 
         }
 
+
+        //vec3 wpos = vec3(texture(PosX,uv).r,texture(PosX,uv).g,texture(PosX,uv).b);
+        //fragColor.rgb =vec3(wpos.x > -1e20? 1.0:0.0,0.0,0.0);
+        //fragColor.a = 1.0f;
+
 }

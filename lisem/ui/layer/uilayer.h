@@ -722,11 +722,19 @@ public:
         return LayerInfo();
     }
 
+    inline int GetScriptRefs()
+    {
+
+        std::cout << "scriptref " << this <<  " " << m_Scriptref << std::endl;
+        return m_Scriptref;
+    }
+
 
     inline void IncreaseScriptRef()
     {
         m_ScriptRefMutex.lock();
         m_Scriptref ++;
+        std::cout << "scriptref " << this <<  " " << m_Scriptref << std::endl;
         m_ScriptRefMutex.unlock();
     }
 
@@ -734,6 +742,7 @@ public:
     {
         m_ScriptRefMutex.lock();
         m_Scriptref --;
+        std::cout << "scriptref " << this <<  " " << m_Scriptref << std::endl;
         m_ScriptRefMutex.unlock();
     }
 

@@ -618,7 +618,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
 
 
                                  LSMVector3 axis = LSMVector3(rot[0],rot[1],rot[2]);
-                                 LSMVector3 velo = LSMVector3(vel[0],vel[1],vel[2]);
+                                 LSMVector3 velo = LSMVector3(vel[0],vel[2],vel[1]);
 
 
                                  ChVector<double> vel_abs_A = obj->m_chBody->PointSpeedLocalToParent(ChVector<double>(relpos_A.x,relpos_A.y,relpos_A.z));
@@ -1674,8 +1674,6 @@ std::vector<Field*> RigidWorldToField(RigidPhysicsWorld* world, Field * ref)
                 lstart = lend;
                 lend = temp;
             }
-
-            std::cout << lstart<< " " << lend << " " << cstart << " " << cend << " " << rstart << " " << rend << std::endl;
 
             for(int l = lstart; l < lend +1; l++)
             {

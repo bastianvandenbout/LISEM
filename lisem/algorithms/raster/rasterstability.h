@@ -8,8 +8,6 @@
 
 inline static std::vector<cTMap*> AS_SlopeStabilityIS(cTMap * DEM, cTMap * soildepth, cTMap * coh, cTMap * ifa, cTMap * dens, cTMap * WH, float sfmax)
 {
-    std::cout << "slope stab " << DEM << " " << soildepth << " " << coh << " " << ifa << " "<< dens << " " << WH << std::endl;
-
     cTMap * SF = DEM->GetCopy0();
     cTMap * FD = DEM->GetCopy0();
 
@@ -111,7 +109,8 @@ inline static std::vector<cTMap*> AS_SlopeStabilityIS(cTMap * DEM, cTMap * soild
 
                         }catch( ...)
                         {
-                            std::cout << "error in failure " << std::endl;
+                            LISEMS_ERROR("Error when calculating potential failure depth");
+                            throw 1;
                         }
 
                     }
@@ -125,7 +124,6 @@ inline static std::vector<cTMap*> AS_SlopeStabilityIS(cTMap * DEM, cTMap * soild
         }
     }
 
-    std::cout << "done" << std::endl;
     return {SF,FD};
 }
 
@@ -685,7 +683,7 @@ inline static std::vector<cTMap*> AS_SlopeStabilityRES(cTMap * DEM, std::vector<
     {
         for(int c = 0; c < DEM->data.nr_cols();c++)
         {
-            if(pcr::isMV(DEM->data[r][c]))
+            if(!pcr::isMV(DEM->data[r][c]))
             {
                 cols.push_back(c);
                 rows.push_back(r);
@@ -702,7 +700,8 @@ inline static std::vector<cTMap*> AS_SlopeStabilityRES(cTMap * DEM, std::vector<
     std::uniform_real_distribution<double> realgen(0.0,1.0);
 
     //total number of ellipsoids
-    int cells_per_ellips = (0.5 * (size_max + size_max)) * (0.5 * (size_lat_max + size_lat_max))/(DEM->cellSizeX() * DEM->cellSizeY());
+    int cells_per_ellips = (0.5 * (size_max + size_max)) * (0.5 * (size_lat_max + size_lat_max))/(std::fabs(DEM->cellSizeX()) * std::fabs(DEM->cellSizeY()));
+    cells_per_ellips = std::max(1,cells_per_ellips);
     int n_ellips = sample_density * n_cells/ cells_per_ellips;
 
     float dx = std::fabs(DEM->cellSizeX());
@@ -710,7 +709,7 @@ inline static std::vector<cTMap*> AS_SlopeStabilityRES(cTMap * DEM, std::vector<
     //just an assumption here
     //most efficient number of locks for the cell array is equal to the number of threads
 
-     std::cout << "number of ellipsoids " << n_ellips << std::endl;
+     std::cout << "number of ellipsoids " << n_ellips << " " << sample_density << " " << n_cells << "  " << cells_per_ellips << std::endl;
 
     //for each ellipsoid
 #pragma omp parallel for collapse(1)
@@ -908,50 +907,52 @@ inline static std::vector<cTMap*> AS_SlopeStabilityRES(cTMap * DEM, std::vector<
                     float x = (c2-c)*dx - x_offset;
                     float y = (r2-r)*dy - y_offset;
 
-                    float z = elev + h + Sample_Ellipsoid_Z_Bottom(x,y,size,size_lat,size_vert,-aspect+rot_lat,angle + rot);
-                    z =std::max(DEMBottom->data[r][c],z);
-
-                    float height = DEM->data[r2][c2] - z;
-                    if(!pcr::isMV(z))
+                    float zbot = Sample_Ellipsoid_Z_Bottom(x,y,size,size_lat,size_vert,-aspect+rot_lat,angle + rot);
+                    if(!pcr::isMV(zbot))
                     {
-                        m.lock();
-                        bool do_write = false;
 
-                        if(pcr::isMV(SF->data[r2][c2]))
-                        {
-                            do_write = true;
-                            SF->data[r2][c2] = FoS;
+                            float z = elev + h + zbot;
+                            z =std::max(DEMBottom->data[r][c],z);
 
-                            Probability->data[r][c] += 1.0;
+                            float height = DEM->data[r2][c2] - z;
 
-                        }else if(SF->data[r2][c2] > FoS)
-                        {
-                            do_write = true;
-                            SF->data[r2][c2] = FoS;
+                            if(!pcr::isMV(z) && height > 0.0f)
+                            {
+                                m.lock();
+                                bool do_write = false;
 
-                            Probability->data[r2][c2] += 1.0;
-                        }
-                        ProbabilityN->data[r2][c2] += 1.0;
+                                if(pcr::isMV(SF->data[r2][c2]))
+                                {
+                                    do_write = true;
+                                    SF->data[r2][c2] = FoS;
 
-                        if(do_write)
-                        {
-                            Depth->data[r2][c2] = height;
-                            ellipsoid_y->data[r2][c2] = DEM->north() + r * DEM->cellSizeY() + y_offset;
-                            ellipsoid_x->data[r2][c2] = DEM->west() + r * DEM->cellSizeX() + x_offset;
-                            ellipsoid_z->data[r2][c2] = elev + h;
-                            ellipsoid_a->data[r2][c2] = size;
-                            ellipsoid_b->data[r2][c2] = size_lat;
-                            ellipsoid_c->data[r2][c2] = size_vert;
-                            ellipsoid_t1->data[r2][c2] = rot_lat;
-                            ellipsoid_t2->data[r2][c2] = rot;
-                        }
+                                    Probability->data[r][c] += 1.0;
 
+                                }else if(SF->data[r2][c2] > FoS)
+                                {
+                                    do_write = true;
+                                    SF->data[r2][c2] = FoS;
 
-                        m.unlock();
+                                    Probability->data[r2][c2] += 1.0;
+                                }
+                                ProbabilityN->data[r2][c2] += 1.0;
+
+                                if(do_write)
+                                {
+                                    Depth->data[r2][c2] = height;
+                                    ellipsoid_y->data[r2][c2] = DEM->north() + r * DEM->cellSizeY() + y_offset;
+                                    ellipsoid_x->data[r2][c2] = DEM->west() + r * DEM->cellSizeX() + x_offset;
+                                    ellipsoid_z->data[r2][c2] = elev + h;
+                                    ellipsoid_a->data[r2][c2] = size;
+                                    ellipsoid_b->data[r2][c2] = size_lat;
+                                    ellipsoid_c->data[r2][c2] = size_vert;
+                                    ellipsoid_t1->data[r2][c2] = rot_lat;
+                                    ellipsoid_t2->data[r2][c2] = rot;
+                                }
+                                m.unlock();
+                            }
                     }
-
                 }
-
             }
 
         }

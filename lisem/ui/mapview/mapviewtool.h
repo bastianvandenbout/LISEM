@@ -838,7 +838,7 @@ public:
 
                 if(rdp->Exists())
                 {
-                    UIStreamRasterLayer * ret = new UIStreamRasterLayer(rdp,name,m->AS_FileName.size() == 0? false : true,m->AS_FileName,!false);
+                    UIStreamRasterLayer * ret = new UIStreamRasterLayer(rdp,name,m->AS_FileName.size() == 0? false : true,m->AS_FileName,false);
                     if(rdp->GetBandCount() > 1)
                     {
                         ret->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_MULTIRASTER),true);
@@ -851,7 +851,6 @@ public:
 
                     lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret) );
 
-                    std::cout << " added ui raster layer " << std::endl;
                     return lay;
 
                 }else {
@@ -901,7 +900,6 @@ public:
 
     inline ASUILayer AddLayerFromScript(RigidPhysicsWorld * m, QString name, bool can_remove)
     {
-        std::cout << "add view layer " << std::endl;
         ASUILayer lay;
         m->AS_AddRef();
 
@@ -912,8 +910,6 @@ public:
             m_WorldWindow->AddUILayer(UIP,true);
 
             lay.SetUID(UIP->GetUID(),std::bind(&UILayer::IncreaseScriptRef,UIP),std::bind(&UILayer::DecreaseScriptRef,UIP) );
-
-            std::cout << "return view layer " << std::endl;
 
             return lay;
         }
@@ -1114,10 +1110,10 @@ public:
 
 
         //add layer
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        r = sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Shapes &in shapes, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(ShapeFile *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Field &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(const RigidModel &in map, string name, bool removeable = false)", asMETHODPR( MapViewTool ,AddLayerFromScript,(RigidPhysicsWorld *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        r = sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Shapes &in shapes, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(ShapeFile *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Field &in map, string name, bool removeable =  true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(const RigidModel &in map, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(RigidPhysicsWorld *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
 
         //remove layer
 

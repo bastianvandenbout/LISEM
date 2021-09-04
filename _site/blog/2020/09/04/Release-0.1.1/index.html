@@ -11,22 +11,22 @@
 
     <link rel="shortcut icon" href="/favicon.ico?1">
     <!-- Begin Jekyll SEO tag v2.7.1 -->
-<title>Alpha release of the new LISEM! | LISEM</title>
+<title>Release of 0.1.1 | LISEM</title>
 <meta name="generator" content="Jekyll v3.9.0" />
-<meta property="og:title" content="Alpha release of the new LISEM!" />
+<meta property="og:title" content="Release of 0.1.1" />
 <meta name="author" content="Bastian van den Bout" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Today we have finally uploaded a first link to the compiled new version of LISEM. This is not just the model, but the full software with all of the tools. Some of these are slightly (understatement) ambitious. Thus, a solid warning is in place:" />
-<meta property="og:description" content="Today we have finally uploaded a first link to the compiled new version of LISEM. This is not just the model, but the full software with all of the tools. Some of these are slightly (understatement) ambitious. Thus, a solid warning is in place:" />
-<link rel="canonical" href="http://localhost:4000/blog/2020/07/09/Alpha-Release/" />
-<meta property="og:url" content="http://localhost:4000/blog/2020/07/09/Alpha-Release/" />
+<meta name="description" content="We have seen some activity on the downloads pages on sourceforge for the new LISEM software! Thanks for your interest!" />
+<meta property="og:description" content="We have seen some activity on the downloads pages on sourceforge for the new LISEM software! Thanks for your interest!" />
+<link rel="canonical" href="http://localhost:4000/blog/2020/09/04/Release-0.1.1/" />
+<meta property="og:url" content="http://localhost:4000/blog/2020/09/04/Release-0.1.1/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2020-07-09T11:41:09+02:00" />
+<meta property="article:published_time" content="2020-09-04T11:41:09+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Alpha release of the new LISEM!" />
+<meta property="twitter:title" content="Release of 0.1.1" />
 <script type="application/ld+json">
-{"@type":"BlogPosting","headline":"Alpha release of the new LISEM!","dateModified":"2020-07-09T11:41:09+02:00","datePublished":"2020-07-09T11:41:09+02:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/blog/2020/07/09/Alpha-Release/"},"author":{"@type":"Person","name":"Bastian van den Bout"},"url":"http://localhost:4000/blog/2020/07/09/Alpha-Release/","description":"Today we have finally uploaded a first link to the compiled new version of LISEM. This is not just the model, but the full software with all of the tools. Some of these are slightly (understatement) ambitious. Thus, a solid warning is in place:","@context":"https://schema.org"}</script>
+{"@type":"BlogPosting","headline":"Release of 0.1.1","dateModified":"2020-09-04T11:41:09+02:00","datePublished":"2020-09-04T11:41:09+02:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/blog/2020/09/04/Release-0.1.1/"},"author":{"@type":"Person","name":"Bastian van den Bout"},"url":"http://localhost:4000/blog/2020/09/04/Release-0.1.1/","description":"We have seen some activity on the downloads pages on sourceforge for the new LISEM software! Thanks for your interest!","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -91,9 +91,9 @@
                 <h4>RECENT POSTS</h4>
                 <ul class="list-unstyled post-list-container">
                     
-                    <li><a href="/blog/2020/09/04/Release-0.1.1/" >Release of 0.1.1</a></li>
+                    <li><a href="/blog/2020/09/04/Release-0.1.1/"  class="active" >Release of 0.1.1</a></li>
                     
-                    <li><a href="/blog/2020/07/09/Alpha-Release/"  class="active" >Alpha release of the new LISEM!</a></li>
+                    <li><a href="/blog/2020/07/09/Alpha-Release/" >Alpha release of the new LISEM!</a></li>
                     
                     <li><a href="/blog/2020/05/10/Under-Development/" >The new LISEM website is under development!</a></li>
                     
@@ -103,22 +103,24 @@
         </div>
 
         <div class="col-md-8">
-            <h1>Alpha release of the new LISEM!</h1>
-            <p>Jul 9, 2020 • Bastian van den Bout</p>
-            <div  id="markdown-content-container"><p>Today we have finally uploaded a first link to the compiled new version of LISEM.
-This is not just the model, but the full software with all of the tools.
-Some of these are slightly (understatement) ambitious. 
-Thus, a solid warning is in place:</p>
+            <h1>Release of 0.1.1</h1>
+            <p>Sep 4, 2020 • Bastian van den Bout</p>
+            <div  id="markdown-content-container"><p>We have seen some activity on the downloads pages on sourceforge for the new LISEM software!
+Thanks for your interest!</p>
 
-<p>This software is in alpha release!
-There will be bugs, issues and sometimes confusing elements to the interface and algorithms.</p>
+<p>I hope you all have had some uses for the software. If there are any issues or questions, please contact us.
+You can use the github discussions page, or email b.vandenbout@utwente.nl</p>
 
-<p>We will proceed during the summer and fall to fix the majority of the remaining bugs.
-For now, if you wish to use it, check out the docs pages on this website.
-If you have comments, found a bug thats particularly nasty, or want to contribute, 
-please check the about page for details on how to contact us.</p>
+<p>For now, there is a new version: 0.1.1. See the downloads page for the available files.
+You will find a lot of bug fixes, stability and memory issues resolved.
+Additionally, there is now reasonably good support for 3d datasets with the introduction of the Field object.
+You can use similar code as for maps, except the data is stored as .fld (3d netcdf file internally).
+so: a.fld = b.fld + sin(ZCoord(c.fld));
+These fields can be used with the (now working) 3d water flow model (FlowIncompressible3D) and seismic model based on SW4 (SeismicModel class).
+There are also major improvements to the rigid physics simulation using the Project Chrono library. These can be used from the scripting language and interact with 3d and 2d water flow.
+Tutorials will be added at some point to this site.</p>
 
-<p>Thanks for your interest!</p>
+<p>Thank you for your interest and happy modelling!</p>
 
 <p>Bastian</p>
 </div>
@@ -126,17 +128,11 @@ please check the about page for details on how to contact us.</p>
             <ul class="pager">
                 
                 <li class="previous">
-                    <a href="/blog/2020/05/10/Under-Development/">
+                    <a href="/blog/2020/07/09/Alpha-Release/">
                         <span aria-hidden="true">&larr;</span> Older
                     </a>
                 </li>
                  
-                <li class="next">
-                    <a href="/blog/2020/09/04/Release-0.1.1/">
-                      Newer <span aria-hidden="true">&rarr;</span>
-                    </a>
-                </li>
-                
             </ul>
         </div>
 

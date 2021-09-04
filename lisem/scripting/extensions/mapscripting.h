@@ -304,6 +304,9 @@ inline void RegisterMapMathToScriptEngine(asIScriptEngine *engine)
     r = engine->RegisterGlobalFunction("float GetMVVal()", asFUNCTION( AS_GetMVVal),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("float IsValMV(float s)", asFUNCTION( AS_IsValMV),  asCALL_CDECL); assert( r >= 0 );
 
+    r = engine->RegisterGlobalFunction("Map @MapEdge(const Map &in m)", asFUNCTION(AS_Edge), asCALL_CDECL);
+
+
     //register map averages (normal and reductive->meaning not a map but single float is returned)
     r = engine->RegisterGlobalFunction("Map @MapTotal(const Map &in s)", asFUNCTION( AS_MapTotal),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("float MapTotalRed(const Map &in s)", asFUNCTION( AS_MapTotalRed),  asCALL_CDECL); assert( r >= 0 );

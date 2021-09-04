@@ -181,6 +181,8 @@ public:
 
     int GetNumInstances();
 
+    void Scale(float scale_x, float scale_y, float scale_z);
+
     //check for convexity by determining all face planes, and checking if all other points are behind this plane
     bool int_Calc_IsConvex(float threshold = 0.001);
     double CalculateSurface();

@@ -908,11 +908,16 @@ public slots:
         inline void OnDeleteButtonChecked()
         {
 
+            int refs = m_maplayer->GetScriptRefs();
+
             //we do not allow removal of native (model) maps, since there is no way to add these again
             //if user does not want to display those, uncheck the draw checkbox
             if(!(m_maplayer->IsNative()))
             {
-                m_window->RemoveUILayer(this->m_maplayer,true);
+                if(refs < 1)
+                {
+                    m_window->RemoveUILayer(this->m_maplayer,true);
+                }
             }
 
         }

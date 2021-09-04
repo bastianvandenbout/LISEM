@@ -977,6 +977,23 @@ double LSMMesh::CalculateProjectedSurface(LSMVector3 shape_loc,LSMVector2 Veloci
 
 }
 
+void LSMMesh::Scale(float scale_x, float scale_y, float scale_z)
+{
+
+    for(int i = 0; i < vertices.size(); i++)
+    {
+        LSMVector3 pos = vertices.at(i).position();
+        pos.x *= scale_x;
+        pos.y *= scale_y;
+        pos.z *= scale_z;
+        vertices.at(i).setPosition(pos);
+    }
+
+
+
+}
+
+
 //get volume and inertia properties
 // Following function is a modified version of:
 //

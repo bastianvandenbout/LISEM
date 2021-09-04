@@ -13,6 +13,7 @@
 //#define GLFW_EXPOSE_NATIVE_GLX
 #endif
 
+#include "version.h"
 #include "defines.h"
 #include <glad/glad.h>
 #include "OpenCLUtil.h"
@@ -399,7 +400,7 @@ public slots:
     inline void Info()
     {
         QMessageBox msgBox;
-        msgBox.setText("Thank you for using LISEM 0.1.0 alpha!");
+        msgBox.setText(QString("Thank you for using LISEM ") + LISEM_VERSION_STRING + "!");
         msgBox.setInformativeText("Info");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.setDefaultButton(QMessageBox::Ok);

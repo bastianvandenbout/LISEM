@@ -842,7 +842,6 @@ public:
                                         {
 
 
-                                            std::cout << "check_ref "<<check_ref<< std::endl;
                                             if(check_ref)
                                             {
                                                 BoundingBox bref1 = BoundingBox(rsb_i->tlx,rsb_i->brx, rsb_i->tly ,rsb_i->bry);

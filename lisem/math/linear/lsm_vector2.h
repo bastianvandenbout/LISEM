@@ -2,6 +2,7 @@
 #define VECTOR2_H
 
 #include  "math.h"
+#include "angelscript.h"
 
 class LSMVector2
 {
@@ -139,6 +140,17 @@ public:
         out.y = -y;
         return out;
     }
+
+    inline void AS_FromList(void*buf)
+    {
+        asUINT length = *(asUINT*)buf;
+        float * f = (float*)buf;
+
+        x = *f;
+        f++;
+        y = *f;
+    }
+
 
 };
 static inline LSMVector2 operator+(const double & in, const LSMVector2 & in2)

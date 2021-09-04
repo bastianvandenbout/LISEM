@@ -439,7 +439,7 @@ void main() {
             frag_colour = 0.025 *(1.0-color.a) * vec4(value,value,value,value) + (0.975 + 0.025 *(color.a))* vec4(color.r,color.g,color.b,color.a * alpha);
 
         }
-    //float testval = length(screenwpos);
+    //float testval = length(screenwpos)/50.0;
     //frag_colour = vec4(testval,testval,testval,1.0f);
     //frag_colour = vec4(vec3(1.0,0.702,0.278) * (0.4 +0.6 * max(0.0f,dot(normalize(frag_normal),normalize(iSunDir)))),1.0);
 

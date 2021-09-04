@@ -179,7 +179,19 @@ inline void RegisterModelScriptFunctions(LSMScriptEngine *sm)
     sm->RegisterObjectBehaviour("RigidObject",asBEHAVE_RELEASE,"void f()",asMETHOD(RigidPhysicsObject,AS_ReleaseRef),asCALL_THISCALL); assert( r >= 0 );
 
     sm->RegisterObjectMethod("RigidObject", "RigidObject& opAssign(RigidObject &in m)", asMETHODPR(RigidPhysicsObject,AS_Assign,(RigidPhysicsObject *),RigidPhysicsObject*), asCALL_THISCALL); assert( r >= 0 );
-    //sm->RegisterObjectMethod("RigidObject", "vec3 Position()", asMETHODPR(RigidPhysicsObject,GetPosition,(),SPHVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 Position()", asMETHODPR(RigidPhysicsObject,GetPosition,(),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 Rotation()", asMETHODPR(RigidPhysicsObject,GetRotation,(),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 Velocity()", asMETHODPR(RigidPhysicsObject,GetVelocity,(),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 RotationalVelocity()", asMETHODPR(RigidPhysicsObject,GetRotationVelocity,(),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 GetLocalLinearVelocity(vec3 worldpos)", asMETHODPR(RigidPhysicsObject,GetLocalLinearVelocity,(LSMVector3),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 GetForces()", asMETHODPR(RigidPhysicsObject,GetForces,(),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "vec3 GetTorques()", asMETHODPR(RigidPhysicsObject,GetTorques,(),LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "void ApplyForce(vec3 p, vec3 f)", asMETHODPR(RigidPhysicsObject,ApplyForce,(LSMVector3, LSMVector3),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "void ApplyTorques(vec3 f)", asMETHODPR(RigidPhysicsObject,ApplyTorque,(LSMVector3),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "void SetPosition(vec3 f)", asMETHODPR(RigidPhysicsObject,SetPosition,(LSMVector3),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "void SetVelocity(vec3 f)", asMETHODPR(RigidPhysicsObject,SetRotation,(LSMVector3),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "void SetRotation(vec3 f)", asMETHODPR(RigidPhysicsObject,SetVelocity,(LSMVector3),void), asCALL_THISCALL); assert( r >= 0 );
+    sm->RegisterObjectMethod("RigidObject", "void SetRotationalVelocity(vec3 f)", asMETHODPR(RigidPhysicsObject,SetRotationalVelocity,(LSMVector3),void), asCALL_THISCALL); assert( r >= 0 );
 
     sm->RegisterGlobalFunction("RigidObject @RigidObjectSphere(float size, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsSphere),  asCALL_CDECL); assert( r >= 0 );
     sm->RegisterGlobalFunction("RigidObject @RigidObjectEllipsoid(vec3 size= {1.0,1.0,1.0}, double density = 1000.0, vec3 position = {0.0,0.0,0.0}, vec3 rotation = {0.0,0.0,0.0}, vec3 vel = {0.0,0.0,0.0}, vec3 rotvel = {0.0,0.0,0.0},double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double damplingF = 0.2, string family = \"\", bool static = false)", asFUNCTION(RigidPhysicsObject::RigidPhysicsObject_AsEllipsoid),  asCALL_CDECL); assert( r >= 0 );

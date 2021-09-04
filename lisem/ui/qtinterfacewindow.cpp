@@ -9,6 +9,7 @@
 #include "tools/toolbrowser.h"
 #include "extensionprovider.h"
 #include "site.h"
+#include "version.h"
 
 int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManager * sm, WorldWindow * window )
 {
@@ -85,7 +86,7 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
     //trayIcon->setIcon(QIcon(":/openLisem.ico"));
     //trayIcon->show();
 
-    setWindowTitle("LISEM 0.1.0 alpha");
+    setWindowTitle(QString("LISEM ") + LISEM_VERSION_STRING);
     setMinimumWidth(800);
     setMinimumHeight(600);
     setAttribute(Qt::WA_DeleteOnClose);

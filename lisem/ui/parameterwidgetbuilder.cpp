@@ -8,7 +8,7 @@ void QTInterfaceWindow::CreateParameterWidgets()
 
     QTabWidget * m_TabModel = new QTabWidget();
 
-    TabWidget->addTab(m_TabModel,"SPH Model");
+    TabWidget->addTab(m_TabModel,"LISEM Model");
 
     QList<QVBoxLayout *> pastparents;
     QVBoxLayout * currentparent = m_Layout;

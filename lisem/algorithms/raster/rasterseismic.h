@@ -22,11 +22,11 @@ inline static std::vector<cTMap *> AS_PressureWaveEquation( cTMap * DX, cTMap * 
 }
 
 //2d wave equation solution
-inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
+inline static std::vector<cTMap *> AS_WaveEquation( cTMap * inU, cTMap * inUp, cTMap * cc, float dt)
 {
     cTMap * U = inU->GetCopy();
     cTMap * UN = inU->GetCopy();
-    cTMap * UP = inU->GetCopy0();
+    cTMap * UP = inUp->GetCopy();
 
     double maxc = MapMaximum(cc);
 
@@ -44,18 +44,18 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
     nrRows = U->nrRows();
     nrCols = U->nrCols();
 
+
     for (r = 0; r < nrRows; r++) {
         for (c = 0; c < nrCols; c++) {
 
-            if(!pcr::isMV(U->data[r][c]))
+            if(pcr::isMV(UP->data[r][c]) && !pcr::isMV(U->data[r][c]))
             {
                 double ddx2 = UF2D_Derivative2(U,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(U->cellSizeX()));
                 double ddy2 = UF2D_Derivative2(U,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(U->cellSizeY()));
 
-
                 if(!pcr::isMV(cc->data[r][c]))
                 {
-                    U->data[r][c] = UP->data[r][c] + (ddx2 + ddy2)*cc->data[r][c]*cc->data[r][c];
+                    UP->data[r][c] = U->data[r][c] - dt_s*dt_s*(ddx2 + ddy2)*cc->data[r][c]*cc->data[r][c];
                 }
             }
         }
@@ -63,8 +63,11 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
 
     for(int i = 0; i < iter; i++)
     {
-        SWAPMAP(UP,U);
-        SWAPMAP(UN,U);
+        if(i > 0)
+        {
+            SWAPMAP(UP,U);
+            SWAPMAP(UN,U);
+        }
 
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
@@ -77,7 +80,7 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
                     double du = 0.0;
                     if(!pcr::isMV(cc->data[r][c]))
                     {
-                        du = dt_s *(ddx2 + ddy2)*cc->data[r][c]*cc->data[r][c];
+                        du = dt_s *dt_s * (ddx2 + ddy2)*cc->data[r][c]*cc->data[r][c];
                     }
                     UN->data[r][c] = (2.0 * U->data[r][c]  - UP->data[r][c]) +( du);
                 }
@@ -87,9 +90,8 @@ inline static cTMap * AS_WaveEquation( cTMap * inU, cTMap * cc, float dt)
     }
 
 
-    delete U;
     delete UP;
-    return UN;
+    return {UN,U};
 }
 
 inline static cTMap * AS_GaussianBump(cTMap * m, LSMVector2 point, LSMVector2 size, float intensity, float stdev, float time)
@@ -119,13 +121,101 @@ inline static cTMap * AS_GaussianBump(cTMap * m, LSMVector2 point, LSMVector2 si
 }
 
 //2d wave equation solution
-inline static std::vector<cTMap *> AS_SHWaveEquation( cTMap * inU,cTMap * SX,cTMap * SY, cTMap * rho, cTMap * mu, float dt)
+inline static std::vector<cTMap *> AS_SHWaveEquation( cTMap * inU, cTMap * inUp, cTMap * rho, cTMap * mu, float dt)
 {
     cTMap * U = inU->GetCopy();
     cTMap * UN = inU->GetCopy();
-    cTMap * UP = inU->GetCopy0();
-    cTMap * SXN = SX->GetCopy();
-    cTMap * SYN = SY->GetCopy();
+    cTMap * UP = inUp->GetCopy();
+
+
+    cTMap * cc = rho->GetCopy();
+    for (int r = 0; r < cc->nrRows(); r++) {
+        for (int c = 0; c < cc->nrCols(); c++) {
+
+            if(!pcr::isMV(cc->data[r][c]) )
+            {
+                cc->data[r][c] = mu->data[r][c] /rho->data[r][c];
+            }
+        }
+    }
+
+    double maxc = MapMaximum(cc);
+
+    if(! (maxc > 0.0))
+    {
+        LISEMS_ERROR("Wave velocity must be larger then 0");
+        throw 1;
+    }
+    float dt_req = 0.5 * std::min(std::fabs(U->cellSizeX()),std::fabs(U->cellSizeY()))/maxc;
+    int iter = std::max(1, ((int)( dt/dt_req))+1);
+    float dt_s = dt/((float)(iter));
+
+    int r, c, nrRows, nrCols;
+
+    nrRows = U->nrRows();
+    nrCols = U->nrCols();
+
+
+    for (r = 0; r < nrRows; r++) {
+        for (c = 0; c < nrCols; c++) {
+
+            if(pcr::isMV(UP->data[r][c]) && !pcr::isMV(U->data[r][c]))
+            {
+                double ddx2 = UF2D_Derivative2(U,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(U->cellSizeX()));
+                double ddy2 = UF2D_Derivative2(U,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(U->cellSizeY()));
+
+                if(!pcr::isMV(cc->data[r][c]))
+                {
+                    UP->data[r][c] = U->data[r][c] - dt_s*dt_s*(ddx2 + ddy2)*cc->data[r][c]*cc->data[r][c];
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < iter; i++)
+    {
+        if(i > 0)
+        {
+            SWAPMAP(UP,U);
+            SWAPMAP(UN,U);
+        }
+
+        for (r = 0; r < nrRows; r++) {
+            for (c = 0; c < nrCols; c++) {
+
+                if(!pcr::isMV(U->data[r][c]))
+                {
+                    double ddx2 = UF2D_Derivative2(U,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(U->cellSizeX()));
+                    double ddy2 = UF2D_Derivative2(U,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(U->cellSizeY()));
+
+                    double du = 0.0;
+                    if(!pcr::isMV(cc->data[r][c]))
+                    {
+                        du = dt_s *dt_s * (ddx2 + ddy2)*cc->data[r][c]*cc->data[r][c];
+                    }
+                    UN->data[r][c] = (2.0 * U->data[r][c]  - UP->data[r][c]) +( du);
+                }
+            }
+        }
+
+    }
+
+
+    delete cc;
+    delete UP;
+    return {UN,U};
+}
+
+
+//2d wave equation solution
+inline static std::vector<cTMap *> AS_PSVWaveEquation( cTMap * inUX, cTMap * inUXp,  cTMap * inUY, cTMap * inUYp, cTMap * rho, cTMap * lambda, cTMap * mu, float dt)
+{
+    cTMap * UX = inUX->GetCopy();
+    cTMap * UXN = inUX->GetCopy();
+    cTMap * UXP = inUXp->GetCopy();
+    cTMap * UY = inUY->GetCopy();
+    cTMap * UYN = inUY->GetCopy();
+    cTMap * UYP = inUYp->GetCopy();
 
     double maxv = 1.0;
     bool found = false;
@@ -157,92 +247,7 @@ inline static std::vector<cTMap *> AS_SHWaveEquation( cTMap * inU,cTMap * SX,cTM
         LISEMS_ERROR("Wave velocity must be larger then 0");
         throw 1;
     }
-    float dt_req = 0.5 * std::min(std::fabs(U->cellSizeX()),std::fabs(U->cellSizeY()))/maxv;
-    int iter = std::max(1, ((int)( dt/dt_req))+1);
-    float dt_s = dt/((float)(iter));
-
-    int r, c, nrRows, nrCols;
-
-    nrRows = U->nrRows();
-    nrCols = U->nrCols();
-
-    for (r = 0; r < nrRows; r++) {
-        for (c = 0; c < nrCols; c++) {
-
-            if(!pcr::isMV(U->data[r][c]))
-            {
-                double ddx2 = UF2D_Derivative(SX,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(U->cellSizeX()));
-                double ddy2 = UF2D_Derivative(SY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(U->cellSizeY()));
-
-                if(!pcr::isMV(rho->data[r][c]))
-                {
-                    U->data[r][c] = UP->data[r][c] + (1.0/rho->data[r][c]) * (ddx2 + ddy2);
-                }
-            }
-        }
-    }
-
-    for(int i = 0; i < iter; i++)
-    {
-        SWAPMAP(UP,U);
-        SWAPMAP(UN,U);
-
-        SWAPMAP(SXN,SX);
-        SWAPMAP(SYN,SY);
-
-
-        for (r = 0; r < nrRows; r++) {
-            for (c = 0; c < nrCols; c++) {
-
-                if(!pcr::isMV(U->data[r][c]))
-                {
-                    double ddx2 = UF2D_Derivative(SX,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(SX->cellSizeX()));
-                    double ddy2 = UF2D_Derivative(SY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(SY->cellSizeY()));
-
-                    double dudx = UF2D_Derivative(U,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(U->cellSizeX()));
-                    double dudy = UF2D_Derivative(U,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR,std::fabs(U->cellSizeY()));
-
-                    double du = 0.0;
-                    if(!pcr::isMV(rho->data[r][c]))
-                    {
-                        du = dt_s * (1.0/rho->data[r][c]) * (ddx2 + ddy2);
-                    }
-                    SXN->data[r][c] = SX->data[r][c] + dt_s * dudx * mu->data[r][c];
-                    SXN->data[r][c] = SX->data[r][c] + dt_s * dudy * mu->data[r][c];
-
-                    UN->data[r][c] = (2.0 * U->data[r][c]  - UP->data[r][c]) +( du);
-                }
-            }
-        }
-
-    }
-
-
-    delete U;
-    delete UP;
-    return {UN, SXN, SYN};
-}
-
-
-
-//2d wave equation solution
-/*inline static std::vector<cTMap *> AS_PWaveEquation( cTMap * inUX, cTMap * inUY, cTMap * inSX,cTMap * inSXY,cTMap * inSY, cTMap * rho, cTMap * mux, cTMap * muxy, cTMap * muy, float dt)
-{
-    cTMap * UX = inU->GetCopy();
-    cTMap * UNX = inU->GetCopy();
-    cTMap * UPX = inU->GetCopy0();
-    cTMap * UY = inU->GetCopy();
-    cTMap * UNY = inU->GetCopy();
-    cTMap * UPY = inU->GetCopy0();
-
-    double maxc = MapMaximum(cc);
-
-    if(! (maxc > 0.0))
-    {
-        LISEMS_ERROR("Wave velocity must be larger then 0");
-        throw 1;
-    }
-    float dt_req = 0.5 * std::min(std::fabs(UX->cellSizeX()),std::fabs(UX->cellSizeY()))/maxc;
+    float dt_req = 0.5 * std::min(std::fabs(UX->cellSizeX()),std::fabs(UX->cellSizeY()))/maxv;
     int iter = std::max(1, ((int)( dt/dt_req))+1);
     float dt_s = dt/((float)(iter));
 
@@ -254,56 +259,77 @@ inline static std::vector<cTMap *> AS_SHWaveEquation( cTMap * inU,cTMap * SX,cTM
     for (r = 0; r < nrRows; r++) {
         for (c = 0; c < nrCols; c++) {
 
-            if(!pcr::isMV(U->data[r][c]))
+            if((pcr::isMV(UXP->data[r][c]) ||  pcr::isMV(UYP->data[r][c])) && !(pcr::isMV(UX->data[r][c]) && pcr::isMV(UY->data[r][c])))
             {
-                double ddx2x = UF2D_Derivative2(UX,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UX->cellSizeX()));
-                double ddy2x = UF2D_Derivative2(UX,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
-                double ddx2y = UF2D_Derivative2(UY,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UY->cellSizeX()));
-                double ddy2y = UF2D_Derivative2(UY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UY->cellSizeY()));
+                double dudxdx = UF2D_Derivative2(UX,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UX->cellSizeX()));
+                double dudxdy = UF2D_Derivative2(UX,r,c, UF_DIRECTION_XY,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
+                double dudydy = UF2D_Derivative2(UX,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
 
+                double dwdxdx = UF2D_Derivative2(UY,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UX->cellSizeX()));
+                double dwdxdy = UF2D_Derivative2(UY,r,c, UF_DIRECTION_XY,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
+                double dwdydy = UF2D_Derivative2(UY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
 
-                if(!pcr::isMV(cc->data[r][c]))
+                double l =  lambda->data[r][c];
+                double m = mu->data[r][c];
+                double p = rho->data[r][c];
+                double dudt = (l+2.0*m)*dudxdx + l*dwdxdy + m*dudydy + m * dwdxdy;
+                double dwdt = (l+2.0*m)*dwdydy + l*dudxdy + m*dudxdy + m * dwdxdx;
+
+                if(!pcr::isMV(rho->data[r][c]))
                 {
-                    UX->data[r][c] = UPX->data[r][c] + (ddx2 + ddy2)*ccx->data[r][c]*ccx->data[r][c];
-                    UY->data[r][c] = UPY->data[r][c] + (ddx2 + ddy2)*ccy->data[r][c]*ccy->data[r][c];
+                    UXP->data[r][c] = UX->data[r][c] -dt_s*dt_s*(1.0/rho->data[r][c]) * (dudt);
+                }
+
+                if(!pcr::isMV(rho->data[r][c]))
+                {
+                    UYP->data[r][c] = UY->data[r][c] -dt_s*dt_s*(1.0/rho->data[r][c]) * (dwdt);
                 }
             }
         }
     }
 
+    std::cout << "iter " << iter << " " << maxv << " " << dt_s <<std::endl;
     for(int i = 0; i < iter; i++)
     {
-        SWAPMAP(UPX,UX);
-        SWAPMAP(UNX,UX);
-        SWAPMAP(UPY,UY);
-        SWAPMAP(UNY,UY);
+        if(i > 0)
+        {
+            SWAPMAP(UXP,UX);
+            SWAPMAP(UXN,UX);
+
+            SWAPMAP(UYP,UY);
+            SWAPMAP(UYN,UY);
+
+        }
+
+
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
 
-                if(!pcr::isMV(U->data[r][c]))
+                if(!(pcr::isMV(UX->data[r][c]) || pcr::isMV(UY->data[r][c])))
                 {
-                    double ddx2x = UF2D_Derivative2(UY,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UX->cellSizeX()));
-                    double ddy2x = UF2D_Derivative2(UY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
+                    double dudxdx = UF2D_Derivative2(UX,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UX->cellSizeX()));
+                    double dudxdy = UF2D_Derivative2(UX,r,c, UF_DIRECTION_XY,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
+                    double dudydy = UF2D_Derivative2(UX,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
 
-                    double ddx2y = UF2D_Derivative2(UY,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UY->cellSizeX()));
-                    double ddy2y = UF2D_Derivative2(UY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UY->cellSizeY()));
+                    double dwdxdx = UF2D_Derivative2(UY,r,c, UF_DIRECTION_X,UF_DERIVATIVE_LR,std::fabs(UX->cellSizeX()));
+                    double dwdxdy = UF2D_Derivative2(UY,r,c, UF_DIRECTION_XY,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
+                    double dwdydy = UF2D_Derivative2(UY,r,c, UF_DIRECTION_Y,UF_DERIVATIVE_LR, std::fabs(UX->cellSizeY()));
 
+                    double l =  lambda->data[r][c];
+                    double m = mu->data[r][c];
+                    double p = rho->data[r][c];
+                    double dudt = (l+2.0*m)*dudxdx + l*dwdxdy + m*dudydy + m * dwdxdy;
+                    double dwdt = (l+2.0*m)*dwdydy + l*dudxdy + m*dudxdy + m * dwdxdx;
 
-                    double dux = 0.0;
-                    if(!pcr::isMV(ccx->data[r][c]))
+                    if(!pcr::isMV(rho->data[r][c]))
                     {
-                        dux = dt_s *(ddx2x + ddy2x)*ccx->data[r][c]*ccx->data[r][c];
+                        UXN->data[r][c] = 2.0 * UX->data[r][c] - UXP->data[r][c] + dt_s*dt_s*(1.0/rho->data[r][c]) * (dudt);
                     }
-                    UNX->data[r][c] = (2.0 * UX->data[r][c]  - UPX->data[r][c]) +( dux);
 
-
-
-                    double duy = 0.0;
-                    if(!pcr::isMV(ccy->data[r][c]))
+                    if(!pcr::isMV(rho->data[r][c]))
                     {
-                        duy = dt_s *(ddx2y + ddy2y)*ccy->data[r][c]*ccy->data[r][c];
+                        UYN->data[r][c] = 2.0 * UY->data[r][c] - UYP->data[r][c] + dt_s*dt_s*(1.0/rho->data[r][c]) * (dwdt);
                     }
-                    UNY->data[r][c] = (2.0 * UY->data[r][c]  - UPY->data[r][c]) +( duy);
                 }
             }
         }
@@ -311,21 +337,11 @@ inline static std::vector<cTMap *> AS_SHWaveEquation( cTMap * inU,cTMap * SX,cTM
     }
 
 
-    delete UX;
-    delete UPX;
-    delete UY;
-    delete UPY;
-    return {UNX,UNY};
-}*/
+    delete UXP;
+    delete UYP;
+    return {UXN, UX, UYN, UY};
+}
 
-
-
-//inline static std::vector<cTMap *> AS_ViscoPlastic2DWaveEquation(cTMap * )
-//{
-
-
-
-//}
 
 #include "seismic/EW.h"
 

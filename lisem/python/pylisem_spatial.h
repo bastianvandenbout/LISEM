@@ -42,7 +42,8 @@
 #include "models/3dmodel.h"
 #include "models/lsmmesh.h"
 #include "geo/pointcloud/pointcloud.h"
-
+#include "geo/raster/field.h"
+#include "geo/raster/fieldalgebra.h"
 #include "pybind11/pybind11.h"
 #include <pybind11/numpy.h>
 
@@ -393,6 +394,76 @@ inline void init_pylisem_spatial(py::module &m)
 
     py::class_<LSMMesh>(m,"Mesh")
             .def(py::init<>());
+
+
+    py::class_<Field>(m, "Field")
+           .def(py::init(py::overload_cast<>(&FieldFactory)))
+           .def(py::init(py::overload_cast<int,int,int,float,float,float,float,float,float>(&FieldFactory2)))
+           .def("Rows",&Field::nrRows)
+           .def("Cols",&Field::nrCols)
+           .def("Levels",&Field::nrLevels)
+           .def("North",&Field::GetNorth)
+           .def("West",&Field::GetWest)
+           .def("Bottom",&Field::GetBottom)
+           .def("CellSizeX",&Field::cellSizeX)
+           .def("CellSizeY",&Field::cellSizeY)
+           .def("CellSizeZ",&Field::cellSizeZ)
+            .def("__add__",[](Field*A,Field *B){return A->OpAdd(B);},py::is_operator())
+           .def("__sub__",[](Field*A,Field *B){return A->OpSub(B);},py::is_operator())
+           .def("__mul__",[](Field*A,Field *B){return A->OpMul(B);},py::is_operator())
+           .def("__pow__",[](Field*A,Field *B){return A->OpPow(B);},py::is_operator())
+           .def("__truediv__",[](Field*A,Field *B){return A->OpDiv(B);},py::is_operator())
+           //.def("__floordiv__",[](Field*A,Field *B){return A->OpAdd(B);},py::is_operator())
+           .def("__mod__",[](Field*A,Field *B){return A->OpMod(B);},py::is_operator())
+           .def("__and__",[](Field*A,Field *B){return A->And(B);},py::is_operator())
+           .def("__or__",[](Field*A,Field *B){return A->Or(B);},py::is_operator())
+           .def("__xor__",[](Field*A,Field *B){return A->Xor(B);},py::is_operator())
+           .def("__invert__",[](Field*A){return A->Negate();},py::is_operator())
+           .def("__lt__",[](Field*A,Field *B){return A->SmallerThen(B);},py::is_operator())
+           .def("__le__",[](Field*A,Field *B){return A->SmallerEqualThen(B);},py::is_operator())
+           .def("__eq__",[](Field*A,Field *B){return A->EqualTo(B);},py::is_operator())
+           .def("__ne__",[](Field*A,Field *B){return A->NotEqualTo(B);},py::is_operator())
+           .def("__gt__",[](Field*A,Field *B){return A->LargerThen(B);},py::is_operator())
+           .def("__ge__",[](Field*A,Field *B){return A->LargerEqualThen(B);},py::is_operator())
+
+           .def("__add__",[](Field*A,float B){return A->OpAdd(B);},py::is_operator())
+           .def("__sub__",[](Field*A,float B){return A->OpSub(B);},py::is_operator())
+           .def("__mul__",[](Field*A,float B){return A->OpMul(B);},py::is_operator())
+           .def("__pow__",[](Field*A,float B){return A->OpPow(B);},py::is_operator())
+           .def("__truediv__",[](Field*A,float B){return A->OpDiv(B);},py::is_operator())
+           //.def("__floordiv__",[](Field*A,float B){return A->OpAdd(B);},py::is_operator())
+           .def("__mod__",[](Field*A,float B){return A->OpMod(B);},py::is_operator())
+           .def("__and__",[](Field*A,float B){return A->And(B);},py::is_operator())
+           .def("__or__",[](Field*A,float B){return A->Or(B);},py::is_operator())
+           .def("__xor__",[](Field*A,float B){return A->Xor(B);},py::is_operator())
+           .def("__lt__",[](Field*A,float B){return A->SmallerThen(B);},py::is_operator())
+           .def("__le__",[](Field*A,float B){return A->SmallerEqualThen(B);},py::is_operator())
+           .def("__eq__",[](Field*A,float B){return A->EqualTo(B);},py::is_operator())
+           .def("__ne__",[](Field*A,float B){return A->NotEqualTo(B);},py::is_operator())
+           .def("__gt__",[](Field*A,float B){return A->LargerThen(B);},py::is_operator())
+           .def("__ge__",[](Field*A,float B){return A->LargerEqualThen(B);},py::is_operator())
+
+            .def("__add__",[](float B,Field* A){return A->OpAdd_r(B);},py::is_operator())
+            .def("__sub__",[](float B,Field* A){return A->OpSub_r(B);},py::is_operator())
+            .def("__mul__",[](float B,Field* A){return A->OpMul_r(B);},py::is_operator())
+            .def("__pow__",[](float B,Field* A){return A->OpPow_r(B);},py::is_operator())
+            .def("__truediv__",[](float B,Field* A){return A->OpDiv_r(B);},py::is_operator())
+            //.def("__floordiv__",[](float B,Field* A){return A->OpAdd(B);},py::is_operator())
+            .def("__mod__",[](float B,Field* A){return A->OpMod_r(B);},py::is_operator())
+            .def("__and__",[](float B,Field* A){return A->And_r(B);},py::is_operator())
+            .def("__or__",[](float B,Field* A){return A->Or_r(B);},py::is_operator())
+            .def("__xor__",[](float B,Field* A){return A->Xor_r(B);},py::is_operator())
+            .def("__lt__",[](float B,Field* A){return A->SmallerThen_r(B);},py::is_operator())
+            .def("__le__",[](float B,Field* A){return A->SmallerEqualThen_r(B);},py::is_operator())
+            .def("__eq__",[](float B,Field* A){return A->EqualTo_r(B);},py::is_operator())
+            .def("__ne__",[](float B,Field* A){return A->NotEqualTo_r(B);},py::is_operator())
+            .def("__gt__",[](float B,Field* A){return A->LargerThen_r(B);},py::is_operator())
+            .def("__ge__",[](float B,Field* A){return A->LargerEqualThen_r(B);},py::is_operator())
+            .def("__copy__",[](Field * A){return A->GetCopy();});
+
+    m.def("FieldFromMap", &FieldFromMap, py::arg( "map"), py::arg("nlevels"), py::arg("zstart"),py::arg("dz") );
+    m.def("FieldFromMapList", &FieldFromMapList, py::arg("levels"), py::arg("zstart"),py::arg("dz"));
+    m.def("GetMapList", &MapListFromField, py::arg("Field"));
 
 
 }

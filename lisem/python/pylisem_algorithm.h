@@ -361,7 +361,7 @@ inline void init_pylisem_algorithm(py::module &m)
     m.def("RasterPaintEllips",&AS_PaintEllipsoid,py::arg("Target"),py::arg("x"),py::arg("y"),py::arg("rx"),py::arg("ry"),py::arg("Val1"),py::arg("Val2"),py::arg("Feather"),py::arg("Operation"));
     m.def("RasterPaintRectangle",&AS_PaintRectangle,py::arg("Target"),py::arg("x"),py::arg("y"),py::arg("rx"),py::arg("ry"),py::arg("Val1"),py::arg("Val2"),py::arg("Feather"),py::arg("Operation"));
 
-    m.def("WaveEquation",&AS_WaveEquation,py::arg("Displacement"),py::arg("c"),py::arg("dt"));
+    m.def("WaveEquation",&AS_WaveEquation,py::arg("Displacement"),py::arg("PreviousDisplacement"),py::arg("c"),py::arg("dt"));
 
     m.def("RasterFromTableValues",&AS_RasterFromTableHeader,py::arg("Table"),py::arg("RowValue"),py::arg("ColumnValue"));
     m.def("RasterFromTable",&AS_RasterFromTableHeader,py::arg("Table"),py::arg("RowIndex"),py::arg("ColumnIndex"));

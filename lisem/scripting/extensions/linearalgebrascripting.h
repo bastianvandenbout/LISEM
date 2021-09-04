@@ -21,7 +21,7 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectType("vec2", sizeof(LSMVector2), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS | asGetTypeTraits<LSMVector2>()); assert( r >= 0 );
     engine->RegisterObjectProperty("vec2", "float x", asOFFSET(LSMVector2,x)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec2", "float y", asOFFSET(LSMVector2,y)); assert( r >= 0 );
-
+    engine->RegisterObjectBehaviour("vec2", asBEHAVE_LIST_CONSTRUCT, "void f(int &in) {float,float}", asMETHODPR(LSMVector2,AS_FromList, (void*),void), asCALL_THISCALL);
 
     //vec3
     engine->RegisterObjectType("vec3", sizeof(LSMVector3), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS| asGetTypeTraits<LSMVector3>()); assert( r >= 0 );

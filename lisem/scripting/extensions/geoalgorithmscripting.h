@@ -41,6 +41,8 @@
 #include "geo/marchingcubes.h"
 #include "scriptarrayhelpers.h"
 #include "raster/rasterseismic.h"
+#include "raster/rasterprofile.h"
+#include "raster/rasterdeformation.h"
 
 inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 {
@@ -203,7 +205,7 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityIFM(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, float sfmax, int iter = 25)",GetFuncConvert(AS_SlopeStabilityIFM));
     engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityISS(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, const Map&in PGA, float sfmax)", GetFuncConvert(AS_SlopeStabilityISS));
 
-    engine->RegisterGlobalFunction("array<Map> @SlopeStabilityRES(const Map & in elevation, const array<Map> &in SoilDepth, const array<Map> &in Cohesion, const array<Map> &in InternalFrictionAngle, const array<Map> &in Density, const array<Map> &in Saturation, const Map&in WaterHeight, float sample_density, float h_min, float h_max, float size_min, float size_max, float size_lat_min, float size_lat_max, float size_vert_min, float size_vert_max, float rot_min, float rot_max, float rot_lat_min, float rot_lat_max, float vol_min)",asFUNCTION( AS_SlopeStabilityRES),  asCALL_CDECL);
+    engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityRES(const Map & in elevation, const array<Map> &in SoilDepth, const array<Map> &in Cohesion, const array<Map> &in InternalFrictionAngle, const array<Map> &in Density, const array<Map> &in Saturation, const Map&in WaterHeight, float sample_density, float h_min, float h_max, float size_min, float size_max, float size_lat_min, float size_lat_max, float size_vert_min, float size_vert_max, float rot_min, float rot_max, float rot_lat_min, float rot_lat_max, float vol_min)",GetFuncConvert(AS_SlopeStabilityRES));
 
     engine->RegisterGlobalFunction("Map @TerrainErode(const Map &in DEM, float p_erode, float p_deposit, float p_gravity, float p_tc, float p_evapo, float p_intertia, float p_minslope, float radius)", asFUNCTION(AS_LandscapeErode),asCALL_CDECL);
     //vector stuff
@@ -225,10 +227,13 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("Map @MedianGrainSize(const Map&in Sand, const Map&in Clay)", asFUNCTION(AS_MedianGrainSize),asCALL_CDECL);
     engine->RegisterGlobalFunction("Map @TextureClass(const Map&in Sand, const Map&in Clay)", asFUNCTION(AS_TextureClass),asCALL_CDECL);
     //wave
-    engine->RegisterGlobalFunction("Map @WaveEquation(const Map&in U, const Map&in c, float dt)", asFUNCTION( AS_WaveEquation),  asCALL_CDECL); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("array<Map> @WaveEquation(const Map&in U, const Map&in UP, const Map&in c, float dt)", GetFuncConvert(AS_WaveEquation)); assert( r >= 0 );
     engine->RegisterGlobalFunction("Map @GaussianBump(const Map&in m, vec2 point, vec2 size, float intensity, float stdev = 1.0, float time = 0.0)", asFUNCTION( AS_GaussianBump),  asCALL_CDECL); assert( r >= 0 );
-    engine->RegisterGlobalSTDFunction("Map @SHWaveEquation(const Map&in U, const Map&in SX, const Map&in SY,const Map&in rho, const Map&in mu,float dt)", GetFuncConvert(AS_SHWaveEquation)); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("array<Map> @SHWaveEquation(const Map&in U,const Map &in Up,const Map&in rho, const Map&in mu,float dt)", GetFuncConvert(AS_SHWaveEquation)); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("array<Map> @PSVWaveEquation(const Map&in UX,const Map &in UXp, const Map&in UY, const Map&in UYp,const Map&in rho,  const Map&in lambda,const Map&in mu,float dt)", GetFuncConvert(AS_PSVWaveEquation)); assert( r >= 0 );
 
+    engine->RegisterGlobalSTDFunction("array<Map> @OkadaDeform(const Map&in ref,vec2 centroid, float depth, float strike_degrees, float dip_degrees, float length, float width, float rake_degrees, float slip, float open, float poissonratio = 0.25)", GetFuncConvert( AS_OkadaDeform)); assert( r >= 0 );
+    engine->RegisterGlobalFunction("Map @TerrainProfileMap(const Map&in terrain, vec2 point, vec2 end, float cellsize, float zmin, float zmax)", asFUNCTION( AS_ProfileMap),  asCALL_CDECL); assert( r >= 0 );
 
     //mesh stuff
 

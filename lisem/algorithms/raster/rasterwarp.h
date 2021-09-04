@@ -125,7 +125,7 @@ inline static std::vector<cTMap*> AS_RasterOrthoRectify(std::vector<cTMap*> inpu
     ToGDALDataset(ddem,dem);
 
 
-   std::cout << "actual warping" << std::endl;
+   std::cout << "actual warping " << std::endl;
     int error = 0;
 
     GDALDatasetH out = GDALWarp(nullptr,TargetRaster,1,SourceRasters.data(),warpoptions,&error);
@@ -415,12 +415,48 @@ inline static void RasterWarpMultiple(QList<cTMap *> targets,  QList<QList<cTMap
 inline static void RasterWarp(cTMap * target, std::vector<cTMap *> inputmaps, QString interpolation)
 {
 
-    std::cout << "rasterwarp" << std::endl;
+    std::cout << "rasterwarp " << interpolation.toStdString().c_str() << std::endl;
     CPLStringList sl;
     sl.AddString("overwrite");
+    sl.AddString("-r");
+    sl.AddString(interpolation.toStdString().c_str());
     sl.AddNameValue("r",interpolation.toStdString().c_str());
+    sl.AddNameValue("-r",interpolation.toStdString().c_str());
 
-    GDALWarpAppOptions *warpoptions = GDALWarpAppOptionsNew(sl.List(),nullptr);
+    GDALWarpAppOptions *warpoptions;
+
+    if(interpolation == "nearest")
+    {
+        char * ops[] = {"-overwrite","-r","nearest","-rn",NULL};
+
+      warpoptions = GDALWarpAppOptionsNew(ops,nullptr);
+    }else if(interpolation == "cubic")
+    {
+        char * ops[] = {"-overwrite","-r","cubic","-rc",NULL};
+
+      warpoptions = GDALWarpAppOptionsNew(ops,nullptr);
+    }else if(interpolation == "cubicspline")
+    {
+        char * ops[] = {"-overwrite","-r","cubicspline","-rcs",NULL};
+
+      warpoptions = GDALWarpAppOptionsNew(ops,nullptr);
+    }else if(interpolation == "lanczos")
+    {
+        char * ops[] = {"-overwrite","-r","lanczos","-rl",NULL};
+
+      warpoptions = GDALWarpAppOptionsNew(ops,nullptr);
+    }else if(interpolation == "average")
+    {
+        char * ops[] = {"-overwrite","-r","average","-ra",NULL};
+
+      warpoptions = GDALWarpAppOptionsNew(ops,nullptr);
+    }else
+    {
+        char * ops[] = {"-overwrite","-r","bilinear","-rb",NULL};
+
+      warpoptions = GDALWarpAppOptionsNew(ops,nullptr);
+    }
+
 
     GDALDriver *poDriver;
 
@@ -464,11 +500,11 @@ inline static void RasterWarp(cTMap * target, std::vector<cTMap *> inputmaps, QS
 
 
     }
-   std::cout << "rasterwarp4" << std::endl;
+   std::cout << "rasterwarp4 " << std::endl;
     int error = 0;
 
     GDALDatasetH out = GDALWarp(nullptr,TargetRaster,SourceRasters.size(),SourceRasters.data(),warpoptions,&error);
-   std::cout << "rasterwarp5" << std::endl;
+   std::cout << "rasterwarp5 " << error << std::endl;
     auto band = d->GetRasterBand(1);
     band->SetNoDataValue(-FLT_MAX);
     if(band->RasterIO(GF_Read, 0, 0, nrCols, nrRows, target->data[0],

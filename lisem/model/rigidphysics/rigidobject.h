@@ -201,9 +201,32 @@ public:
         //transform pos to local coordinate system
         ChVector<double> relpos = m_chBody->Point_World2Body(ChVector<double>(pos.x,pos.y,pos.z));
 
-        std::cout << "rel pos " << relpos[0] << " " << relpos[1] << " " << relpos[2] << std::endl;
         //ask triangulated model
         return this->m_TriangulatedModel->IsPointInside(LSMVector3(relpos[0],relpos[1],relpos[2]));
+    }
+
+    inline LSMVector3 GetRotation()
+    {
+        ChVector<double> vel = m_chBody->GetRot().Q_to_Euler123();
+        return LSMVector3(vel[0],vel[1],vel[2]);
+    }
+
+    inline LSMVector3 GetRotationVelocity()
+    {
+        ChVector<double> vel = m_chBody->GetRot_dt().Q_to_Euler123();
+        return LSMVector3(vel[0],vel[1],vel[2]);
+    }
+
+    inline LSMVector3 GetForces()
+    {
+        ChVector<double> vel = m_chBody->Get_accumulated_force();
+        return LSMVector3(vel[0],vel[1],vel[2]);
+    }
+
+    inline LSMVector3 GetTorques()
+    {
+        ChVector<double> vel = m_chBody->Get_accumulated_torque();
+        return LSMVector3(vel[0],vel[1],vel[2]);
     }
 
     inline LSMVector3 GetVelocity()
@@ -220,6 +243,39 @@ public:
         return LSMVector3(absvel[0],absvel[1],absvel[2]);
 
     }
+
+    inline void ApplyForce(LSMVector3 pos, LSMVector3 f)
+    {
+        m_chBody->Accumulate_force(ChVector<double>(f.x,f.y,f.z),ChVector<double>(pos.x,pos.y,pos.z),false);
+    }
+
+    inline void ApplyTorque(LSMVector3 pos)
+    {
+        m_chBody->Accumulate_torque(ChVector<double>(pos.x,pos.y,pos.z),false);
+    }
+
+    inline void SetPosition(LSMVector3 pos)
+    {
+        m_chBody->SetPos(ChVector<double>(pos.x,pos.y,pos.z));
+    }
+
+    inline void SetVelocity(LSMVector3 vel)
+    {
+        m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
+    }
+
+    inline void SetRotation(LSMVector3 rotation)
+    {
+        LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
+        m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+
+    }
+    inline void SetRotationalVelocity(LSMVector3 rotation)
+    {
+        LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
+        m_chBody->SetRot_dt(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
+    }
+
 
     inline double GetConfinedVolume(BoundingBox & region, float h, float dhdx, float dhdz)
     {
@@ -255,39 +311,7 @@ public:
     static inline RigidPhysicsObject * RigidPhysicsObject_AsSphere(double radius, double density, LSMVector3 position = LSMVector3(0.0,0.0,0.0), LSMVector3 rotation = LSMVector3(0.0,0.0,0.0), LSMVector3 vel = LSMVector3(0.0,0.0,0.0), LSMVector3 rotvel = LSMVector3(0.0,0.0,0.0), double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "", bool is_static = false)
     {
 
-        RigidPhysicsObject * ret = new RigidPhysicsObject();
-        ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
-        ret->m_chMaterial->SetFriction(friction);
-        ret->m_chMaterial->SetCompliance(compliance);
-        ret->m_chMaterial->SetComplianceT(complianceT);
-        ret->m_chMaterial->SetDampingF(DampingF);
-        ret->m_chBody = std::dynamic_pointer_cast<ChBody>(std::shared_ptr<ChBodyEasySphere>(new ChBodyEasySphere(radius,density,true,true,ret->m_chMaterial), [=](ChBodyEasySphere* b)
-        {
-
-            std::cout << "Deleting body Sphere\n" << b << std::endl;
-            //delete b;
-        }));
-        ret->m_Family = family;
-        ret->m_Volume = (4.0/3.0)*M_PI * std::pow(radius,3.0);
-        if(!ret->m_Family.isEmpty())
-        {
-            //save the scaling of this particular thing, as opposed to a unit mesh
-            ret->m_FamilyScale = LSMVector3(radius,radius,radius);
-        }
-        if(is_static)
-        {
-            ret->m_chBody->SetBodyFixed(true);
-        }
-        ret->m_chBody->SetPos(ChVector<double>(position.x,position.y,position.z));
-        LSMVector4 rotq = LSMVector4::QFromEulerAngles(rotation.x,rotation.y,rotation.z);
-        ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
-        ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
-        ModelGeometry *model = new ModelGeometry();
-        LSMMesh m1;
-        m1.SetAsEllipsoidTruncated(1,1,-1,1,0.0,10,10);
-        model->AddMesh(m1);
-        ret->m_TriangulatedModel = model;
-        return ret;
+        return  RigidPhysicsObject_AsEllipsoid(LSMVector3(radius,radius,radius),density,position,rotation,vel,rotvel,friction,compliance,complianceT,DampingF,family,is_static);
 
     }
 
@@ -325,6 +349,7 @@ public:
         LSMMesh m1;
         m1.SetAsEllipsoidTruncated(1,1,-1,1,0.0,10,10);
         m1.CalculateNormalsAndTangents();
+        m1.Scale(radius.x,radius.y,radius.z);
         model->AddMesh(m1);
         ret->m_TriangulatedModel = model;
         return ret;

@@ -15,7 +15,7 @@
 #include "linear/lsm_vector3.h"
 #include "linear/lsm_vector4.h"
 #include "linear/lsm_matrix4x4.h"
-#include "extensions/modelscripting.h"
+//#include "extensions/modelscripting.h"
 
 namespace py = pybind11;
 

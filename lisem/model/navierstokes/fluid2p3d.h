@@ -1376,7 +1376,7 @@ public:
                     z = fmin(1.0,fmax(0.0,z));
                     // Interpolate Dists
                     if( grids[(int)((gx-1)*x)][(int)((gy-1)*y)][(int)((gz-1)*z)].known ) {
-                        swap_dists->data[i][j][k] = y<1.0 ? interp( source_dists, (gx-1)*x, (gy-1)*y,(gz-1)*z, gx, gy,gz ) : 1.0;
+                        swap_dists->data[i][j][k] = interp( source_dists, (gx-1)*x, (gy-1)*y,(gz-1)*z, gx, gy,gz ) ;
                     } else {
                         swap_dists->data[i][j][k] = source_dists->data[i][j][k];
                     }
