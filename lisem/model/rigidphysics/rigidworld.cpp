@@ -618,7 +618,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
 
 
                                  LSMVector3 axis = LSMVector3(rot[0],rot[1],rot[2]);
-                                 LSMVector3 velo = LSMVector3(vel[0],vel[2],vel[1]);
+                                 LSMVector3 velo = LSMVector3(vel[0],vel[1],vel[2]);
 
 
                                  ChVector<double> vel_abs_A = obj->m_chBody->PointSpeedLocalToParent(ChVector<double>(relpos_A.x,relpos_A.y,relpos_A.z));
@@ -667,7 +667,7 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                                          double area_bound_this = (facing_up?-1.0:1.0)*(0.5 *(po1y + po2y) - 0.5*(po1.y + po2.y)) *std::fabs(po1.z - po2.z);
                                          area_bound_x1 += area_bound_this;
                                          area_total += area_bound_this;
-                                         area_proj_z += 0.5*area_bound_this;
+                                         area_proj_z += std::fabs(0.5*area_bound_this);
                                          center_bound_x1 = center_bound_x1 + LSMVector3(extenthor.GetMinX(),0.25 *(po1y + po2y) + 0.25*(po1.y + po2.y),(po1.z * std::fabs(po1y- po1.y)+ po2.z * std::fabs(po2y- po2.y))/(std::max(1e-6,std::fabs(po1y- po1.y)+std::fabs(po2y- po2.y))) )*area_bound_this;
                                      }
                                      if(std::fabs(po1.x - extenthor.GetMaxX()) < 1e-6 && std::fabs(po2.x - extenthor.GetMaxX()) < 1e-6)
@@ -677,27 +677,27 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                                          double area_bound_this = (facing_up?-1.0:1.0)*(0.5 *(po1y + po2y) - 0.5*(po1.y + po2.y)) *std::fabs(po1.z - po2.z);
                                          area_bound_x2 += area_bound_this;
                                          area_total += area_bound_this;
-                                         area_proj_z += 0.5*area_bound_this;
+                                         area_proj_z += std::fabs(0.5*area_bound_this);
                                          center_bound_x2 = center_bound_x2 + LSMVector3(extenthor.GetMaxX(),0.25 *(po1y + po2y) + 0.25*(po1.y + po2.y),(po1.z * std::fabs(po1y- po1.y)+ po2.z * std::fabs(po2y- po2.y))/(std::max(1e-6,std::fabs(po1y- po1.y)+std::fabs(po2y- po2.y))) )*area_bound_this;
                                      }
-                                     if(std::fabs(po1.y - extenthor.GetMinY()) < 1e-6 && std::fabs(po2.y - extenthor.GetMinY()) < 1e-6)
+                                     if(std::fabs(po1.z - extenthor.GetMinY()) < 1e-6 && std::fabs(po2.z - extenthor.GetMinY()) < 1e-6)
                                      {
                                          double po1y = h + dhdy *(extenthor.GetMinY()-extenthor.GetCenterY()) + dhdx *((po1.x)-extenthor.GetCenterX());
                                          double po2y = h + dhdy *(extenthor.GetMinY()-extenthor.GetCenterY()) + dhdx *((po2.x)-extenthor.GetCenterX());
                                          double area_bound_this = (facing_up?-1.0:1.0)*(0.5 *(po1y + po2y) - 0.5*(po1.y + po2.y)) *std::fabs(po1.x - po2.x);
                                          area_bound_y1 += area_bound_this;
                                          area_total += area_bound_this;
-                                         area_proj_x += 0.5*area_bound_this;
+                                         area_proj_x += std::fabs(0.5*area_bound_this);
                                          center_bound_y1 = center_bound_y1 + LSMVector3((po1.x * std::fabs(po1y- po1.y)+ po2.x * std::fabs(po2y- po2.y))/(std::max(1e-6,std::fabs(po1y- po1.y)+std::fabs(po2y- po2.y))) ,0.25 *(po1y + po2y) + 0.25*(po1.y + po2.y),extenthor.GetMinY())*area_bound_this;
                                      }
-                                     if(std::fabs(po1.y - extenthor.GetMaxY()) < 1e-6 && std::fabs(po2.y - extenthor.GetMaxY()) < 1e-6)
+                                     if(std::fabs(po1.z - extenthor.GetMaxY()) < 1e-6 && std::fabs(po2.z - extenthor.GetMaxY()) < 1e-6)
                                      {
                                          double po1y = h + dhdy *(extenthor.GetMaxY()-extenthor.GetCenterY()) + dhdx *((po1.x)-extenthor.GetCenterX());
                                          double po2y = h + dhdy *(extenthor.GetMaxY()-extenthor.GetCenterY()) + dhdx *((po2.x)-extenthor.GetCenterX());
                                          double area_bound_this = (facing_up?-1.0:1.0)*(0.5 *(po1y + po2y) - 0.5*(po1.y + po2.y)) *std::fabs(po1.x - po2.x);
                                          area_bound_y2 += area_bound_this;
                                          area_total += area_bound_this;
-                                         area_proj_x += 0.5*area_bound_this;
+                                         area_proj_x += std::fabs(0.5*area_bound_this);
                                          center_bound_y2 = center_bound_y2 + LSMVector3((po1.x * std::fabs(po1y- po1.y)+ po2.x * std::fabs(po2y- po2.y))/(std::max(1e-6,std::fabs(po1y- po1.y)+std::fabs(po2y- po2.y))) ,0.25 *(po1y + po2y) + 0.25*(po1.y + po2.y),extenthor.GetMaxY())*area_bound_this;
                                      }
                                  }
@@ -1106,8 +1106,8 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                          {
                              m_BlockLDD->data[r][c] = 5;
 
-                             m_BlockX->data[r][c] = std::max(0.0,1.0-block_av_x) * block_av_y;
-                             m_BlockY->data[r][c] = std::max(0.0,1.0-block_av_z) * block_av_y;
+                             m_BlockX->data[r][c] = std::max(0.0,1.0-block_av_x) * std::max(0.0,block_av_y);
+                             m_BlockY->data[r][c] = std::max(0.0,1.0-block_av_z) * std::max(0.0,block_av_y);
                              m_HCorrected->data[r][c] = h_final - hf;
                              m_BlockLX1->data[r][c] = 0.0;
                              m_BlockLY1->data[r][c] = 0.0;
@@ -1205,8 +1205,8 @@ void RigidPhysicsWorld::RunSingleStep(double dt, double tmodel)
                          }
 
 
-                         m_BlockX->data[r][c] = std::min(1.0,2.0*area_proj_x_total /(std::max(0.00001,h_final) * std::fabs(csy))) * block_av_y;
-                         m_BlockY->data[r][c] = std::min(1.0,2.0*area_proj_z_total /(std::max(0.00001,h_final) * std::fabs(csx))) * block_av_y;
+                         m_BlockX->data[r][c] = std::min(1.0,2.0*area_proj_x_total /(std::max(0.00001,h_final) * std::fabs(csy))) * std::max(0.0,block_av_y);
+                         m_BlockY->data[r][c] = std::min(1.0,2.0*area_proj_z_total /(std::max(0.00001,h_final) * std::fabs(csx))) * std::max(0.0,block_av_y);
                          m_HCorrected->data[r][c] = (h_final)-hf;
 
                          m_BlockCaptureX->data[r][c] = capture_x_total/std::max(1e-6,capture_x_wtotal);

@@ -508,9 +508,20 @@ public slots:
 
     inline void OnRequestRunCode()
     {
+        std::cout <<  m_ScriptTabs->currentIndex() << std::endl;
+        if(m_ScriptTabs->currentIndex() < 0)
+        {
+            return;
+        }
+
         {
             CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
-           ce->SetHighlightErrorLocation(-1,-1);
+
+            if(ce == nullptr)
+            {
+                return;
+            }
+            ce->SetHighlightErrorLocation(-1,-1);
         }
 
 

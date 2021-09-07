@@ -29,9 +29,12 @@ inline static cTMap * AS_ProfileMap(cTMap * terrain, LSMVector2 start, LSMVector
     for(int c = 0; c <  map->nrCols(); c++)
     {
         LSMVector2 coord = start + (((float)(c))*cellsize/dist) * (end-start);
+        float x = start.x +(((float)(c))*cellsize/dist)  * (end.x-start.x);
+        float y = start.y +(((float)(c))*cellsize/dist)  * (end.y-start.y);
 
-        float terrainh = terrain->SampleCubic(coord.x, coord.y);
+        float terrainh = terrain->SampleCubic(x,y);
 
+        std::cout << (end-start).x << " " << (end-start).y << " " << ((((float)(c))*cellsize/dist) * (end-start)).x << " " <<  ((((float)(c))*cellsize/dist) * (end-start)).y << " " << x << " " << y << std::endl;
         std::cout << "col " << c << " " << terrainh << " " << coord.x << " " << coord.y << " " << (((float)(c))*cellsize/dist) << " " << dist << " " << cellsize <<  " " << ((float)(c))*cellsize << std::endl;
         for(int r = 0; r < map->nrRows(); r++)
         {

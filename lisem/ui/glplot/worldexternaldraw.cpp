@@ -67,15 +67,15 @@ QImage *WorldWindow::DoExternalDraw(GeoWindowState s)
 
     QImage * Im;
 
-    //if(s.is_3d)
-    {
+    //if(!s.is_3d)
+    //{
         ExternalTarget->BlitToTexture();
         Im = ExternalTarget->ToQImage();
-    }/*else
-    {
-        External3DRenderTarget->BlitToTexture();
-        Im = External3DRenderTarget->ToQImage();
-    }*/
+    //}else
+    //{
+    //    External3DRenderTarget->BlitToTexture();
+    //    Im = External3DRenderTarget->ToQImage();
+    //}
 
     glfwMakeContextCurrent(NULL);
 

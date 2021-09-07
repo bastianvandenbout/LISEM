@@ -384,7 +384,7 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 float zhc_x1 = HCorrect->data[gy][gx_x1];
                 float zhc_x2 = HCorrect->data[gy][gx_x2];
                 float zhc_y1 = HCorrect->data[gy_y1][gx];
-                float zhc_y2 = HCorrect->data[gy_y1][gx];
+                float zhc_y2 = HCorrect->data[gy_y2][gx];
 
                 float z = DEM->data[gy][gx];
                 float n = std::max(0.00001f,N->data[gy][gx]);
@@ -394,7 +394,7 @@ static inline void flow_saintvenant_rigid(cTMap * DEM,cTMap * N,cTMap * H,cTMap 
                 float z_x1 = zhc_x1 + DEM->data[gy][gx_x1];
                 float z_x2 = zhc_x2 + DEM->data[gy][gx_x2];
                 float z_y1 = zhc_y1 + DEM->data[gy_y1][gx];
-                float z_y2 = zhc_y2 +DEM->data[gy_y2][gx];
+                float z_y2 = zhc_y2 + DEM->data[gy_y2][gx];
 
 
                 if(gx + 1 > dim0-1)

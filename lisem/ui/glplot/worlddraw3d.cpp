@@ -5,6 +5,11 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 {
 
 
+    if(external)
+    {
+
+        std::cout << "do external draw " << s.GL_FrameBuffer->GetFrameBuffer(0) << " " << s.GL_3DFrameBuffer->GetFrameBuffer(0)<< std::endl;
+    }
 
 
 
@@ -44,7 +49,36 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
     s.GL_3DFrameBuffer->BlitToTexture();
 
-    if(
+    if(external)
+    {
+        MaskedRaster<float> raster_data(s.GL_3DFrameBuffer->GetHeight(),s.GL_3DFrameBuffer->GetWidth(),0.0,0.0,1.0);
+        cTMap * ScreenPosX = new cTMap(std::move(raster_data),"","");
+        ScreenPosX->AS_IsSingleValue = false;
+
+        MaskedRaster<float> raster_data2(s.GL_3DFrameBuffer->GetHeight(),s.GL_3DFrameBuffer->GetWidth(),0.0,0.0,1.0);
+        cTMap * ScreenPosY = new cTMap(std::move(raster_data2),"","");
+        ScreenPosY->AS_IsSingleValue = false;
+
+        MaskedRaster<float> raster_data3(s.GL_3DFrameBuffer->GetHeight(),s.GL_3DFrameBuffer->GetWidth(),0.0,0.0,1.0);
+        cTMap * ScreenPosZ = new cTMap(std::move(raster_data3),"","");
+        ScreenPosZ->AS_IsSingleValue = false;
+
+        m_OpenGLCLManager->CopyTextureToMap(s.GL_3DFrameBuffer->GetTexture(1),&(ScreenPosZ->data));
+        m_OpenGLCLManager->CopyTextureToMap(s.GL_3DFrameBuffer->GetTexture(2),&(ScreenPosY->data));
+        m_OpenGLCLManager->CopyTextureToMap(s.GL_3DFrameBuffer->GetTexture(3),&(ScreenPosX->data));
+
+        s.ScreenPosX = ScreenPosX;
+        s.ScreenPosY = ScreenPosY;
+        s.ScreenPosZ = ScreenPosZ;
+
+        s.ScreenPosXTex =s.GL_3DFrameBuffer->GetTexture(1);
+        s.ScreenPosYTex =s.GL_3DFrameBuffer->GetTexture(2);
+        s.ScreenPosZTex =s.GL_3DFrameBuffer->GetTexture(3);
+
+        s.ScreenNormalXTex =s.GL_3DFrameBuffer->GetTexture(4);
+        s.ScreenNormalYTex =s.GL_3DFrameBuffer->GetTexture(5);
+        s.ScreenNormalZTex =s.GL_3DFrameBuffer->GetTexture(6);
+    }else if(
             (m_OpenGLCLManager->GL_GLOBAL.Height != m_3DScreenPosX->nrRows() || m_OpenGLCLManager->GL_GLOBAL.Width != m_3DScreenPosX->nrCols())
             || (s.GL_3DFrameBuffer->GetHeight() != m_3DScreenPosX->nrRows() || s.GL_3DFrameBuffer->GetWidth() != m_3DScreenPosX->nrCols())
 
@@ -64,6 +98,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
     }else if(s.GL_3DFrameBuffer != m_3DRenderTarget)
     {
+
         s.ScreenPosX = nullptr;
         s.ScreenPosY = nullptr;
         s.ScreenPosZ = nullptr;
@@ -98,6 +133,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
     if(s.ScreenPosX == nullptr || s.ScreenPosY == nullptr || s.ScreenPosZ == nullptr)
     {
+        std::cout << "return as screenpos = null" << std::endl;
         return;
     }
 
@@ -119,13 +155,26 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
     s.GL_3DFrameBuffer->BlitToTexture();
 
-    s.GL_FrameBuffer->SetDefaultTarget();
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_FrameBuffer->GetFrameBuffer());
+    if(external)
+    {
+
+        std::cout << "do external draw " << s.GL_FrameBuffer->GetFrameBuffer(0) << " " << s.GL_3DFrameBuffer->GetFrameBuffer(0)<< std::endl;
+    }
 
 
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_FrameBuffer->GetFrameBuffer());
+    //s.GL_FrameBuffer->SetDefaultTarget();
+    //glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_FrameBuffer->GetFrameBuffer());
+
+
+    //glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_FrameBuffer->GetFrameBuffer());
     GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glad_glDrawBuffers(1, DrawBuffers);
+    //glad_glDrawBuffers(1, DrawBuffers);
+
+    s.GL_FrameBuffer->SetAsTarget();
+    if(external)
+    {
+        glad_glClearColor(1.0,0.5,0.5,1.0);
+    }
 
     glad_glViewport(0,0,s.GL_FrameBuffer->GetWidth(),s.GL_FrameBuffer->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
 
@@ -148,9 +197,9 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     glad_glBindVertexArray(0);
 
 
-    m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
-    m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
-    m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+    m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
+    m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
+    m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
 
     GeoWindowState s2 = s;
     //s2.GL_FrameBuffer = m_OpenGLCLManager->GetFrameBuffer();
@@ -163,6 +212,24 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
 
     Draw3DUI(s2);
+
+
+    if(external)
+    {
+        delete s.ScreenPosX;
+        s.ScreenPosX = nullptr;
+        delete s.ScreenPosY;
+        s.ScreenPosY = nullptr;
+        delete s.ScreenPosZ;
+        s.ScreenPosZ = nullptr;
+    }
+
+
+
+    m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+    m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+    m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+
 
 }
 
