@@ -223,7 +223,8 @@ public:
 
     void ClearMatrixTables();
     void RemoveMatrixTable(int index, bool tab_already_removed = false);
-    void AddMatrixTable(MatrixTable * tbl_in , bool one_x_list = true);
+    void AddMatrixTable(MatrixTable * tbl_in , bool one_x_list = true, int iuid = -1);
+    bool ReplaceMatrixTable(MatrixTable * tbl_in , bool one_x_list = true, int uid = -1);
     void SetFromMatrixTable(MatrixTable * tbl_in , bool one_x_list = true);
     void SetTime(int);
     int GetTime();

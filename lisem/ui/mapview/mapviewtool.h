@@ -135,6 +135,148 @@ static inline void AS_ASUILayerD0(ASUILayer * mem)
     mem->~ASUILayer();
 }
 
+
+
+
+struct ASUIPlot
+{
+    int m_UniqueID = -1;
+    std::function<void( ASUIPlot*)> m_CallBackIncrease;
+    std::function<void( ASUIPlot*)> m_CallBackDecrease;
+public:
+
+    inline ASUIPlot()
+    {
+
+    }
+    inline ~ASUIPlot()
+    {
+        if(m_CallBackDecrease)
+        {
+            m_CallBackDecrease(this);
+        }
+
+    }
+
+    inline void SetUID(int id, std::function<void( ASUIPlot *)> fincr, std::function<void( ASUIPlot*)> fdecr)
+    {
+        std::cout << "set id " << id << std::endl;
+        m_UniqueID = id;
+
+        m_CallBackIncrease = fincr;
+        m_CallBackDecrease = fdecr;
+
+        if(m_CallBackIncrease)
+        {
+            m_CallBackIncrease(this);
+        }
+    }
+
+    inline int GetUID()
+    {
+        return m_UniqueID;
+    }
+
+    inline ASUIPlot * Assign(ASUIPlot * l)
+    {
+        std::cout << "assign ui layer "<< std::endl;
+        m_UniqueID = l->m_UniqueID;
+        m_CallBackIncrease = l->m_CallBackIncrease;
+        m_CallBackDecrease = l->m_CallBackDecrease;
+
+        if(m_CallBackIncrease)
+        {
+            m_CallBackIncrease(this);
+        }
+
+        return this;
+    }
+};
+static inline void AS_ASUIPlotC0(void * mem)
+{
+
+    new(mem)  ASUIPlot();
+}
+static inline void AS_ASUIPlotD0(ASUIPlot * mem)
+{
+    std::cout << "destruct uilayer " << std::endl;
+
+    mem->~ASUIPlot();
+}
+
+
+
+
+
+
+
+struct ASUIPlotLayer
+{
+    int m_UniqueID = -1;
+    std::function<void(ASUIPlotLayer*)> m_CallBackIncrease;
+    std::function<void(ASUIPlotLayer*)> m_CallBackDecrease;
+public:
+
+    inline ASUIPlotLayer()
+    {
+
+    }
+    inline ~ASUIPlotLayer()
+    {
+        if(m_CallBackDecrease)
+        {
+            m_CallBackDecrease(this);
+        }
+
+    }
+
+    inline void SetUID(int id, std::function<void(ASUIPlotLayer*)> fincr, std::function<void(ASUIPlotLayer*)> fdecr)
+    {
+        m_UniqueID = id;
+
+        m_CallBackIncrease = fincr;
+        m_CallBackDecrease = fdecr;
+
+        if(m_CallBackIncrease)
+        {
+            m_CallBackIncrease(this);
+        }
+    }
+
+    inline int GetUID()
+    {
+        return m_UniqueID;
+    }
+
+    inline ASUIPlotLayer * Assign(ASUIPlotLayer * l)
+    {
+        std::cout << "assign ui layer "<< std::endl;
+        m_UniqueID = l->m_UniqueID;
+        m_CallBackIncrease = l->m_CallBackIncrease;
+        m_CallBackDecrease = l->m_CallBackDecrease;
+
+        if(m_CallBackIncrease)
+        {
+            m_CallBackIncrease(this);
+        }
+
+        return this;
+    }
+};
+static inline void AS_ASUIPlotLayerC0(void * mem)
+{
+
+    new(mem)  ASUIPlotLayer();
+}
+static inline void AS_ASUIPlotLayerD0(ASUIPlotLayer * mem)
+{
+    std::cout << "destruct uilayer " << std::endl;
+
+    mem->~ASUIPlotLayer();
+}
+
+
+
 class ListWidgetE : public QListWidget
 {
     Q_OBJECT
@@ -1098,6 +1240,115 @@ public:
         return new ShapeFile();
     }
 
+
+
+
+    int m_UPlotIDCount = 0;
+    int m_UPlotLayerIDCount = 0;
+
+
+    QMutex m_PlotMutex;
+
+    std::vector<TablePlotter *> m_Plots;
+    std::vector<int> m_PlotsIds;
+
+    std::vector<int> m_PlotsToCreate;
+    std::vector<QString> m_PlotsToCreateS;
+    std::vector<int> m_PlotLayersToCreate;
+    std::vector<int> m_PlotLayersToCreateP;
+    std::vector<QString> m_PlotLayersToCreateS;
+    std::vector<MatrixTable*> m_PlotLayersToCreateT;
+    std::vector<int> m_PlotLayersToReplace;
+    std::vector<MatrixTable*> m_PlotLayersToReplaceT;
+    std::vector<int> m_PlotsToStyle;
+    std::vector<LSMVector3> m_PlotsToStyleColor;
+
+
+
+    inline void IncreaseScriptRefPlot(ASUIPlot* p)
+    {
+
+    }
+    inline void DecreaseScriptRefPlot(ASUIPlot* p)
+    {
+
+    }
+    inline void IncreaseScriptRefPlotLayer(ASUIPlotLayer* p)
+    {
+
+    }
+    inline void DecreaseScriptRefPlotLayer(ASUIPlotLayer* p)
+    {
+
+    }
+
+    inline ASUIPlot CreatePlot(QString name)
+    {
+
+        ASUIPlot lay;
+        lay.SetUID(m_UPlotIDCount,std::bind(&MapViewTool::IncreaseScriptRefPlot,this,std::placeholders::_1),std::bind(&MapViewTool::DecreaseScriptRefPlot,this,std::placeholders::_1) );
+
+        m_PlotMutex.lock();
+
+        m_PlotsToCreate.push_back(m_UPlotIDCount);
+        m_PlotsToCreateS.push_back(name);
+
+        m_UPlotIDCount = m_UPlotIDCount +1;
+        m_PlotMutex.unlock();
+
+
+        emit int_on_create_plot();
+
+        return lay;
+
+
+    }
+
+    inline ASUIPlotLayer AddPlotLayer(ASUIPlot p, MatrixTable * data, QString name)
+    {
+        ASUIPlotLayer lay;
+        lay.SetUID(m_UPlotLayerIDCount,std::bind(&MapViewTool::IncreaseScriptRefPlotLayer,this,std::placeholders::_1),std::bind(&MapViewTool::DecreaseScriptRefPlotLayer,this,std::placeholders::_1) );
+
+        m_PlotMutex.lock();
+
+        m_PlotLayersToCreate.push_back(m_UPlotLayerIDCount);
+        m_PlotLayersToCreateS.push_back(name);
+        m_PlotLayersToCreateP.push_back(p.GetUID());
+        m_PlotLayersToCreateT.push_back(data->Copy());
+        m_UPlotLayerIDCount = m_UPlotLayerIDCount +1;
+
+        m_PlotMutex.unlock();
+
+
+        emit int_on_add_plot();
+
+        return lay;
+
+    }
+
+    inline void ReplacePlotLayer(ASUIPlotLayer l, MatrixTable * data)
+    {
+        m_PlotMutex.lock();
+
+        m_PlotLayersToReplace.push_back(l.GetUID());
+        m_PlotLayersToReplaceT.push_back(data->Copy());
+
+
+        m_PlotMutex.unlock();
+
+
+        emit int_on_replace_plot();
+    }
+
+    inline void SetPlotLayerStyle(ASUIPlotLayer l, LSMVector3 color)
+    {
+
+
+
+        emit int_on_style_plot();
+    }
+
+
     inline void SetScriptFunctions(ScriptManager * sm)
     {
 
@@ -1107,6 +1358,26 @@ public:
         sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUILayerC0,(void*),void), asCALL_CDECL_OBJLAST);
         sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUILayerD0), asCALL_CDECL_OBJLAST);
         sm->m_Engine->RegisterObjectMethod("UILayer", "UILayer& opAssign(const UILayer &in m)", asMETHODPR(ASUILayer,Assign,(ASUILayer *),ASUILayer*), asCALL_THISCALL); assert( r >= 0 );
+
+        r = sm->m_Engine->RegisterObjectType("UIPlot", sizeof(ASUIPlot), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUIPlot>());
+        sm->m_Engine->RegisterObjectBehaviour("UIPlot", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUIPlotC0,(void*),void), asCALL_CDECL_OBJLAST);
+        sm->m_Engine->RegisterObjectBehaviour("UIPlot", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUIPlotD0), asCALL_CDECL_OBJLAST);
+        sm->m_Engine->RegisterObjectMethod("UIPlot", "UIPlot& opAssign(const UIPlot &in m)", asMETHODPR(ASUIPlot,Assign,(ASUIPlot *),ASUIPlot*), asCALL_THISCALL); assert( r >= 0 );
+
+        r = sm->m_Engine->RegisterObjectType("UIPlotLayer", sizeof(ASUIPlotLayer), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUIPlotLayer>());
+        sm->m_Engine->RegisterObjectBehaviour("UIPlotLayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUIPlotLayerC0,(void*),void), asCALL_CDECL_OBJLAST);
+        sm->m_Engine->RegisterObjectBehaviour("UIPlotLayer", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUIPlotLayerD0), asCALL_CDECL_OBJLAST);
+        sm->m_Engine->RegisterObjectMethod("UIPlotLayer", "UIPlotLayer& opAssign(const UIPlotLayer &in m)", asMETHODPR(ASUIPlotLayer,Assign,(ASUIPlotLayer *),ASUIPlotLayer*), asCALL_THISCALL); assert( r >= 0 );
+
+
+        //Create Plot
+        sm->m_Engine->RegisterGlobalFunction("UIPlot CreatePlot(string name)", asMETHODPR( MapViewTool ,CreatePlot, (QString),ASUIPlot),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("UIPlotLayer AddPlotLayer(UIPlot p, const Table &in t, string name)", asMETHODPR( MapViewTool ,AddPlotLayer, (ASUIPlot, MatrixTable *, QString),ASUIPlotLayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("void ReplacePlotLayer(UIPlotLayer l, const Table &in t)", asMETHODPR( MapViewTool ,ReplacePlotLayer, (ASUIPlotLayer,MatrixTable * ),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+        sm->m_Engine->RegisterGlobalFunction("void SetPlotLayerStyle(UIPlotLayer l, vec3 color)", asMETHODPR( MapViewTool ,SetPlotLayerStyle, (ASUIPlotLayer, LSMVector3),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+
+
+
 
 
         //add layer
@@ -1180,14 +1451,137 @@ public:
 
 
 
-
+        connect(this,&MapViewTool::int_on_create_plot,this,&MapViewTool::OnCreatePlot,Qt::ConnectionType::QueuedConnection);
+        connect(this,&MapViewTool::int_on_add_plot,this,&MapViewTool::OnCreatePlotLayer,Qt::ConnectionType::QueuedConnection);
+        connect(this,&MapViewTool::int_on_replace_plot,this,&MapViewTool::OnReplacePlotLayer,Qt::ConnectionType::QueuedConnection);
+        connect(this,&MapViewTool::int_on_style_plot,this,&MapViewTool::OnSetPlotLayerStyle,Qt::ConnectionType::QueuedConnection);
 
 
     }
 
 
+    inline void Internal_CreateAllPlots()
+    {
+
+        m_PlotMutex.lock();
+
+
+        for(int i = 0; i < m_PlotsToCreate.size(); i++)
+        {
+            MatrixTable * tbl = new MatrixTable();
+
+
+            TablePlotter * t = new TablePlotter(tbl,true,false);
+            t->show();
+
+            m_Plots.push_back(t);
+            m_PlotsIds.push_back(m_PlotsToCreate.at(i));
+        }
+
+        m_PlotsToCreate.clear();
+        m_PlotsToCreateS.clear();
+
+        m_PlotMutex.unlock();
+
+    }
+
+    inline void Internal_CreateAllPlotLayers()
+    {
+
+        m_PlotMutex.lock();
+
+        for(int i = 0; i < m_PlotLayersToCreate.size(); i++)
+        {
+            MatrixTable * tbl = m_PlotLayersToCreateT.at(i);
+            QString name = m_PlotLayersToCreateS.at(i);
+            int table = m_PlotLayersToCreateP.at(i);
+            int id = m_PlotLayersToCreate.at(i);
+
+
+            for(int j = 0; j < m_Plots.size(); j++)
+            {
+                TablePlotter * p = m_Plots.at(j);
+
+                if(m_PlotsIds.at(j) == table)
+                {
+
+                    //actually add table to plotter
+
+                    p->AddMatrixTable(tbl,true, id);
+                    break;
+
+                }
+            }
+
+        }
+
+        m_PlotLayersToCreateT.clear();
+        m_PlotLayersToCreateS.clear();
+        m_PlotLayersToCreateP.clear();
+        m_PlotLayersToCreate.clear();
+
+        m_PlotMutex.unlock();
+
+    }
+
+
+    inline void Internal_ReplaceAllPlotLayers()
+    {
+
+        m_PlotMutex.lock();
+
+        for(int i = 0; i < m_PlotLayersToReplace.size(); i++)
+        {
+            for(int j = 0; j < m_Plots.size(); j++)
+            {
+                TablePlotter * p = m_Plots.at(j);
+
+                if(p->ReplaceMatrixTable(m_PlotLayersToReplaceT.at(i),true,m_PlotLayersToReplace.at(i)))
+                {
+                    break;
+                }
+            }
+
+        }
+        m_PlotMutex.unlock();
+    }
+
+
+signals:
+
+    void int_on_create_plot();
+    void int_on_add_plot();
+    void int_on_replace_plot();
+    void int_on_style_plot();
+
+
 
 public slots:
+
+
+    inline void OnCreatePlot()
+    {
+         Internal_CreateAllPlots();
+    }
+
+    inline void OnCreatePlotLayer()
+    {
+        Internal_CreateAllPlots();
+        Internal_CreateAllPlotLayers();
+    }
+
+    inline void OnReplacePlotLayer()
+    {
+        Internal_CreateAllPlots();
+        Internal_CreateAllPlotLayers();
+        Internal_ReplaceAllPlotLayers();
+    }
+
+    inline void OnSetPlotLayerStyle()
+    {
+
+
+    }
 
     inline void OnSelectedLayerChanged()
     {

@@ -846,6 +846,9 @@ MatrixTable*        MatrixTable::Assign            (QString s)
 
 }
 
+
+
+
 MatrixTable*        MatrixTable::OpAdd             (QString s)
 {
     return ApplyOperatorToMatrixTables(this,s,std::plus<int>(),std::plus<double>(),std::plus<QString>());

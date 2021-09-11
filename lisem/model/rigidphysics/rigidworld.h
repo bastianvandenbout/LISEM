@@ -192,7 +192,7 @@ public:
 
     void AddObject(RigidPhysicsObject * object,bool has_mutex = false, bool add_geo = false);
     void RemoveObject(RigidPhysicsObject * object,bool has_mutex = false);
-    int GetObjectCount(bool has_mutex);
+    int GetObjectCount(bool has_mutex, bool include_terrain = true);
     void LockMutex();
     void UnLockMutex();
 
@@ -364,10 +364,10 @@ inline int RigidPhysicsWorld::AS_GetObjCount()
 {
 
 
-    return GetObjectCount(false);
+    return GetObjectCount(false,false);
 }
 
-inline RigidPhysicsObject* RigidPhysicsWorld::AS_GetObj(int i)
+inline RigidPhysicsObject* RigidPhysicsWorld::AS_GetObj(int index)
 {
 
     {
@@ -376,14 +376,35 @@ inline RigidPhysicsObject* RigidPhysicsWorld::AS_GetObj(int i)
     }
 
 
-    if(i < 0 || i > m_Objects.length())
+    if(index < 0 || index > m_Objects.length())
     {
 
-        LISEMS_ERROR("RigidWorld::GetObject incorrect object index, out of bounds " + QString::number(i));
+        LISEMS_ERROR("RigidWorld::GetObject incorrect object index, out of bounds " + QString::number(index));
         throw 1;
     }
 
-    RigidPhysicsObject* obj = m_Objects.at(i);
+
+    RigidPhysicsObject* obj = nullptr;;
+
+    int n = 0;
+    for(int i = 0; i < m_Objects.size(); i++)
+    {
+        if(!m_Objects.at(i)->IsTerrain())
+        {
+            if(n == index)
+            {
+                obj = m_Objects.at(i);
+                break;
+            }
+            n++;
+        }
+    }
+
+    if(obj  == nullptr)
+    {
+        LISEMS_ERROR("RigidWorld::GetObject incorrect object index, out of bounds " + QString::number(index));
+        throw 1;
+    }
 
     obj->AS_IsFromScript = true;
     obj->AS_AddRef();

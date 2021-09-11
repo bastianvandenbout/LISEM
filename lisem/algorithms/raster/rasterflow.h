@@ -298,16 +298,19 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
                 if(QX1 != nullptr && QX2 != nullptr && QY1 != nullptr && QY2 != nullptr)
                 {
 
-                    QX1->data[gy][gx] =  flux_x1 *(dx*dx);
-                    QX2->data[gy][gx] =  flux_x2 *(dx*dx);
-                    QY1->data[gy][gx] =  flux_y1 *(dx*dx);
-                    QY2->data[gy][gx] =  flux_y2 *(dx*dx);
+                    QX1->data[gy][gx] = flux_x1 *(dx*dx);
+                    QX2->data[gy][gx] = flux_x2 *(dx*dx);
+                    QY1->data[gy][gx] = flux_y1 *(dx*dx);
+                    QY2->data[gy][gx] = flux_y2 *(dx*dx);
                 }
             }
         }
     }
     return;
 }
+
+
+
 
 
 
@@ -855,28 +858,33 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
 
 }
 
-inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap * VX, cTMap * VY, float _dt, float courant)
+inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * HI, cTMap * VXI, cTMap * VYI, float _dt, float courant)
 {
     if(!(DEM->data.nr_rows() == N->data.nr_rows() && DEM->data.nr_cols() == N->data.nr_cols()))
     {
        LISEMS_ERROR("Numbers of rows and column do not match for N");
        throw -1;
     }
-    if(!(DEM->data.nr_rows() == H->data.nr_rows() && DEM->data.nr_cols() == H->data.nr_cols()))
+    if(!(DEM->data.nr_rows() == HI->data.nr_rows() && DEM->data.nr_cols() == HI->data.nr_cols()))
     {
        LISEMS_ERROR("Numbers of rows and column do not match for H");
        throw -1;
     }
-    if(!(DEM->data.nr_rows() == VX->data.nr_rows() && DEM->data.nr_cols() == VX->data.nr_cols()))
+    if(!(DEM->data.nr_rows() == VXI->data.nr_rows() && DEM->data.nr_cols() == VXI->data.nr_cols()))
     {
        LISEMS_ERROR("Numbers of rows and column do not match for VX");
        throw -1;
     }
-    if(!(DEM->data.nr_rows() == VY->data.nr_rows() && DEM->data.nr_cols() == VY->data.nr_cols()))
+    if(!(DEM->data.nr_rows() == VYI->data.nr_rows() && DEM->data.nr_cols() == VYI->data.nr_cols()))
     {
        LISEMS_ERROR("Numbers of rows and column do not match for VY");
        throw -1;
     }
+
+
+    cTMap * H = HI->GetCopy();
+    cTMap * VX = VXI->GetCopy();
+    cTMap * VY = VYI->GetCopy();
 
     cTMap * HN = H->GetCopy();
     cTMap * VXN = VX->GetCopy();
@@ -917,6 +925,170 @@ inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap
 
 
     return {HN,VXN,VYN};
+}
+
+
+inline cTMap * AS_DynamicWaveSuspendedTransport(cTMap * SI, cTMap * DEM,cTMap * N,cTMap * HI, cTMap * VXI, cTMap * VYI, float _dt, float courant)
+{
+    if(!(DEM->data.nr_rows() == N->data.nr_rows() && DEM->data.nr_cols() == N->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for N");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == HI->data.nr_rows() && DEM->data.nr_cols() == HI->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for H");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == VXI->data.nr_rows() && DEM->data.nr_cols() == VXI->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for VX");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == VYI->data.nr_rows() && DEM->data.nr_cols() == VYI->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for VY");
+       throw -1;
+    }
+    if(!(DEM->data.nr_rows() == SI->data.nr_rows() && DEM->data.nr_cols() ==SI->data.nr_cols()))
+    {
+       LISEMS_ERROR("Numbers of rows and column do not match for S");
+       throw -1;
+    }
+
+
+    cTMap * H = HI->GetCopy();
+    cTMap * VX = VXI->GetCopy();
+    cTMap * VY = VYI->GetCopy();
+    cTMap * S = SI->GetCopy();
+
+    cTMap * HN = H->GetCopy();
+    cTMap * VXN = VX->GetCopy();
+    cTMap * VYN = VY->GetCopy();
+
+    cTMap * QX1 = H->GetCopy();
+    cTMap * QX2 = H->GetCopy();
+    cTMap * QY1 = H->GetCopy();
+    cTMap * QY2 = H->GetCopy();
+
+    cTMap * SN = S->GetCopy();
+    double t = 0;
+    double t_end = _dt;
+
+
+    int dim0 = H->nrCols();
+    int dim1 = H->nrRows();
+
+    float dx = std::fabs(H->cellSizeX());
+
+    float tx = _dt/dx;
+    int iter = 0;
+    while(t < t_end)
+    {
+
+        //first update flow heights
+        double dt = flow_saintvenantdt(DEM,N,H,VX,VY,HN,VXN,VYN,nullptr,nullptr,nullptr,nullptr);
+
+        dt = std::min(t_end - t,std::max(dt,1e-6));
+
+        //then update fluxes
+        flow_saintvenant(DEM,N,H,VX,VY,HN,VXN,VYN,QX1,QX2,QY1,QY2,dt);
+
+        for(int r = 0; r < DEM->nrRows(); r++)
+        {
+            for (int c = 0; c < DEM->nrCols(); c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+
+
+                    int x = r;
+                    int y = c;
+                    const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
+                    const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
+
+                    const int gx_x1 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx - 1 )));
+                    const int gy_x1 = gy;
+                    const int gx_x2 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx + 1)));
+                    const int gy_x2 = gy;
+                    const int gx_y1 = gx;
+                    const int gy_y1 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy - 1)));
+                    const int gx_y2 = gx;
+                    const int gy_y2 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy + 1)));
+
+                    float h = std::max(0.0f,H->data[gy][gx]);
+                    float h_x1 = std::max(0.0f,H->data[gy][gx_x1]);
+                    float h_x2 = std::max(0.0f,H->data[gy][gx_x2]);
+                    float h_y1 = std::max(0.0f,H->data[gy_y1][gx]);
+                    float h_y2 = std::max(0.0f,H->data[gy_y2][gx]);
+
+                    float s = std::max(0.0f,S->data[gy][gx]);
+                    float s_x1 = h_x1 > 0.0f? std::max(0.0f,S->data[gy][gx_x1]) : s;
+                    float s_x2 = h_x2 > 0.0f? std::max(0.0f,S->data[gy][gx_x2]) : s;
+                    float s_y1 = h_y1 > 0.0f? std::max(0.0f,S->data[gy_y1][gx]) : s;
+                    float s_y2 = h_y2 > 0.0f? std::max(0.0f,S->data[gy_y2][gx]) : s;
+
+
+                    float watervol = h * dx*dx;
+                    float x1_watervol = h_x1 > 0.0f? h_x1 * dx*dx : watervol;
+                    float x2_watervol = h_x2 > 0.0f? h_x2 * dx*dx : watervol;
+                    float y1_watervol = h_y1 > 0.0f? h_y1 * dx*dx : watervol;
+                    float y2_watervol = h_y2 > 0.0f? h_y2 * dx*dx : watervol;
+
+                    float sq_x1 = QX1->data[r][c]/std::max(1e-10f,x1_watervol);
+                    float sq_y1 = QY1->data[r][c]/std::max(1e-10f,y1_watervol);
+                    float sq_x2 = QX2->data[r][c]/std::max(1e-10f,x2_watervol);
+                    float sq_y2 = QY2->data[r][c]/std::max(1e-10f,y2_watervol);
+
+
+                    sq_x1 = (sq_x1> 0.0f? 1.0:-1.0) * std::min(std::fabs(sq_x1) * s_x1,s_x1);
+                    sq_x2 = (sq_x2> 0.0f? 1.0:-1.0) * std::min(std::fabs(sq_x2) * s_x2,s_x2);
+                    sq_y1 = (sq_y1> 0.0f? 1.0:-1.0) * std::min(std::fabs(sq_y1) * s_y1,s_y1);
+                    sq_y2 = (sq_y2> 0.0f? 1.0:-1.0) * std::min(std::fabs(sq_y2) * s_y2,s_y2);
+
+                    float sn = std::max(0.0f,s + sq_x1 + sq_x2 + sq_y1 + sq_y2);
+                    if(!std::isfinite((sn)))
+                    {
+                        sn = 0.0;
+                    }
+                    SN->data[r][c] = sn;
+
+                }
+
+            }
+        }
+
+
+        t = t+dt;
+        iter ++;
+
+        for(int r = 0; r < H->nrRows(); r++)
+        {
+            for(int c = 0; c < H->nrCols(); c++)
+            {
+                H->Drc = HN->Drc;
+                VX->Drc = VXN->Drc;
+                VY->Drc = VYN->Drc;
+
+                S->Drc = SN->data[r][c];
+
+
+            }
+        }
+    }
+
+
+
+    delete HN;
+    delete VXN;
+    delete VYN;
+
+    delete H;
+    delete VX;
+    delete VY;
+    delete S;
+
+    return {SN};
 }
 
 

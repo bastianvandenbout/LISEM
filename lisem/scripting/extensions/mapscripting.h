@@ -532,6 +532,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @FlowDiffusiveMaxCG(const Map &in DEM,const Map &in H, const Map &in DEMSlope, float slopefactor, int iter = 10,float courant = 0.1)", asFUNCTIONPR( AS_DiffusiveMaxWaveCG,(cTMap*,cTMap*,cTMap*,float, int,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDynamic(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, float dt, float courant = 0.1)",GetFuncConvert(AS_DynamicWave));
+    r = engine->RegisterGlobalSTDFunction("Map @FlowDynamicSuspendedTransport(const Map &in S, const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, float dt, float courant = 0.1)",GetFuncConvert(AS_DynamicWaveSuspendedTransport));
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDynamicRigid(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, const Map &in BlockX,const Map &in BlockY, const Map &in BlockFx, const Map &in BlockFy, const Map &in Blockvelx, const Map &in Blockvely, const Map &in HCorrect, float dt, float courant = 0.1)",GetFuncConvert(AS_DynamicWaveRigid));
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDebris(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, const Map &in HS, const Map &in VXS, const Map&in VYS, const Map &in IFA, const Map &in RS, const Map&in D, float dragmult, float dt, float courant = 0.1)",GetFuncConvert(AS_DebrisWave));
 
@@ -541,6 +542,8 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowTsunami(const Map &in DEM, const Map &in H, const Map &in U, const Map &in V, const Map & in N, float timestep = 0.1)", GetFuncConvert(AS_TsunamiFlow));
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowNavierStokes(const Map &in DENS, const Map &in U, const Map &in V, float visc, float diff, float timestep = 0.1, float courant = 0.25)", GetFuncConvert(AS_NavierStokesWave));
     r = engine->RegisterGlobalFunction("Map @FlowKinematic(const Map &in LDD, const Map &in Slope, const Map &in Width, const Map &in N, const Map &in H, float dt)", asFUNCTIONPR(    AS_FlowKinematic,(cTMap *,cTMap *,cTMap *,cTMap *,cTMap*,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );;
+    r = engine->RegisterGlobalFunction("Map @FlowKinematicSuspendedTransport(const Map &in LDD, const Map &in Slope, const Map &in Width, const Map &in N, const Map &in H, const Map&in S, float dt)", asFUNCTIONPR(    AS_FlowKinematicSubstance,(cTMap *,cTMap *,cTMap *,cTMap *,cTMap*,cTMap *,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );;
+
     r = engine->RegisterGlobalSTDFunction("array<Map> @VoxelMaskDem(array<Map> &in state, float zmin, float zmax, const Map &in elevation)", GetFuncConvert( AS_VoxelMaskDem));
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowNavierStokes3D(array<Map> &in state, float zmin, float zmax, float visc, float diff, float timestep = 0.1, float courant = 0.25)",GetFuncConvert( AS_NavierStokesWave3D));
 

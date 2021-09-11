@@ -52,14 +52,29 @@ void RigidPhysicsWorld::SetTerrain(cTMap * DEM)
 
 }
 
-int RigidPhysicsWorld::GetObjectCount( bool has_mutex )
+int RigidPhysicsWorld::GetObjectCount( bool has_mutex, bool include_terrain )
 {
     if(!has_mutex)
     {
         m_Mutex.lock();
         m_Mutex_internal.lock();
     }
-    int objects = m_Objects.length();
+
+    int objects = 0;
+    if(include_terrain)
+    {
+        objects = m_Objects.length();
+    }else
+    {
+        for(int i = 0; i < m_Objects.length(); i++)
+        {
+            if(!m_Objects.at(i)->IsTerrain())
+            {
+               objects ++;
+            }
+        }
+
+    }
 
     if(!has_mutex)
     {

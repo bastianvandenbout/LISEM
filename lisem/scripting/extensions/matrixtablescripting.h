@@ -7,7 +7,76 @@
 #include "matrixtable.h"
 #include "table/tableanalysis.h"
 #include "table/correlations.h"
+#include "scriptarray.h"
 
+
+
+
+/*r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<string> &m)", asMETHODPR(MatrixTable,AssignArrS,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<double> &m)", asMETHODPR(MatrixTable,AssignArrD,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<float> &m)", asMETHODPR(MatrixTable,AssignArrF,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<int> &m)", asMETHODPR(MatrixTable,AssignArrI,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<string>> &m)", asMETHODPR(MatrixTable,AssignArrSA,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<double>> &m)", asMETHODPR(MatrixTable,AssignArrDA,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<float>> &m)", asMETHODPR(MatrixTable,AssignArrFA,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<int>> &m)", asMETHODPR(MatrixTable,AssignArrIA,(CScriptArray *),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+*/
+
+
+inline static MatrixTable * AssignArrS(CScriptArray* a)
+{
+    QList<QString> qa = a->ToQNPList<QString>();
+
+    /*MatrixTable*target = this;
+    if(writeonassign)
+    {
+        target = readfunc(FileName);
+    }
+    std::function<double(double,double)> powfuncd = [](double a, double b){return b;};
+    std::function<int(int,int)> powfunci = [](int a, int b){return b;};
+    std::function<QString(QString,QString)> addfunc = [](QString a, QString b){return b;};
+    ApplyOperatorToMatrixTables(target,s,powfunci,powfuncd,addfunc,true);
+
+    target->UpdateParent();
+    return target;*/
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrD( CScriptArray* a)
+{
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrF(CScriptArray* a)
+{
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrI( CScriptArray* a)
+{
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrSA( CScriptArray* a)
+{
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrDA(CScriptArray* a)
+{
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrFA( CScriptArray* a)
+{
+
+    return nullptr;
+}
+inline static MatrixTable * AssignArrIA( CScriptArray* a)
+{
+
+    return nullptr;
+}
 inline void RegisterTableToScriptEngine(asIScriptEngine *engine)
 {
 
@@ -154,6 +223,14 @@ inline void RegisterTableToScriptEngine(asIScriptEngine *engine)
     r = engine->RegisterObjectMethod("Table", "Table& opAssign(string m)", asMETHODPR(MatrixTable,Assign,(QString),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Table", "Table& opAssign(double m)", asMETHODPR(MatrixTable,Assign,(double),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Table", "Table& opAssign(int m)", asMETHODPR(MatrixTable,Assign,(int),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<string> &m)", asFUNCTIONPR(AssignArrS,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<double> &m)", asFUNCTIONPR(AssignArrD,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<float> &m)", asFUNCTIONPR(AssignArrF,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<int> &m)", asFUNCTIONPR(AssignArrI,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<string>> &m)", asFUNCTIONPR(AssignArrSA,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<double>> &m)", asFUNCTIONPR(AssignArrDA,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<float>> &m)", asFUNCTIONPR(AssignArrFA,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Table", "Table& opAssign(const array<array<int>> &m)", asFUNCTIONPR(AssignArrIA,(CScriptArray *),MatrixTable*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     r = engine->RegisterObjectMethod("Table", "Table@ opAdd(string s)", asMETHODPR(MatrixTable,OpAdd,(QString),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Table", "Table& opAddAssign(string m)", asMETHODPR(MatrixTable,OpAddAssign,(QString),MatrixTable*), asCALL_THISCALL); assert( r >= 0 );

@@ -243,6 +243,7 @@ void TablePlotter::RemoveMatrixTable(int index, bool tab_already_removed)
         }
     }
 
+    //update all the other indices!
 
     //remove table from internal list
     delete m_Data.at(index);
@@ -261,8 +262,13 @@ void TablePlotter::ClearMatrixTables()
     }
 }
 
-void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
+void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list, int uid)
 {
+    if(tbl->GetNumberOfCols() == 0 || tbl->GetNumberOfRows() == 0)
+    {
+        return;
+    }
+
     MatrixTable*data = tbl->Copy();
     m_Data.append(data);
 
@@ -275,6 +281,7 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
     double hmin = 1e31;
     double xmin = 1e31;
     double xmax = -1e31;
+    bool minmaxset = false;
 
     int ngraphs = 0;
 
@@ -300,6 +307,7 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
 
                  timeData.replace(j,gd);
 
+                 minmaxset = true;
                  hmax = std::max(hmax,val_y);
                  hmin = std::min(hmin,val_y);
                  xmin = std::min(xmin,val_x);
@@ -340,6 +348,7 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
                 m_CustomPlot->graph(gindex)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 4));
                 m_CustomPlot->graph(gindex)->setName(tbl->GetColumnTitleQ(i*2+1));
                 m_CustomPlot->graph(gindex)->setProperty("sph_tab_index",QVariant::fromValue(data));
+                m_CustomPlot->graph(gindex)->setProperty("sph_uid",QVariant::fromValue(uid));
 
                 QListWidgetItem * item1 = new QListWidgetItem(m_ListWidget);
                 GraphStyleWidget * itemw1 = new GraphStyleWidget(m_ListWidget,gindex,data,m_CustomPlot);
@@ -372,6 +381,7 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
                  hmin = std::min(hmin,val_y);
                  xmin = std::min(xmin,val_x);
                  xmax = std::max(xmax,val_x);
+                 minmaxset = true;
             }
 
             if(n_items > 0)
@@ -411,6 +421,7 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
                 m_CustomPlot->graph(gindex)->setName(tbl->GetColumnTitleQ(i*2+1));
                 m_CustomPlot->graph(gindex)->setName("Graph " + QString::number(gindex));
                 m_CustomPlot->graph(gindex)->setProperty("sph_tab_index",QVariant::fromValue(data));
+                m_CustomPlot->graph(gindex)->setProperty("sph_uid",QVariant::fromValue(uid));
 
                 QListWidgetItem * item1 = new QListWidgetItem(m_ListWidget);
                 GraphStyleWidget * itemw1 = new GraphStyleWidget(m_ListWidget,gindex,data,m_CustomPlot);
@@ -436,6 +447,13 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
     }
 
 
+    if(!minmaxset )
+    {
+        xmin = -1;
+        xmax = 1;
+        hmin = -1;
+        hmax = 1;
+    }
 
     m_OldMinX = xmin;
     m_OldMaxX = xmax;
@@ -477,9 +495,181 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list)
 
 }
 
+
+bool TablePlotter::ReplaceMatrixTable(MatrixTable * tbl, bool one_x_list, int uid)
+{
+
+    int gindex = -1;
+    for(int i = 0; i < m_CustomPlot->graphCount(); i++)
+    {
+        QVariant uid = m_CustomPlot->graph(i)->property("sph_uid");
+        if(uid.isValid() && !uid.isNull())
+        {
+            bool ok = true;
+            int uidi = uid.toInt(&ok);
+            if(ok)
+            {
+                if(uidi == uid)
+                {
+                    gindex = i;
+                    break;
+                }
+            }
+        }
+
+    }
+    if(gindex < 0)
+    {
+        return false;
+    }
+
+
+    MatrixTable*data = tbl->Copy();
+
+    MatrixTable* data_old = (m_CustomPlot->graph(gindex)->property("sph_tab_index").value<MatrixTable*>());
+    int tabindex = -1;
+    for(int  i = 0; i < m_Data.size(); i++)
+    {
+        if(m_Data.at(i) == data_old)
+        {
+            m_Data[i] = data;
+            tabindex= i;
+        }
+    }
+
+
+
+    int cols = tbl->GetNumberOfCols();
+    int rows = tbl->GetNumberOfRows();
+
+
+    double hmax = -1e31;
+    double hmin = 1e31;
+    double xmin = 1e31;
+    double xmax = -1e31;
+
+    bool minmaxset = false;
+
+    int ngraphs = 0;
+    if(!one_x_list)
+    {
+        ngraphs = cols/2;
+
+        for(int i = 0;i < ngraphs; i++)
+        {
+            int n_items = tbl->GetNumberOfRowsAtColumn(i * 2);
+            QVector<QCPGraphData> timeData(n_items);
+
+            for(int j = 0; j < n_items; j++)
+            {
+                double val_x = tbl->GetValueDouble(j,i*2);
+                double val_y = tbl->GetValueDouble(j,i*2+1);
+                QCPGraphData gd;
+                gd.key = val_x;
+                gd.value = val_y;
+
+                 timeData.replace(j,gd);
+
+                 hmax = std::max(hmax,val_y);
+                 hmin = std::min(hmin,val_y);
+                 xmin = std::min(xmin,val_x);
+                 xmax = std::max(xmax,val_x);
+                 minmaxset = true;
+            }
+
+            if(n_items > 0)
+            {
+                m_CustomPlot->graph(i)->data()->set(timeData);
+                m_CustomPlot->graph(gindex)->setProperty("sph_tab_index",QVariant::fromValue(data));
+
+            }
+        }
+
+    }else
+    {
+        ngraphs = cols-1;
+
+        for(int i = 0;i < ngraphs; i++)
+        {
+            int n_items = tbl->GetNumberOfRowsAtColumn(i * 2);
+            QVector<QCPGraphData> timeData(n_items);
+
+            for(int j = 0; j < n_items; j++)
+            {
+                double val_x = tbl->GetValueDouble(j,0);
+                double val_y = tbl->GetValueDouble(j,i+1);
+                QCPGraphData gd;
+                gd.key = val_x;
+                gd.value = val_y;
+
+                 timeData.replace(j,gd);
+
+                 hmax = std::max(hmax,val_y);
+                 hmin = std::min(hmin,val_y);
+                 xmin = std::min(xmin,val_x);
+                 xmax = std::max(xmax,val_x);
+                 minmaxset = true;
+            }
+
+            if(n_items > 0)
+            {
+
+                m_CustomPlot->graph(i)->data()->set(timeData);
+                m_CustomPlot->graph(gindex)->setProperty("sph_tab_index",QVariant::fromValue(data));
+
+            }
+        }
+    }
+
+
+    if(!minmaxset )
+    {
+        xmin = -1;
+        xmax = 1;
+        hmin = -1;
+        hmax = 1;
+    }
+
+    m_OldMinX = xmin;
+    m_OldMaxX = xmax;
+    m_OldMinY = hmin;
+    m_OldMaxY = hmax;
+    m_CustomPlot->xAxis->setRange(xmin,xmax);
+    m_CustomPlot->yAxis->setRange(hmin,hmax);
+
+    QString text;
+    for(int i = 0; i < data->GetNumberOfRows(); i++)
+    {
+        for(int j = 0; j < data->GetNumberOfCols(); j++)
+        {
+            text = text + data->GetValueStringQ(i,j);
+            text = text + "\t";
+        }
+
+        text = text + "\n";
+    }
+
+    if(!(tabindex < 0))
+    {
+         QTextEdit * te = (QTextEdit *)textedits->widget(tabindex);
+         if(te != nullptr)
+         {
+             te->setText(text);
+         }
+    }
+
+    //textedits->addTab(te,"Table " + QString::number(m_Data.length()-1));
+
+    m_CustomPlot->replot();
+
+    return true;
+
+}
+
 void TablePlotter::SetFromMatrixTable(MatrixTable * tbl, bool one_x_list)
 {
     ClearMatrixTables();
+
     AddMatrixTable(tbl,one_x_list);
 }
 

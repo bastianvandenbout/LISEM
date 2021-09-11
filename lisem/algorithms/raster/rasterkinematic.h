@@ -279,7 +279,7 @@ inline static void Kinematic(int pitRowNr, int pitColNr, cTMap *_LDD,
  */
 inline static void routeSubstance(int pitRowNr, int pitColNr, cTMap *_LDD,
                             cTMap *_Q, cTMap *_Qn, cTMap *_Qs, cTMap *_Qsn,
-                            cTMap *_Alpha, cTMap *_DX, cTMap*  _Vol , cTMap *_Sed, float _dt)// ,cTMap *_StorVol, cTMap *_StorSed)
+                            cTMap *_Alpha, cTMap*  _Vol , cTMap *_Sed, float _dt)// ,cTMap *_StorVol, cTMap *_StorSed)
 {
     int dx[10] = {0, -1, 0, 1, -1, 0, 1, -1, 0, 1};
     int dy[10] = {0, 1, 1, 1, 0, 0, 0, -1, -1, -1};
@@ -292,6 +292,7 @@ inline static void routeSubstance(int pitRowNr, int pitColNr, cTMap *_LDD,
     list->rowNr = pitRowNr;
     list->colNr = pitColNr;
 
+    double _dx = std::fabs(_LDD->cellSizeX());
     // _Qsn->fill(0);
     // NOT wrong when multiple outlets! DO this befiore the loop
     //VJ 12/12/12 set output substance to zero
@@ -373,7 +374,7 @@ inline static void routeSubstance(int pitRowNr, int pitColNr, cTMap *_LDD,
 
                             //if (!SwitchSimpleSedKinWave)
             _Qsn->data[rowNr][colNr] = complexSedCalc(_Qn->data[rowNr][colNr], Qin, _Q->data[rowNr][colNr],
-                                                      Sin, _Qs->data[rowNr][colNr], _Alpha->data[rowNr][colNr], _dt, _DX->data[rowNr][colNr]);
+                                                      Sin, _Qs->data[rowNr][colNr], _Alpha->data[rowNr][colNr], _dt, _dx);
             /*else
                                 _Qsn->data[rowNr][colNr] = simpleSedCalc(_Qn->data[rowNr][colNr], Qin, Sin, _dt,
                                                                          _Vol->data[rowNr][colNr], _Sed->data[rowNr][colNr]);
@@ -436,6 +437,8 @@ inline static cTMap * AS_FlowKinematic(cTMap * LDD, cTMap * Slope, cTMap * Width
                     Q->Drc = 0;
 
             }
+
+            pcr::setMV(Qn->Drc);
         }
 
     }
@@ -477,6 +480,114 @@ inline static cTMap * AS_FlowKinematic(cTMap * LDD, cTMap * Slope, cTMap * Width
     delete Alpha;
 
     return Q;
+}
+
+
+inline static cTMap * AS_FlowKinematicSubstance(cTMap * LDD, cTMap * Slope, cTMap * Width, cTMap * N, cTMap * H, cTMap * S,float dt)
+{
+
+    //convert height to discharge
+
+    cTMap * Alpha = Slope->GetCopy0();
+    cTMap * Q = Slope->GetCopy0();
+    cTMap * Qn = Slope->GetCopy0();
+    cTMap * infil = Slope->GetCopy0();
+    cTMap * Sn = S->GetCopy0();
+    cTMap * Qs = Slope->GetCopy0();
+    cTMap * Qsn = Slope->GetCopy0();
+    cTMap * Watervol = Slope->GetCopy0();
+
+    for(int r = 0; r < Alpha->nrRows(); r++)
+    {
+        for(int c = 0; c < Alpha->nrCols(); c++)
+        {
+            if(!pcr::isMV(H->data[r][c]))
+            {
+
+                double Perim, Radius, Area;
+                const double beta = 0.6;
+                const double _23 = 2.0/3.0;
+                double beta1 = 1/beta;
+                double wh = H->data[r][c];
+                double FW = Width->data[r][c];
+                double grad = sqrt(sin(atan(std::max(Slope->data[r][c],1e-12f))));
+
+                {
+                    Perim = FW + 2.0*wh;
+                    Area = FW*wh;
+                }
+
+                Radius = (Perim > 0 ? Area/Perim : 0);
+
+                Alpha->Drc = std::pow(N->Drc/grad * std::pow(Perim, _23),beta);
+
+                if (Alpha->Drc > 0)
+                    Q->Drc = std::pow(Area/Alpha->Drc, beta1);
+                else
+                    Q->Drc = 0;
+
+
+
+                double watervol = H->Drc * Width->data[r][c] * std::fabs(LDD->cellSizeX());
+                double conc = S->Drc /watervol;
+                Watervol->Drc = watervol;
+                Qs->Drc = Q->Drc * conc;
+
+            }
+
+            pcr::setMV(Qn->Drc);
+
+            pcr::setMV(Qsn->Drc);
+        }
+
+    }
+
+
+    //now run the kinematic algorithm to get new q
+
+    for(int r = 0; r < LDD->nrRows(); r++)
+    {
+        for(int c = 0; c < LDD->nrCols(); c++)
+        {
+            if(!pcr::isMV(LDD->data[r][c]))
+            {
+
+                if((int) LDD->data[r][c] == 5)
+                {
+                    Kinematic(r,c,LDD,Q,Qn,infil,Alpha,LDD->cellSize(),dt);
+
+                }
+            }
+        }
+    }
+
+
+    for(int r = 0; r < LDD->nrRows(); r++)
+    {
+        for(int c = 0; c < LDD->nrCols(); c++)
+        {
+            if(!pcr::isMV(LDD->data[r][c]))
+            {
+
+                if((int) LDD->data[r][c] == 5)
+                {
+                    routeSubstance(r,c,LDD,Q,Qn,Qs,Qsn,Alpha,Watervol,Sn,dt);
+
+                }
+            }
+        }
+    }
+
+
+    delete Q;
+    delete Watervol;
+    delete Qn;
+    delete Qs;
+    delete Qsn;
+    delete infil;
+    delete Alpha;
+
+    return Sn;
 }
 
 
