@@ -684,6 +684,8 @@ public:
 
         QCheckBox * m_CheckBoxUI = new QCheckBox("Draw UI");
         QCheckBox * m_CheckBoxLegend = new QCheckBox("Draw Legends");
+        QCheckBox * m_CheckBoxShadow = new QCheckBox("Draw Shadows");
+        QCheckBox * m_CheckBoxReflections = new QCheckBox("Draw Reflections");
         QCheckBox * m_CheckBoxLines = new QCheckBox("Draw Coordinate Lines");
         QDoubleSpinBox *m_UIScale = new QDoubleSpinBox();
         m_CheckBoxUI->setChecked(true);
@@ -695,10 +697,12 @@ public:
 
         connect(m_CheckBoxLines,SIGNAL(toggled(bool)),this,SLOT(OnLinesToggled(bool)));
         connect(m_CheckBoxUI,SIGNAL(toggled(bool)),this,SLOT(OnUIToggled(bool)));
-        connect(m_CheckBoxLegend,SIGNAL(toggled(bool)),this,SLOT(OnLegendToggled(bool)));
+        connect(m_CheckBoxLegend,SIGNAL(toggled(bool)),this,SLOT(OnShadowToggled(bool)));
+        connect(m_CheckBoxShadow,SIGNAL(toggled(bool)),this,SLOT(OnLegendToggled(bool)));
         connect(m_UIScale,SIGNAL(valueChanged(double)),this,SLOT(onUIScaleChanged(double)));
         m_DrawingOptionsLayout->addWidget(m_CheckBoxUI);
         m_DrawingOptionsLayout->addWidget(m_CheckBoxLegend);
+        m_DrawingOptionsLayout->addWidget(m_CheckBoxShadow);
         m_DrawingOptionsLayout->addWidget(new QLabeledWidget("UI Scale Multiplier",m_UIScale));
         m_DrawingOptionsLayout->setSpacing(0);
         m_DrawingOptionsLayout->setMargin(0);
@@ -1530,19 +1534,26 @@ public:
 
         m_PlotMutex.lock();
 
+
         for(int i = 0; i < m_PlotLayersToReplace.size(); i++)
         {
+            std::cout << "check replace " << m_Plots.size() << std::endl;
             for(int j = 0; j < m_Plots.size(); j++)
             {
                 TablePlotter * p = m_Plots.at(j);
 
                 if(p->ReplaceMatrixTable(m_PlotLayersToReplaceT.at(i),true,m_PlotLayersToReplace.at(i)))
                 {
+                    std::cout << "replace found at " <<  j << std::endl;
                     break;
                 }
             }
 
         }
+
+        m_PlotLayersToReplace.clear();
+        m_PlotLayersToReplaceT.clear();
+
         m_PlotMutex.unlock();
     }
 
@@ -2431,6 +2442,11 @@ public slots:
     {
         m_WorldWindow->SetLegendDraw(b);
     }
+    inline void OnShadowToggled(bool b)
+    {
+        m_WorldWindow->SetShadowDraw(b);
+    }
+
     inline void onUIScaleChanged(double s)
     {
         m_WorldWindow->SetUIScale(s);

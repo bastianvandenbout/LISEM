@@ -1,0 +1,4 @@
+#ifndef UIAMBIENTLIGHT_H
+#define UIAMBIENTLIGHT_H
+
+#endif // UIAMBIENTLIGHT_H

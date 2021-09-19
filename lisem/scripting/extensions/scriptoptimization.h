@@ -253,6 +253,7 @@ struct ScriptFunctionError
 
             }else {
 
+                ctx->Unprepare();
                 ctx->PopState();
                 LISEMS_ERROR("Error when calling optimizing callback function!")
                 throw 1;
@@ -261,6 +262,7 @@ struct ScriptFunctionError
 
 
             // Once done, restore the previous state
+            ctx->Unprepare();
             ctx->PopState();
           }else {
 

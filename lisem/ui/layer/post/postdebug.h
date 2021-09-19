@@ -4,7 +4,7 @@
 #include "gl3dgeometry.h"
 #include "gl/openglcldatamanager.h"
 
-class UIPostFXAALayer : public UILayer
+class UIPostDebugLayer : public UILayer
 {
 private:
 
@@ -15,9 +15,10 @@ protected:
 
 public:
 
-    inline UIPostFXAALayer() : UILayer("FXAA", false,"",false)
+    inline UIPostDebugLayer() : UILayer("Debug", false,"",false)
     {
 
+        m_Draw = false;
          m_IsNative = true;
          m_IsUser = false;
          m_IsLayerSaveAble = true;
@@ -26,7 +27,7 @@ public:
          //m_Parameters->AddParameter("Cloud Height",m_CloudHeight,5000.0);
     }
 
-    inline ~UIPostFXAALayer()
+    inline ~UIPostDebugLayer()
     {
 
     }
@@ -42,10 +43,20 @@ public:
     }
 
 
+    inline virtual void OnKeyPressed(int key, int action, int modifier) override
+    {
+
+        std::cout << "key pressed debug " << key << " " << action << std::endl;
+        if(key == GLFW_KEY_I && action == GLFW_PRESS)
+        {
+            m_Draw = !m_Draw;
+        }
+    }
+
 
     inline QString layertypeName()
     {
-        return "PostFXAALayer";
+        return "PostDebugLayer";
     }
 
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
@@ -55,6 +66,12 @@ public:
     //virtual sub-draw function that is specifically meant for geo-objects
     inline void OnDraw3DPostProcess(OpenGLCLManager * m, GeoWindowState s,WorldGLTransformManager * tm) override
     {
+        std::cout << "draw debug " << std::endl;
+
+        int count = 0;
+        glad_glGetIntegerv(GL_MAX_DRAW_BUFFERS, &count);
+
+        std::cout << "max count  "<< count << std::endl;
         float matrix[16] = {
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
@@ -106,10 +123,10 @@ public:
         glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"Light"),6);
         glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(6));
 
-
         glad_glActiveTexture(GL_TEXTURE7);
         glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"Velocity"),7);
         glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(7));
+
 
         glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_PostProcessBuffer2->GetFrameBuffer());
 
@@ -138,7 +155,7 @@ public:
 
     inline void OnPrepare(OpenGLCLManager * m,GeoWindowState s) override
     {
-        m_Program = m->GetMGLProgram(KernelDir + "PostProcess.vert", KernelDir + "PostFXAA.frag");
+        m_Program = m->GetMGLProgram(KernelDir + "PostProcess.vert", KernelDir + "PostDebug.frag");
 
         m_IsPrepared = true;
 

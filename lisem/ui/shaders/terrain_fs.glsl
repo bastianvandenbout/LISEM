@@ -17,9 +17,16 @@ layout (location = 1) out vec4 frag_posx;
 layout (location = 2) out vec4 frag_posy;
 layout (location = 3) out vec4 frag_posz;
 
+layout (location = 4) out vec4 frag_normal;
+layout (location = 5) out vec4 frag_props;
+layout (location = 6) out vec4 frag_Light;
+layout (location = 7) out vec4 frag_Velocity;
+
+
 in wireFrameVertex {
     vec4 worldPosition;
     vec4 position;
+    vec3 normal;
     vec4 color;
     vec3 patchdist;
     vec3 tridist;
@@ -84,5 +91,12 @@ void main() {
     frag_posx = vec4(VIN.worldPosition.z,VIN.worldPosition.z,VIN.worldPosition.z,1.0);
     frag_posy = vec4(elevation,elevation,elevation,1.0);
     frag_posz = vec4(VIN.worldPosition.x,VIN.worldPosition.x,VIN.worldPosition.x,1.0) ;
+
+    frag_normal = vec4(VIN.normal.x,VIN.normal.y,VIN.normal.z,1.0);
+    frag_props = vec4(0.6,0.6,1,1.0);
+    frag_Light = vec4(1.0,1.0,1.0,1.0);
+    frag_Velocity = vec4(0.0,0.0,0.0,1.0);
+
+
 
 }

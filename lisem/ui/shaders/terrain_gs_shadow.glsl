@@ -23,13 +23,11 @@ in worldVertex {
     float alpha;
         float tess_level;
     flat highp vec3 referencepos;
-    vec3 normal;
 } In[];
 
 out wireFrameVertex {
     highp vec4 worldPosition;
     highp vec4 position;
-    highp vec3 normal;
     vec4 color;
     vec3 patchdist;
     vec3 tridist;
@@ -116,12 +114,9 @@ void main() {
 	
     if(position0.y > -1e20f && position1.y >  -1e20f && position2.y >  -1e20f )
     {
-        vec3 normal = normalize(cross(position1.rgb-position0.rgb,position2.rgb-position0.rgb));
-
         Out.worldPosition = position0;
         Out.position = CMatrix *position0;
         Out.color = In[0].color;
-        Out.normal = In[0].normal;
         Out.patchdist = In[0].patchdist;
         Out.tridist = vec3(1.0,0.0,0.0);
         Out.alpha = In[0].alpha;
@@ -131,7 +126,6 @@ void main() {
         Out.worldPosition = position1;
         Out.position = CMatrix *position1;
         Out.color = In[1].color;
-        Out.normal = In[1].normal;
         Out.patchdist = In[1].patchdist;
         Out.tridist = vec3(0.0,1.0,0.0);
         Out.alpha = In[1].alpha;
@@ -141,7 +135,6 @@ void main() {
         Out.worldPosition = position2;
         Out.position = CMatrix *position2;
         Out.color = In[2].color;
-        Out.normal = In[2].normal;
         Out.patchdist = In[2].patchdist;
         Out.tridist = vec3(0.0,0.0,1.0);
         Out.alpha = In[2].alpha;

@@ -6,10 +6,11 @@ uniform sampler2D tex; //color
 uniform sampler2D PosX; //position (in world space, relative to camera)
 uniform sampler2D PosY;
 uniform sampler2D PosZ;
-uniform sampler2D NormalX; //normal (in world space)
-uniform sampler2D NormalY;
-uniform sampler2D NormalZ;
-uniform sampler2D props; // albedo,metalness,roughness
+uniform sampler2D Normal; //normal (in world space)
+uniform sampler2D Props; //Metalness, Rougness, Object Type
+uniform sampler2D Light; // albedo,metalness,roughness
+uniform sampler2D Velocity;
+
 
 in vec2 texcoord;
 
@@ -93,7 +94,7 @@ void main()
 
 
         //vec3 wpos = vec3(texture(PosX,uv).r,texture(PosX,uv).g,texture(PosX,uv).b);
-        //fragColor.rgb =vec3(wpos.x > -1e20? 1.0:0.0,0.0,0.0);
+        fragColor.rgb = fragColor.rgb * (0.5 + 0.5 * vec3(texture(Light,uv).r,texture(Light,uv).g,texture(Light,uv).b));
         //fragColor.a = 1.0f;
 
 }

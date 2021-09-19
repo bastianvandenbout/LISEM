@@ -85,7 +85,7 @@ bool WorldWindow::DrawPostProcess(GeoWindowState &s, WorldGLTransformManager * g
 
                 if(l->ShouldBeRemoved() == false && l->Exists())
                 {
-                     if(l->IsPostProcess())
+                     if(l->IsPostProcess() && l->IsDraw())
                      {
                          l->OnDraw3DPostProcess(m_OpenGLCLManager,s, m_TransformManager);
                          OpenGLCLMSAARenderTarget * temp = s.GL_PostProcessBuffer1;
@@ -108,7 +108,7 @@ bool WorldWindow::DrawPostProcess(GeoWindowState &s, WorldGLTransformManager * g
 
                 if(l->ShouldBeRemoved() == false && l->Exists())
                 {
-                    if(l->IsPostProcess())
+                    if(l->IsPostProcess() && l->IsDraw())
                     {
                         l->OnDraw3DPostProcess(m_OpenGLCLManager,s, m_TransformManager);
                         OpenGLCLMSAARenderTarget * temp = s.GL_PostProcessBuffer1;
@@ -133,7 +133,7 @@ bool WorldWindow::DrawPostProcess(GeoWindowState &s, WorldGLTransformManager * g
 
                 if(l->ShouldBeRemoved() == false && l->Exists())
                 {
-                    if(l->IsPostPostProcess())
+                    if(l->IsPostPostProcess() && l->IsDraw())
                     {
                         l->OnDraw3DPostPostProcess(m_OpenGLCLManager,s, m_TransformManager);
                         OpenGLCLMSAARenderTarget * temp = s.GL_PostProcessBuffer1;
@@ -156,7 +156,7 @@ bool WorldWindow::DrawPostProcess(GeoWindowState &s, WorldGLTransformManager * g
 
                 if(l->ShouldBeRemoved() == false && l->Exists())
                 {
-                    if(l->IsPostPostProcess())
+                    if(l->IsPostPostProcess() && l->IsDraw())
                     {
                         l->OnDraw3DPostPostProcess(m_OpenGLCLManager,s, m_TransformManager);
                         OpenGLCLMSAARenderTarget * temp = s.GL_PostProcessBuffer1;

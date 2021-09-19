@@ -36,7 +36,7 @@
 #include "scriptarrayhelpers.h"
 #include "stat/mlsupersampling.h"
 #include "raster/rastermixtureflow.h"
-
+#include "raster/rasterchannel.h"
 
 inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
 {
@@ -597,6 +597,12 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("Map @RandomVoronoise(const Map &in mask, float scalex, float scaley, int pointn = 1)", asFUNCTIONPR( AS_Voronoise,(cTMap*,float,float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
     engine->RegisterGlobalSTDFunction("array<Map> @ApplyMLModel(array<Map> &in image, string modelpath, int pathsize_x, int patchsize_y , array<int> &in inputbasis = {0,1,2,3},bool fill = false)",GetFuncConvert(ApplyMLBModel));
+
+    engine->RegisterGlobalSTDFunction("array<Map> @GetClosestCells(const Map &in mask)",GetFuncConvert(AS_GetClosestCells));
+    engine->RegisterGlobalSTDFunction("array<Map> @GetClosestCoordinate(const Map &in mask)",GetFuncConvert(AS_GetClosestCoordinate));
+    engine->RegisterGlobalSTDFunction("Map @RasterMoveToCell(const Map &in data, const Map &in row, const Map&in col)",GetFuncConvert(AS_RasterMoveToCell));
+    engine->RegisterGlobalSTDFunction("Map @RasterCellSample(const Map &in data, const Map &in row, const Map&in col)",GetFuncConvert(AS_RasterCellSample));
+    engine->RegisterGlobalSTDFunction("Map @RasterCoordinateSample(const Map &in data, const Map&in x, const Map&in y)",GetFuncConvert(AS_RasterSample));
 
 }
 

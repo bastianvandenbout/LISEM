@@ -173,6 +173,16 @@ class LSMVector3
        return R;
     }
 
+    inline static LSMVector3 mix(const LSMVector3 &v1, const LSMVector3 &v2, float a)
+    {
+        return v1 * (1.0-a) + v2 * a;
+    }
+
+    inline static LSMVector3 mix(const LSMVector3 &v1, const LSMVector3 &v2, LSMVector3 a)
+    {
+        return LSMVector3(v1.x * (1.0-a.x) + v2.x* a.x,v1.y * (1.0-a.y) + v2.y* a.y,v1.z * (1.0-a.z) + v2.x* a.z);
+    }
+
 
     inline static float VDot(const LSMVector3 &v1, const LSMVector3 &v2)
     {
@@ -193,6 +203,12 @@ class LSMVector3
     }
 
 
+    inline static float smoothstep(float edge0, float edge1, float x)
+    {
+        x = std::clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+        // Evaluate polynomial
+        return x * x * (3 - 2 * x);
+    }
 
     LSMVector3 operator+(const LSMVector3 & in) const
     {
@@ -202,6 +218,15 @@ class LSMVector3
         out.z = z + in.z;
         return out;
     }
+    LSMVector3 operator+(const double & in) const
+    {
+        LSMVector3 out;
+        out.x = x + in;
+        out.y = y + in;
+        out.z = z + in;
+        return out;
+    }
+
     LSMVector3 operator-(const LSMVector3 & in) const
     {
         LSMVector3 out;
@@ -226,6 +251,15 @@ class LSMVector3
         out.z = z * in;
         return out;
     }
+    LSMVector3 operator/(const LSMVector3 & in) const
+    {
+        LSMVector3 out;
+        out.x = x / in.x;
+        out.y = y / in.y;
+        out.z = z / in.z;
+        return out;
+    }
+
     LSMVector3 operator/(const float & in) const
     {
         LSMVector3 out;

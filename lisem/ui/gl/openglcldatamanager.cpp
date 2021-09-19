@@ -11,6 +11,7 @@ OpenGLProgram * GLProgram_particles = nullptr;
 OpenGLProgram * GLProgram_pointcloud = nullptr;
 OpenGLProgram * GLProgram_pointcloud3d = nullptr;
 OpenGLProgram * GLProgram_uiterrain = nullptr;
+OpenGLProgram * GLProgram_uiterrainshadow = nullptr;
 OpenGLProgram * GLProgram_uiterrainlayer = nullptr;
 OpenGLProgram * GLProgram_uiocean = nullptr;
 OpenGLProgram * GLProgram_uiobject = nullptr;

@@ -26,6 +26,19 @@ void WorldWindow::AddCloudLayer()
     UILayer * ml2 = new UICloudLayer();
     AddUILayer(ml2,true);
 }
+
+void WorldWindow::AddLight(UILight * L)
+{
+    m_UILayerMutex.lock();
+
+
+    m_UILightList.push_back(L);
+
+    m_UILayerMutex.unlock();
+
+}
+
+
 int WorldWindow::AddUILayerAt(UILayer *ML, bool emitsignal, bool do_zoom, int i)
 {
     m_UILayerMutex.lock();

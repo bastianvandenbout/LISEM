@@ -16,6 +16,7 @@ private:
     bool do_msaa = false;
     int m_nlayersrgba8 = 0;
     int m_nlayersr32 = 0;
+    int m_nlayersrgb32 = 0;
 
     QList<GLuint> fb_TextureID;
     GLuint fb_MSAAId;
@@ -49,14 +50,7 @@ public:
         return m_FrameBufferHeight;
     }
 
-    inline void SetDrawBuffers()
-    {
-
-
-
-    }
-
-    inline void Create(int width, int height, int msaa_level, GLenum format, GLenum tformat,GLenum tcomp,GLenum tdatt, int nlayersrgba8 = 0,int nlayersr32 = 0)
+    inline void Create(int width, int height, int msaa_level, GLenum format, GLenum tformat,GLenum tcomp,GLenum tdatt, int nlayersrgba8 = 0,int nlayersr32 = 0,int nlayersrgb32 = 0)
     {
         m_FrameBufferWidth = width;
         m_FrameBufferHeight = height;
@@ -67,6 +61,7 @@ public:
         m_tdatatype = tdatt;
         m_nlayersrgba8 = nlayersrgba8;
         m_nlayersr32 = nlayersr32;
+        m_nlayersrgb32 = nlayersrgb32;
         m_MSAA = msaa_level;
 
 
@@ -81,7 +76,7 @@ public:
         glad_glBindFramebuffer(GL_FRAMEBUFFER, fb_MSAAId);
 
 
-        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32 +1; i++)
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32 + m_nlayersrgb32 + 1; i++)
         {
             GLenum i_format;
             GLenum i_tformat;
@@ -101,10 +96,16 @@ public:
                 i_tformat = GL_RGBA8;
                 i_tcomp = GL_RGBA;
                 i_tdatt = GL_UNSIGNED_BYTE;
-            }else {
+            }else if( i < m_nlayersrgba8 + m_nlayersr32 + 1){
                 i_format = GL_R32F;
                 i_tformat = GL_R32F;
                 i_tcomp = GL_RED;
+                i_tdatt = GL_FLOAT;
+            }else
+            {
+                i_format = GL_RGB32F;
+                i_tformat = GL_RGB32F;
+                i_tcomp = GL_RGB;
                 i_tdatt = GL_FLOAT;
             }
 
@@ -152,7 +153,7 @@ public:
         if(do_msaa)
         {
 
-           for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+           for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32 + m_nlayersrgb32 +1; i++)
            {
                GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+i);
                // attach msaa RBOs to FBO attachment points
@@ -162,7 +163,7 @@ public:
         }else {
 
 
-            for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+            for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32 +1; i++)
             {
                 GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+i);
 
@@ -240,7 +241,7 @@ public:
         if(m_FrameBufferWidth!= FrameBufferWidth || m_FrameBufferHeight != FrameBufferHeight)
         {
             Destroy();
-            Create(FrameBufferWidth,FrameBufferHeight,m_MSAA,m_format,m_tformat,m_tcomponents,m_tdatatype, m_nlayersrgba8,m_nlayersr32);
+            Create(FrameBufferWidth,FrameBufferHeight,m_MSAA,m_format,m_tformat,m_tcomponents,m_tdatatype, m_nlayersrgba8,m_nlayersr32, m_nlayersrgb32);
         }
     }
 
@@ -251,7 +252,7 @@ public:
             std::cout << "create msaa buffer "  <<  FrameBufferWidth << "  "  <<FrameBufferHeight<< std::endl;
 
             Destroy();
-            Create(FrameBufferWidth,FrameBufferHeight,msaa,m_format,m_tformat,m_tcomponents,m_tdatatype, m_nlayersrgba8,m_nlayersr32);
+            Create(FrameBufferWidth,FrameBufferHeight,msaa,m_format,m_tformat,m_tcomponents,m_tdatatype, m_nlayersrgba8,m_nlayersr32, m_nlayersrgb32);
         }
     }
 
@@ -262,7 +263,7 @@ public:
 
             if(do_msaa)
             {
-                for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+                for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32 +1; i++)
                 {
                     glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, fb_MSAAId);
                     glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_Id.at(i));
@@ -286,14 +287,26 @@ public:
     {
 
 
-        std::vector<GLuint> attachments = std::vector<GLuint>(m_nlayersrgba8 + m_nlayersr32+1);
-        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+        std::vector<GLuint> attachments = std::vector<GLuint>(m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1);
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32 +1; i++)
         {
             GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+i);
             attachments[i] = colattach;
         }
         glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_MSAAId);
-        glad_glDrawBuffers(m_nlayersrgba8 + m_nlayersr32+1,attachments.data());
+        glad_glDrawBuffers(m_nlayersrgba8 + m_nlayersr32 +m_nlayersrgb32+1,attachments.data());
+    }
+    inline void SetPrimaryAsTarget()
+    {
+
+
+        std::vector<GLuint> attachments = std::vector<GLuint>(1);
+        {
+            GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+0);
+            attachments[0] = colattach;
+        }
+        glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_MSAAId);
+        glad_glDrawBuffers(1,attachments.data());
     }
 
     inline void SetDefaultTarget()
@@ -338,22 +351,22 @@ public:
 
     }
 
-    inline void ClearAll()
+    inline void ClearAll0()
     {
         GLint drawFboId = 0, readFboId = 0;
         glad_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &drawFboId);
         glad_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &readFboId);
 
-        std::vector<GLuint> attachments = std::vector<GLuint>(m_nlayersrgba8 + m_nlayersr32+1);
-        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+        std::vector<GLuint> attachments = std::vector<GLuint>(m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1);
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1; i++)
         {
             GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+i);
             attachments[i] = colattach;
         }
         glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_MSAAId);
-        glad_glDrawBuffers(m_nlayersrgba8 + m_nlayersr32+1,attachments.data());
+        glad_glDrawBuffers(m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1,attachments.data());
 
-        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+1; i++)
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32 +1; i++)
         {
             if(i == 0)
             {
@@ -368,10 +381,70 @@ public:
                 glad_glDisable(GL_DEPTH_TEST);
                 glad_glClearColor(0.0,0.0,0.0,0.0);
 
-            }else {
-                static GLfloat mv[] = {-1e30f, 0.0f, 0.0f, 1.0f};
+            }else if(i < m_nlayersrgba8+m_nlayersr32 +1)
+            {
+
+                static GLfloat mv[] = {0.0f, 0.0f, 0.0f, 1.0f};
+                glad_glClearBufferfv(GL_COLOR, i, mv);
+            }else
+            {
+
+                static GLfloat mv[] = {0.0f, 0.0f, 0.0f, 1.0f};
                 glad_glClearBufferfv(GL_COLOR, i, mv);
             }
+
+
+        }
+
+        glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER,drawFboId);
+        glad_glBindFramebuffer(GL_READ_FRAMEBUFFER,readFboId);
+
+
+
+    }
+
+    inline void ClearAll()
+    {
+        GLint drawFboId = 0, readFboId = 0;
+        glad_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &drawFboId);
+        glad_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &readFboId);
+
+        std::vector<GLuint> attachments = std::vector<GLuint>(m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1);
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1; i++)
+        {
+            GLenum colattach = static_cast<GLenum>(static_cast<int>(GL_COLOR_ATTACHMENT0)+i);
+            attachments[i] = colattach;
+        }
+        glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb_MSAAId);
+        glad_glDrawBuffers(m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32+1,attachments.data());
+
+        for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32+m_nlayersrgb32 +1; i++)
+        {
+            if(i == 0)
+            {
+                glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glad_glDisable(GL_DEPTH_TEST);
+                glad_glClearColor(0.0,0.0,0.0,0.0);
+
+            }else if(i < m_nlayersrgba8+1)
+            {
+                glad_glBindFramebuffer(GL_FRAMEBUFFER, fb_Id.at(i-1));
+                glad_glClear(GL_COLOR_BUFFER_BIT);
+                glad_glDisable(GL_DEPTH_TEST);
+                glad_glClearColor(0.0,0.0,0.0,0.0);
+
+            }else if(i < m_nlayersrgba8+m_nlayersr32 +1)
+            {
+
+                static GLfloat mv[] = {-1e30f, 0.0f, 0.0f, 1.0f};
+                glad_glClearBufferfv(GL_COLOR, i, mv);
+            }else
+            {
+
+                static GLfloat mv[] = {0.0f, 0.0f, 0.0f, 1.0f};
+                glad_glClearBufferfv(GL_COLOR, i, mv);
+            }
+
 
         }
 

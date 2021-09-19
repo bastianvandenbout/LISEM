@@ -10,10 +10,10 @@ uniform sampler2D tex; //color
 uniform sampler2D PosX; //position (in world space, relative to camera)
 uniform sampler2D PosY;
 uniform sampler2D PosZ;
-uniform sampler2D NormalX; //normal (in world space)
-uniform sampler2D NormalY;
-uniform sampler2D NormalZ;
-uniform sampler2D props; // albedo,metalness,roughness
+uniform sampler2D Normal; //normal (in world space)
+uniform sampler2D Props; //Metalness, Rougness, Object Type
+uniform sampler2D Light; // albedo,metalness,roughness
+uniform sampler2D Velocity;
 
 in vec2 texcoord;
 

@@ -42,7 +42,7 @@ QImage *WorldWindow::DoExternalDraw(GeoWindowState s)
         if(External3DRenderTarget == nullptr)
         {
             External3DRenderTarget = new OpenGLCLMSAARenderTarget();
-            External3DRenderTarget->Create(s.scr_pixwidth,s.scr_pixheight,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,6);
+            External3DRenderTarget->Create(s.scr_pixwidth,s.scr_pixheight,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,3,3);
 
 
         }else
@@ -133,7 +133,7 @@ uchar *WorldWindow::DoExternalDrawToUChar(GeoWindowState s)
         if(External3DRenderTarget == nullptr)
         {
             External3DRenderTarget = new OpenGLCLMSAARenderTarget();
-            External3DRenderTarget->Create(s.scr_pixwidth,s.scr_pixheight,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,6);
+            External3DRenderTarget->Create(s.scr_pixwidth,s.scr_pixheight,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,3,4);
 
 
         }else

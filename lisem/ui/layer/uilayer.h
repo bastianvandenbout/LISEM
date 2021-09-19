@@ -80,6 +80,7 @@ protected:
     QString m_File;
     bool m_IsFile;
 
+    bool m_ShadowCaster = false;
     bool m_Exists = true;
     bool m_Draw = true;
     bool m_IsDynamic = true;
@@ -171,6 +172,11 @@ public:
         return m_IsRequired;
     }
 
+
+    inline bool IsShadowCaster()
+    {
+        return m_ShadowCaster;
+    }
     //virtual methods implemented by other classes
 
     virtual QString layertypeName() = 0;
@@ -214,6 +220,9 @@ public:
     {}
 
     inline virtual void OnDraw3DGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
+    {}
+
+    inline virtual void OnDraw3DShadowDepth(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm, OpenGLCLMSAARenderTarget * target, LSMMatrix4x4 perspectiveview, BoundingBox bb, int level)
     {}
 
     inline virtual void OnDraw3DTransparentLayer(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)

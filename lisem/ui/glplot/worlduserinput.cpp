@@ -287,6 +287,7 @@ void WorldWindow::InputToLayers()
     bool GeoHit = m_CurrentWindowState.MouseHit;
     LSMVector3 GeoLoc = LSMVector3(m_CurrentWindowState.MouseGeoPosX,m_CurrentWindowState.MouseGeoPosY,m_CurrentWindowState.MouseGeoPosZ);
 
+
     for(int j = 0; j < m_UILayerList.length(); j++)
     {
         UILayer * l = m_UILayerList.at(j);

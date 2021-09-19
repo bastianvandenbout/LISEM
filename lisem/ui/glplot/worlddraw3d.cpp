@@ -151,6 +151,25 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     Draw3DObjects(s);
 
 
+
+    //draw lighting (shadowmapping)
+
+
+    CreateShadowMaps(s,external);
+
+    CreateLightBuffer(s,external);
+
+
+
+    s.GL_3DFrameBuffer->BlitToTexture();
+
+    s.GL_3DFrameBuffer->SetAsTarget();
+    glad_glViewport(0,0,s.GL_FrameBuffer->GetWidth(),s.GL_FrameBuffer->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
+
+
+    DeferredLightPass(s,external);
+
+
     Draw3DPost(s);
 
     s.GL_3DFrameBuffer->BlitToTexture();
@@ -451,6 +470,7 @@ void WorldWindow::DrawColoredTerrain3D(GeoWindowState *s)
         s->GL_FrameBuffer3DWindow.append(BoundingBox(sn.tlx,sn.brx,sn.tly,sn.bry));
 
         m_2D3DRenderTargetBoundingBox.append(BoundingBox(sn.tlx,sn.brx,sn.tly,sn.bry));
+        s->m_2D3DRenderTargetBoundingBox.append(BoundingBox(sn.tlx,sn.brx,sn.tly,sn.bry));
 
         m_ElevationProvider->SetElevationModel(i,m_OpenGLCLManager,TargetD,BoundingBox(sn.tlx,sn.brx,sn.tly,sn.bry));
     }

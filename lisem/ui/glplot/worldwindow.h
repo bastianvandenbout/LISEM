@@ -41,6 +41,9 @@
 #include "layer/post/dof.h"
 #include "layer/post/ssao.h"
 #include "layer/post/ssr.h"
+#include "layer/uilight.h"
+#include "layer/light/uidirectionallight.h"
+#include "layer/post/postdebug.h"
 
 typedef struct World2DMouseState
 {
@@ -106,6 +109,8 @@ private:
     //layers
 
     QList<UILayer *> m_UILayerList;
+    QList<UILight *> m_UILightList;
+
     UILayer * m_UIFocusLayer = nullptr;
 
     //internal signaling that
@@ -125,6 +130,7 @@ private:
     bool m_DrawLegends = true;
     bool m_Draw3D = false;
     bool m_Draw3DGlobe = false;
+    bool m_DrawShadows = false;
 
     LSMVector3 m_SunDir = LSMVector3(0.0,0.4,1.0);//default solar position
     bool m_SunDrag = false;
@@ -209,6 +215,9 @@ public:
         //AddUILayer(new UISkyBoxLayer());
         AddUILayer(new UITerrainLayer());
         AddUILayer(new UIPostFXAALayer());
+        AddUILayer(new UIPostDebugLayer());
+        AddLight(new UIDirectionalLight());
+
         GeoProjection p;
         p.SetGeneric();
         SetCurrentProjection(p,true);
@@ -234,6 +243,7 @@ public:
     void SetUIDraw(bool d);
     void SetLinesDraw(bool d);
     void SetUIScale(double d);
+    void SetShadowDraw(bool d);
     void SetLegendDraw(bool d);
     GeoProjection GetCurrentProjection();
     void SetCurrentProjection(GeoProjection p, bool forceupdate = false);
@@ -249,6 +259,9 @@ public:
     void AddOceanLayer();
     void AddSkyBoxLayer();
     void AddCloudLayer();
+
+    void AddLight(UILight * L);
+
 
     int AddUILayerAt(UILayer *ML, bool emitsignal = true, bool do_zoom = true, int i = 0);
     int AddUILayer(UILayer *ML, bool emitsignal = true, bool do_zoom = true);
@@ -417,6 +430,10 @@ public:
     void DrawGeoLayers2DElevation(GeoWindowState S, WorldGLTransformManager * glt = nullptr);
     void DrawUILayers(GeoWindowState S, WorldGLTransformManager * glt = nullptr);
     bool DrawPostProcess(GeoWindowState &s, WorldGLTransformManager * glt = nullptr);
+    void CreateShadowMaps(GeoWindowState s, bool external);
+    void CreateLightBuffer(GeoWindowState s, bool external);
+    void DeferredLightPass(GeoWindowState s, bool external);
+
     //serialization
 
     UILayerTypeRegistry * m_LayerRegistry;

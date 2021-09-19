@@ -28,7 +28,6 @@ out worldVertex {
     float alpha;
     float tess_level;
     flat highp vec3 referencepos;
-    vec3 normal;
 } Out;
 
 highp vec2 GetTexCoords(highp vec4 wpos)
@@ -57,38 +56,6 @@ highp float GetElevation(highp vec4 wpos)
 	}
 }
 
-highp vec3 GetNormal(highp vec4 wpos)
-{
-
-    highp vec2 texcoord = GetTexCoords(wpos) + vec2(0.00005,0.00005);
-   highp vec2 texcoord_x = texcoord + vec2(-0.0001,0.0);
-   highp vec2 texcoord_y = texcoord + vec2(0.0,-0.0001);
-   float elev = ZScale * texture(TextureD,texcoord).r;
-   float elev_x = ZScale * texture(TextureD,texcoord_x).r;
-   float elev_y = ZScale * texture(TextureD,texcoord_y).r;
-
-    if(!(elev > -1e20f && elev < 1e20f))
-    {
-            return vec3(0.0,-1.0,0.0);
-    }
-    if(!(elev_x > -1e20f && elev_x < 1e20f))
-    {
-            return vec3(0.0,-1.0,0.0);
-    }
-    if(!(elev_y > -1e20f && elev_y < 1e20f))
-    {
-            return vec3(0.0,-1.0,0.0);
-    }
-
-    float dzdx = (elev-elev_x)/0.0001;
-    float dzdy = (elev-elev_y)/0.0001;
-
-    return normalize(vec3(dzdx,-1.0,dzdy));
-
-
-
-}
-
 
 void main() {
     highp vec3 position = gl_TessCoord.x*In[0].position + gl_TessCoord.y*In[1].position + gl_TessCoord.z*In[2].position;
@@ -96,11 +63,6 @@ void main() {
     position.x = position.x*TerrainSize.x*0.5;
     position.z = position.z*TerrainSize.y*0.5;
     position.y = GetElevation(vec4(position,1.0));
-
-    Out.normal = GetNormal(vec4(position,1.0));
-
-    //y_y = GetElevation(vec4(position,1.0));
-    //y_x = GetElevation(vec4(position,1.0));
 
 
     /*position0.x = position0.x*TerrainSize.x*0.5;// + CameraPosition.x;

@@ -73,10 +73,10 @@ void WorldWindow::Draw()
         m_Post1RenderTarget = new OpenGLCLMSAARenderTarget();
         m_Post2RenderTarget = new OpenGLCLMSAARenderTarget();
 
-        m_3DRenderTarget->Create(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,6);
+        m_3DRenderTarget->Create(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,3,4);
         m_Post1RenderTarget->CreateRGBA8(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
         m_Post2RenderTarget->CreateRGBA8(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
-        m_TDRenderTarget->Create(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,6);
+        m_TDRenderTarget->Create(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height,1,GL_RGB8,GL_RGBA8,GL_RGBA, GL_UNSIGNED_BYTE,0,3,4);
 
         MaskedRaster<float> raster_data(m_OpenGLCLManager->GL_GLOBAL.Height,m_OpenGLCLManager->GL_GLOBAL.Width,0.0,0.0,1.0);
         m_3DScreenPosX = new cTMap(std::move(raster_data),"","");
@@ -447,6 +447,13 @@ void WorldWindow::SetUIScale(double d)
      m_UILayerMutex.unlock();
 
 }
+void WorldWindow::SetShadowDraw(bool d)
+{
+    m_UILayerMutex.lock();
+    m_DrawShadows = d;
+    m_UILayerMutex.unlock();
+}
+
 void WorldWindow::SetLegendDraw(bool d)
 {
     m_UILayerMutex.lock();

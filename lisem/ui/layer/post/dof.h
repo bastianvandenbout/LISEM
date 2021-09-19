@@ -109,11 +109,6 @@ public:
         glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"NormalZ"),6);
         glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(6));
 
-        glad_glActiveTexture(GL_TEXTURE7);
-        glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"props"),7);
-        glad_glBindTexture(GL_TEXTURE_2D,s.GL_3DFrameBuffer->GetTexture(7));
-
-
         glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_PostProcessBuffer2->GetFrameBuffer());
 
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};

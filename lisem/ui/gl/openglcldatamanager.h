@@ -20,6 +20,7 @@ LISEM_API extern OpenGLProgram * GLProgram_particles;
 LISEM_API extern OpenGLProgram * GLProgram_pointcloud;
 LISEM_API extern OpenGLProgram * GLProgram_pointcloud3d;
 LISEM_API extern OpenGLProgram * GLProgram_uiterrain;
+LISEM_API extern OpenGLProgram * GLProgram_uiterrainshadow;
 LISEM_API extern OpenGLProgram * GLProgram_uiterrainlayer;
 LISEM_API extern OpenGLProgram * GLProgram_uiocean;
 LISEM_API extern OpenGLProgram * GLProgram_uiobject;
@@ -49,6 +50,7 @@ inline static void InitUIShaders(OpenGLCLManager * m)
     GLProgram_pointcloud3d = m->GetMGLProgram(KernelDir + "UIGeo3DPointCloud.vert", KernelDir + "UIGeo3DPointCloud.frag");
     GLProgram_uipointsimple = m->GetMGLProgram(KernelDir+ "UIGeoSimplePointDraw.vert", KernelDir+ "UIGeoSimplePointDraw.frag");
     GLProgram_uiterrain = m->GetMGLProgram(KernelDir + "terrain_vs.glsl", KernelDir + "terrain_fs.glsl", KernelDir + "terrain_gs.glsl", KernelDir + "terrain_tc.glsl", KernelDir + "terrain_te.glsl");
+    GLProgram_uiterrainshadow = m->GetMGLProgram(KernelDir + "terrain_vs_shadow.glsl", KernelDir + "terrain_fs_shadow.glsl", KernelDir + "terrain_gs_shadow.glsl", KernelDir + "terrain_tc_shadow.glsl", KernelDir + "terrain_te_shadow.glsl");
     GLProgram_uiterrainlayer = m->GetMGLProgram(KernelDir + "terrain_vs_layer.glsl", KernelDir + "terrain_fs_layer.glsl", KernelDir + "terrain_gs_layer.glsl", KernelDir + "terrain_tc_layer.glsl", KernelDir + "terrain_te_layer.glsl");
     GLProgram_uiocean = m->GetMGLProgram(KernelDir + "terrain_vs_ocean.glsl", KernelDir + "terrain_fs_ocean.glsl", KernelDir + "terrain_gs_ocean.glsl", KernelDir + "terrain_tc_ocean.glsl", KernelDir + "terrain_te_ocean.glsl");
 
@@ -73,6 +75,7 @@ inline static void DestroyUIShaders(OpenGLCLManager * m)
     SAFE_DELETE(GLProgram_pointcloud3d);
     SAFE_DELETE(GLProgram_uipointsimple);
     SAFE_DELETE(GLProgram_uiterrain);
+    SAFE_DELETE(GLProgram_uiterrainshadow);
     SAFE_DELETE(GLProgram_uiterrainlayer);
     SAFE_DELETE(GLProgram_uiocean);
 
