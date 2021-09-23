@@ -178,8 +178,8 @@ inline static cTMap * AS_SaxtonSuction(cTMap * SAND, cTMap * CLAY, cTMap * ORGAN
 
         float B = bB;
         float A = aA;
+        float psi1 = std::max(10.0f,(float) aA* std::pow((FC1 + Saturation->data[r][c] * (thetast - FC1)),-bB));
 
-        float psi1 = std::max(10.0f,(float) std::pow(aA*(FC1 + Saturation->data[r][c] * (thetast - FC1)),-bB));
         float thetai1 = (FC1 + 0.7 * (thetast - FC1));
 
         ret->data[r][c] = psi1;

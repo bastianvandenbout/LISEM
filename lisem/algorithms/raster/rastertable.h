@@ -693,5 +693,150 @@ inline cTMap * AS_RasterFromTable(MatrixTable * table, cTMap * Other, cTMap * Ot
 }
 
 
+inline cTMap * AS_RasterFromTable(MatrixTable * table, cTMap * Other, int Other2)
+{
+
+    cTMap * ref = Other;
+
+    if(!(table->GetNumberOfCols() > 1 && table->GetNumberOfCols() > 1))
+    {
+        LISEMS_ERROR("Table does not contain at least 2 rows and 2 columns (top row = row class) (left column = column class");
+        throw -1;
+    }
+    cTMap *map;
+
+    if(Other->AS_IsSingleValue)
+    {
+        MaskedRaster<float> raster_data(ref->data.nr_rows(), ref->data.nr_cols(), ref->data.north(), ref->data.west(), ref->data.cell_size(),ref->data.cell_sizeY());
+        map = new cTMap(std::move(raster_data),ref->projection(),"");
+    }else {
+        MaskedRaster<float> raster_data(ref->data.nr_rows(), ref->data.nr_cols(), ref->data.north(), ref->data.west(), ref->data.cell_size(),ref->data.cell_sizeY());
+        map = new cTMap(std::move(raster_data),ref->projection(),"");
+    }
+
+    int tnrcols=  table->GetNumberOfCols();
+    int tnrrows = table->GetNumberOfRows();
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+
+            {
+                int class_r = 0;
+                int class_c = 0;
+
+                if(Other->AS_IsSingleValue)
+                {
+                    if(pcr::isMV(Other->data[0][0]))
+                    {
+
+                    }else {
+                        class_r = (int) (0.25f +Other->data[0][0]);
+                    }
+                }else {
+                    class_r = (int) (0.25f +Other->data[r][c]);
+                }
+
+
+                class_c = (int) (Other2);
+
+
+
+                if(class_r < 0 || class_c < 0)
+                {
+                    pcr::setMV(map->data[r][c]);
+                }else {
+                    int ri = class_r;
+                    int ci = class_c;
+                    if(ri > -1 && ci > -1 && ri < tnrrows && ci < tnrcols)
+                    {
+                        map->data[r][c] = table->GetValueDouble(ri,ci);
+                    }else {
+                        pcr::setMV(map->data[r][c]);
+                    }
+                }
+
+            }
+        }
+    }
+
+
+    return map;
+}
+
+
+inline cTMap * AS_RasterFromTable(MatrixTable * table, int Other, cTMap * Other2)
+{
+    cTMap * ref = Other2;
+
+    if(!(table->GetNumberOfCols() > 1 && table->GetNumberOfCols() > 1))
+    {
+        LISEMS_ERROR("Table does not contain at least 2 rows and 2 columns (top row = row class) (left column = column class");
+        throw -1;
+    }
+    cTMap *map;
+
+    if(Other2->AS_IsSingleValue)
+    {
+        MaskedRaster<float> raster_data(ref->data.nr_rows(), ref->data.nr_cols(), ref->data.north(), ref->data.west(), ref->data.cell_size(),ref->data.cell_sizeY());
+        map = new cTMap(std::move(raster_data),ref->projection(),"");
+    }else {
+        MaskedRaster<float> raster_data(ref->data.nr_rows(), ref->data.nr_cols(), ref->data.north(), ref->data.west(), ref->data.cell_size(),ref->data.cell_sizeY());
+        map = new cTMap(std::move(raster_data),Other2->projection(),"");
+    }
+
+    int tnrcols=  table->GetNumberOfCols();
+    int tnrrows = table->GetNumberOfRows();
+
+    for(int r = 0; r < ref->data.nr_rows();r++)
+    {
+        for(int c = 0; c < ref->data.nr_cols();c++)
+        {
+
+            {
+                int class_r = 0;
+                int class_c = 0;
+
+
+                class_r = (int) (Other);
+
+                if(Other2->AS_IsSingleValue)
+                {
+                    if(pcr::isMV(Other2->data[0][0]))
+                    {
+
+                    }else {
+                        class_c = (int) (0.25f +Other2->data[0][0]);
+                    }
+                }else {
+                    class_c = (int) (0.25f +Other2->data[r][c]);
+                }
+
+
+                if(class_r < 0 || class_c < 0)
+                {
+                    pcr::setMV(map->data[r][c]);
+                }else {
+                    int ri = class_r;
+                    int ci = class_c;
+                    if(ri > -1 && ci > -1 && ri < tnrrows && ci < tnrcols)
+                    {
+                        map->data[r][c] = table->GetValueDouble(ri,ci);
+                    }else {
+                        pcr::setMV(map->data[r][c]);
+                    }
+                }
+
+            }
+        }
+    }
+
+
+    return map;
+}
+
+
+
 
 #endif // RASTERTABLE_H

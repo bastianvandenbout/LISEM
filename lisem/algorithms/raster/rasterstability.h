@@ -428,6 +428,10 @@ inline static std::vector<cTMap*> AS_SlopeStabilityIFM(cTMap * DEMORG, cTMap * s
         }
     }
 
+    delete soildepth;
+    delete DEM;
+    delete FD;
+
     return {SF,FDT};
 
 }

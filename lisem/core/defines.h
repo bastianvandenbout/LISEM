@@ -17,6 +17,13 @@
 #define LSMFLOAT float
 
 #include "qmetatype.h"
+#include "armadillo"
+
+namespace arma
+{
+  extern thread_local arma_rng_cxx11 arma_rng_cxx11_instance;
+}
+
 
 #define WIN32
 

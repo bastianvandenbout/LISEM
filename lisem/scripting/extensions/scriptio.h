@@ -4,6 +4,7 @@
 #include "scriptmanager.h"
 #include "lsmio.h"
 #include "scriptarrayhelpers.h"
+#include "iohdf5.h"
 
 inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
 {
@@ -55,6 +56,10 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
    sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetVarNames(const string&in s)",GetFuncConvert(GetVarNamesFromNetCDF));
    sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimNames(const string&in s)",GetFuncConvert(GetVarDimNames));
    sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimSizes(const string&in s)",GetFuncConvert(GetVarDimSizes));
+
+   sm->RegisterGlobalSTDFunction("void PrintHDF5(const string&in s)",GetFuncConvert(HDF5InfoPrint));
+   sm->RegisterGlobalSTDFunction("Map @ReadHDF5Map(const string&in file, const string&in variable)",GetFuncConvert(ReadHDF5Map));
+
 
    sm->RegisterGlobalFunction("string ValuesToXMLPost(string xmlname, array<string> &in namelist, array<string> &in valuelist)", asFUNCTION(AS_ValueListToXMLPost),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string OSMExtentToXMLPost(Region b)", asFUNCTION(AS_OSMToXMLPost),  asCALL_CDECL);

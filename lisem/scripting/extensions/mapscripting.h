@@ -517,9 +517,11 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     //table interactions
 
-    r = engine->RegisterGlobalFunction("Table @RasterConfusionMatrix(Map &real, Map&model)", asFUNCTIONPR( AS_RasterConfusionTable,(cTMap*,cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("Map @RasterFromTableValues(Table &table,Map &RowValue, Map &ColumnValue)", asFUNCTIONPR( AS_RasterFromTableHeader,(MatrixTable *,cTMap*,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("Map @RasterFromTable(Table &table,Map &Row, Map &Column)", asFUNCTIONPR( AS_RasterFromTable,(MatrixTable *,cTMap*,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Table @RasterConfusionMatrix(const Map &in real, Map&model)", asFUNCTIONPR( AS_RasterConfusionTable,(cTMap*,cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @RasterFromTableValues(const Table &in table,Map &RowValue, Map &ColumnValue)", asFUNCTIONPR( AS_RasterFromTableHeader,(MatrixTable *,cTMap*,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @RasterFromTable(const Table &in table,const Map &Row, Map &Column)", asFUNCTIONPR( AS_RasterFromTable,(MatrixTable *,cTMap*,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @RasterFromTable(const Table &in table,Map &Row, int Column)", asFUNCTIONPR( AS_RasterFromTable,(MatrixTable *,cTMap*,int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @RasterFromTable(const Table &in table,int Row, const Map &Column)", asFUNCTIONPR( AS_RasterFromTable,(MatrixTable *,int,cTMap*),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Table @RasterClasses(Map &m)", asFUNCTIONPR( AS_RasterTableClasses,(cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Table @RasterTableAverage(Map &Row, Map &Column)", asFUNCTIONPR( AS_RasterTableAverage,(cTMap*,cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Table @RasterTableMinimum(Map &Row, Map &Column)", asFUNCTIONPR( AS_RasterTableMinimum,(cTMap*,cTMap*),MatrixTable *),  asCALL_CDECL); assert( r >= 0 );

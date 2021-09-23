@@ -31,6 +31,10 @@ uniform mat4x4 CMatrixShadowMap2;
 uniform mat4x4 CMatrixNoTranslation;
 uniform mat4x4 CMatrixWorldToView;
 
+//pre-computed skybox color info
+uniform vec3 iSolarColor;
+uniform vec3 iSkyColor;
+uniform vec3 iBaseColor;
 
 
 out vec4 fragColor;
@@ -41,6 +45,8 @@ out vec4 fragColor;
 #define FXAA_REDUCE_MUL 1.0/8.0
 #define FXAA_REDUCE_MIN 1.0/128.0
 
+
+//variance cascaded shadowmapping for directional light
 void main()
 {
     vec2 uv = texcoord;
@@ -76,25 +82,72 @@ void main()
         shadow_depth = 1.0 * texture(ShadowMap0,pos_sh.xy).r;
 
     }
+
+
+    float shadow0 = 0.0;
+    vec2 texelSize0 = 1.0 / textureSize(ShadowMap0, 0);
+    for(int xi = -1; xi <= 1; ++xi)
+    {
+        for(int yi = -1; yi <= 1; ++yi)
+        {
+            float pcfDepth = texture(ShadowMap0, pos_sh.xy + vec2(xi, yi) * texelSize0).r;
+            float s = do_shadow? (pcfDepth < pos_sh.z - 0.005 ? 0.0 : 1.0):1.0;
+            if(pcfDepth > 0.99995 || pcfDepth < 0.0005)
+            {
+                s = 1.0;
+            }
+            shadow0 += s;
+        }
+    }
+
+
     if(pos_sh1.x > 0 && pos_sh1.x < 1.0 && pos_sh1.y < 1.0 && pos_sh1.y > 0.0)
     {
         do_shadow1= true;
         shadow_depth1 = 1.0 * texture(ShadowMap1,pos_sh1.xy).r;
     }
+
+
+    float shadow1 = 0.0;
+    vec2 texelSize1 = 1.0 / textureSize(ShadowMap1, 0);
+    for(int xi = -1; xi <= 1; ++xi)
+    {
+        for(int yi = -1; yi <= 1; ++yi)
+        {
+            float pcfDepth = texture(ShadowMap1, pos_sh1.xy + vec2(xi, yi) * texelSize1).r;
+            float s1 = do_shadow1? (pcfDepth < pos_sh1.z - 0.005 ? 0.0 : 1.0):1.0;
+            if(pcfDepth > 0.99995 || pcfDepth < 0.0005)
+            {
+                s1 = 1.0;
+            }
+            shadow1 += s1;
+        }
+    }
+
+
     //compare depths to detect shadows
 
     float light0 = do_shadow? (shadow_depth < pos_sh.z - 0.005 ? 0.0 : 1.0):1.0;
-    if(shadow_depth > 1.00005 || shadow_depth < -0.0005)
+    if(shadow_depth > 0.99995 || shadow_depth < 0.0005)
     {
-        light0 = 0.0;
+        light0 = 1.0;
     }
     float light1 = do_shadow1? (shadow_depth1 < pos_sh1.z - 0.005 ? 0.0 : 1.0):1.0;
-    if(shadow_depth1 > 1.00005 || shadow_depth1 < -0.0005)
+    if(shadow_depth1 > 0.99995 || shadow_depth1 < 0.0005)
     {
-        light1 = 0.0;
+        light1 = 1.0;
     }
-    float light = light0 * light1;
+    shadow0 += light0;
+    shadow1 += light1;
 
-    fragColor = vec4(light,light,light,1.0);//texture(ShadowMap0,uv);
+    shadow0 /= 10.0;
+
+    shadow1 /= 10.0;
+
+
+
+    float light = shadow0 * shadow1;
+
+    fragColor = vec4(iSolarColor * light,1.0);//texture(ShadowMap0,uv);
 
 }

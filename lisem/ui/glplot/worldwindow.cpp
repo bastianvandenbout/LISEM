@@ -92,6 +92,27 @@ void WorldWindow::Draw()
 
     }
 
+    //get global width and depth
+    int widtht = 0;
+    int heightt = 0;
+    glfwGetWindowSize(m_OpenGLCLManager->window,&widtht, &heightt);
+
+    std::cout<< "current dims " << widtht << " " << heightt << " " <<  m_OpenGLCLManager->GL_GLOBAL.Height << " " << m_OpenGLCLManager->GL_GLOBAL.Width <<  std::endl;
+    //check if they are the same as currently said by the glfw database
+
+    if(widtht != m_OpenGLCLManager->GL_GLOBAL.Width)
+    {
+        m_OpenGLCLManager->GL_GLOBAL.Width = widtht;
+    }
+    if(heightt != m_OpenGLCLManager->GL_GLOBAL.Height)
+    {
+        m_OpenGLCLManager->GL_GLOBAL.Height = heightt;
+    }
+
+
+
+
+
     m_3DRenderTarget->Resize(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
     m_TDRenderTarget->Resize(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
     m_Post1RenderTarget->Resize(m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);

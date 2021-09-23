@@ -192,6 +192,42 @@ public:
         return color;
     }
 
+    inline LSMVector3 GetBaseColor(LSMVector3 iSunDir)
+    {
+        return GetFinalSkyColor(LSMVector3(0.0,-1.0,0.0),iSunDir);
+    }
+
+    inline LSMVector3 GetSunColor(LSMVector3 iSunDir)
+    {
+        return GetFinalSkyColor(iSunDir,iSunDir);
+    }
+    inline LSMVector3 GetSkyColor(LSMVector3 iSunDir)
+    {
+        //which direction to sample? try to take the bet of four quadrant upward directions
+        std::vector<LSMVector3> dirs = {LSMVector3(1.0,1.0,1.0),LSMVector3(1.0,1.0,-1.0),LSMVector3(-1.0,1.0,1.0),LSMVector3(-1.0,1.0,-1.0)};
+        std::vector<LSMVector3> colors;
+        std::vector<float> dist;
+        LSMVector3 color = LSMVector3(0.0,0.0,0.0);
+        double min = 1e30;
+        double i_best = 0;
+        for(int i  = 0; i < dirs.size(); i++)
+        {
+
+            min =dirs[i].dot(LSMVector3(0.0,1.0,0.0));
+            LSMVector3 colori = GetFinalSkyColor(dirs[i],iSunDir);
+            colors.push_back(colori);
+            dist.push_back(1.0-std::max(0.0,dirs[i].dot(LSMVector3(0.0,1.0,0.0))));
+
+            color = color + (1.0-std::max(0.0,dirs[i].dot(LSMVector3(0.0,1.0,0.0)))) * colori;
+            if(dirs[i].dot(LSMVector3(0.0,1.0,0.0)) < min)
+            {
+                i_best = i;
+            }
+        }
+
+        return color;
+    }
+
 
     virtual inline void OnRenderLightBuffer(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm, OpenGLCLMSAARenderTarget * target, int bufferindex) override
     {
@@ -273,6 +309,13 @@ public:
             glad_glUniform2f(glad_glGetUniformLocation(m_Program->m_program,"iViewPortSize"),s.GL_PostProcessBuffer2->GetWidth(),s.GL_PostProcessBuffer2->GetHeight());
             glad_glUniform2f(glad_glGetUniformLocation(m_Program->m_program,"iResolution"),s.GL_PostProcessBuffer2->GetWidth(),s.GL_PostProcessBuffer2->GetHeight());
 
+            LSMVector3 s_color = GetSunColor(s.SunDir);
+            LSMVector3 sky_color = GetSkyColor(s.SunDir);
+            LSMVector3 base_color = GetBaseColor(s.SunDir);
+
+            glad_glUniform3f(glad_glGetUniformLocation(m_Program->m_program,"iSolarColor"),s_color.x,s_color.y,s_color.z);
+            glad_glUniform3f(glad_glGetUniformLocation(m_Program->m_program,"iSkyColor"),sky_color.x,sky_color.y,sky_color.z);
+            glad_glUniform3f(glad_glGetUniformLocation(m_Program->m_program,"iBaseColor"),base_color.x,base_color.y,base_color.z);
 
             // bind texture
             glad_glActiveTexture(GL_TEXTURE0);
