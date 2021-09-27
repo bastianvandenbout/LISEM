@@ -2438,6 +2438,7 @@ public:
                     m->m_ShapePainter->UpdateRenderTargetProperties(FB,sn.scr_pixwidth,sn.scr_pixheight);
                     m->m_TextPainter->UpdateRenderTargetProperties(FB,sn.scr_pixwidth,sn.scr_pixheight);
                     m->m_TexturePainter->UpdateRenderTargetProperties(FB,sn.scr_pixwidth,sn.scr_pixheight);
+                    m->m_3DPainter->UpdateRenderTargetProperties(FB,sn.scr_pixwidth,sn.scr_pixheight);
 
                     glad_glBindFramebuffer(GL_FRAMEBUFFER, FB);
                     glad_glViewport(0,0,sn.scr_pixwidth,sn.scr_pixheight);
@@ -2453,6 +2454,7 @@ public:
                     m->m_ShapePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m->GL_GLOBAL.Width,m->m_height);
                     m->m_TextPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m->GL_GLOBAL.Width,m->m_height);
                     m->m_TexturePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m->GL_GLOBAL.Width,m->m_height);
+                    m->m_3DPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m->GL_GLOBAL.Width,m->m_height);
 
 
                     //draw elevation

@@ -187,6 +187,9 @@ void OpenGLCLManager::InitGLCL_int()
     m_TexturePainter = new OpenGLTexturePainter();
     m_TexturePainter->LoadShaders();
 
+    m_3DPainter = new OpenGL3DPainter();
+    m_3DPainter->LoadShaders();
+
     m_ScreenTarget = new OpenGLCLMSAARenderTarget();
     m_MSAATarget = new OpenGLCLMSAARenderTarget();
 
@@ -542,6 +545,7 @@ void OpenGLCLManager::GLCLLoop()
         m_TexturePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
         m_TextPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
         m_ShapePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
+        m_3DPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
 
 
         for(int i = 0; i < m_CallBackFrameList.length(); i++)

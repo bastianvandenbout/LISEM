@@ -280,6 +280,17 @@ public:
 
     }
 
+    inline void Transpose()
+    {
+        for (int i = 0; i < 4; i++) {
+            for (int j = i+1; j < 4; j++) {
+                double temp = data[i][j];
+                data[i][j] = data[j][i];
+                data[j][i] = temp;
+            }
+        }
+    }
+
     inline void SetScaling(float scalex, float scaley, float scalez)
     {
         data[0][0] = scalex;

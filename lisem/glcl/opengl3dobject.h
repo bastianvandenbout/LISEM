@@ -1,5 +1,4 @@
-#ifndef OPENGL3DOBJECT_H
-#define OPENGL3DOBJECT_H
+#pragma once
 
 #include "models/3dmodel.h"
 #include "openglclmanager.h"
@@ -210,7 +209,3 @@ public:
 
 
 };
-
-
-
-#endif // OPENGL3DOBJECT_H

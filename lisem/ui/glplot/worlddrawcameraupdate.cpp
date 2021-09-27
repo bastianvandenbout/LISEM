@@ -64,12 +64,24 @@ bool WorldWindow::UpdateCamera()
 
     if(m_Draw3D)
     {
-        m_Camera2D->LookAt(m_Camera3D->Get2DViewEquivalent(m_ElevationProvider));
+        if(m_DoSet3DViewFrom2DOnce)
+        {
+            m_DoSet3DViewFrom2DOnce = false;
+            m_ElevationProvider->SetAllZero();
+            m_Camera3D->PlaceAndLookAtAuto(m_Camera2D->GetBoundingBox());
+
+        }else
+        {
+            m_Camera2D->LookAt(m_Camera3D->Get2DViewEquivalent(m_ElevationProvider));
+        }
 
     }else {
         m_ElevationProvider->SetAllZero();
         m_Camera3D->PlaceAndLookAtAuto(m_Camera2D->GetBoundingBox());
     }
+
+
+    m_DoSet3DViewFrom2DOnce = false;
 
     m_Camera3D->SetCurrentMatrix();
 

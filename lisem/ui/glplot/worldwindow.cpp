@@ -90,6 +90,21 @@ void WorldWindow::Draw()
         m_3DScreenPosZ = new cTMap(std::move(raster_data3),"","");
         m_3DScreenPosZ->AS_IsSingleValue = false;
 
+
+
+        m_ArrowModel = new ModelGeometry();
+        LSMMesh base;
+        base.SetAsCone(0.1,0.1,0.4,10);
+        base.Move(LSMVector3(0.0,0.4,0.0));
+        LSMMesh top;
+        top.SetAsCone(0.2,0.0,0.1,10);
+        top.Move(LSMVector3(0.0,0.9,0.0));
+
+        m_ArrowModel->AddMesh(base);
+        m_ArrowModel->AddMesh(top);
+
+        m_ArrowActor = new gl3dObject(m_OpenGLCLManager,m_ArrowModel);
+
     }
 
     //get global width and depth
@@ -97,7 +112,7 @@ void WorldWindow::Draw()
     int heightt = 0;
     glfwGetWindowSize(m_OpenGLCLManager->window,&widtht, &heightt);
 
-    std::cout<< "current dims " << widtht << " " << heightt << " " <<  m_OpenGLCLManager->GL_GLOBAL.Height << " " << m_OpenGLCLManager->GL_GLOBAL.Width <<  std::endl;
+    //std::cout<< "current dims " << widtht << " " << heightt << " " <<  m_OpenGLCLManager->GL_GLOBAL.Height << " " << m_OpenGLCLManager->GL_GLOBAL.Width <<  std::endl;
     //check if they are the same as currently said by the glfw database
 
     if(widtht != m_OpenGLCLManager->GL_GLOBAL.Width)

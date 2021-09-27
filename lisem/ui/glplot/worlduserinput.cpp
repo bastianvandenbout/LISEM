@@ -249,6 +249,14 @@ void WorldWindow::OnKey(int key, int action, int mods)
     m_MouseState.KeyAction.append(action);
     m_MouseState.KeyMods.append(mods);
 
+    if (key == GLFW_KEY_TAB && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
+
+        std::cout << "set draw arrows " << m_DrawArrows << std::endl;
+        m_DrawArrows = !m_DrawArrows;
+
+    }
+
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 
 

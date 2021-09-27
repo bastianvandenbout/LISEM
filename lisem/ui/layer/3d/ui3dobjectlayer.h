@@ -24,16 +24,20 @@ public:
          m_IsNative = false;
          m_IsUser = true;
          m_IsLayerSaveAble = true;
+         m_is3D = true;
+
 
     }
 
-    inline UI3DObjectLayer(ModelGeometry*g,QString name, bool is_file, QString file_name) : UIGeoLayer(GeoProjection(),BoundingBox(g->GetBoundingBox().GetMinX(),g->GetBoundingBox().GetMaxX(),g->GetBoundingBox().GetMinY(),g->GetBoundingBox().GetMaxY()),QString("3D Object"),false,QString(""),false)
+    inline UI3DObjectLayer(ModelGeometry*g,QString name, bool is_file, QString file_name) : UIGeoLayer(GeoProjection(),BoundingBox(g->GetBoundingBox().GetMinX(),g->GetBoundingBox().GetMaxX(),g->GetBoundingBox().GetMinZ(),g->GetBoundingBox().GetMaxZ()),QString("3D Object"),false,QString(""),false)
     {
          m_Model = g;
          m_IsNative = false;
          m_IsUser = true;
          m_IsLayerSaveAble = true;
+         m_is3D = true;
 
+         m_BoundingBox3D = g->GetBoundingBox();
     }
 
     inline ~UI3DObjectLayer()

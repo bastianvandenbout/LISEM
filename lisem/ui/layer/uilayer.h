@@ -109,6 +109,10 @@ protected:
     bool m_HasParameters = false;
     bool m_IsPostProcessDrawer = false;
     bool m_IsPostPostProcessDrawer = false;
+    bool m_is3D = false;
+    bool m_IsMovable = false;
+    bool m_IsScaleable = false;
+    bool m_IsRotateable = false;
 
     bool m_IsTimeSeriesAble = false;
     bool m_IsSpectraAble = false;
@@ -172,10 +176,45 @@ public:
         return m_IsRequired;
     }
 
+    inline bool Is3D()
+    {
+        return m_is3D;
+    }
 
     inline bool IsShadowCaster()
     {
         return m_ShadowCaster;
+    }
+
+    inline bool IsMovable()
+    {
+        return m_IsMovable;
+    }
+
+    inline bool IsScaleAble()
+    {
+        return m_IsScaleable;
+    }
+    inline bool IsRotateAble()
+    {
+        return m_IsRotateable;
+    }
+
+    inline virtual void Scale(LSMVector3 s)
+    {
+
+
+    }
+
+    inline virtual void Move(LSMVector3 m)
+    {
+
+
+    }
+    inline virtual void Rotate(LSMVector3 r)
+    {
+
+
     }
     //virtual methods implemented by other classes
 

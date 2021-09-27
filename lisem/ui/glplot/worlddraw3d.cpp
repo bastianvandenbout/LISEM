@@ -145,10 +145,13 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(s.GL_3DFrameBuffer->GetFrameBuffer(),s.scr_pixwidth,s.scr_pixheight);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(s.GL_3DFrameBuffer->GetFrameBuffer(),s.scr_pixwidth,s.scr_pixheight);
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(s.GL_3DFrameBuffer->GetFrameBuffer(),s.scr_pixwidth,s.scr_pixheight);
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(s.GL_3DFrameBuffer->GetFrameBuffer(),s.scr_pixwidth,s.scr_pixheight);
 
 
 
     Draw3DObjects(s);
+
+    Draw3DArrows(s,externals);
 
 
 
@@ -219,6 +222,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),s.GL_PrimaryFrameBuffer->GetWidth(),s.GL_PrimaryFrameBuffer->GetHeight());
 
     GeoWindowState s2 = s;
     //s2.GL_FrameBuffer = m_OpenGLCLManager->GetFrameBuffer();
@@ -248,6 +252,8 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(s.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+
 
 
 }

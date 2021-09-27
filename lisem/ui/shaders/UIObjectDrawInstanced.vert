@@ -13,11 +13,11 @@ uniform highp vec3 ObjTranslate;
 
 out vec3 frag_position;
 out vec2 frag_texcoords;
-out vec3 frag_normal;
+out vec3 frag_in_normal;
 
 void main() {
    gl_Position = CMatrix *(vec4((matrixAttr*vec4(posAttr , 1.0)).xyz ,1.0));
    frag_position = (matrixAttr*vec4(posAttr , 1.0)).xyz;
    frag_texcoords = UVAttr;
-   frag_normal = (matrixAttr*vec4(normalAttr,0.0)).xyz;
+   frag_in_normal = (matrixAttr*vec4(normalAttr,0.0)).xyz;
 }

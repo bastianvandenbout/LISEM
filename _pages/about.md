@@ -1,6 +1,7 @@
 ---
 title: About
 permalink: /docs/about/
+katex: True
 ---
 
 The LISEM model is an open-source geospatial modelling tool focused on simulation of physical processes on and in the Earth's surface.
@@ -19,7 +20,6 @@ Finally, the development of the integrated spatial modelling tool LISEM, as it i
 
 ### Authors
 The main authors of the LISEM model are:
-
 
 Victor Jetten - v.g.jetten@utwente.nl
 

@@ -22,11 +22,19 @@
 #include "site.h"
 
 
-class opengl3dpainter
+class OpenGL3DPainter
 {
+private:
     QString m_AssetDir;
 
-    inline opengl3dpainter()
+
+    GLuint VAO, VBO, VAO3D, VBO3D,TBO3D;
+
+    OpenGLProgram * m_GLProgram_DrawObject;
+
+public:
+
+    inline OpenGL3DPainter()
     {
 
         m_AssetDir = GetSite()+"/kernels/";
@@ -47,17 +55,31 @@ class opengl3dpainter
 
     }
 
-    inline void LoadShaders()
-    {
-
-
-    }
+    void LoadShaders();
 
     inline void DrawTexturedPlane()
     {
 
 
 
+    }
+
+    inline void DrawLine()
+    {
+
+
+    }
+
+    inline void DrawArrow()
+    {
+
+
+    }
+
+    inline double RayCastArrow()
+    {
+
+        return 0.0;
     }
 
     inline void DrawBillboardTexture()
@@ -67,9 +89,22 @@ class opengl3dpainter
 
     }
 
-    inline void DrawTextBillBoarded()
+    inline void DrawTextBillBoarded(QString text, LSMVector3 topleft)
     {
 
+
+
+    }
+
+    inline void DrawText3D(QString text, LSMVector3 topleft, LSMVector3 normal, LSMVector4 Color)
+    {
+
+
+
+    }
+
+    inline void Destroy()
+    {
 
 
     }

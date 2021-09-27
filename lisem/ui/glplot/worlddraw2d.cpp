@@ -15,6 +15,7 @@ void WorldWindow::DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager 
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, FB);
     glad_glViewport(0,0,S.scr_pixwidth,S.scr_pixheight);
@@ -28,6 +29,7 @@ void WorldWindow::DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager 
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
 }
 
 
@@ -43,6 +45,7 @@ void WorldWindow::DrawToFrameBuffer2DElevation(GeoWindowState S, WorldGLTransfor
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(FB,S.scr_pixwidth,S.scr_pixheight);
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, FB);
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -57,6 +60,7 @@ void WorldWindow::DrawToFrameBuffer2DElevation(GeoWindowState S, WorldGLTransfor
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TexturePainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
+    m_OpenGLCLManager->m_3DPainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
 
 
 

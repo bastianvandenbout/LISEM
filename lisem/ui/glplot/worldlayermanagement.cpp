@@ -694,15 +694,27 @@ BoundingBox WorldWindow::GetLook()
 void WorldWindow::LookAt(UIGeoLayer* geolayer)
 {
     BoundingBox bb_orgref = geolayer->GetBoundingBox();
-
-
     GeoCoordTransformer * transformer = GeoCoordTransformer::GetCoordTransformer(geolayer->GetProjection(),m_CurrentWindowState.projection);
 
     BoundingBox bb_newref = transformer->Transform(bb_orgref);
 
     delete transformer;
 
-    LookAt(bb_newref);
+    if(geolayer->Is3D())
+    {
+
+        BoundingBox3D b3d = geolayer->GetBoundingBox3D();
+
+        LookAt(BoundingBox3D(bb_newref.GetMinX(),bb_newref.GetMaxX(),b3d.GetMinY(),b3d.GetMaxY(),bb_newref.GetMinY(),bb_newref.GetMaxY()));
+
+    }else
+    {
+
+
+        LookAt(bb_newref);
+
+    }
+
 }
 
 void WorldWindow::LookAtbb(BoundingBox b)
@@ -712,6 +724,9 @@ void WorldWindow::LookAtbb(BoundingBox b)
 
 void WorldWindow::LookAt(BoundingBox3D b3d)
 {
+    std::cout << "lookat 3d " << b3d.GetMinX() << " "<< b3d.GetMaxX() << " " << b3d.GetMinY() << " " << b3d.GetMaxY() << " "<< b3d.GetMinZ() << " " << b3d.GetMaxZ() <<  std::endl;
+
+
     BoundingBox b;
     b.Set(b3d.GetMinX(),b.GetMaxX(), b.GetMinY(), b.GetMaxY());
     m_Camera2D->LookAt(b);
@@ -757,6 +772,17 @@ void WorldWindow::LookAt(BoundingBox3D b3d)
 void WorldWindow::LookAt(BoundingBox b, bool auto_3d )
 {
     m_Camera2D->LookAt(b);
+
+    if(m_Draw3D)
+    {
+        //try to get a hint of the 3d extent of the object
+
+        m_DoSet3DViewFrom2DOnce = true;
+
+        //otherwise use default guess
+
+    }
+
     if(auto_3d)
     {
         m_Camera3D->PlaceAndLookAtAuto(m_Camera2D->GetBoundingBox());

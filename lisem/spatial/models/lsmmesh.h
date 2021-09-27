@@ -164,6 +164,7 @@ public:
      float RayCast(LSMVector3 O, LSMVector3 Dir);
      bool IsPointInside(LSMVector3 O);
 
+     void Move(LSMVector3 m);
      void CalculateNormalsAndTangents();
      void CalcIsConvex();
      void SetIsConvex(bool conv);

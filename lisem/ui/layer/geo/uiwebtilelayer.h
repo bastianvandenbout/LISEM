@@ -1712,7 +1712,8 @@ public:
 
                         }
                     }else {
-                        m_DownloadManager->StopDownload(ti.download);
+                        //causes error as download->Download is not usable?
+                        //m_DownloadManager->StopDownload(ti.download);
                     }
                 }
             }

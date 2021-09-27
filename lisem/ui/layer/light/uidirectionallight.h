@@ -287,8 +287,6 @@ public:
             GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0 + 6};
             glad_glDrawBuffers(1, DrawBuffers);
 
-            std::cout << "viewport " << target->GetWidth() << target->GetHeight() << std::endl;
-
             glad_glViewport(0,0,target->GetWidth(),target->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
 
             glad_glDisable(GL_DEPTH_TEST);

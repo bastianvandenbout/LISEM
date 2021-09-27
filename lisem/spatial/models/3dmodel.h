@@ -115,6 +115,8 @@ public:
         for(int i = 0; i < meshes.size(); i++)
         {
             BoundingBox3D b = meshes.at(i).GetBoundingBox(calc);
+            std::cout << "get sub bounding box "<< b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinZ() << "  " << b.GetMaxZ() <<  std::endl;
+
             if(i == 0)
             {
                 bf= b;

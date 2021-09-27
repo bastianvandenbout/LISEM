@@ -1,4 +1,0 @@
-#ifndef UIMESHLAYER_H
-#define UIMESHLAYER_H
-
-#endif // UIMESHLAYER_H

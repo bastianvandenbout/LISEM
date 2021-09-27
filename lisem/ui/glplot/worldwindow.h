@@ -44,6 +44,7 @@
 #include "layer/uilight.h"
 #include "layer/light/uidirectionallight.h"
 #include "layer/post/postdebug.h"
+#include "opengl3dobject.h"
 
 typedef struct World2DMouseState
 {
@@ -129,8 +130,13 @@ private:
     double m_DrawUIScale = 1.0;
     bool m_DrawLegends = true;
     bool m_Draw3D = false;
+    bool m_DrawArrows = false;
     bool m_Draw3DGlobe = false;
     bool m_DrawShadows = false;
+    bool m_DoSet3DViewFrom2DOnce =false;
+
+    ModelGeometry* m_ArrowModel;
+    gl3dObject * m_ArrowActor;
 
     LSMVector3 m_SunDir = LSMVector3(0.0,0.4,1.0);//default solar position
     bool m_SunDrag = false;
@@ -414,6 +420,12 @@ public:
     WorldGeoProbeResult ProbeLayer(UILayer * l);
 
     void Draw();
+
+
+    void Draw3DArrows(GeoWindowState s, bool external = false);
+    void Arrow3DRayCast();
+    void Draw2DArrows(GeoWindowState s, bool external = false);
+    void Arrow2DRayCast();
 
     void DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager * glt = nullptr);
     void DrawToFrameBuffer2DElevation(GeoWindowState S, WorldGLTransformManager * glt = nullptr);

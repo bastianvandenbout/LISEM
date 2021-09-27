@@ -53,6 +53,8 @@
 #include "opengltexturepainter.h"
 #include "openglmsaarendertarget.h"
 #include "openglrendertarget.h"
+#include "opengl3dpainter.h"
+
 
 //#include "scriptmanager.h"
 //#include "lsmio.h"
@@ -273,6 +275,7 @@ public:
     OpenGLTextPainter * m_TextPainter;
     OpenGLShapePainter * m_ShapePainter;
     OpenGLTexturePainter * m_TexturePainter;
+    OpenGL3DPainter * m_3DPainter;
 
     /*OpenGLProgram * m_GLProgram_uimap;
     OpenGLProgram * m_GLProgram_uiduomap;
@@ -740,11 +743,12 @@ public:
         m_TexturePainter->Destroy();
         m_TextPainter->Destroy();
         m_ShapePainter->Destroy();
+        m_3DPainter->Destroy();
 
         SAFE_DELETE(m_TexturePainter);
         SAFE_DELETE(m_TextPainter);
         SAFE_DELETE(m_ShapePainter);
-
+        SAFE_DELETE(m_3DPainter);
 
         m_MSAATarget->Destroy();
 

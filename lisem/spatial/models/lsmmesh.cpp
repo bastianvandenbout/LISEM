@@ -138,8 +138,10 @@ BoundingBox3D LSMMesh::GetBoundingBox(bool calc)
                 b.Merge(v1);
             }
         }
+
+        m_BoundingBox = b;
+
     }
-    m_BoundingBox = b;
 
 
     return m_BoundingBox;
@@ -840,6 +842,13 @@ bool LSMMesh::IsPointInside(LSMVector3 O)
 
 }
 
+void LSMMesh::Move(LSMVector3 m)
+{
+    for (unsigned int i = 0; i < vertices.size();  ++i) {
+        //vertices[i].setPosition(LSMVector3(vertices[i].position()) );
+        vertices[i].setPosition(LSMVector3(vertices[i].position().x  + m.x,vertices[i].position().y + m.y,vertices[i].position().z + m.z));
+    }
+}
 
  bool LSMMesh::IsSetup()
 {
