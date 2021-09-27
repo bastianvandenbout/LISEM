@@ -39,11 +39,11 @@ window.MathJax = {
 <meta property="og:url" content="http://localhost:4000/docs/calibration/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-09-27T09:08:02+02:00" />
+<meta property="article:published_time" content="2021-09-27T16:18:49+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Calibration" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Calibration","dateModified":"2021-09-27T09:08:02+02:00","datePublished":"2021-09-27T09:08:02+02:00","url":"http://localhost:4000/docs/calibration/","description":"The LISEM software includes an automated calibration procedure based on gradient descent with Armijo-backtracking. The function is called OptimizeCustom. It takes as an argument a list of initial parameter values, a list of true/false indicating wether the values must be postive-only. The third argument is a custom function that return an error number. This error number will be minimized during the gradient descent. Finally, there are the finite step and gradient descent step. OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05); The gradient descent algorithm attempt to find the gradient of the error function using variations in the parameter values (the size of the variation is the infinite step). Once the gradient is determined, the algorithm moves towards lower error with a step size determined by the gradient descent step parameter.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Calibration","dateModified":"2021-09-27T16:18:49+02:00","datePublished":"2021-09-27T16:18:49+02:00","url":"http://localhost:4000/docs/calibration/","description":"The LISEM software includes an automated calibration procedure based on gradient descent with Armijo-backtracking. The function is called OptimizeCustom. It takes as an argument a list of initial parameter values, a list of true/false indicating wether the values must be postive-only. The third argument is a custom function that return an error number. This error number will be minimized during the gradient descent. Finally, there are the finite step and gradient descent step. OptimizeCustom({​​​1.0,1.0}​​​,{​​​true,true}​​​,@Calibrate,0.01,0.05); The gradient descent algorithm attempt to find the gradient of the error function using variations in the parameter values (the size of the variation is the infinite step). Once the gradient is determined, the algorithm moves towards lower error with a step size determined by the gradient descent step parameter.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -425,7 +425,9 @@ Other options, such as percentage accuracy, or root mean square error can also b
     <script>
   var baseurl = ''
 </script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" ></script>
 <script src="/assets/js/bootstrap.min.js "></script>
 <script src="/assets/js/typeahead.bundle.min.js "></script>
 

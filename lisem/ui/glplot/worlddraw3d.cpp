@@ -151,7 +151,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
     Draw3DObjects(s);
 
-    Draw3DArrows(s,externals);
+    Draw3DArrows(s,external);
 
 
 

@@ -95,6 +95,7 @@ int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
 
     LISEM_DEBUG("Creating Window");
 
+
     m_width = wind_width;
     m_height = wind_height;
 
@@ -533,6 +534,13 @@ void OpenGLCLManager::GLCLLoop()
         //make this thread current for opengl
         glfwMakeContextCurrent(window);
 
+        int widtht = 0;
+        int heightt = 0;
+        glfwGetWindowSize(window,&widtht, &heightt);
+
+        std::cout << "wh " << widtht << " " << heightt << " " << m_width << " " << m_height << std::endl;
+        m_width = widtht;
+        m_height = heightt;
 
         CreateMSAABuffer();
 
