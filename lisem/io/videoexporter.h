@@ -7,6 +7,7 @@
 #include "QImage"
 #include "QMediaRecorder"
 #include "iostream"
+#include "error.h"
 
 extern "C"
 {
@@ -55,6 +56,8 @@ inline void Log(std::string str) {
 
     std::cout << str << std::endl;
 
+    LISEMS_ERROR(QString(str.c_str()));
+
 }
 
 typedef void(*FuncPtr)(const char *);
@@ -65,7 +68,7 @@ inline void VideoExportDebug(std::string str, int err) {
    Log(str + " " + std::to_string(err));
    if (err < 0) {
        av_strerror(err, errbuf, sizeof(errbuf));
-       str += errbuf;
+       str +=  errbuf;
    }
    Log(str);
    ExtDebug(str.c_str());
@@ -136,16 +139,21 @@ public:
 namespace VideoExport
 {
 inline VideoCapture* Init(int width, int height, int fps, int bitrate, QString filename) {
+    std::cout << "init video capture"<< std::endl;
     VideoCapture *vc = new VideoCapture();
     vc->Init(width, height, fps, bitrate, filename);
     return vc;
 };
 
 inline void AddFrame(uint8_t *data, VideoCapture *vc) {
+    std::cout << "add frame"<< std::endl;
+
     vc->AddFrame(data);
 }
 
 inline void Finish(VideoCapture *vc, bool save) {
+    std::cout << "finish"<< std::endl;
+
     vc->Finish(save);
 }
 

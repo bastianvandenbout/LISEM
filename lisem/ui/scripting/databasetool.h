@@ -29,6 +29,7 @@
 #include "site.h"
 #include "lsmio.h"
 #include "site.h"
+#include "defines.h"
 
 class SPHFileSystemModel : public QFileSystemModel
 {
@@ -197,6 +198,9 @@ public:
 
     inline void keyPressEvent(QKeyEvent *event) override
     {
+
+        std::cout  << "lineedit " << this->document()->lineCount() << std::endl;
+
         QKeyEvent *e = event;
 
         bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E); // CTRL+E
@@ -312,6 +316,8 @@ public:
     bool m_ConsoleRunning = false;
 
     QSplitter *m_MainWidget;
+    QWidget *m_Main1Widget;
+    QVBoxLayout *m_Main1Layout;
     QPlainTextEdit *m_FileConsole;
     LSMLineEdit * m_FileConsoleLineEdit;
     ScriptTool * m_FileEditor;
@@ -528,7 +534,14 @@ public:
      m_MenuLayout->addWidget(InfoButton,0,Qt::AlignLeft);
      m_MenuLayout->addItem(new QSpacerItem(20,20));
      m_MenuLayout->addWidget(DirOpenButton);
-     m_MenuLayout->addWidget(m_DirLabel);
+
+     QWidgetLayout * wdl = new QWidgetLayout(m_DirLabel);
+
+     wdl->setMinimumHeight(25);
+     wdl->setMinimumWidth(100);
+     wdl->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
+
+     m_MenuLayout->addWidget(wdl);
 
      m_MenuLayout->setMargin(2);
      m_MenuLayout->setSpacing(2);
@@ -542,9 +555,14 @@ public:
      QHBoxLayout *maplayout = new QHBoxLayout();
      QVBoxLayout *mapvlayout = new QVBoxLayout();
 
+     m_Main1Widget = new QWidget();
+     m_Main1Layout = new QVBoxLayout();
+     m_Main1Widget->setLayout(m_Main1Layout);
      m_MainWidget = new QSplitter();
+
      this->setLayout(maplayout);
-     maplayout->addWidget(m_MainWidget);
+     maplayout->addWidget(m_Main1Widget);
+     //m_Main1Layout->addWidget(m_MainWidget);
 
      maplayout->setMargin(2);
      maplayout->setSpacing(2);
@@ -561,6 +579,10 @@ public:
      m_MainWidget->setCollapsible(m_MainWidget->indexOf(mapVtab),false);
      m_MainWidget->setStretchFactor(m_MainWidget->indexOf(mapVtab),1);
      mapVtab->setLayout(mapvlayout);
+
+
+     m_Main1Layout->addWidget(m_MainWidget);
+
 
      QSplitter * vsplit = new QSplitter();
      vsplit->setOrientation(Qt::Vertical);
@@ -582,6 +604,7 @@ public:
      vwidg2l->setSpacing(2);
 
 
+     //vwidg1l->addWidget(new QWidgetHDuo(m_BrowseTree,m_BrowseTree2));
      vwidg1l->addWidget(m_BrowseWidget);
      m_BrowseWidget->addWidget(m_BrowseTree);
      m_BrowseWidget->addWidget(m_BrowseTree2);
@@ -593,6 +616,9 @@ public:
      vsplit->addWidget(vwidg2);
 
      mapvlayout->addWidget(vsplit);
+
+     m_Main1Widget->setStyleSheet(splitterSheet);
+
 
 
      connect(m_BrowseTree,SIGNAL(clicked(const QModelIndex &)),this, SLOT(OnFileModelClicked(const QModelIndex &)));
@@ -611,7 +637,7 @@ public:
 
 
      connect(m_FileConsoleLineEdit,SIGNAL(OnCommandGiven(QString)),this,SLOT(OnConsoleCommand(QString)));
-     QTimer::singleShot(0,this,SLOT(UpdateConsole()));
+     QTimer::singleShot(30,this,SLOT(UpdateConsole()));
 
      m_Path_Current = GetSite()+"/";
      m_Path_OpenFiles = m_Path_Current + "openloc.ini";
@@ -716,7 +742,7 @@ public slots:
             m_FileConsole->appendHtml(line);
         }
 
-        QTimer::singleShot(0.01,this,SLOT(UpdateConsole()));
+        QTimer::singleShot(30,this,SLOT(UpdateConsole()));
 
     }
 

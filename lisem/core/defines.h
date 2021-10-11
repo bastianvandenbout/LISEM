@@ -17,6 +17,7 @@
 #define LSMFLOAT float
 
 #include "qmetatype.h"
+#include "QString"
 #include "armadillo"
 
 namespace arma
@@ -31,6 +32,13 @@ namespace arma
 #define LISEM_PI 3.141592653589793238462643383279502884197169399375105820974944
 #define LISEM_1DIVPI 0.31830988618
 #define LISEM_PIdiv180 (LISEM_PI/180.0)
+
+extern QString splitterSheetH;
+
+extern QString splitterSheetV;
+
+extern QString splitterSheet;
+
 
 template<class T>
 inline const T& min_(const T& a, const T& b)

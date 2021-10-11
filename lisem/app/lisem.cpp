@@ -48,13 +48,15 @@ void SPHazard::OnGLCLLoad()
 
 }
 
-void SPHazard::OnGLCLFrame()
+bool SPHazard::OnGLCLFrame()
 {
 
     processTimeStep();
 
     renderFrame();
 
+    //return true only if the model has altered data due to a new timestep
+    return false;
 }
 
 int SPHazard::execute(int argc, char *argv[])
@@ -262,6 +264,9 @@ int SPHazard::execute(int argc, char *argv[])
 
             m_OpenGLCLManager->ProcessEvents(); //QTimer::singleShot(0,m_OpenGLCLManager,SLOT(ProcessEvents));
             std::cout << "execute qt app " << std::endl;
+
+            //int qreturn  = 0;
+            //std::this_thread::sleep_for(std::chrono::seconds(100));
             int qreturn = m_App->exec();
 
             m_App->processEvents();

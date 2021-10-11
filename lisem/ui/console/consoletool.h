@@ -60,7 +60,7 @@ public:
         m_Console->setSizePolicy(sizePolicy);
 
         connect(m_ConsoleLineEdit,SIGNAL(returnPressed()),this,SLOT(OnConsoleEnterPressed()));
-        QTimer::singleShot(0,this,SLOT(UpdateConsole()));
+        QTimer::singleShot(30,this,SLOT(UpdateConsole()));
 
         QVBoxLayout *gblayout = new QVBoxLayout;
         this->setLayout(gblayout);
@@ -113,7 +113,7 @@ public slots:
             m_Console->appendHtml(line);
         }
 
-        QTimer::singleShot(0.01,this,SLOT(UpdateConsole()));
+        QTimer::singleShot(30,this,SLOT(UpdateConsole()));
 
     }
 

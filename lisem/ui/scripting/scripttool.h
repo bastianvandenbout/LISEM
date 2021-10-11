@@ -16,6 +16,7 @@
 #include "QMessageBox"
 #include "QMovie"
 #include "QSplitter"
+#include "widgets/labeledwidget.h"
 
 #include "stackdisplay.h"
 #include "atomic"
@@ -193,9 +194,13 @@ public:
         m_StackDisplay = new StackDisplay();
         m_DebugSplitter = new QSplitter();
 
+
         m_DebugSplitter->addWidget(m_ScriptTabs);
         m_DebugSplitter->addWidget(m_StackDisplay);
         m_DebugSplitter->setSizes({1,0});
+
+        m_DebugSplitter->blockSignals(true);
+        m_DebugSplitter->handle(0)->blockSignals(true);
 
         m_MainLayout->addWidget(m_DebugSplitter);
 

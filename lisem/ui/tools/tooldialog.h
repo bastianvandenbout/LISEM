@@ -302,7 +302,7 @@ public:
         {
             onParameterChanged();
 
-            QTimer::singleShot(0,this,&ToolDialog::UpdateConsole);
+            QTimer::singleShot(30,this,&ToolDialog::UpdateConsole);
         }
     }
 
@@ -337,7 +337,7 @@ public slots:
             m_Messages->appendHtml(line);
         }
 
-        QTimer::singleShot(0,this,&ToolDialog::UpdateConsole);
+        QTimer::singleShot(30,this,&ToolDialog::UpdateConsole);
 
     }
 

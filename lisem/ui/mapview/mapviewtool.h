@@ -232,6 +232,7 @@ public:
 
     inline void SetUID(int id, std::function<void(ASUIPlotLayer*)> fincr, std::function<void(ASUIPlotLayer*)> fdecr)
     {
+        std::cout << "set ui plot layer id " << id << std::endl;
         m_UniqueID = id;
 
         m_CallBackIncrease = fincr;
@@ -301,6 +302,67 @@ signals:
 };
 
 
+class myEventFilter: public QObject {
+  Q_OBJECT
+public:
+    WorldWindow * m_WorldWindow;
+
+  myEventFilter(WorldWindow * WorldWindow) {
+       m_WorldWindow = WorldWindow;
+  }
+  ~myEventFilter() {
+  }
+protected:
+  bool eventFilter(QObject* object, QEvent* event) {
+
+      if(object != nullptr)
+      {
+          //std::cout << "event " << event->type() << " " << object->inherits("QSplitter")  <<  object->metaObject()->className() << std::endl;
+          //object->dumpObjectInfo();
+      }else
+      {
+          //std::cout << "event " << event->type() << "no object " << std::endl;
+      }
+    if(event->type() == QEvent::MouseMove
+             || event->type() == QEvent::TouchBegin
+             || event->type() == QEvent::TouchUpdate
+             || event->type() == QEvent::TouchEnd
+             || event->type() == QEvent::GrabMouse
+             || event->type() == QEvent::UngrabMouse
+             || event->type() == QEvent::GrabKeyboard
+             || event->type() == QEvent::UngrabKeyboard
+             || event->type() == QEvent::GraphicsSceneMouseMove
+             || event->type() == QEvent::GraphicsSceneMousePress
+             || event->type() == QEvent::GraphicsSceneMouseRelease
+             || event->type() == QEvent::GraphicsSceneMouseDoubleClick
+             || event->type() == QEvent::GraphicsSceneContextMenu
+             || event->type() == QEvent::GraphicsSceneHoverEnter
+             || event->type() == QEvent::GraphicsSceneHoverMove
+             || event->type() == QEvent::GraphicsSceneHoverLeave
+             || event->type() == QEvent::GraphicsSceneHelp
+             || event->type() == QEvent::GraphicsSceneDragEnter
+             || event->type() == QEvent::GraphicsSceneDragMove
+             || event->type() == QEvent::GraphicsSceneDragLeave
+             || event->type() == QEvent::GraphicsSceneDrop
+             || event->type() == QEvent::GraphicsSceneWheel
+             || event->type() == QEvent::MouseButtonPress
+             || event->type() == QEvent::MouseButtonRelease
+             || event->type() == QEvent::MouseButtonDblClick
+             || event->type() == QEvent::MouseMove
+             || event->type() == QEvent::KeyPress
+             || event->type() == QEvent::KeyRelease)
+    {
+
+        m_WorldWindow->SetRedrawNeeded();
+        return false; // make it unhandled and sent to other filters.
+    } else
+    {
+      return false;
+    }
+  }
+};
+
+
 class MapViewTool : public QWidget
 {
         Q_OBJECT;
@@ -357,6 +419,10 @@ public:
         m_WorldWindow = w;
         m_Model = m;
         m_ModelData = minterface;
+
+
+        QCoreApplication::instance()->installEventFilter(new myEventFilter(m_WorldWindow));
+
 
         QVBoxLayout *gblayout_map  = new QVBoxLayout;
         gblayout_map->setMargin(0);
@@ -792,8 +858,8 @@ public:
         m_RecordingOptionsLayout->addWidget(m_RecordButton);
         m_RecordingOptionsLayout->addWidget(m_StopButton);
         m_RecordingOptionsLayout->addWidget(m_DelButton);
-        m_RecordingOptionsLayout->addWidget(new QLabeledWidget("FPS",m_FPSBox));
-        m_RecordingOptionsLayout->addWidget(new QLabeledWidget("Playback FPS",m_RecordFPSBox));
+        m_RecordingOptionsLayout->addWidget(new QLabeledWidget("Frametime",m_FPSBox));
+        m_RecordingOptionsLayout->addWidget(new QLabeledWidget("PlayFPS",m_RecordFPSBox));
         m_RecordingOptionsLayout->addWidget(new QLabeledWidget("Width",m_WidthBox));
         m_RecordingOptionsLayout->addWidget(new QLabeledWidget("Height",m_HeightBox));
         m_RecordingOptionsLayout->addWidget(m_RecordFile);
@@ -1091,6 +1157,9 @@ public:
                         m_WorldWindow->m_UILayerMutex.lock();
                         std::cout << "do direct replace " << std::endl;
                         lrs->DirectReplace({{m->GetCopy()}});
+
+                        m_WorldWindow->SetRedrawNeeded();
+
                         m_WorldWindow->m_UILayerMutex.unlock();
                         return;
                     }
@@ -1144,6 +1213,8 @@ public:
                         m_WorldWindow->m_UILayerMutex.lock();
                         std::cout << "do direct replace " << std::endl;
                         lrs->DirectReplace(m->GetCopy());
+
+                        m_WorldWindow->SetRedrawNeeded();
 
                         m_WorldWindow->m_UILayerMutex.unlock();
                         return;
@@ -1537,14 +1608,12 @@ public:
 
         for(int i = 0; i < m_PlotLayersToReplace.size(); i++)
         {
-            std::cout << "check replace " << m_Plots.size() << std::endl;
             for(int j = 0; j < m_Plots.size(); j++)
             {
                 TablePlotter * p = m_Plots.at(j);
 
                 if(p->ReplaceMatrixTable(m_PlotLayersToReplaceT.at(i),true,m_PlotLayersToReplace.at(i)))
                 {
-                    std::cout << "replace found at " <<  j << std::endl;
                     break;
                 }
             }
@@ -2363,19 +2432,31 @@ public slots:
 
     inline void OnVideoRecord()
     {
-        m_RecordButton->setEnabled(false);
-        m_StopButton->setEnabled(true);
-        m_DelButton->setEnabled(true);
-        m_FPSBox->setEnabled(false);
-        m_RecordFPSBox->setEnabled(false);
-        m_WidthBox->setEnabled(false);
-        m_HeightBox->setEnabled(false);
-        m_RecordFile->setEnabled(false);
+
+        try
+        {
+            m_VideoCapture = VideoExport::Init(m_WidthBox->value(),m_HeightBox->value(),m_RecordFPSBox->value(),std::max(350000,(6*1000000*m_WidthBox->value()/1920)*(m_HeightBox->value()/1080)),m_RecordFile->text());
 
 
-        m_VideoTimer.start(m_FPSBox->value() * 1000.0f);
+            m_VideoTimer.start(m_FPSBox->value() * 1000.0f);
 
-        m_VideoCapture = VideoExport::Init(m_WidthBox->value(),m_HeightBox->value(),m_RecordFPSBox->value(),std::max(350000,(6*1000000*m_WidthBox->value()/1920)*(m_HeightBox->value()/1080)),m_RecordFile->text());
+            m_RecordButton->setEnabled(false);
+            m_StopButton->setEnabled(true);
+            m_DelButton->setEnabled(true);
+            m_FPSBox->setEnabled(false);
+            m_RecordFPSBox->setEnabled(false);
+            m_WidthBox->setEnabled(false);
+            m_HeightBox->setEnabled(false);
+            m_RecordFile->setEnabled(false);
+
+
+        }catch(...)
+        {
+            QMessageBox::critical(this, "LISEM",
+               QString("Can not record video, try opening LISEM as administrator"));
+
+        }
+
     }
 
     inline void OnVideoStop()

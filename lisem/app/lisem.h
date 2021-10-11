@@ -110,7 +110,7 @@ public:
 
     void OnGLCLLoad();
 
-    void OnGLCLFrame();
+    bool OnGLCLFrame();
 
     ////
     /// \brief execute

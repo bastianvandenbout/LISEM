@@ -2,47 +2,70 @@
 
 #include <QPaintEvent>
 #include <QResizeEvent>
+#include "elidedlabel.h"
 
-void ElidedLabel::setElideMode(Qt::TextElideMode elideMode)
+#include <QResizeEvent>
+#include <QTimer>
+
+ElidedLabel::ElidedLabel(QWidget *parent, Qt::WindowFlags f) :
+    QLabel(parent, f)
 {
-    m_elideMode = elideMode;
-    m_cachedText.clear();
-    update();
+    defaultType = Qt::ElideMiddle;
+    eliding = false;
+    original = "";
 }
 
-void ElidedLabel::resizeEvent(QResizeEvent *e)
+ElidedLabel::ElidedLabel(const QString &text, QWidget *parent, Qt::WindowFlags f) :
+    QLabel(text, parent, f)
 {
-    QLabel::resizeEvent(e);
-    m_cachedText.clear();
+    defaultType = Qt::ElideMiddle;
+
+    //Usado para verificar se a string está ou não sendo atualizado
+    eliding = false;
+
+    //Guarda o texto original
+    setText(text);
 }
 
-void ElidedLabel::paintEvent(QPaintEvent *e)
+void ElidedLabel::setType(const Qt::TextElideMode type)
 {
-    if (m_elideMode == Qt::ElideNone)
-        return QLabel::paintEvent(e);
-
-    updateCachedTexts();
-    QLabel::setText(m_cachedElidedText);
-    QLabel::paintEvent(e);
-    QLabel::setText(m_cachedText);
+    /*
+       Altera o tipo de elide, podendo ser:
+       Esquerda: "... bar baz"
+       Meido: "Foo ... baz"
+       Direita: "Foo bar ..."
+    */
+    defaultType = type;
+    elide();
 }
 
-void ElidedLabel::updateCachedTexts()
+//Atualiza o texto se o Label for redimensionado
+void ElidedLabel::resizeEvent(QResizeEvent *event)
 {
-    // setText() is not virtual ... :/
-    const auto txt = text();
-    if (m_cachedText == txt)
-        return;
-    m_cachedText = txt;
-    const QFontMetrics fm(fontMetrics());
-    m_cachedElidedText = fm.elidedText(text(),
-                                       m_elideMode,
-                                       width(),
-                                       Qt::TextShowMnemonic);
-    // make sure to show at least the first character
-    if (!m_cachedText.isEmpty())
-    {
-      const QString showFirstCharacter = m_cachedText.at(0) + QStringLiteral("...");
-      setMinimumWidth(fm.horizontalAdvance(showFirstCharacter) + 1);
+    Q_UNUSED(event);
+
+    //O delay é necessário para evitar conflitos
+    QTimer::singleShot(50, this, SLOT(elide()));
+}
+
+//Atualiza o texto
+void ElidedLabel::setText(const QString &text)
+{
+    original = text;
+    QLabel::setText(text);
+
+    //Executa no momento que é atualizado
+    elide();
+}
+
+void ElidedLabel::elide()
+{
+    if (eliding == false) {
+        eliding = true;
+
+        QFontMetrics metrics(font());
+        QLabel::setText(metrics.elidedText(original, defaultType, width()));
+
+        eliding = false;
     }
 }

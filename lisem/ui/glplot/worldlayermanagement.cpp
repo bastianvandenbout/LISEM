@@ -84,6 +84,10 @@ int WorldWindow::AddUILayerAt(UILayer *ML, bool emitsignal, bool do_zoom, int i)
     {
         emit OnMapsChanged();
     }
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
+
     return 0;
 }
 
@@ -133,6 +137,9 @@ int WorldWindow::AddUILayer(UILayer *ML, bool emitsignal, bool do_zoom)
     {
         emit OnMapsChanged();
     }
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
     return 0;
 }
 UILayer * WorldWindow::GetUILayerFromName(QString name)
@@ -492,6 +499,10 @@ void WorldWindow::SetUILayerAs(UILayer *ML,  bool emitsignal)
     }
     m_UILayerMutex.unlock();
 
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
+
     if(emitsignal)
     {
         emit OnMapsChanged();
@@ -536,6 +547,9 @@ void WorldWindow::SetLayerOrder(QList<UILayer *> newlist, bool emitsignal, bool 
     {
         m_UILayerMutex.unlock();
     }
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
 
     if(emitsignal)
     {
@@ -649,7 +663,9 @@ BoundingBox WorldWindow::AddNativeUILayers(int channel, LISEMModel * m)
         AddUILayer(UIP,false);
     }
 
-
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
 
     emit OnMapsChanged();
 
@@ -676,6 +692,10 @@ void WorldWindow::RemoveNativeUILayers(int channel)
 
     m_UILayersChanged = true;
     m_UILayerMutex.unlock();
+
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
 
     {
         emit OnMapsChanged();

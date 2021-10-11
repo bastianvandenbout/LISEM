@@ -260,8 +260,8 @@ public:
     QMutex m_GLOutputUIMutex;
 
     QList<GLListener*> m_ListenerList;
-    QList<std::function<void(void)>> m_CallBackFrameList;
-    std::function<void(void)> m_CallBackFrame;
+    QList<std::function<bool(void)>> m_CallBackFrameList;
+    std::function<bool(void)> m_CallBackFrame;
 
     //QString m_KernelDir;
     //QString m_AssetDir;

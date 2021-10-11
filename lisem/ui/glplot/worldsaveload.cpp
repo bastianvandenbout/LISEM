@@ -137,6 +137,10 @@ void WorldWindow::LoadFrom(QJsonObject * obj, bool delete_old)
         AddUILayer(layers.at(i),false);
    }
 
+   m_RedrawNeedMutex.lock();
+   m_RedrawNeed = true;
+   m_RedrawNeedMutex.unlock();
+
    {
        emit OnMapsChanged();
    }

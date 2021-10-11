@@ -496,7 +496,7 @@ void TablePlotter::AddMatrixTable(MatrixTable * tbl, bool one_x_list, int uid)
 }
 
 
-bool TablePlotter::ReplaceMatrixTable(MatrixTable * tbl, bool one_x_list, int uid)
+bool TablePlotter::ReplaceMatrixTable(MatrixTable * tbl, bool one_x_list, int uid_in)
 {
 
     int gindex = -1;
@@ -509,9 +509,11 @@ bool TablePlotter::ReplaceMatrixTable(MatrixTable * tbl, bool one_x_list, int ui
             int uidi = uid.toInt(&ok);
             if(ok)
             {
-                if(uidi == uid)
+                if(uidi == uid_in)
                 {
                     gindex = i;
+
+
                     break;
                 }
             }
@@ -520,11 +522,9 @@ bool TablePlotter::ReplaceMatrixTable(MatrixTable * tbl, bool one_x_list, int ui
     }
     if(gindex < 0)
     {
-        std::cout << "replace not found " << std::endl;
         return false;
     }
 
-    std::cout << "replace found " << std::endl;
 
 
     MatrixTable*data = tbl->Copy();
@@ -633,7 +633,6 @@ bool TablePlotter::ReplaceMatrixTable(MatrixTable * tbl, bool one_x_list, int ui
         hmax = 1;
     }
 
-    std::cout << hmin << " " << hmax << std::endl;
 
     m_OldMinX = xmin;
     m_OldMaxX = xmax;

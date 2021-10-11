@@ -65,7 +65,7 @@ static inline double GetTimeInSeconds()
 #include <thread>
 static inline void AS_Sleep(double seconds)
 {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::microseconds((unsigned int)(seconds * 1000000.0)));
 
 }
 

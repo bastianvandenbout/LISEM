@@ -157,12 +157,14 @@ public:
             m_SpinMax->setDecimals(6);
             m_SpinMax->setMaximum(1e10);
             m_SpinMax->setMinimum(-1e10);
+            m_SpinMax->setMinimumSize(50,25);
 
             m_SpinMin = new QDoubleSpinBox();
             m_SpinMin->setValue(0.0);
             m_SpinMin->setDecimals(6);
             m_SpinMin->setMaximum(1e10);
             m_SpinMin->setMinimum(-1e10);
+            m_SpinMin->setMinimumSize(50,25);
 
             m_Layout->addWidget(m_CheckBoxDraw);
             m_Layout->addWidget(m_Name);
@@ -204,6 +206,8 @@ public:
             m_Layout->setStretchFactor(m_CheckBoxLeg,1);
             m_Layout->setStretchFactor(m_SpinMin,1);
             m_Layout->setStretchFactor(m_SpinMax,1);
+
+
 
             connect(m_CheckBoxDraw,SIGNAL(clicked(bool)),this,SLOT(OnDrawChecked(bool)));
             connect(m_CheckBoxDEM,SIGNAL(clicked(bool)),this,SLOT(OnDEMChecked(bool)));

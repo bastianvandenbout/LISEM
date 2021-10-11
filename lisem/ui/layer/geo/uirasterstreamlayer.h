@@ -1066,7 +1066,12 @@ public:
     void Draw_Raster(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm,bool raw_value, float zscale = 1.0f)
     {
 
+        std::cout << "timeseries test 1 " << std::endl;
+        std::cout << "timeseries test 2 " << this->GetProjection().IsGeneric() << std::endl;
+        std::cout << "timeseries test 3 " << state.projection.IsGeneric() << std::endl;
+
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
+        std::cout << "timeseries test 4 " << gltransform <<  std::endl;
         LSMStyle s = GetStyle();
         BoundingBox bb = GetBoundingBox();
 

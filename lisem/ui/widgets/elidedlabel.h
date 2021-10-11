@@ -6,23 +6,24 @@
 class ElidedLabel : public QLabel
 {
     Q_OBJECT
+
 public:
-    using QLabel::QLabel;
-    // Set the elide mode used for displaying text.
-    void setElideMode(Qt::TextElideMode elideMode);
-    // Get the elide mode currently used to display text.
-    Qt::TextElideMode elideMode() const { return m_elideMode; }
+    explicit ElidedLabel(QWidget *parent=0, Qt::WindowFlags f=0);
+    explicit ElidedLabel(const QString &text, QWidget *parent=0, Qt::WindowFlags f=0);
+    void setType(const Qt::TextElideMode type);
+
+public slots:
+    void setText(const QString &text);
+    void elide();
 
 protected:
-    void paintEvent(QPaintEvent *e) override;
-    void resizeEvent(QResizeEvent *e) override;
+    void resizeEvent(QResizeEvent *event);
 
 private:
-    void updateCachedTexts();
+    QString original;
+    Qt::TextElideMode defaultType;
+    bool eliding;
 
-private:
-    Qt::TextElideMode m_elideMode = Qt::ElideLeft;
-    QString m_cachedElidedText;
-    QString m_cachedText;
 };
+
 

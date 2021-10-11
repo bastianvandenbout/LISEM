@@ -228,6 +228,10 @@ public:
     virtual void OnPrepare(OpenGLCLManager * m,GeoWindowState s) = 0;
     virtual void OnCRSChanged(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) = 0;
 
+    inline virtual bool RequiresDraw(GeoWindowState s)
+    {
+        return false;
+    }
 
     virtual void OnDraw(OpenGLCLManager * m,GeoWindowState s) = 0;
     virtual void OnDestroy(OpenGLCLManager * m) = 0;

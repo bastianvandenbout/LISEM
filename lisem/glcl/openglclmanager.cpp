@@ -103,9 +103,22 @@ int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     window = glfwCreateWindow(wind_width,wind_height,"LISEM",NULL,NULL);
+
+    int code = glfwGetError(NULL);
+
+    if (code != GLFW_NO_ERROR)
+    {
+        LISEM_DEBUG("Error when making window " + QString::number(code));
+
+    }else
+    {
+        LISEM_DEBUG("Succesfully created window");
+
+    }
+
     if (!window) {
 
-
+        LISEM_DEBUG("Could not open window, terminating glfw!");
         glfwTerminate();
         return 254;
     }
@@ -500,7 +513,7 @@ void OpenGLCLManager::LoadPreferredCLContext()
 
 }
 
-
+#include <thread>
 
 void OpenGLCLManager::GLCLLoop()
 {
@@ -511,6 +524,9 @@ void OpenGLCLManager::GLCLLoop()
 
 
     while (!glfwWindowShouldClose(window)) {
+
+         //std::this_thread::sleep_for(std::chrono::microseconds((unsigned int)(100000)));
+
         glfwPollEvents();
 
 
@@ -538,7 +554,7 @@ void OpenGLCLManager::GLCLLoop()
         int heightt = 0;
         glfwGetWindowSize(window,&widtht, &heightt);
 
-        std::cout << "wh " << widtht << " " << heightt << " " << m_width << " " << m_height << std::endl;
+        //std::cout << "wh " << widtht << " " << heightt << " " << m_width << " " << m_height << std::endl;
         m_width = widtht;
         m_height = heightt;
 
@@ -555,49 +571,52 @@ void OpenGLCLManager::GLCLLoop()
         m_ShapePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
         m_3DPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
 
+        bool did_redraw = false;
 
         for(int i = 0; i < m_CallBackFrameList.length(); i++)
         {
-            m_CallBackFrameList.at(i)();
+            did_redraw = did_redraw || m_CallBackFrameList.at(i)();
         }
 
+        if(did_redraw)
+        {
+            // render msaa  render buffer to normal texture
 
-        // render msaa  render buffer to normal texture
-
-        m_MSAATarget->BlitToTexture();
-
-
-        //render texture to screen
-        glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-        glad_glDrawBuffers(1, DrawBuffers);
-
-        glad_glViewport(0,0,m_width,m_height);
-
-        glad_glDisable(GL_DEPTH_TEST);
-        // bind shader
-        glad_glUseProgram(m_GLProgram_CopyText->m_program);
-        // get uniform locations
-        int mat_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"matrix");
-        int tex_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"tex");
-        // bind texture
-        glad_glActiveTexture(GL_TEXTURE0);
-        glad_glUniform1i(tex_loc,0);
-        glad_glBindTexture(GL_TEXTURE_2D,m_MSAATarget->GetTexture());
-        // set project matrix
-        glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,matrix);
-        // now render stuff
-        glad_glBindVertexArray(m_Quad->m_vao);
-        glad_glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-        glad_glBindVertexArray(0);
+            m_MSAATarget->BlitToTexture();
 
 
-        //glad_glClearColor(0.961,0.963,0.966,1.0);
-        //glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            //render texture to screen
+            glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+            glad_glDrawBuffers(1, DrawBuffers);
+
+            glad_glViewport(0,0,m_width,m_height);
+
+            glad_glDisable(GL_DEPTH_TEST);
+            // bind shader
+            glad_glUseProgram(m_GLProgram_CopyText->m_program);
+            // get uniform locations
+            int mat_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"matrix");
+            int tex_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"tex");
+            // bind texture
+            glad_glActiveTexture(GL_TEXTURE0);
+            glad_glUniform1i(tex_loc,0);
+            glad_glBindTexture(GL_TEXTURE_2D,m_MSAATarget->GetTexture());
+            // set project matrix
+            glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,matrix);
+            // now render stuff
+            glad_glBindVertexArray(m_Quad->m_vao);
+            glad_glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+            glad_glBindVertexArray(0);
 
 
-        //swap opengl front and back buffer
-        glfwSwapBuffers(window);
+            //glad_glClearColor(0.961,0.963,0.966,1.0);
+            //glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+            //swap opengl front and back buffer
+            glfwSwapBuffers(window);
+        }
 
         //reset the current thread for opengl
         glfwMakeContextCurrent(NULL);

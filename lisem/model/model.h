@@ -182,6 +182,7 @@ public:
     bool m_UIMapsSet = false;
     bool m_Loaded = false;
     bool m_RequiresUIReset = false;
+    bool m_DidUpdate = false;
 
     int m_NCells = 0;
     int m_NParticle = 0;

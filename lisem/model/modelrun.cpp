@@ -985,7 +985,12 @@ void LISEMModel::DoModelRun()
             {
                 m_CallBackTimeStep(true,false);
             }
-            m_RequiresUIReset = true;
+            m_RequiresUIReset = true; // this also lets the viewer know to redraw
+        }else
+        {
+            //m_Model->UILayerRemoveMutex.lock();
+            m_DidUpdate = true;
+            //m_Model->UILayerRemoveMutex.unlock();
         }
 
         //call the interface to update its values

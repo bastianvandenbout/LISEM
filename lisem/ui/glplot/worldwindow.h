@@ -46,6 +46,11 @@
 #include "layer/post/postdebug.h"
 #include "opengl3dobject.h"
 
+#define GIZMO_MOVE 0
+#define GIZMO_ROTATE 1
+#define GIZMO_SCALE 2
+
+
 typedef struct World2DMouseState
 {
     float scrollold = 0.0f;
@@ -121,6 +126,9 @@ private:
     GeoWindowState m_CurrentWindowState;
     GeoWindowState m_CurrentDrawWindowState;
 
+    QMutex m_RedrawNeedMutex;
+    bool m_RedrawNeed = false;
+
     QMutex MouseStateMutex;
     World2DMouseState m_MouseState;
 
@@ -131,6 +139,7 @@ private:
     bool m_DrawLegends = true;
     bool m_Draw3D = false;
     bool m_DrawArrows = false;
+    bool m_GizmoMode = 0;
     bool m_Draw3DGlobe = false;
     bool m_DrawShadows = false;
     bool m_DoSet3DViewFrom2DOnce =false;
@@ -244,6 +253,7 @@ public:
 
     }
 
+    void SetRedrawNeeded();
     void SetDraw3D(bool d);
     void SetDraw3DGlobe(bool d);
     void SetUIDraw(bool d);
@@ -419,7 +429,7 @@ public:
     WorldGeoProbeResult ProbeAll();
     WorldGeoProbeResult ProbeLayer(UILayer * l);
 
-    void Draw();
+    bool Draw();
 
 
     void Draw3DArrows(GeoWindowState s, bool external = false);

@@ -14,6 +14,29 @@
 #include "QSpacerItem"
 #include "QLabel"
 
+class LISEM_API QWidgetLayout : public QWidget
+{
+    Q_OBJECT;
+    public:
+
+    QHBoxLayout * m_Layout;
+    inline QWidgetLayout(QWidget * w1, bool no_margin = false) : QWidget()
+    {
+
+        m_Layout = new QHBoxLayout();
+        this->setLayout(m_Layout);
+
+        if(no_margin)
+        {
+            m_Layout->setMargin(0);
+            m_Layout->setSpacing(0);
+        }
+        m_Layout->addWidget(w1);
+    }
+
+};
+
+
 class LISEM_API QWidgetHDuo : public QWidget
 {
     Q_OBJECT;

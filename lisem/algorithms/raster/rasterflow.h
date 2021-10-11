@@ -3514,7 +3514,7 @@ inline cTMap * AS_TransientFlow(cTMap * DEM, cTMap * SD, cTMap * KSat, cTMap * T
 
                     //change height
 
-                    QX->data[r][c] = signx*qy;
+                    QX->data[r][c] = signx*qx;
                     QY->data[r][c] = signy*qy;
 
 
@@ -3577,7 +3577,7 @@ inline cTMap * AS_TransientFlow(cTMap * DEM, cTMap * SD, cTMap * KSat, cTMap * T
             {
                 if(!pcr::isMV(DEM->data[r][c]))
                 {
-                    map->data[r][c] = std::max(0.0f,std::min(map->data[r][c],SD->data[r][c] * Theta->data[r][c]));
+                    map->data[r][c] = std::max(0.0f,std::min(map->data[r][c],SD->data[r][c] * Theta->data[r][c]))/std::max(0.001f,Theta->data[r][c]);
 
                 }
             }
@@ -3591,21 +3591,6 @@ inline cTMap * AS_TransientFlow(cTMap * DEM, cTMap * SD, cTMap * KSat, cTMap * T
     return map;
 }
 
-
-
-//TODO
-
-inline cTMap * AS_TwoPhaseWave(cTMap * DEM,cTMap * n, cTMap * Hf,cTMap * Hs, cTMap * VfX, cTMap * VfY, cTMap * VsX, cTMap * VsY,cTMap * sifa, cTMap * srs, cTMap * sdens,float dt_min, float courant, int iter_max)
-{
-
-    return nullptr;
-}
-
-inline cTMap * AS_TwoPhaseWave(cTMap * DEM,cTMap * n,cTMap * Hf,cTMap * Hs, cTMap * VfX, cTMap * VfY, cTMap * VsX, cTMap * VsY,cTMap * sifa, cTMap * srs, cTMap * sdens,cTMap * Qfx,cTMap * Qfy,cTMap * Qsx,cTMap * Qsy, float dt_min, float courant, int iter_max)
-{
-
-    return nullptr;
-}
 
 
 inline cTMap * AS_MVMap(cTMap * M)

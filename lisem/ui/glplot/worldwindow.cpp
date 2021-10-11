@@ -3,8 +3,11 @@
 #include "QThread"
 
 
-void WorldWindow::Draw()
+bool WorldWindow::Draw()
 {
+
+    bool require_redraw = false;
+
 
     qint64 timenew =  m_time.nsecsElapsed();
     double timedif = double(timenew - m_timeold)/1000000000.0;
@@ -105,6 +108,7 @@ void WorldWindow::Draw()
 
         m_ArrowActor = new gl3dObject(m_OpenGLCLManager,m_ArrowModel);
 
+        require_redraw = true;
     }
 
     //get global width and depth
@@ -117,13 +121,14 @@ void WorldWindow::Draw()
 
     if(widtht != m_OpenGLCLManager->GL_GLOBAL.Width)
     {
+        require_redraw = true;
         m_OpenGLCLManager->GL_GLOBAL.Width = widtht;
     }
     if(heightt != m_OpenGLCLManager->GL_GLOBAL.Height)
     {
+        require_redraw = true;
         m_OpenGLCLManager->GL_GLOBAL.Height = heightt;
     }
-
 
 
 
@@ -135,6 +140,7 @@ void WorldWindow::Draw()
 
     if(m_OpenGLCLManager->GL_GLOBAL.Height != m_3DScreenPosX->nrRows() || m_OpenGLCLManager->GL_GLOBAL.Width != m_3DScreenPosX->nrCols())
     {
+        require_redraw = true;
         delete m_3DScreenPosX;
         delete m_3DScreenPosY;
         delete m_3DScreenPosZ;
@@ -174,19 +180,25 @@ void WorldWindow::Draw()
 
         if(m_Model->m_RequiresUIReset)
         {
-
             m_Model->m_RequiresUIReset = false;
 
             RemoveNativeUILayers();
             AddNativeUILayers();
 
+            require_redraw = true;
+
+        }
+        if(m_Model->m_DidUpdate)
+        {
+            require_redraw = true;
+            m_Model->m_DidUpdate = false;
         }
     }else if(m_Model->m_RequiresUIReset)
     {
-
         m_Model->m_RequiresUIReset = false;
 
         RemoveNativeUILayers();
+        require_redraw = true;
     }
 
 
@@ -219,6 +231,7 @@ void WorldWindow::Draw()
                 layer_replace_index.append(i);
 
             }
+            require_redraw = true;
         }
 
     }
@@ -243,6 +256,8 @@ void WorldWindow::Draw()
 
 
         }
+        require_redraw = true;
+
 
         m_UILayerMutex.unlock();
     }
@@ -256,6 +271,7 @@ void WorldWindow::Draw()
         k++;
         l->SetID(layer_replace_id.at(i));
         l->SetUID(layer_replace_uid.at(i));
+        require_redraw = true;
     }
 
     m_UILayerMutex.lock();
@@ -273,6 +289,7 @@ void WorldWindow::Draw()
             removed = true;
             l->OnDestroy(m_OpenGLCLManager);
             m_UILayerList.removeAt(i);
+            require_redraw = true;
         }
 
     }
@@ -288,18 +305,15 @@ void WorldWindow::Draw()
             l->OnDestroy(m_OpenGLCLManager);
             delete m_LayerEditor;
             m_LayerEditor = nullptr;
+            require_redraw = true;
 
         }
     }
 
 
-
-
-
-
-
     if(removed)
     {
+        require_redraw = true;
         emit OnMapsChanged();
     }
 
@@ -325,12 +339,14 @@ void WorldWindow::Draw()
     m_ElevationProvider->SetDistanceObjects(dlist);
 
     //Update Camera properties
-    UpdateCamera();
+    bool cam_dyn = UpdateCamera();
+    require_redraw = require_redraw || cam_dyn;
 
 
     //update GeoWindowState
     bool need_redraw = UpdateCurrentWindowState();
 
+    require_redraw = require_redraw || need_redraw;
 
     m_CRSMutex.lock();
 
@@ -344,6 +360,8 @@ void WorldWindow::Draw()
         UILayer * l = m_UILayerList.at(i);
         if(m_CRSChanged || l->IsCRSChanged())
         {
+            require_redraw = true;
+
             l->OnCRSChanged(m_OpenGLCLManager,m_CurrentWindowState,m_TransformManager);
             if(m_LayerEditor != nullptr)
             {
@@ -357,6 +375,7 @@ void WorldWindow::Draw()
     }
     if(m_LayerEditor != nullptr && !crs_doneeditor && m_CRSChanged)
     {
+        require_redraw = true;
         m_LayerEditor->OnCRSChanged(m_OpenGLCLManager,m_CurrentWindowState,m_TransformManager);
     }
     m_CRSChanged = false;
@@ -387,7 +406,14 @@ void WorldWindow::Draw()
     //send all input signals to the child objects (layers, editors etc..)
 
 
+
     InputToLayers();
+
+    if(m_MouseState.Move_X != 0.0 || m_MouseState.Move_Y != 0.0 || m_MouseState.MoveScroll_X != 0.0 || m_MouseState.MoveScroll_Y != 0.0 || m_MouseState.MouseButtonEvents.length() > 0 || m_MouseState.KeyEvents.length() > 0)
+    {
+        require_redraw = true;
+
+    }
 
     //reset some values in the mouse state
 
@@ -409,16 +435,33 @@ void WorldWindow::Draw()
     m_MouseState.KeyMods.clear();
     MouseStateMutex.unlock();
 
+    //std::cout << "drawdo g " << require_redraw << std::endl;
+
     //OnDraw callback
 
     for(int i = 0; i < m_UILayerList.length() ; i++)
     {
+        {
+            UILayer * l = m_UILayerList.at(i);
+
+            if(l->IsPrepared() == false)
+            {
+               //std::cout << "prepare layer " << l->GetName().toStdString()<< std::endl;
+                require_redraw = true;
+                l->OnPrepare(m_OpenGLCLManager,m_CurrentWindowState);
+                l->OnCRSChanged(m_OpenGLCLManager,m_CurrentWindowState,m_TransformManager);
+            }
+        }
+
         if(m_UILayerList.at(i)->IsUser() )
         {
             UILayer * l = m_UILayerList.at(i);
             if(l->ShouldBeRemoved() == false && l->Exists() && l->IsDraw())
             {
                 l->OnDraw(m_OpenGLCLManager,m_CurrentWindowState);
+
+                //check if this layer has something new to draw
+                require_redraw = require_redraw || l->RequiresDraw(m_CurrentWindowState);
             }
         }
     }
@@ -429,15 +472,36 @@ void WorldWindow::Draw()
     }
 
 
-    //now depending on what kind of window we are drawing (3d, globe or 2d) call the relevant function
-    if(!m_Draw3D)
+
+    m_RedrawNeedMutex.lock();
+
+
+    require_redraw = require_redraw || m_RedrawNeed;
+
+    m_RedrawNeed = false;
+
+    if(require_redraw )
     {
 
-        DrawToFrameBuffer2D(m_CurrentDrawWindowState);
+        //std::cout << "redraw " << m_GLDT << " " << " " <<  m_RedrawNeed <<  std::endl;
 
-    }else {
-        DrawToFrameBuffer3D(m_CurrentDrawWindowState,false);
+        //now depending on what kind of window we are drawing (3d, globe or 2d) call the relevant function
+        if(!m_Draw3D)
+        {
+
+            DrawToFrameBuffer2D(m_CurrentDrawWindowState);
+
+        }else {
+            DrawToFrameBuffer3D(m_CurrentDrawWindowState,false);
+        }
+
+
+    }else
+    {
+        //std::cout << "no redraw " << m_GLDT << std::endl;
     }
+
+    m_RedrawNeedMutex.unlock();
 
     m_Model->UILayerRemoveMutex.unlock();
 
@@ -445,9 +509,17 @@ void WorldWindow::Draw()
     m_UILayerMutex.unlock();
 
 
+    //only return true if it needed an update
+    return require_redraw;
+
 }
 
-
+void WorldWindow::SetRedrawNeeded()
+{
+    m_RedrawNeedMutex.lock();
+    m_RedrawNeed = true;
+    m_RedrawNeedMutex.unlock();
+}
 
 void WorldWindow::SetDraw3D(bool d)
 {

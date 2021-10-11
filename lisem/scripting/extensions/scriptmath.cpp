@@ -3,6 +3,8 @@
 #include <float.h>
 #include <string.h>
 #include "scriptmath.h"
+#include "functions.h"
+
 
 #ifdef __BORLANDC__
 #include <cmath>
@@ -195,6 +197,9 @@ void RegisterScriptMath_Native(asIScriptEngine *engine)
 	r = engine->RegisterGlobalFunction("double abs(double)", asFUNCTIONPR(fabs, (double), double), asCALL_CDECL); assert( r >= 0 );
 	r = engine->RegisterGlobalFunction("double floor(double)", asFUNCTIONPR(floor, (double), double), asCALL_CDECL); assert( r >= 0 );
 	r = engine->RegisterGlobalFunction("double fraction(double)", asFUNCTIONPR(fraction, (double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double uppergamma(double,double)", asFUNCTIONPR(GammaUpperIncomplete, (double,double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double lowergamma(double,double)", asFUNCTIONPR(GammaLowerIncomplete, (double,double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double gamma(double)", asFUNCTIONPR(tgamma, (double), double), asCALL_CDECL); assert( r >= 0 );
 #endif
 }
 

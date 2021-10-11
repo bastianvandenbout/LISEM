@@ -37,6 +37,7 @@
 #include "stat/mlsupersampling.h"
 #include "raster/rastermixtureflow.h"
 #include "raster/rasterchannel.h"
+#include "raster/rasterfiberbundle.h"
 
 inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
 {
@@ -606,6 +607,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalSTDFunction("Map @RasterCellSample(const Map &in data, const Map &in row, const Map&in col)",GetFuncConvert(AS_RasterCellSample));
     engine->RegisterGlobalSTDFunction("Map @RasterCoordinateSample(const Map &in data, const Map&in x, const Map&in y)",GetFuncConvert(AS_RasterSample));
 
+    engine->RegisterGlobalSTDFunction("array<Map> @FiberBundleModel(const Map &in LoadMax, const Map&in LoadMaxLatX, const Map&in LoadMaxLatY, const Map &in Damage_Base, const Map &in Damage_LatX, const Map &in Damage_LatY, const Map&in LoadX, const Map &in LoadY, const Map&in CapacityBase, const Map&in CapacityLatX, const Map&in CapacityLatY, const Map&in K_comp, const Map&in K_tens,const Map &in Alpha, int iterations = 25, float m_base = 2, float m_lat = 2, bool do_springblock = false)",GetFuncConvert(AS_LoadRedistribute));
 }
 
 
