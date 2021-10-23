@@ -3,10 +3,22 @@ title: Downloads
 permalink: /docs/downloads/
 ---
 
-Please find below all the available packages as part of the LISEM software 
+You can find below all the available packages as part of the LISEM software.
 
-### LISEM
-The LISEM software is now public in alpha-relase. WARNING: Contains various bugs!! 
+PLEASE NOTE: LISEM classic and LISEM are different softwares. 
+Dont know which one you want? See the [documentation](/docs/home)!
+
+
+
+#### LISEM Classic
+LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.
+
+| [Windows-64x Portable executable](https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download) | ![LISEM](/assets/img/openLisem.png) |
+
+
+#### LISEM
+The new LISEM software, a geo-spatial modelling and analysis tool focusing on multi-hazards, is now public in alpha-relase. 
+WARNING: Contains various bugs!! 
 
 Version 0.1.1
 
@@ -20,12 +32,8 @@ Version 0.1.0
 | [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.1.0-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.1.0-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
 
-### LISEM Classic
-LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.
 
-| [Windows-64x Portable executable](https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download) | ![LISEM](/assets/img/openLisem.png) |
-
-### OpenLISEM Hazard
+#### OpenLISEM Hazard
 The OpenLISEM Hazard model does not receive active support. It has become pretty stable, and is available here:
 
 [Windows-64x Portable executable](https://sourceforge.net/projects/lisem/files/OpenLISEM%20Hazard%20%28public%20beta%29/)
@@ -41,14 +49,14 @@ hr.tif = ApplyMLModel({lr.tif},"model.onnx",32,32,{0,3,1,2});
 ```
 Where "model.onnx" should be replaced with the model that you want to use.
 
-[Dahal-ESRGAN-Austria](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_at_dahal_model.onnx/download)
-
-[Dahal-ESRGAN-Dominica (Best option)](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_dm_dahal_model.onnx/download)
-
 [Dahal-EBRN-Austria](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/ebrn_at_dahal_model.onnx/download)
 
-[Dahal-EBRN-Dominica](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/ebrn_dm_dahal_model.onnx/download)
+[Dahal-EBRN-Dominica (Best option)](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/ebrn_dm_dahal_model.onnx/download)
 
+The following models are currently not yet working within LISEM, but could be used with the ONNX or Tensorflow API.
+[Dahal-ESRGAN-Austria](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_at_dahal_model.onnx/download)
+
+[Dahal-ESRGAN-Dominica](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_dm_dahal_model.onnx/download)
 
 #### Example dataset for the LISEM model
 

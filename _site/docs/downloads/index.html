@@ -33,17 +33,17 @@ window.MathJax = {
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="Downloads" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Please find below all the available packages as part of the LISEM software" />
-<meta property="og:description" content="Please find below all the available packages as part of the LISEM software" />
+<meta name="description" content="You can find below all the available packages as part of the LISEM software." />
+<meta property="og:description" content="You can find below all the available packages as part of the LISEM software." />
 <link rel="canonical" href="http://localhost:4000/docs/downloads/" />
 <meta property="og:url" content="http://localhost:4000/docs/downloads/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-10-23T15:44:32+02:00" />
+<meta property="article:published_time" content="2021-10-23T19:44:22+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Downloads" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"Downloads","dateModified":"2021-10-23T15:44:32+02:00","datePublished":"2021-10-23T15:44:32+02:00","url":"http://localhost:4000/docs/downloads/","description":"Please find below all the available packages as part of the LISEM software","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"Downloads","dateModified":"2021-10-23T19:44:22+02:00","datePublished":"2021-10-23T19:44:22+02:00","url":"http://localhost:4000/docs/downloads/","description":"You can find below all the available packages as part of the LISEM software.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -109,10 +109,26 @@ window.MathJax = {
 			
         <div class="col-md-12">
             <h1>Downloads</h1>
-            <div id="markdown-content-container"><p>Please find below all the available packages as part of the LISEM software</p>
+            <div id="markdown-content-container"><p>You can find below all the available packages as part of the LISEM software.</p>
 
-<h3 id="lisem">LISEM</h3>
-<p>The LISEM software is now public in alpha-relase. WARNING: Contains various bugs!!</p>
+<p>PLEASE NOTE: LISEM classic and LISEM are different softwares. 
+Dont know which one you want? See the <a href="/docs/home">documentation</a>!</p>
+
+<h4 id="lisem-classic">LISEM Classic</h4>
+<p>LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><a href="https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download">Windows-64x Portable executable</a></td>
+      <td><img src="/assets/img/openLisem.png" alt="LISEM" /></td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="lisem">LISEM</h4>
+<p>The new LISEM software, a geo-spatial modelling and analysis tool focusing on multi-hazards, is now public in alpha-relase. 
+WARNING: Contains various bugs!!</p>
 
 <p>Version 0.1.1</p>
 
@@ -152,19 +168,7 @@ window.MathJax = {
   </tbody>
 </table>
 
-<h3 id="lisem-classic">LISEM Classic</h3>
-<p>LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.</p>
-
-<table>
-  <tbody>
-    <tr>
-      <td><a href="https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download">Windows-64x Portable executable</a></td>
-      <td><img src="/assets/img/openLisem.png" alt="LISEM" /></td>
-    </tr>
-  </tbody>
-</table>
-
-<h3 id="openlisem-hazard">OpenLISEM Hazard</h3>
+<h4 id="openlisem-hazard">OpenLISEM Hazard</h4>
 <p>The OpenLISEM Hazard model does not receive active support. It has become pretty stable, and is available here:</p>
 
 <p><a href="https://sourceforge.net/projects/lisem/files/OpenLISEM%20Hazard%20%28public%20beta%29/">Windows-64x Portable executable</a></p>
@@ -178,13 +182,14 @@ Use the following code to apply the model to an elevation file:</p>
 </code></pre></div></div>
 <p>Where “model.onnx” should be replaced with the model that you want to use.</p>
 
-<p><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_at_dahal_model.onnx/download">Dahal-ESRGAN-Austria</a></p>
-
-<p><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_dm_dahal_model.onnx/download">Dahal-ESRGAN-Dominica (Best option)</a></p>
-
 <p><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/ebrn_at_dahal_model.onnx/download">Dahal-EBRN-Austria</a></p>
 
-<p><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/ebrn_dm_dahal_model.onnx/download">Dahal-EBRN-Dominica</a></p>
+<p><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/ebrn_dm_dahal_model.onnx/download">Dahal-EBRN-Dominica (Best option)</a></p>
+
+<p>The following models are currently not yet working within LISEM, but could be used with the ONNX or Tensorflow API.
+<a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_at_dahal_model.onnx/download">Dahal-ESRGAN-Austria</a></p>
+
+<p><a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Neural%20Networks/esrgan_dm_dahal_model.onnx/download">Dahal-ESRGAN-Dominica</a></p>
 
 <h4 id="example-dataset-for-the-lisem-model">Example dataset for the LISEM model</h4>
 
@@ -285,9 +290,6 @@ but provide enough information to run LISEM or LISEM classic.</p>
   
   
 
-  
-  
-
 
         </div>
 
@@ -301,10 +303,11 @@ but provide enough information to run LISEM or LISEM classic.</p>
     <div class="container">
 
         <p class="text-center">
-            LISEM 2021 |
-            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University
-
-<form action="https://www.paypal.com/donate" method="post" target="_top">
+            
+<form action="https://www.paypal.com/donate" method="post" target="_top" class="center" align="center">
+<label for="image">  LISEM 2021 |
+            Developed by ITC, Faculty of Geo-Information Science and Earth Observation, Twente University &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;    
+</label>
 <input type="hidden" name="hosted_button_id" value="J4JR9NY9JZZ2G" />
 <input type="image" src="https://raw.githubusercontent.com/bastianvandenbout/LISEM/main/assets/img/support.png" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" class="center" />
 <img alt="" border="0" src="https://www.paypal.com/en_NL/i/scr/pixel.gif" width="1" height="1" />

@@ -1,21 +1,23 @@
+
+<p><big>LISEM Classic</big></p>
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  {% for section in site.data.docs %}
+  {% for section in site.data.docsl2 %}
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-{{forloop.index}}" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-{{forloop.index}}-1" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
             {{ section.title }}
           </a>
         </h4>
       </div>
       {% assign collapsed = true %}
-      {% for item in section.docs %}
+      {% for item in section.docsl2 %}
         {% assign item_url = item | prepend:"/docs/" | append:"/" %}
         {% if item_url == page.url %}
           {% assign collapsed = false %}
         {% endif %}
       {% endfor %}
-      <div class="panel-collapse{% if collapsed %} collapse{% endif %}" id="collapse-{{forloop.index}}" role="tabpanel" aria-label="Side Navigation">
+      <div class="panel-collapse{% if collapsed %} collapse{% endif %}" id="collapse-{{forloop.index}}-1" role="tabpanel" aria-label="Side Navigation">
         <div class="list-group">
           {% for item in section.docs %}
             {% assign item_url = item | prepend:"/docs/" | append:"/" %}
@@ -27,3 +29,35 @@
     </div>
   {% endfor %}
 </div>
+
+<p><big>LISEM</big></p>
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  {% for section in site.data.docs %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-{{forloop.index}}-2" aria-expanded="false" aria-controls="collapse-{{forloop.index}}">
+            {{ section.title }}
+          </a>
+        </h4>
+      </div>
+      {% assign collapsed = true %}
+      {% for item in section.docs %}
+        {% assign item_url = item | prepend:"/docs/" | append:"/" %}
+        {% if item_url == page.url %}
+          {% assign collapsed = false %}
+        {% endif %}
+      {% endfor %}
+      <div class="panel-collapse{% if collapsed %} collapse{% endif %}" id="collapse-{{forloop.index}}-2" role="tabpanel" aria-label="Side Navigation">
+        <div class="list-group">
+          {% for item in section.docs %}
+            {% assign item_url = item | prepend:"/docs/" | append:"/" %}
+            {% assign p = site.docs | where:"url", item_url | first %}
+            <a class="list-group-item {% if item_url == page.url %}active{% endif %}" href="{{ p.url  | relative_url }}">{{ p.title }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
