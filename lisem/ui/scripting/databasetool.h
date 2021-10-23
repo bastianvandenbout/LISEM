@@ -687,7 +687,7 @@ public:
             QTextStream out(&fin);
             out << QString("[Runfile List]\n");
 
-            out << m_DirLabel->text() << "\n";
+            out << m_Path_Work << "\n";
 
         }
         fin.close();
