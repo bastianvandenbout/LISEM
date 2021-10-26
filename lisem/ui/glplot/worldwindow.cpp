@@ -6,6 +6,17 @@
 bool WorldWindow::Draw()
 {
 
+    //get global width and depth
+    int widtht = 0;
+    int heightt = 0;
+    glfwGetFramebufferSize(m_OpenGLCLManager->window,&widtht, &heightt);
+
+    if(widtht < 3 || heightt < 3)
+    {
+        return false;
+    }
+
+
     bool require_redraw = false;
 
 
@@ -111,12 +122,7 @@ bool WorldWindow::Draw()
         require_redraw = true;
     }
 
-    //get global width and depth
-    int widtht = 0;
-    int heightt = 0;
-    glfwGetWindowSize(m_OpenGLCLManager->window,&widtht, &heightt);
 
-    //std::cout<< "current dims " << widtht << " " << heightt << " " <<  m_OpenGLCLManager->GL_GLOBAL.Height << " " << m_OpenGLCLManager->GL_GLOBAL.Width <<  std::endl;
     //check if they are the same as currently said by the glfw database
 
     if(widtht != m_OpenGLCLManager->GL_GLOBAL.Width)
@@ -470,9 +476,6 @@ bool WorldWindow::Draw()
     {
         m_LayerEditor->OnDraw(m_OpenGLCLManager,m_CurrentWindowState);
     }
-
-
-
     m_RedrawNeedMutex.lock();
 
 
@@ -482,6 +485,9 @@ bool WorldWindow::Draw()
 
     if(require_redraw )
     {
+
+        std::cout<< "draw current dims " << widtht << " " << heightt << " " <<  m_OpenGLCLManager->GL_GLOBAL.Height << " " << m_OpenGLCLManager->GL_GLOBAL.Width << " " << m_3DRenderTarget->GetWidth() << " " << m_3DRenderTarget->GetHeight() <<  std::endl;
+
 
         //std::cout << "redraw " << m_GLDT << " " << " " <<  m_RedrawNeed <<  std::endl;
 

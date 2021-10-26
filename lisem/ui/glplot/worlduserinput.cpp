@@ -249,10 +249,51 @@ void WorldWindow::OnKey(int key, int action, int mods)
     m_MouseState.KeyAction.append(action);
     m_MouseState.KeyMods.append(mods);
 
-    if (key == GLFW_KEY_TAB && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
+    if( key == GLFW_KEY_P && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS)
+    {
+        m_OpenGLCLManager->m_DoFinalRender = !m_OpenGLCLManager->m_DoFinalRender;
+    }
+    if (key == GLFW_KEY_T && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
 
         std::cout << "set draw arrows " << m_DrawArrows << std::endl;
-        m_DrawArrows = !m_DrawArrows;
+        if(m_DrawArrows && m_GizmoMode != GIZMO_MOVE)
+        {
+            m_DrawArrows = true;
+        }else
+        {
+            m_DrawArrows = !m_DrawArrows;
+        }
+        m_GizmoMode = GIZMO_MOVE;
+
+    }
+    if (key == GLFW_KEY_R && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
+
+        if(m_DrawArrows && m_GizmoMode != GIZMO_ROTATE)
+        {
+            m_DrawArrows = true;
+
+        }else
+        {
+            m_DrawArrows = !m_DrawArrows;
+        }
+        std::cout << "set draw arrows " << m_DrawArrows << std::endl;
+
+        m_GizmoMode = GIZMO_ROTATE;
+
+    }
+    if (key == GLFW_KEY_S && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS) {
+
+        std::cout << "set draw arrows " << m_DrawArrows << std::endl;
+        if(m_DrawArrows && m_GizmoMode != GIZMO_SCALE)
+        {
+            m_DrawArrows = true;
+
+        }else
+        {
+            m_DrawArrows = !m_DrawArrows;
+        }
+
+        m_GizmoMode = GIZMO_SCALE;
 
     }
 

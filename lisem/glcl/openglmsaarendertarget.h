@@ -52,6 +52,7 @@ public:
 
     inline void Create(int width, int height, int msaa_level, GLenum format, GLenum tformat,GLenum tcomp,GLenum tdatt, int nlayersrgba8 = 0,int nlayersr32 = 0,int nlayersrgb32 = 0)
     {
+
         m_FrameBufferWidth = width;
         m_FrameBufferHeight = height;
 
@@ -64,8 +65,13 @@ public:
         m_nlayersrgb32 = nlayersrgb32;
         m_MSAA = msaa_level;
 
-
         int MSAA_level = msaa_level;
+
+
+        if(width < 3 || height < 3)
+        {
+            return;
+        }
         do_msaa = msaa_level > 1? true:false;
 
 
@@ -75,6 +81,7 @@ public:
         glad_glGenFramebuffers(1, &fb_MSAAId);
         glad_glBindFramebuffer(GL_FRAMEBUFFER, fb_MSAAId);
 
+        std::cout << "create fb " << fb_MSAAId << " " << msaa_level << " " <<  width << " " << height << std::endl;
 
         for(int i = 0; i < m_nlayersrgba8 + m_nlayersr32 + m_nlayersrgb32 + 1; i++)
         {

@@ -32,6 +32,8 @@ uniform highp vec2 cloudSize;
 uniform highp float cloudRoughness;
 uniform highp float cloudOpacity;
 
+uniform float Transparancy = 1.0;
+
 uniform sampler2D iChannel0;
 uniform sampler2D iChannel1;
 
@@ -52,7 +54,7 @@ void main() {
     frag_posy = vec4(frag_position.y,frag_position.y,frag_position.y,1.0);
     frag_posz = vec4(frag_position.z,frag_position.z,frag_position.z,1.0) ;
 
-    frag_normal = vec4(normalize(frag_in_normal),1.0);
+    frag_normal = vec4(normalize(frag_in_normal),Transparancy);
     frag_props = vec4(0.6,0.6,2,1.0);
     frag_Light = vec4(1.0,1.0,1.0,1.0);
     frag_Velocity = vec4(0.0,0.0,0.0,1.0);

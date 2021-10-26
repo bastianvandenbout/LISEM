@@ -299,6 +299,7 @@ public:
 
     int m_width = wind_width;
     int m_height = wind_height;
+    bool m_DoFinalRender = true;
 
     UI_STATE GL_GLOBAL;
 

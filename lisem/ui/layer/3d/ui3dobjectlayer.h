@@ -26,6 +26,7 @@ public:
          m_IsLayerSaveAble = true;
          m_is3D = true;
 
+         m_IsMovable = true;
 
     }
 
@@ -37,7 +38,11 @@ public:
          m_IsLayerSaveAble = true;
          m_is3D = true;
 
+
+         m_IsMovable = true;
+
          m_BoundingBox3D = g->GetBoundingBox();
+         m_Position = LSMVector3(m_BoundingBox3D.GetCenterX(),m_BoundingBox3D.GetCenterY(),m_BoundingBox3D.GetCenterZ());
     }
 
     inline ~UI3DObjectLayer()
@@ -130,6 +135,9 @@ public:
             glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"isclouds"),0);
             glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"iSunDir"),s.SunDir.x,s.SunDir.y,s.SunDir.z);
             glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"ObjTranslate"),objpos.x - camerapos.x,objpos.y,objpos.z  - camerapos.z);
+
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"Transparancy"),1.0 - this->GetStyle().GetTransparancy());
+
 
             glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(0).GetCenterX(),s.Camera3D->GetPosition().y,s.GL_FrameBuffer3DWindow.at(0).GetCenterY());
 

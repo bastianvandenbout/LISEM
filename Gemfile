@@ -6,6 +6,7 @@ source 'https://rubygems.org'
 
 gem 'github-pages'
 gem 'rdiscount'
+gem 'jekyll-seo-tag'
 
 # to use GitHub Pages
 gem "github-pages", group: :jekyll_plugins

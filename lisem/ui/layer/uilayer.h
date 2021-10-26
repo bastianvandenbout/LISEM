@@ -126,6 +126,10 @@ protected:
     int m_Channel = 0;
     bool m_IsRequired = false;
 
+    LSMVector3 m_Position = LSMVector3(0.0,0.0,0.0);
+    LSMVector3 m_Scale = LSMVector3(1.0,1.0,1.0);
+    LSMVector3 m_Rotation = LSMVector3(0.0,0.0,0.0);
+
     //public functions
 public:
 
@@ -199,6 +203,22 @@ public:
     {
         return m_IsRotateable;
     }
+
+    inline virtual LSMVector3 GetPosition()
+    {
+        return m_Position;
+    }
+
+    inline virtual LSMVector3 GetScale()
+    {
+        return m_Scale;
+    }
+    inline virtual LSMVector3 GetRotation()
+    {
+        return m_Rotation;
+
+    }
+
 
     inline virtual void Scale(LSMVector3 s)
     {

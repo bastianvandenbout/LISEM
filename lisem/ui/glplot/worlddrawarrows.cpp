@@ -23,8 +23,38 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
 
                 if(l->IsMovable() && m_GizmoMode == GIZMO_MOVE)
                 {
+
+
+                    LSMVector3 FLoc = l->GetPosition();
+
                     //draw 3 arrows aligned with axes
                     //use view-axis aligned line segments (as done in some other 3d viewers/editors)
+
+
+                    std::cout << "draw position move gizmo " << std::endl;
+                    LSMVector3 camerapos = s.Camera3D->GetPosition();
+
+                    LSMVector3 DrawCenter = FLoc  - LSMVector3(camerapos.x,0.0,camerapos.z);
+
+                    LSMVector3 NormalX = LSMVector3(1.0,0.0,0.0) * 0.015 * DrawCenter.length();
+                    LSMVector3 NormalY = LSMVector3(0.0,1.0,0.0) * 0.015 * DrawCenter.length();
+                    LSMVector3 NormalZ = LSMVector3(0.0,0.0,1.0) * 0.015 * DrawCenter.length();
+
+
+                    std::cout << "DrawCenter " << DrawCenter.x << " " << DrawCenter.y << " " << DrawCenter.z << std::endl;
+                    std::cout << "CameraPos " << camerapos.x << " " << camerapos.y << " " << camerapos.z << std::endl;
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalX,LSMVector3(0.0,camerapos.y,0.0),5.0,LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalY,LSMVector3(0.0,camerapos.y,0.0),5.0,LSMVector4(0.0,1.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalZ,LSMVector3(0.0,camerapos.y,0.0),5.0,LSMVector4(0.0,0.0,1.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
+
+
+
+
+
+                    //draw 3 squares for plane-aligned movement
+                    //we have to make sure these are not drawn if they are to close to the arrows
+
 
                     /*gl3dObject * m_Actor = m_ArrowActor;
                     std::vector<gl3dMesh *> meshes = m_Actor->GetMeshes();

@@ -2,7 +2,7 @@
 title: LISEM
 email: b.vandenbout@utwente.nl
 description: >
-  LISEM website, open-source spatial modelling software download and tutorials.
+  LISEM website, open-source spatial modelling software download and tutorials. Tool for analysis of floods, erosion, hydrology, natural hazards and geo-algorithms.
 lang: en-US
 
 baseurl: "" # the subpath of your site, e.g. /blog/
@@ -24,7 +24,7 @@ plugins:
   - jekyll-redirect-from
   - jekyll-seo-tag
   - jekyll-sitemap
-  
+
 exclude:
   - Gemfile
   - Gemfile.lock

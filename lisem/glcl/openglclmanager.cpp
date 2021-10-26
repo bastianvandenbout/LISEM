@@ -124,6 +124,8 @@ int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
     }
     glfwSetWindowUserPointer(window, this);
 
+    glfwSetWindowSizeLimits(window, 200, 200, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
     GLFWimage image;
     image.width = pixmap.width();
     image.height = pixmap.height();
@@ -552,71 +554,89 @@ void OpenGLCLManager::GLCLLoop()
 
         int widtht = 0;
         int heightt = 0;
-        glfwGetWindowSize(window,&widtht, &heightt);
+        glfwGetFramebufferSize(window,&widtht, &heightt);
 
         //std::cout << "wh " << widtht << " " << heightt << " " << m_width << " " << m_height << std::endl;
         m_width = widtht;
         m_height = heightt;
 
-        CreateMSAABuffer();
-
-        glad_glBindFramebuffer(GL_FRAMEBUFFER, m_MSAATarget->GetFrameBuffer());
-
-        glad_glClearColor(0.961,0.963,0.966,1.0);
-        glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glad_glDisable(GL_DEPTH_TEST);
-
-        m_TexturePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
-        m_TextPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
-        m_ShapePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
-        m_3DPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
-
-        bool did_redraw = false;
-
-        for(int i = 0; i < m_CallBackFrameList.length(); i++)
+        if(m_width > 2 && m_height > 2)
         {
-            did_redraw = did_redraw || m_CallBackFrameList.at(i)();
-        }
 
-        if(did_redraw)
-        {
-            // render msaa  render buffer to normal texture
+            CreateMSAABuffer();
 
-            m_MSAATarget->BlitToTexture();
+            glad_glBindFramebuffer(GL_FRAMEBUFFER, m_MSAATarget->GetFrameBuffer());
 
-
-            //render texture to screen
-            glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-            glad_glDrawBuffers(1, DrawBuffers);
-
-            glad_glViewport(0,0,m_width,m_height);
-
+            glad_glClearColor(0.961,0.963,0.966,1.0);
+            //glad_glClearColor(1.0,0.0,0.0,1.0);
+            glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glad_glDisable(GL_DEPTH_TEST);
-            // bind shader
-            glad_glUseProgram(m_GLProgram_CopyText->m_program);
-            // get uniform locations
-            int mat_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"matrix");
-            int tex_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"tex");
-            // bind texture
-            glad_glActiveTexture(GL_TEXTURE0);
-            glad_glUniform1i(tex_loc,0);
-            glad_glBindTexture(GL_TEXTURE_2D,m_MSAATarget->GetTexture());
-            // set project matrix
-            glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,matrix);
-            // now render stuff
-            glad_glBindVertexArray(m_Quad->m_vao);
-            glad_glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-            glad_glBindVertexArray(0);
+
+            m_TexturePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
+            m_TextPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
+            m_ShapePainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
+            m_3DPainter->UpdateRenderTargetProperties(m_MSAATarget->GetFrameBuffer(),GL_GLOBAL.Width,GL_GLOBAL.Height);
+
+            bool did_redraw = false;
+
+            for(int i = 0; i < m_CallBackFrameList.length(); i++)
+            {
+                did_redraw = did_redraw || m_CallBackFrameList.at(i)();
+            }
+
+            if(did_redraw)
+            {
+                // render msaa  render buffer to normal texture
+
+                std::cout << "redraw " << std::endl;
+
+                m_MSAATarget->BlitToTexture();
 
 
-            //glad_glClearColor(0.961,0.963,0.966,1.0);
-            //glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                //render texture to screen
+                glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+                glad_glDrawBuffers(1, DrawBuffers);
+
+                glad_glClearColor(0.961,0.963,0.966,1.0);
+                glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glad_glDisable(GL_DEPTH_TEST);
+
+                std::cout << "get texture for final render " << m_MSAATarget->GetTexture() << std::endl;
+
+                //if(m_DoFinalRender)
+                {
+
+                    glad_glViewport(0,0,m_width,m_height);
+
+                    glad_glDisable(GL_DEPTH_TEST);
+                    // bind shader
+                    glad_glUseProgram(m_GLProgram_CopyText->m_program);
+                    // get uniform locations
+                    int mat_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"matrix");
+                    int tex_loc = glad_glGetUniformLocation(m_GLProgram_CopyText->m_program,"tex");
+                    // bind texture
+                    glad_glActiveTexture(GL_TEXTURE0);
+                    glad_glUniform1i(tex_loc,0);
+                    glad_glBindTexture(GL_TEXTURE_2D,m_MSAATarget->GetTexture());
+                    // set project matrix
+                    glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,matrix);
+                    // now render stuff
+                    glad_glBindVertexArray(m_Quad->m_vao);
+                    glad_glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+                    glad_glBindVertexArray(0);
+
+                }
+
+                //glad_glClearColor(0.961,0.963,0.966,1.0);
+                //glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-            //swap opengl front and back buffer
-            glfwSwapBuffers(window);
+                //swap opengl front and back buffer
+                glfwSwapBuffers(window);
+            }
         }
+
 
         //reset the current thread for opengl
         glfwMakeContextCurrent(NULL);
