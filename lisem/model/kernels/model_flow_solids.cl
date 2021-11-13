@@ -140,11 +140,20 @@ nonkernel float3 F_HLL2FS(float h_L,float ho_L,float u_L,float v_L,float h_R,flo
         float dc_R = dragmult * sf_dev_R * ff_dev_R * (1.0f/(max(0.0001f,srocksize)))* max(0.0f,sdensity-1000.0f)/max(0.1f,1000.0f);//den > 0.0f? 100.0*ff_dev * sf_dev* (1.0f - (1.0f/max(1.0f,density)))/den : 0.0f;
         float fac_dc_R = max(0.0f,1.0f - (4.0f *(1.0f-min(1.0f,max(max(0.0f,(ff_dev_R)),(exp(-(dc_R /ff_dev_R)) + ((sf_dev_R *sdensity)/(1000.0f))*tan(sifa))/tan(sifa))))));
 
+
+        float dc = (dc_L * h_L + dc_R * h_R)/max(0.0001f,(h_L + h_R));
+        float ff_tot = max(0.001f,max(ho_L,ho_R)/max(0.0001f,max(h_L + ho_L,h_R + ho_R)));
+
+        ff_tot = max(0.0f,min(1.0f, (ff_tot -0.2f) * 10.0f));
+
+        float ffac_L = (1.0f- ff_tot) * max(0.0f,min(1.0f,exp(-dc_L)));
+        float ffac_R = (1.0f- ff_tot) * max(0.0f,min(1.0f,exp(-dc_R)));
+
         //and pressure-momentum based on the solid content
         float grav_h_L = GRAV*h_L;//*  pow(min(1.0f,max(0.0f,(1.0f-1.25f*sf_dev_L))),4.0f);
         float grav_h_R = GRAV*h_R;//*  pow(min(1.0f,max(0.0f,(1.0f-1.25f*sf_dev_R))),4.0f) ;
-        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * fac_dc_L;  // wave velocity
-        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * fac_dc_R ;
+        float sqrt_grav_h_L = sqrt((float)(grav_h_L));// * fac_dc_L;  // wave velocity
+        float sqrt_grav_h_R = sqrt((float)(grav_h_R));// * fac_dc_R ;
         q_R = u_R*h_R;
         q_L = u_L*h_L;
 
@@ -161,7 +170,11 @@ nonkernel float3 F_HLL2FS(float h_L,float ho_L,float u_L,float v_L,float h_R,flo
         ret.y = t1*(q_R*u_R + grav_h_R*h_R*0.5f) + t2*(q_L*u_L + grav_h_L*h_L*0.5f) - t3*(q_R - q_L);
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
 
-                return ret;
+        ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
+        ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
+        ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
+
+        return ret;
 }
 
 
@@ -198,11 +211,22 @@ nonkernel float3 F_HLL2SF(float h_L,float ho_L,float u_L,float v_L,float h_R,flo
         float dc_R = dragmult * sf_dev_R * ff_dev_R * (1.0f/(max(0.0001f,srocksize)))* max(0.0f,sdensity-1000.0f)/max(0.1f,1000.0f);//den > 0.0f? 100.0*ff_dev * sf_dev* (1.0f - (1.0f/max(1.0f,density)))/den : 0.0f;
         float fac_dc_R = max(0.0f,1.0f - (4.0f *(1.0f-min(1.0f,max(max(0.0f,(ff_dev_R)),(exp(-(dc_R /ff_dev_R)) + ((sf_dev_R *sdensity)/(1000.0f))*tan(sifa))/tan(sifa))))));
 
+
+        float dc = (dc_L * h_L + dc_R * h_R)/max(0.0001f,(h_L + h_R));
+        float ff_tot = max(0.001f,max(h_L,h_R)/max(0.0001f,max(h_L + ho_L,h_R + ho_R)));
+
+        ff_tot = max(0.0f,min(1.0f,(ff_tot -0.2f) * 10.0f));
+
+        float ffac_L = (1.0f- ff_tot) * max(0.0f,min(1.0f,exp(-dc_L)));
+        float ffac_R = (1.0f- ff_tot) * max(0.0f,min(1.0f,exp(-dc_R)));
+
+
+
         //and pressure-momentum based on the solid content
         float grav_h_L = GRAV*h_L;//*  pow(min(1.0f,max(0.0f,(1.0f-1.25f*sf_dev_L))),4.0f);
         float grav_h_R = GRAV*h_R;//*  pow(min(1.0f,max(0.0f,(1.0f-1.25f*sf_dev_R))),4.0f) ;
-        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * fac_dc_L;  // wave velocity
-        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * fac_dc_R ;
+        float sqrt_grav_h_L = sqrt((float)(grav_h_L));  // wave velocity
+        float sqrt_grav_h_R = sqrt((float)(grav_h_R));
         q_R = u_R*h_R;
         q_L = u_L*h_L;
 
@@ -219,7 +243,13 @@ nonkernel float3 F_HLL2SF(float h_L,float ho_L,float u_L,float v_L,float h_R,flo
         ret.y = t1*(q_R*u_R + grav_h_R*h_R*0.5f) + t2*(q_L*u_L + grav_h_L*h_L*0.5f) - t3*(q_R - q_L);
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
 
-        return ret;
+
+        ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
+        ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
+        ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
+
+        //switch betweeen non-shock capturing gudanov and shock-capturing hll solver based on solid content
+        return retnw;
 }
 
 
@@ -335,9 +365,9 @@ nonkernel float GetVNFX(float v,float hn, float dt, float dx, float n,
 		//drag
 		float vpow = pow((vn - us) * (vn - us) + (vf - vs) * (vf - vs),UF_j - 1.0f);
 		float lfacu = max(0.0f,dt * dc);
-                float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
-                float v_balance = (1.0f - fac_dc) *(ff * vn + sf * us) + (fac_dc) * us;
-		vn = v_balance + (vn - v_balance) * exp(-lfacu);
+        float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
+        float v_balance = us;//(fac_dc )*(ff * vn + sf * us) + (1.0f - fac_dc) * us;
+        vn = v_balance + (vn - v_balance) * exp(-lfacu);
 	}
 
         {
@@ -468,9 +498,11 @@ nonkernel float GetVNFY(float v,float hn, float dt, float dx, float n,
 		//drag
 		float vpow = pow((vn - vs) * (vn - vs) + (uf - us) * (uf - us),UF_j - 1.0f);
 		float lfacv = max(0.0f,dt * dc);
-                float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
-                float v_balance = (1.0f - fac_dc) *(ff * vn + sf * vs) + (fac_dc) * vs;
-		vn = v_balance + (vn - v_balance) * exp(-lfacv);
+        float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
+        float v_balance = vs;//(fac_dc )*(ff * vn + sf * vs) + (1.0f - fac_dc) * vs;
+
+        vn = v_balance + (vn - v_balance) * exp(-lfacv);
+
 	}
 	
         {
@@ -583,9 +615,9 @@ nonkernel float GetVNSX(float v,float hn, float dt, float dx, float n,
     float nsq = nsq1*vsq*dt;
     vn = (float)((vn/(1.0f+nsq)));
 	
-    float vn_ifa = vn > 0.0f? max(0.0f,(float)(vn - sf * dt *GRAV * tan(ifa))) : min(0.0f,(float)(vn + sf * dt * GRAV * tan(ifa)));
+    float vn_ifa = vn > 0.0f? max(0.0f,(float)(vn - max(0.0f,(sf - ff * (1000.0f/density))) * dt *GRAV * tan(ifa))) : min(0.0f,(float)(vn + max(0.0f,(sf - ff * (1000.0f/density))) * dt * GRAV * tan(ifa)));
     float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)))/tan(ifa)));// + ((sf_dev *density)/(1000.0f))*tan(ifa)
-    vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn;
+    vn = vn_ifa *fac_dc + vn_ifa*(1.0f-fac_dc);
 
     return vn;
 }
@@ -666,15 +698,15 @@ nonkernel float GetVNSY(float v,float hn, float dt, float dx, float n,
         float v_balance = ff * vf  + sf * vn;
         vn = v_balance + (vn - v_balance) * exp(-lfacv);
 
-	float vsq = sqrt((float)(us * us + vs * vs));
+        float vsq = sqrt((float)(us * us + vs * vs));
         float nsq1 = (0.001+n)*(0.001+n)*GRAV/max(0.01f,pow((float)(hn),(float)(4.0/3.0)));
         float nsq = nsq1*vsq*dt;
         vn = (float)((vn/(1.0f+nsq)));
 	
-        float vn_ifa = vn > 0? max(0.0f,(float)(vn - sf * dt *GRAV * tan(ifa))) : min(0.0f,(float)(vn + sf * dt * GRAV * tan(ifa)));
+        float vn_ifa = vn > 0.0? max(0.0f,(float)(vn - max(0.0f,(sf - ff * (1000.0f/density))) * dt *GRAV * tan(ifa))) : min(0.0f,(float)(vn + max(0.0f,(sf - ff * (1000.0f/density))) * dt * GRAV * tan(ifa)));
         float fac_dc = min(1.0f,max(0.0f,(exp(-(dc * vpow/ff_dev)))/tan(ifa)));// + ((sf_dev *density)/(1000.0f))*tan(ifa)
-        vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn;
-	return vn;
+        vn = vn_ifa *fac_dc + vn_ifa*(1.0f-fac_dc);
+        return vn;
 }
 
 kernel
@@ -1094,7 +1126,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
                     write_imagef(OUTPUT_UI, int2(gx,gy), ui);
             }else if(ui_image == 8)
             {
-                    ui = hsn;
+                    ui = sf_dev_dc;
                     write_imagef(OUTPUT_UI, int2(gx,gy), ui);
             }else if(ui_image == 9)
             {

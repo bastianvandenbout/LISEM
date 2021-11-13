@@ -72,8 +72,9 @@
 #define LISEM_ICON_RELOADLIGHT 62
 #define LISEM_ICON_FIELD 63
 #define LISEM_ICON_ADDFIELD 64
+#define LISEM_ICON_CLEAR 65
 
-#define LISEM_ICON_COUNT 65
+#define LISEM_ICON_COUNT 66
 
 class SPHResourceManager
 {
@@ -179,6 +180,7 @@ public:
             case LISEM_ICON_RELOADLIGHT: return "reload_light.png";break;
             case LISEM_ICON_FIELD: return "field.png";break;
             case LISEM_ICON_ADDFIELD: return "addfield.png";break;
+            case LISEM_ICON_CLEAR: return "clear.png";break;
         }
 
         return QString();

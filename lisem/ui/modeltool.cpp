@@ -136,11 +136,13 @@ void ModelTool::ImportRunfile(QString name)
 
     int ret = m_ParameterManager->LoadFromRunFile(path);
 
+
     if(ret != 0)
     {
         return;
     }
 
+    this->UpdateParameterActive();
     UpdateInterface();
 
     bool exst = false;
@@ -796,6 +798,12 @@ void ModelTool::CreateParameterWidgets()
     }
 
     this->UpdateParameters();
+
+    this->UpdateParameterActive();
+}
+
+void ModelTool::UpdateParameterActive()
+{
 
     bool changed = false;
 

@@ -24,7 +24,16 @@ inline static QString PreProcessScript(QString script)
 
     //QStringList sl = script.split(QRegExp("[\r\n]"),QString::SkipEmptyParts);
 
+    //it also prevents some unicode confusion
+    //word uses U+201C and U+201D left and right quotation marks.
+    //we want to instead use U+0022, which is the normal neutral quotation mark
+    //and U+2001, U+2002 and U+2003 should all be normal space (U+0020), instead of em space, em quad space etc..
 
+    script.replace(QString::fromUtf8("\u201D"),"\"");
+    script.replace(QString::fromUtf8("\u202D"),"\"");
+    script.replace(QString::fromUtf8("\u2003")," ");
+    script.replace(QString::fromUtf8("\u2002")," ");
+    script.replace(QString::fromUtf8("\u2001")," ");
 
     QList<QString> list_namesload;
     QList<QString> list_namessave;

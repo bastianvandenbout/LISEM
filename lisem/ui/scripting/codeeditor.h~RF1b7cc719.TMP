@@ -193,8 +193,8 @@ public:
             temp.replace(QString::fromUtf8("\u201D"),"\"");
             temp.replace(QString::fromUtf8("\u202D"),"\"");
             temp.replace(QString::fromUtf8("\u2003")," ");
-            temp.replace(QString::fromUtf8("\u2002")," ");
-            temp.replace(QString::fromUtf8("\u2001")," ");
+            script.replace(QString::fromUtf8("\u2002")," ");
+            script.replace(QString::fromUtf8("\u2001")," ");
 
             plaintext.append(temp);
         }

@@ -102,7 +102,6 @@ public:
 
     inline void OnDraw3DShadowDepth(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm, OpenGLCLMSAARenderTarget * target, LSMMatrix4x4 perspectiveview, BoundingBox bb, int scale_level) override
     {
-        std::cout << "draw terrain depth " << std::endl;
 
         //get the 3d window we are currently closest to
 

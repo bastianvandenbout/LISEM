@@ -34,6 +34,8 @@ public:
 
     QString m_Dir;
 
+    QMenu * m_contextmenu;
+
     QWaitCondition m_PauseWaitCondition;
     QMutex m_PauseMutex;
 
@@ -178,6 +180,8 @@ public:
         m_MenuLayout->addWidget(DebugButton);
 
         m_ScriptTabs = new QTabWidget();
+
+
 
         m_ScriptTabs->setTabsClosable(true);
 
@@ -332,6 +336,47 @@ public:
 
         });
 
+
+        m_contextmenu = new QMenu();
+
+
+        QAction * closeAct = new QAction(*icon_new,tr("Close"), this);
+        //saveAct->setShortcuts(QKeySequence::Save);
+        closeAct->setToolTip(tr("Close this file"));
+        connect(closeAct, &QAction::triggered, this, &ScriptTool::CMCloseTab);
+
+        QAction * newAct = new QAction(*icon_new,tr("New"), this);
+        //saveAct->setShortcuts(QKeySequence::Save);
+        newAct->setToolTip(tr("New file"));
+        connect(newAct, &QAction::triggered, this, &ScriptTool::CMNewTab);
+
+        QAction * saveAct = new QAction(*icon_new,tr("Save"), this);
+        //saveAct->setShortcuts(QKeySequence::Save);
+        saveAct->setToolTip(tr("Save file"));
+        connect(saveAct, &QAction::triggered, this, &ScriptTool::CMSave);
+
+
+        QAction * closeallAct = new QAction(*icon_new,tr("Close all"), this);
+        //saveAct->setShortcuts(QKeySequence::Save);
+        closeallAct->setToolTip(tr("Close all"));
+        connect(closeallAct, &QAction::triggered, this, &ScriptTool::CMCloseAll);
+
+        QAction * closeallbutAct = new QAction(*icon_new,tr("Close all but this"), this);
+        //saveAct->setShortcuts(QKeySequence::Save);
+        closeallbutAct->setToolTip(tr("Close all but this file"));
+        connect(closeallbutAct, &QAction::triggered, this, &ScriptTool::CMCloseAllBut);
+
+
+        m_contextmenu->addAction(closeAct);
+        m_contextmenu->addAction(newAct);
+        m_contextmenu->addAction(saveAct);
+        m_contextmenu->addAction(closeallAct);
+        m_contextmenu->addAction(closeallbutAct);
+
+        m_ScriptTabs->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(m_ScriptTabs->tabBar(), SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(on_contextMenuRequested(const QPoint &)));
+
+
     }
 
     inline ~ScriptTool()
@@ -387,6 +432,8 @@ public:
     }
 
 
+    int m_LastIndexContex = -1;
+
 signals:
 
 
@@ -395,6 +442,80 @@ signals:
     inline void int_update_buttons_stop();
 
 public slots:
+
+    inline void CMCloseTab()
+    {
+        if(m_LastIndexContex > -1)
+        {
+            CloseFile(m_LastIndexContex);
+        }
+        m_LastIndexContex = -1;
+    }
+    inline void CMNewTab()
+    {
+        if(m_LastIndexContex > -1)
+        {
+            NewCode();
+        }
+        m_LastIndexContex = -1;
+    }
+    inline void CMCloseAll()
+    {
+        if(m_LastIndexContex > -1)
+        {
+            for(int i = m_ScriptTabs->count()-1; i > -1; i--)
+            {
+                //if(i != m_LastIndexContex)
+                {
+                    CloseFile(i);
+                }
+            }
+        }
+        m_LastIndexContex = -1;
+    }
+    inline void CMCloseAllBut()
+    {
+        if(m_LastIndexContex > -1)
+        {
+            for(int i = m_ScriptTabs->count()-1; i > -1; i--)
+            {
+                if(i != m_LastIndexContex)
+                {
+                    CloseFile(i);
+                }
+            }
+        }
+        m_LastIndexContex = -1;
+    }
+
+    inline void CMSave()
+    {
+        if(m_LastIndexContex > -1)
+        {
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_LastIndexContex );
+            if(ce != nullptr)
+            {
+                ce->SaveFile(false);
+            }
+
+            ExportOpenFileList();
+        }
+        m_LastIndexContex = -1;
+
+    }
+    inline void on_contextMenuRequested(const QPoint &point)
+    {
+        if (point.isNull())
+        {
+            return;
+        }
+
+        int tabIndex = m_ScriptTabs->tabBar()->tabAt(point);
+
+        m_LastIndexContex = tabIndex;
+        m_contextmenu->popup(QCursor::pos());
+    }
+
 
     inline void int_buttons_onpause()
     {

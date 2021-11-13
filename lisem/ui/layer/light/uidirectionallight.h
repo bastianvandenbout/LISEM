@@ -69,7 +69,6 @@ public:
 
     virtual inline void OnDrawShadowMaps(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm, std::vector<UILayer *> shadowcasters) override
     {
-        std::cout << "draw shadow maps for directional light" << std::endl;
         //if(m_DoShadowMapping)
         if(m_IsPrepared)
         {
@@ -82,7 +81,6 @@ public:
             for(int i = 0; i < s.m_2D3DRenderTargetScales.size(); i++)
             {
 
-                std::cout << "Draw ShadowMap " << i << " " <<  shadowcasters.size() << std::endl;
 
                 BoundingBox bb = s.m_2D3DRenderTargetBoundingBox.at(i);
 
@@ -231,7 +229,6 @@ public:
 
     virtual inline void OnRenderLightBuffer(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm, OpenGLCLMSAARenderTarget * target, int bufferindex) override
     {
-        std::cout << "render light buffer " << std::endl;
         //the render target is a rgb32 texture that contains the lighted material color
 
         float matrix[16] = {
@@ -241,7 +238,6 @@ public:
             0.0f, 0.0f, 0.0f, 1.0f};
 
 
-        std::cout << "m_DoShadowMapping " << m_DoShadowMapping << " " << m_ShadowMaps.size() <<  std::endl;
         //if(m_DoShadowMapping)
         if(m_IsPrepared){
 

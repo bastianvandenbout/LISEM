@@ -386,6 +386,7 @@ public slots:
     void CreateParameterWidgets();
 
     void UpdateParameters();
+    void UpdateParameterActive();
     void UpdateInterface();
 
     void start();

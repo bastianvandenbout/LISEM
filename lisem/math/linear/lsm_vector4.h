@@ -96,6 +96,45 @@ public:
         return angles;
 
     }
+
+    LSMVector4 operator*(const double & in) const
+    {
+        LSMVector4 out;
+        out.x = x * in;
+        out.y = y * in;
+        out.z = z * in;
+        out.w = w * in;
+        return out;
+    }
+    LSMVector4 operator*(const float & in) const
+    {
+        LSMVector4 out;
+        out.x = x * in;
+        out.y = y * in;
+        out.z = z * in;
+        out.w = w* in;
+        return out;
+    }
+    LSMVector4 operator/(const LSMVector4 & in) const
+    {
+        LSMVector4 out;
+        out.x = x / in.x;
+        out.y = y / in.y;
+        out.z = z / in.z;
+        out.w = w / in.w;
+        return out;
+    }
+
+    LSMVector4 operator/(const float & in) const
+    {
+        LSMVector4 out;
+        out.x = x / in;
+        out.y = y / in;
+        out.z = z / in;
+        out.w = w/ in;
+        return out;
+    }
+
 };
 
 #endif // VECTOR4_H

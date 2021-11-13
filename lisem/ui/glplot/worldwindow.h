@@ -46,6 +46,9 @@
 #include "layer/post/postdebug.h"
 #include "opengl3dobject.h"
 
+#include "geometry/geometrybase.h"
+#include "geometry/shapealgebra.h"
+
 #define GIZMO_MOVE 0
 #define GIZMO_ROTATE 1
 #define GIZMO_SCALE 2
@@ -103,6 +106,215 @@ typedef struct WorldGeoProbeResult
 }  WorldGeoProbeResult;
 
 
+typedef struct DragElement
+{
+    std::vector<float> xc;
+    std::vector<float> yc;
+
+    float fac_x = 0.0;
+    float fac_y = 0.0;
+
+    UILayer * Layer = nullptr;
+
+    int GizmoType = -1;
+    //0 = translate
+    //1 = rotate
+    //2 = scale
+
+    int GizmoAction = -1;
+    //0 = arrow
+    //1 = plane
+
+    int GizmoDirection = -1;
+    //0 = x | yz;
+    //1 = y | xz;
+    //2 = z | xy;
+
+    int CollisionType = -1;
+    //0 = linestring
+    //1 = polygon
+
+    bool lines_seperated = false;
+
+    bool view_aligned = false;
+
+    bool exists = false;
+
+    inline double LineDist(double pct1X, double pct1Y, double pct2X, double pct2Y, double pct3X, double pct3Y)
+    {
+        double retx =1e31;
+        double rety =1e31;
+
+        GetClosestPointOnLine(pct2X,pct2Y,pct3X,pct3Y,pct1X,pct1Y, &retx, &rety);
+
+        if(std::isnan(retx) || std::isnan(rety))
+        {
+            retx =1e30;
+            rety =1e30;
+        }
+
+        return (LSMVector2(retx,rety) - LSMVector2(pct1X,pct1Y)).length();
+
+
+    }
+
+
+    inline float direction(LSMVector2 pi, LSMVector2 pj, LSMVector2 pk) {
+        return (pk.x - pi.x) * (pj.y - pi.y) - (pj.x - pi.x) * (pk.y - pi.y);
+    }
+
+    inline bool onSegment(LSMVector2 pi, LSMVector2 pj, LSMVector2 pk) {
+        if (std::min(pi.x, pj.x) <= pk.x && pk.x <= std::max(pi.x, pj.x)
+            && std::min(pi.y, pj.y) <= pk.y && pk.y <= std::max(pi.y, pj.y)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    inline bool segmentIntersect(LSMVector2 p1, LSMVector2 p2, LSMVector2 p3, LSMVector2 p4) {
+        float d1 = direction(p3, p4, p1);
+        float d2 = direction(p3, p4, p2);
+        float d3 = direction(p1, p2, p3);
+        float d4 = direction(p1, p2, p4);
+
+        if (((d1 > 0.0 && d2 <  0.0) || (d1 <  0.0 && d2 >  0.0)) && ((d3 >  0.0 && d4 <  0.0) || (d3 <  0.0 && d4 >  0.0))) {
+            return true;
+        } else if (d1 ==  0.0 && onSegment(p3, p4, p1)) {
+            return true;
+        } else if (d2 ==  0.0 && onSegment(p3, p4, p2)) {
+            return true;
+        } else if (d3 ==  0.0 && onSegment(p1, p2, p3)) {
+            return true;
+        } else if (d4 ==  0.0 && onSegment(p1, p2, p4)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    inline void Drag(float x, float y)
+    {
+
+        if(Layer != nullptr)
+        {
+
+            if(GizmoType == 0)
+            {
+                if(GizmoAction == 0)
+                {
+                    if(GizmoDirection == 0)
+                    {
+                        Layer->Move(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
+                    }
+                    if(GizmoDirection == 1)
+                    {
+                        Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
+                    }
+                    if(GizmoDirection == 2)
+                    {
+                        Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
+                    }
+                }else if(GizmoType  == 1)
+                {
+                    if(GizmoDirection == 0)
+                    {
+                        Layer->Move(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
+                    }
+                    if(GizmoDirection == 1)
+                    {
+                        Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
+                    }
+                    if(GizmoDirection == 2)
+                    {
+                        Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
+                    }
+                }
+
+            }else if(GizmoType  == 1)
+            {
+
+
+
+
+
+
+            }else if(GizmoType  == 2)
+            {
+
+                if(GizmoDirection == 0)
+                {
+                    Layer->Scale(LSMVector3(1.0 + 1.0*( fac_x * x + fac_y * y),1.0,1.0) );
+                }
+                if(GizmoDirection == 1)
+                {
+                    Layer->Scale(LSMVector3(1.0,1.0 + 1.0*( fac_x * x + fac_y * y),1.0) );
+                }
+                if(GizmoDirection == 2)
+                {
+                    Layer->Scale(LSMVector3(1.0,1.0,1.0 + 1.0*( fac_x * x + fac_y * y)) );
+                }
+            }
+
+
+        }
+
+    }
+
+    inline bool Collides(float x, float y)
+    {
+
+        if(CollisionType == 0)
+        {
+            if(xc.size() > 1)
+            {
+                for (int i = 0; i < xc.size() - 1; ++i) {
+
+                    double LineDista =LineDist(x,y,xc[i],yc[i],xc[i+1],yc[i+1]);
+
+                    std::cout << "check collision line " << LineDista << " " <<  x << " " << y << " " << xc[i] << " " << yc[i] << " " << xc[i+1] << " " << yc[i+1]  << " " << std::endl;
+
+                    if(LineDista < 10)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        }else if(CollisionType == 1)
+        {
+            if(xc.size() > 2)
+            {
+                LSMVector2 point(x,y);
+                LSMVector2 outside(10000000, 100000000);
+
+                int intersections = 0;
+                for (int i = 0; i < xc.size() - 1; ++i) {
+
+                    if (segmentIntersect(point, outside,LSMVector2(xc[i],yc[i]),LSMVector2(xc[i+1],yc[i+1]))) {
+                        intersections++;
+                    }
+                }
+                //check the last line
+                if (segmentIntersect(point, outside,LSMVector2(xc[xc.size()-1],yc[xc.size()-1]),LSMVector2(xc[0],yc[0]))) {
+                    intersections++;
+                }
+
+                return (intersections % 2 != 0);
+            }else
+            {
+                return false;
+            }
+
+
+        }
+
+        return false;
+    }
+
+} DragElement;
+
 class LISEM_API WorldWindow : public QObject, public GLListener
 {
     Q_OBJECT;
@@ -143,6 +355,9 @@ private:
     bool m_Draw3DGlobe = false;
     bool m_DrawShadows = false;
     bool m_DoSet3DViewFrom2DOnce =false;
+
+    std::vector<DragElement> m_DragElements;
+    DragElement m_SelectedDragElement;
 
     ModelGeometry* m_ArrowModel;
     gl3dObject * m_ArrowActor;
@@ -432,6 +647,7 @@ public:
     bool Draw();
 
 
+    LSMVector2 WorldToScreenPix(LSMMatrix4x4 m, LSMVector3 DrawCenter);
     void Draw3DArrows(GeoWindowState s, bool external = false);
     void Arrow3DRayCast();
     void Draw2DArrows(GeoWindowState s, bool external = false);

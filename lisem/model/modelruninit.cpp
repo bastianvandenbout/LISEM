@@ -764,7 +764,7 @@ void LISEMModel::InitialCalculations()
                 float A = aA;
 
                 float psi1 = std::max(10.0f,(float) std::pow(aA*(FC1 + 0.7 * (thetas1 - FC1)),-bB));
-                float thetai1 = (FC1 + 0.7 * (thetas1 - FC1));
+                float thetai1 = (FC1 + GW_US->data[r][c] * (thetas1 - FC1));
 
                 THETAS->data[r][c] = thetas1;
                 KSAT_T->data[r][c] = Ksattop * (1.0f/3600000.0f);
@@ -777,7 +777,8 @@ void LISEMModel::InitialCalculations()
                     SWR_B->data[r][c] = B;
 
                     GW_S->data[r][c] = GW_S->data[r][c]*THETAS->data[r][c];
-                    GW_US->data[r][c] = 0;
+                    //convert groundwater effective volume fraction of unsaturated layer to meter equivalet
+                    GW_US->data[r][c] = std::max(0.0f,(SD->data[r][c]* THETAS->data[r][c] - GW_S->data[r][c])) * GW_US->data[r][c];
                 }
 
         }

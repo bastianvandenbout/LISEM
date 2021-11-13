@@ -341,6 +341,7 @@ public:
     QIcon *icon_script;
     QIcon *icon_runfile;
     QIcon *icon_diropen;
+    QIcon *icon_clear;
 
     ScriptManager *m_ScriptManager;
 
@@ -376,6 +377,7 @@ public:
         icon_script = new QIcon();
         icon_runfile = new QIcon();
         icon_diropen = new QIcon();
+        icon_clear = new QIcon();
 
         icon_start->addFile((m_Dir + LISEM_FOLDER_ASSETS + "start1.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_pause->addFile((m_Dir + LISEM_FOLDER_ASSETS + "pause2.png"), QSize(), QIcon::Normal, QIcon::Off);
@@ -390,6 +392,7 @@ public:
         icon_script->addFile((m_Dir + LISEM_FOLDER_ASSETS + "onewfile.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_runfile->addFile((m_Dir + LISEM_FOLDER_ASSETS + "iconfinder_Report_132648.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_diropen->addFile((m_Dir + LISEM_FOLDER_ASSETS + "diropen.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon_clear->addFile((m_Dir + LISEM_FOLDER_ASSETS + "clear.png"), QSize(), QIcon::Normal, QIcon::Off);
 
 
         model = new QFileSystemModel();
@@ -513,6 +516,14 @@ public:
      InfoButton->setEnabled(true);
      InfoButton->setToolTip("Print file info");
 
+     QToolButton *ClearButton = new QToolButton(this);
+     ClearButton->setIcon(*icon_clear);
+     ClearButton->setIconSize(QSize(22,22));
+     ClearButton->setMaximumSize(QSize(22,22));
+     ClearButton->resize(22,22);
+     ClearButton->setEnabled(true);
+     ClearButton->setToolTip("Clear Output");
+
      QToolButton *DirOpenButton = new QToolButton(this);
      DirOpenButton->setIcon(*icon_diropen);
      DirOpenButton->setIconSize(QSize(22,22));
@@ -532,6 +543,7 @@ public:
      m_MenuLayout->addWidget(OpenScriptButton,0,Qt::AlignLeft);
      m_MenuLayout->addWidget(OpenRunfileButton,0,Qt::AlignLeft);
      m_MenuLayout->addWidget(InfoButton,0,Qt::AlignLeft);
+     m_MenuLayout->addWidget(ClearButton,0,Qt::AlignLeft);
      m_MenuLayout->addItem(new QSpacerItem(20,20));
      m_MenuLayout->addWidget(DirOpenButton);
 
@@ -633,6 +645,8 @@ public:
      connect(OpenScriptButton,SIGNAL(pressed()),this,SLOT(OnOpenScript()));
      connect(OpenRunfileButton,SIGNAL(pressed()),this,SLOT(OnOpenRunFile()));
      connect(InfoButton,SIGNAL(pressed()),this,SLOT(OnInfo()));
+     connect(ClearButton,SIGNAL(pressed()),this,SLOT(OnClear()));
+
      connect(DirOpenButton,SIGNAL(pressed()),this,SLOT(OnDirOpen()));
 
 
@@ -1118,6 +1132,12 @@ public slots:
             }
         }
     }
+
+    inline void OnClear()
+    {
+        this->m_FileConsole->clear();
+    }
+
 
     inline void OnScriptDone()
     {

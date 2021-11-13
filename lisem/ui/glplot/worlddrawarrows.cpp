@@ -1,8 +1,20 @@
 #include "worldwindow.h"
 #include "gl/openglcldatamanager.h"
 
+LSMVector2 WorldWindow::WorldToScreenPix(LSMMatrix4x4 m, LSMVector3 DrawCenter)
+{
+
+         LSMVector4 pixlx = m * LSMVector4(DrawCenter.x,DrawCenter.y,DrawCenter.z,1.0);
+         pixlx = pixlx/pixlx.w;
+         pixlx.x = ((pixlx.x+1.0)/2.0) *((float)( m_OpenGLCLManager->m_width));
+         pixlx.y = m_OpenGLCLManager->m_height -  - ((pixlx.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
+
+         return LSMVector2(pixlx.x,pixlx.y);
+}
+
 void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
 {
+    m_DragElements.clear();
 
     //if not external and in moving state
 
@@ -30,80 +42,401 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     //draw 3 arrows aligned with axes
                     //use view-axis aligned line segments (as done in some other 3d viewers/editors)
 
-
-                    std::cout << "draw position move gizmo " << std::endl;
                     LSMVector3 camerapos = s.Camera3D->GetPosition();
 
                     LSMVector3 DrawCenter = FLoc  - LSMVector3(camerapos.x,0.0,camerapos.z);
 
-                    LSMVector3 NormalX = LSMVector3(1.0,0.0,0.0) * 0.015 * DrawCenter.length();
-                    LSMVector3 NormalY = LSMVector3(0.0,1.0,0.0) * 0.015 * DrawCenter.length();
-                    LSMVector3 NormalZ = LSMVector3(0.0,0.0,1.0) * 0.015 * DrawCenter.length();
-
-
-                    std::cout << "DrawCenter " << DrawCenter.x << " " << DrawCenter.y << " " << DrawCenter.z << std::endl;
-                    std::cout << "CameraPos " << camerapos.x << " " << camerapos.y << " " << camerapos.z << std::endl;
-
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalX,LSMVector3(0.0,camerapos.y,0.0),5.0,LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalY,LSMVector3(0.0,camerapos.y,0.0),5.0,LSMVector4(0.0,1.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalZ,LSMVector3(0.0,camerapos.y,0.0),5.0,LSMVector4(0.0,0.0,1.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
+                    LSMVector3 NormalX = LSMVector3(1.0,0.0,0.0) * 0.3 * DrawCenter.length();
+                    LSMVector3 NormalY = LSMVector3(0.0,1.0,0.0) * 0.3 * DrawCenter.length();
+                    LSMVector3 NormalZ = LSMVector3(0.0,0.0,1.0) * 0.3 * DrawCenter.length();
 
 
 
 
-
-                    //draw 3 squares for plane-aligned movement
-                    //we have to make sure these are not drawn if they are to close to the arrows
+                    //view-plane translation
 
 
-                    /*gl3dObject * m_Actor = m_ArrowActor;
-                    std::vector<gl3dMesh *> meshes = m_Actor->GetMeshes();
+                    //view-plane rotation
 
-                    for(int i = 0; i < meshes.size(); i++)
+                    for(int j = 0; j < 90; j++)
                     {
+                        //get position along great circle made by intersection of plane
 
-                        gl3dMesh * mesh = meshes.at(i);
-
-                        LSMVector3 camerapos = s.Camera3D->GetPosition();
-                        LSMVector3 objpos = LSMVector3(0.0,0.0,0.0);
-                        LSMMatrix4x4 objrotm = LSMMatrix4x4();
+                        //m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalX,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
 
 
-                        LSMMatrix4x4 objtrans;
-                        objtrans.Translate(LSMVector3(objpos.x - camerapos.x,objpos.y,objpos.z - camerapos.z));
-                        objrotm = objtrans*objrotm;
-
-                        s.GL_3DFrameBuffer->SetAsTarget();
-
-                        glad_glDepthMask(GL_TRUE);
-                        glad_glEnable(GL_DEPTH_TEST);
-
-                        //set shader uniform values
-                        OpenGLProgram * program = GLProgram_uiobject;
+                    }
 
 
-                        // bind shader
-                        glad_glUseProgram(program->m_program);
 
-                        glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"OMatrix"),1,GL_FALSE,(float*)(&objrotm));//.GetMatrixDataPtr());
+                    //get pixel locations of lines
 
-                        glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,s.Camera3D->GetProjectionMatrixNoTranslationXZ().GetMatrixDataPtr());
-                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"SResolutionX"),s.scr_pixwidth);
-                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"SResolutionY"),s.scr_pixheight);
-                        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"iTime"),s.m_time);
-                        glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"isclouds"),0);
-                        glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"iSunDir"),s.SunDir.x,s.SunDir.y,s.SunDir.z);
-                        glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"ObjTranslate"),objpos.x - camerapos.x,objpos.y,objpos.z  - camerapos.z);
+                    LSMVector4 pix = s.Camera3D->GetProjectionMatrixNoTranslationXZ() * LSMVector4(DrawCenter.x,DrawCenter.y,DrawCenter.z,1.0);
+                    pix = pix/pix.w;
+                    pix.x = ((pix.x+1.0)/2.0) *((float)( m_OpenGLCLManager->m_width));
+                    pix.y = m_OpenGLCLManager->m_height - ((pix.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
 
-                        glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(0).GetCenterX(),s.Camera3D->GetPosition().y,s.GL_FrameBuffer3DWindow.at(0).GetCenterY());
+                    LSMVector4 pixlx = s.Camera3D->GetProjectionMatrixNoTranslationXZ() * LSMVector4(DrawCenter.x + NormalX.x,DrawCenter.y + NormalX.y,DrawCenter.z + NormalX.z,1.0);
+                    pixlx = pixlx/pixlx.w;
+                    pixlx.x = ((pixlx.x+1.0)/2.0) *((float)( m_OpenGLCLManager->m_width));
+                    pixlx.y = m_OpenGLCLManager->m_height - ((pixlx.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
 
-                        // now render stuff
-                        glad_glBindVertexArray(mesh->VAO);
-                        glad_glDrawElements(GL_TRIANGLES,mesh->indices.size(),GL_UNSIGNED_INT,0);
-                        glad_glBindVertexArray(0);
+                    LSMVector4 pixly = s.Camera3D->GetProjectionMatrixNoTranslationXZ() * LSMVector4(DrawCenter.x + NormalY.x,DrawCenter.y + NormalY.y,DrawCenter.z + NormalY.z,1.0);
+                    pixly = pixly/pixly.w;
+                    pixly.x = ((pixly.x+1.0)/2.0) *((float)( m_OpenGLCLManager->m_width));
+                    pixly.y = m_OpenGLCLManager->m_height - ((pixly.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
 
-                    }*/
+                    LSMVector4 pixlz = s.Camera3D->GetProjectionMatrixNoTranslationXZ() * LSMVector4(DrawCenter.x + NormalZ.x,DrawCenter.y + NormalZ.y,DrawCenter.z + NormalZ.z,1.0);
+                    pixlz = pixlz/pixlz.w;
+                    pixlz.x = ((pixlz.x+1.0)/2.0) *((float)( m_OpenGLCLManager->m_width));
+                    pixlz.y = m_OpenGLCLManager->m_height - ((pixlz.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
 
+
+
+
+                    DragElement lx;
+                    lx.xc.push_back(pix.x);
+                    lx.yc.push_back(pix.y);
+                    lx.xc.push_back(pixlx.x);
+                    lx.yc.push_back(pixlx.y);
+
+                    DragElement ly;
+                    ly.xc.push_back(pix.x);
+                    ly.yc.push_back(pix.y);
+                    ly.xc.push_back(pixly.x);
+                    ly.yc.push_back(pixly.y);
+
+                    DragElement lz;
+                    lz.xc.push_back(pix.x);
+                    lz.yc.push_back(pix.y);
+                    lz.xc.push_back(pixlz.x);
+                    lz.yc.push_back(pixlz.y);
+
+                    DragElement sx;
+                    sx.xc.push_back(pix.x * 0.6 + 0.4 * pixlx.x);
+                    sx.yc.push_back(pix.y * 0.6 + 0.4 * pixlx.y);
+                    sx.xc.push_back(pix.x * 0.4 + 0.6 * pixlx.x);
+                    sx.yc.push_back(pix.y * 0.4 + 0.6 * pixlx.y);
+
+                    DragElement sy;
+                    sy.xc.push_back(pix.x * 0.6 + 0.4 * pixly.x);
+                    sy.yc.push_back(pix.y * 0.6 + 0.4 * pixly.y);
+                    sy.xc.push_back(pix.x * 0.4 + 0.6 * pixly.x);
+                    sy.yc.push_back(pix.y * 0.4 + 0.6 * pixly.y);
+
+                    DragElement sz;
+                    sz.xc.push_back(pix.x * 0.6 + 0.4 * pixlz.x);
+                    sz.yc.push_back(pix.y * 0.6 + 0.4 * pixlz.y);
+                    sz.xc.push_back(pix.x * 0.4 + 0.6 * pixlz.x);
+                    sz.yc.push_back(pix.y * 0.4 + 0.6 * pixlz.y);
+
+
+                    lx.Layer = l;
+                    lx.GizmoDirection = 0;
+                    lx.GizmoType = 0;
+                    lx.GizmoAction = 0;
+                    lx.CollisionType = 0;
+                    LSMVector2 lxpixv(pixlx.x - pix.x,pixlx.y-pix.y);
+                    //lxpixv = lxpixv.Normalize();
+
+                    ly.Layer = l;
+                    ly.GizmoDirection = 1;
+                    ly.GizmoType = 0;
+                    ly.GizmoAction = 0;
+                    ly.CollisionType = 0;
+                    LSMVector2 lypixv(pixly.x - pix.x,pixly.y-pix.y);
+                    //lypixv = lypixv.Normalize();
+
+                    lz.Layer = l;
+                    lz.GizmoDirection = 2;
+                    lz.GizmoType = 0;
+                    lz.GizmoAction = 0;
+                    lz.CollisionType = 0;
+                    LSMVector2 lzpixv(pixlz.x - pix.x,pixlz.y-pix.y);
+                    //lzpixv = lzpixv.Normalize();
+
+                    if( lxpixv.x < 1.0 && lxpixv.x > -1.0)
+                    {
+                        lxpixv.x =1.0;
+                    }
+                    if( lxpixv.y < 1.0 && lxpixv.y > -1.0)
+                    {
+                        lxpixv.y =1.0;
+                    }
+                    if( lypixv.x < 1.0 && lypixv.x > -1.0)
+                    {
+                        lypixv.x =1.0;
+                    }
+                    if( lypixv.y < 1.0 && lypixv.y > -1.0)
+                    {
+                        lypixv.y =1.0;
+                    }
+                    if( lzpixv.x < 1.0 && lzpixv.x > -1.0)
+                    {
+                        lzpixv.x =1.0;
+                    }
+                    if( lzpixv.y < 1.0 && lzpixv.y > -1.0)
+                    {
+                        lzpixv.y =1.0;
+                    }
+
+                    std::cout << "arrow stuff " << 0.3 * DrawCenter.length() << " " << lxpixv.x << " " << lxpixv.y << std::endl;
+
+                    lx.fac_x =  0.3 * DrawCenter.length()/lxpixv.x;
+                    lx.fac_y = 0.3 * DrawCenter.length()/lxpixv.y;
+                    ly.fac_x = 0.3 * DrawCenter.length()/lypixv.x;
+                    ly.fac_y =  0.3 * DrawCenter.length()/lypixv.y;
+                    lz.fac_x = 0.3 * DrawCenter.length()/lzpixv.x;
+                    lz.fac_y =  0.3 * DrawCenter.length()/lzpixv.y;
+
+
+
+
+                    sx.Layer = l;
+                    sx.GizmoDirection = 0;
+                    sx.GizmoType = 2;
+                    sx.GizmoAction = 0;
+                    sx.CollisionType = 0;
+                    sx.fac_x = 1.0/lxpixv.x ;
+                    sx.fac_y = 1.0/lxpixv.y;
+
+                    sy.Layer = l;
+                    sy.GizmoDirection = 1;
+                    sy.GizmoType = 2;
+                    sy.GizmoAction = 0;
+                    sy.CollisionType = 0;
+                    sy.fac_x = 1.0/ lypixv.x;
+                    sy.fac_y = 1.0/lypixv.y;
+
+
+                    sz.Layer = l;
+                    sz.GizmoDirection = 2;
+                    sz.GizmoType = 2;
+                    sz.GizmoAction = 0;
+                    sz.CollisionType = 0;
+                    sz.fac_x = 1.0/ lzpixv.x;
+                    sz.fac_y = 1.0/lzpixv.y;
+
+
+
+                    DragElement px;
+                    px.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.67 *NormalZ).x);
+                    px.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.67 *NormalZ).y);
+                    px.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.67 *NormalZ).x);
+                    px.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.67 *NormalZ).y);
+                    px.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.33 *NormalZ).x);
+                    px.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.33 *NormalZ).y);
+                    px.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.33 *NormalZ).x);
+                    px.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.33 *NormalZ).y);
+
+                    DragElement py;
+                    py.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.67 *NormalY).x);
+                    py.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.67 *NormalY).y);
+                    py.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.67 *NormalY).x);
+                    py.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.67 *NormalY).y);
+                    py.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.33 *NormalY).x);
+                    py.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalX + 0.33 *NormalY).y);
+                    py.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.33 *NormalY).x);
+                    py.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalX + 0.33 *NormalY).y);
+
+                    DragElement pz;
+                    pz.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalY + 0.67 *NormalZ).x);
+                    pz.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalY + 0.67 *NormalZ).y);
+                    pz.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalY + 0.67 *NormalZ).x);
+                    pz.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalY + 0.67 *NormalZ).y);
+                    pz.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalY + 0.33 *NormalZ).x);
+                    pz.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.33 * NormalY + 0.33 *NormalZ).y);
+                    pz.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalY + 0.33 *NormalZ).x);
+                    pz.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + 0.67 * NormalY + 0.33 *NormalZ).y);
+
+
+
+                    px.Layer = l;
+                    px.GizmoDirection = 0;
+                    px.GizmoType = 0;
+                    px.GizmoAction = 1;
+                    px.CollisionType = 1;
+                    px.fac_x = 0.3 * DrawCenter.length()/lxpixv.x;
+                    px.fac_y = 0.3 * DrawCenter.length()/lzpixv.y;
+
+                    py.Layer = l;
+                    py.GizmoDirection = 1;
+                    py.GizmoType = 0;
+                    py.GizmoAction = 1;
+                    py.CollisionType = 1;
+                    py.fac_x = 0.3 * DrawCenter.length()/lypixv.x;
+                    py.fac_y = 0.3 * DrawCenter.length()/lypixv.y;
+
+
+                    pz.Layer = l;
+                    pz.GizmoDirection = 2;
+                    pz.GizmoType = 0;
+                    pz.GizmoAction = 1;
+                    pz.CollisionType = 1;
+                    pz.fac_x = 0.3 * DrawCenter.length()/lzpixv.x;
+                    pz.fac_y = 0.3 * DrawCenter.length()/lzpixv.y;
+
+
+
+                    DragElement rx;
+                    DragElement ry;
+                    DragElement rz;
+
+                    for(int j = 0; j < 90; j++)
+                    {
+                        //get position along great circle made by intersection of plane
+                        float radians = (((float)(j))/90.0)* 2.0 * 3.14159;
+                        float radiansn = (((float)(j+1))/90.0)* 2.0 * 3.14159;
+
+                        //only draw this segment of the great circle if it is visible to camera
+                        LSMVector3 normal = (sin(radians) * NormalX + cos(radians) * NormalY).Normalize();
+                        if((DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY - LSMVector3(0.0,camerapos.y,0.0)).dot(normal) <0.0)
+                        {
+                            rx.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY).x);
+                            rx.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY).y);
+                            rx.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radiansn) * NormalX + cos(radiansn) * NormalY).x);
+                            rx.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radiansn) * NormalX + cos(radiansn) * NormalY).y);
+                        }
+
+                        //only draw this segment of the great circle if it is visible to camera
+                        LSMVector3 normal2 = (sin(radians) * NormalX + cos(radians) * NormalY).Normalize();
+                        if((DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ - LSMVector3(0.0,camerapos.y,0.0)).dot(normal2) <0.0)
+                        {
+                            ry.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ).x);
+                            ry.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ).y);
+                            ry.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radiansn) * NormalX + cos(radiansn) * NormalZ).x);
+                            ry.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radiansn) * NormalX + cos(radiansn) * NormalZ).y);
+                        }
+
+                        //only draw this segment of the great circle if it is visible to camera
+                        LSMVector3 normal3 = (sin(radians) * NormalZ + cos(radians) * NormalY).Normalize();
+                        if((DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY - LSMVector3(0.0,camerapos.y,0.0)).dot(normal3) <0.0)
+                        {
+                            rz.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY).x);
+                            rz.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY).y);
+                            rz.xc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radiansn) * NormalZ + cos(radiansn) * NormalY).x);
+                            rz.yc.push_back(WorldToScreenPix(s.Camera3D->GetProjectionMatrixNoTranslationXZ(),DrawCenter + sin(radiansn) * NormalZ + cos(radiansn) * NormalY).y);
+                        }
+                    }
+
+
+                    rx.Layer = l;
+                    rx.GizmoDirection = 0;
+                    rx.GizmoType = 1;
+                    rx.GizmoAction = 0;
+                    rx.CollisionType = 0;
+                    rx.lines_seperated = true;
+                    rx.fac_x = 0.3 * DrawCenter.length()/lxpixv.x;
+                    rx.fac_y = 0.3 * DrawCenter.length()/lxpixv.y;
+
+                    ry.Layer = l;
+                    ry.GizmoDirection = 1;
+                    ry.GizmoType = 1;
+                    ry.GizmoAction = 0;
+                    ry.CollisionType = 0;
+                    ry.lines_seperated = true;
+                    ry.fac_x = 0.3 * DrawCenter.length()/lypixv.x;
+                    ry.fac_y = 0.3 * DrawCenter.length()/lypixv.y;
+
+                    rz.Layer = l;
+                    rz.GizmoDirection = 2;
+                    rz.GizmoType = 1;
+                    rz.GizmoAction = 0;
+                    rz.CollisionType = 0;
+                    rz.lines_seperated = true;
+                    rz.fac_x = 0.3 * DrawCenter.length()/lzpixv.x;
+                    rz.fac_y = 0.3 * DrawCenter.length()/lzpixv.y;
+
+
+
+                    //translation arrows
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalX,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),lx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),ly.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.5,1.0) : LSMVector4(0.0,1.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),lz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,1.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+
+                    //scale cubes
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalX,DrawCenter + 0.60*NormalX,LSMVector3(0.0,camerapos.y,0.0),0.06* 0.5 * DrawCenter.length(),sx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(0.8,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalY,DrawCenter + 0.60*NormalY,LSMVector3(0.0,camerapos.y,0.0),0.06* 0.5 * DrawCenter.length(),sy.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.0,1.0) : LSMVector4(0.0,0.8,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalZ,DrawCenter + 0.60*NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.06* 0.5 * DrawCenter.length(),sz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,0.8,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+
+                    //translate planes
+                    m_OpenGLCLManager->m_ShapePainter->DrawSquare3D(DrawCenter + 0.67 * NormalX + 0.67 *NormalZ,DrawCenter + 0.33 * NormalX + 0.67 *NormalZ,DrawCenter + 0.33 * NormalX + 0.33 *NormalZ,DrawCenter + 0.67 * NormalX + 0.33 *NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),px.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.5,1.0) : LSMVector4(0.0,1.0,.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawSquare3D(DrawCenter + 0.67 * NormalX + 0.67 *NormalY,DrawCenter + 0.33 * NormalX + 0.67 *NormalY,DrawCenter + 0.33 * NormalX + 0.33 *NormalY,DrawCenter + 0.67 * NormalX + 0.33 *NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),py.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,1.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawSquare3D(DrawCenter + 0.67 * NormalY + 0.67 *NormalZ,DrawCenter + 0.33 * NormalY + 0.67 *NormalZ,DrawCenter + 0.33 * NormalY + 0.33 *NormalZ,DrawCenter + 0.67 * NormalY + 0.33 *NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),pz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+
+                    //rotational arcs
+
+                    LSMVector4 color_rx = LSMVector4(0.0,0.0,1.0,1.0);
+                    LSMVector4 color_ry = LSMVector4(1.0,0.0,0.0,1.0);
+                    LSMVector4 color_rz = LSMVector4(0.0,1.0,0.0,1.0);
+
+                    if(rx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y))
+                    {
+                        color_rx =LSMVector4(0.5,0.5,1.0,1.0);
+                    }
+                    if(ry.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y))
+                    {
+                        color_ry =LSMVector4(1.0,0.5,0.5,1.0);
+                    }
+                    if(rz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y))
+                    {
+                        color_rz =LSMVector4(0.5,1.0,0.5,1.0);
+                    }
+
+
+                    for(int j = 0; j < 90; j++)
+                    {
+                        //get position along great circle made by intersection of plane
+                        float radians = (((float)(j))/90.0)* 2.0 * 3.14159;
+                        float radiansn = (((float)(j+1))/90.0)* 2.0 * 3.14159;
+
+                        //only draw this segment of the great circle if it is visible to camera
+                        LSMVector3 normal = (sin(radians) * NormalX + cos(radians) * NormalY).Normalize();
+                        if((DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY - LSMVector3(0.0,camerapos.y,0.0)).dot(normal) <0.0)
+                        {
+                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY,DrawCenter+ sin(radiansn) * NormalX + cos(radiansn) * NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),color_rx,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                        }
+
+                        //only draw this segment of the great circle if it is visible to camera
+                        LSMVector3 normal2 = (sin(radians) * NormalX + cos(radians) * NormalY).Normalize();
+                        if((DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ - LSMVector3(0.0,camerapos.y,0.0)).dot(normal2) <0.0)
+                        {
+                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ,DrawCenter+ sin(radiansn) * NormalX + cos(radiansn) * NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),color_ry,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                        }
+
+                        //only draw this segment of the great circle if it is visible to camera
+                        LSMVector3 normal3 = (sin(radians) * NormalZ + cos(radians) * NormalY).Normalize();
+                        if((DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY - LSMVector3(0.0,camerapos.y,0.0)).dot(normal3) <0.0)
+                        {
+                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY,DrawCenter+ sin(radiansn) * NormalZ + cos(radiansn) * NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),color_rz,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                        }
+                    }
+
+
+
+
+
+
+
+
+                    m_DragElements.push_back(lx);
+                    m_DragElements.push_back(ly);
+                    m_DragElements.push_back(lz);
+
+                    m_DragElements.push_back(sx);
+                    m_DragElements.push_back(sy);
+                    m_DragElements.push_back(sz);
+
+                    m_DragElements.push_back(px);
+                    m_DragElements.push_back(py);
+                    m_DragElements.push_back(pz);
+
+                    m_DragElements.push_back(rx);
+                    m_DragElements.push_back(ry);
+                    m_DragElements.push_back(rz);
+
+
+                    std::cout << "pix " << pix.x << " " << pix.y << " " << pix.z << " " << pix.w << std::endl;
 
                 }
                 if(l->IsRotateAble() && m_GizmoMode == GIZMO_ROTATE)

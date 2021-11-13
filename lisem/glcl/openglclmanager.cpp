@@ -588,7 +588,6 @@ void OpenGLCLManager::GLCLLoop()
             {
                 // render msaa  render buffer to normal texture
 
-                std::cout << "redraw " << std::endl;
 
                 m_MSAATarget->BlitToTexture();
 
@@ -602,7 +601,6 @@ void OpenGLCLManager::GLCLLoop()
                 glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glad_glDisable(GL_DEPTH_TEST);
 
-                std::cout << "get texture for final render " << m_MSAATarget->GetTexture() << std::endl;
 
                 //if(m_DoFinalRender)
                 {

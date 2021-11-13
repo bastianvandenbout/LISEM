@@ -54,7 +54,7 @@ typedef struct VOXELM VOXELM;
 
 //the EDGE is the line that connects two voxels.
 //if we have S voxels, then we have S horizontal edges and S vertical edges
-struct EDGE
+struct UWEDGE
 {
   float reliab;			//reliabilty of the edge and it depends on the two voxels
   VOXELM *pointer_1;		//pointer to the first voxel
@@ -64,7 +64,7 @@ struct EDGE
 				//the second
 };
 
-typedef struct EDGE EDGE;
+typedef struct UWEDGE UWEDGE;
 
 //---------------start quicker_sort algorithm --------------------------------
 #define swap(x,y) {EDGE t; t=x; x=y; y=t;}
@@ -72,11 +72,11 @@ typedef struct EDGE EDGE;
 #define o2(x,y) order(x,y)
 #define o3(x,y,z) o2(x,y); o2(x,z); o2(y,z)
 
-typedef enum {yes, no} yes_no;
+typedef enum {yes, no} uwyes_no;
 
-static inline yes_no find_pivot(EDGE *left, EDGE *right, float *pivot_ptr)
+static inline uwyes_no find_pivot(UWEDGE *left, UWEDGE *right, float *pivot_ptr)
 {
-	EDGE a, b, c, *p;
+	UWEDGE a, b, c, *p;
 
 	a = *left;
 	b = *(left + (right - left) /2 );
@@ -108,7 +108,7 @@ static inline yes_no find_pivot(EDGE *left, EDGE *right, float *pivot_ptr)
     return no;
 }
 
-static inline EDGE *partition(EDGE *left, EDGE *right, float pivot)
+static inline UWEDGE *partition(UWEDGE *left, UWEDGE *right, float pivot)
 {
 	while (left <= right)
 	{
@@ -126,9 +126,9 @@ static inline EDGE *partition(EDGE *left, EDGE *right, float pivot)
 	return left;
 }
 
-static inline void quicker_sort(EDGE *left, EDGE *right)
+static inline void quicker_sort(UWEDGE *left, UWEDGE *right)
 {
-	EDGE *p;
+	UWEDGE *p;
 	float pivot;
 
 	if (find_pivot(left, right, &pivot) == yes)
@@ -684,10 +684,10 @@ static inline void calculate_reliability(float *wrappedVolume, VOXELM *voxel, in
 //is calculated by adding the reliability of voxel and the relibility
 //of its right neighbour. edge is calculated between a voxel and its
 //next neighbour
-static inline void  horizontalEDGEs(VOXELM *voxel, EDGE *edge, int volume_width, int volume_height, int volume_depth, params_t *params)
+static inline void  horizontalEDGEs(VOXELM *voxel, UWEDGE *edge, int volume_width, int volume_height, int volume_depth, params_t *params)
 {
   int n, i, j;
-  EDGE *edge_pointer = edge;
+  UWEDGE *edge_pointer = edge;
   VOXELM *voxel_pointer = voxel;
   int no_of_edges = params->no_of_edges;
 
@@ -734,12 +734,12 @@ static inline void  horizontalEDGEs(VOXELM *voxel, EDGE *edge, int volume_width,
   params->no_of_edges = no_of_edges;
 }
 
-static inline void  verticalEDGEs(VOXELM *voxel, EDGE *edge, int volume_width, int volume_height, int volume_depth, params_t *params)
+static inline void  verticalEDGEs(VOXELM *voxel, UWEDGE *edge, int volume_width, int volume_height, int volume_depth, params_t *params)
 {
   int n, i, j;
   int no_of_edges = params->no_of_edges;
   VOXELM *voxel_pointer = voxel;
-  EDGE *edge_pointer = edge + no_of_edges;
+  UWEDGE *edge_pointer = edge + no_of_edges;
   int frame_size = volume_width * volume_height;
   int next_voxel = frame_size - volume_width;
 
@@ -788,14 +788,14 @@ static inline void  verticalEDGEs(VOXELM *voxel, EDGE *edge, int volume_width, i
   params->no_of_edges = no_of_edges;
 }
 
-static inline void  normalEDGEs(VOXELM *voxel, EDGE *edge, int volume_width, int volume_height, int volume_depth, params_t *params)
+static inline void  normalEDGEs(VOXELM *voxel, UWEDGE *edge, int volume_width, int volume_height, int volume_depth, params_t *params)
 {
   int n, i, j;
   int no_of_edges = params->no_of_edges;
   int frame_size = volume_width * volume_height;
   int volume_size = volume_width * volume_height * volume_depth;
   VOXELM *voxel_pointer = voxel;
-  EDGE *edge_pointer = edge + no_of_edges;
+  UWEDGE *edge_pointer = edge + no_of_edges;
   int next_voxel = volume_size - frame_size;
 
   for (n=0; n < volume_depth - 1; n++)
@@ -843,14 +843,14 @@ static inline void  normalEDGEs(VOXELM *voxel, EDGE *edge, int volume_width, int
 }
 
 //gather the voxels of the volume into groups
-static inline void  gatherVOXELs(EDGE *edge, params_t *params)
+static inline void  gatherVOXELs(UWEDGE *edge, params_t *params)
 {
   int k;
   VOXELM *VOXEL1;
   VOXELM *VOXEL2;
   VOXELM *group1;
   VOXELM *group2;
-  EDGE *pointer_edge = edge;
+  UWEDGE *pointer_edge = edge;
   int incremento;
 
   for (k = 0; k < params->no_of_edges; k++)
@@ -1016,13 +1016,13 @@ unwrap3D(float* wrapped_volume, float* unwrapped_volume, unsigned char* input_ma
   params_t params = {TWOPI, wrap_around_x, wrap_around_y, wrap_around_z, 0};
   unsigned char *extended_mask;
   VOXELM *voxel;
-  EDGE *edge;
+  UWEDGE *edge;
   int volume_size = volume_height * volume_width * volume_depth;
   int No_of_Edges_initially = 3 * volume_width * volume_height * volume_depth;
 
   extended_mask = (unsigned char *) calloc(volume_size, sizeof(unsigned char));
   voxel = (VOXELM *) calloc(volume_size, sizeof(VOXELM));
-  edge = (EDGE *) calloc(No_of_Edges_initially, sizeof(EDGE));;
+  edge = (UWEDGE *) calloc(No_of_Edges_initially, sizeof(UWEDGE));;
 
   extend_mask(input_mask, extended_mask, volume_width, volume_height, volume_depth, &params);
   initialiseVOXELs(wrapped_volume, input_mask, extended_mask, voxel, volume_width, volume_height, volume_depth);

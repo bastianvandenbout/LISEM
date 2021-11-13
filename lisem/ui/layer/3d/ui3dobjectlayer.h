@@ -106,13 +106,15 @@ public:
             gl3dMesh * mesh = meshes.at(i);
 
             LSMVector3 camerapos = s.Camera3D->GetPosition();
-            LSMVector3 objpos = LSMVector3(0.0,0.0,0.0);
+            LSMVector3 objpos = LSMVector3(0.0,0.0,0.0) + m_Position;
             LSMMatrix4x4 objrotm = LSMMatrix4x4();
+            LSMMatrix4x4 scalem = LSMMatrix4x4();
+            scalem.SetScaling(m_Scale.x,m_Scale.y,m_Scale.z);
 
 
             LSMMatrix4x4 objtrans;
             objtrans.Translate(LSMVector3(objpos.x - camerapos.x,objpos.y,objpos.z - camerapos.z));
-            objrotm = objtrans*objrotm;
+            objrotm = objtrans*objrotm*scalem;
 
             s.GL_3DFrameBuffer->SetAsTarget();
 

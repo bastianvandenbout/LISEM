@@ -19,10 +19,6 @@
 
 //TODO: remove global variables
 //TODO: make thresholds independent
-
-static float PI = 3.141592654f;
-static float TWOPI = 6.283185307f;
-
 #define NOMASK 0
 #define MASK 1
 
@@ -54,7 +50,7 @@ typedef struct PIXELM PIXELM;
 
 //the EDGE is the line that connects two pixels.
 //if we have S pixels, then we have S horizontal edges and S vertical edges
-struct EDGE
+struct UWEDGE
 {
   float reliab;			//reliabilty of the edge and it depends on the two pixels
   PIXELM *pointer_1;		//pointer to the first pixel
@@ -63,19 +59,19 @@ struct EDGE
 				//unwrap it with respect to the second
 };
 
-typedef struct EDGE EDGE;
+typedef struct UWEDGE UWEDGE;
 
 //---------------start quicker_sort algorithm --------------------------------
-#define swap(x,y) {EDGE t; t=x; x=y; y=t;}
-#define order(x,y) if (x.reliab > y.reliab) swap(x,y)
+#define uwswap(x,y) {UWEDGE t; t=x; x=y; y=t;}
+#define order(x,y) if (x.reliab > y.reliab) uwswap(x,y)
 #define o2(x,y) order(x,y)
 #define o3(x,y,z) o2(x,y); o2(x,z); o2(y,z)
 
-typedef enum {yes, no} yes_no;
+typedef enum {uwyes, uwno} uwyes_no;
 
-static inline yes_no find_pivot(EDGE *left, EDGE *right, float *pivot_ptr)
+static inline uwyes_no find_pivot(UWEDGE *left, UWEDGE *right, float *pivot_ptr)
 {
-  EDGE a, b, c, *p;
+  UWEDGE a, b, c, *p;
 
   a = *left;
   b = *(left + (right - left) /2 );
@@ -85,13 +81,13 @@ static inline yes_no find_pivot(EDGE *left, EDGE *right, float *pivot_ptr)
   if (a.reliab < b.reliab)
     {
       *pivot_ptr = b.reliab;
-      return yes;
+      return uwyes;
     }
 
   if (b.reliab < c.reliab)
     {
       *pivot_ptr = c.reliab;
-      return yes;
+      return uwyes;
     }
 
   for (p = left + 1; p <= right; ++p)
@@ -99,15 +95,15 @@ static inline yes_no find_pivot(EDGE *left, EDGE *right, float *pivot_ptr)
       if (p->reliab != left->reliab)
 	{
 	  *pivot_ptr = (p->reliab < left->reliab) ? left->reliab : p->reliab;
-	  return yes;
+          return uwyes;
 	}
-      return no;
+      return uwno;
     }
 
-  return no;
+  return uwno;
 }
 
-static inline EDGE *partition(EDGE *left, EDGE *right, float pivot)
+static inline UWEDGE *partition(UWEDGE *left, UWEDGE *right, float pivot)
 {
   while (left <= right)
     {
@@ -117,7 +113,7 @@ static inline EDGE *partition(EDGE *left, EDGE *right, float pivot)
 	--right;
       if (left < right)
 	{
-	  swap (*left, *right);
+          uwswap (*left, *right);
 	  ++left;
 	  --right;
 	}
@@ -125,12 +121,12 @@ static inline EDGE *partition(EDGE *left, EDGE *right, float pivot)
   return left;
 }
 
-static inline void quicker_sort(EDGE *left, EDGE *right)
+static inline void quicker_sort(UWEDGE *left, UWEDGE *right)
 {
-  EDGE *p;
+  UWEDGE *p;
   float pivot;
 
-  if (find_pivot(left, right, &pivot) == yes)
+  if (find_pivot(left, right, &pivot) == uwyes)
     {
       p = partition(left, right, pivot);
       quicker_sort(left, p - 1);
@@ -178,8 +174,8 @@ static inline void  initialisePIXELs(float *wrapped_image, unsigned char *input_
 static inline float wrap(float pixel_value)
 {
   float wrapped_pixel_value;
-  if (pixel_value > PI)	wrapped_pixel_value = pixel_value - TWOPI;
-  else if (pixel_value < -PI) wrapped_pixel_value = pixel_value + TWOPI;
+  if (pixel_value > PI)	wrapped_pixel_value = pixel_value - TWO_PI;
+  else if (pixel_value < -PI) wrapped_pixel_value = pixel_value + TWO_PI;
   else wrapped_pixel_value = pixel_value;
   return wrapped_pixel_value;
 }
@@ -423,12 +419,12 @@ static inline void calculate_reliability(float *wrappedImage, PIXELM *pixel,
 //it is calculated by adding the reliability of pixel and the relibility of
 //its right-hand neighbour
 //edge is calculated between a pixel and its next neighbour
-static inline void  horizontalEDGEs(PIXELM *pixel, EDGE *edge,
+static inline void  horizontalEDGEs(PIXELM *pixel, UWEDGE *edge,
 		      int image_width, int image_height,
 		      params_t *params)
 {
   int i, j;
-  EDGE *edge_pointer = edge;
+  UWEDGE *edge_pointer = edge;
   PIXELM *pixel_pointer = pixel;
   int no_of_edges = params->no_of_edges;
 
@@ -473,14 +469,14 @@ static inline void  horizontalEDGEs(PIXELM *pixel, EDGE *edge,
 //calculate the reliability of the vertical edges of the image
 //it is calculated by adding the reliability of pixel and the relibility of
 //its lower neighbour in the image.
-static inline void  verticalEDGEs(PIXELM *pixel, EDGE *edge,
+static inline void  verticalEDGEs(PIXELM *pixel, UWEDGE *edge,
 		    int image_width, int image_height,
 		    params_t *params)
 {
   int i, j;
   int no_of_edges = params->no_of_edges;
   PIXELM *pixel_pointer = pixel;
-  EDGE *edge_pointer = edge + no_of_edges;
+  UWEDGE *edge_pointer = edge + no_of_edges;
 
   for (i=0; i < image_height - 1; i++)
     {
@@ -521,14 +517,14 @@ static inline void  verticalEDGEs(PIXELM *pixel, EDGE *edge,
 }
 
 //gather the pixels of the image into groups
-static inline void  gatherPIXELs(EDGE *edge, params_t *params)
+static inline void  gatherPIXELs(UWEDGE *edge, params_t *params)
 {
   int k;
   PIXELM *PIXEL1;
   PIXELM *PIXEL2;
   PIXELM *group1;
   PIXELM *group2;
-  EDGE *pointer_edge = edge;
+  UWEDGE *pointer_edge = edge;
   int incremento;
 
   for (k = 0; k < params->no_of_edges; k++)
@@ -629,7 +625,7 @@ static inline void  unwrapImage(PIXELM *pixel, int image_width, int image_height
 
   for (i = 0; i < image_size; i++)
     {
-      pixel_pointer->value += TWOPI * (float)(pixel_pointer->increment);
+      pixel_pointer->value += TWO_PI * (float)(pixel_pointer->increment);
       pixel_pointer++;
     }
 }
@@ -693,16 +689,16 @@ unwrap2D(float* wrapped_image, float* UnwrappedImage, unsigned char* input_mask,
 	 int image_width, int image_height,
 	 int wrap_around_x, int wrap_around_y)
 {
-  params_t params = {TWOPI, wrap_around_x, wrap_around_y, 0};
+  params_t params = {TWO_PI, wrap_around_x, wrap_around_y, 0};
   unsigned char *extended_mask;
   PIXELM *pixel;
-  EDGE *edge;
+  UWEDGE *edge;
   int image_size = image_height * image_width;
   int No_of_Edges_initially = 2 * image_width * image_height;
 
   extended_mask = (unsigned char *) calloc(image_size, sizeof(unsigned char));
   pixel = (PIXELM *) calloc(image_size, sizeof(PIXELM));
-  edge = (EDGE *) calloc(No_of_Edges_initially, sizeof(EDGE));
+  edge = (UWEDGE *) calloc(No_of_Edges_initially, sizeof(UWEDGE));
 
   extend_mask(input_mask, extended_mask, image_width, image_height, &params);
   initialisePIXELs(wrapped_image, input_mask, extended_mask, pixel, image_width, image_height);

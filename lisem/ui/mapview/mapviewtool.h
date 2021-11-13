@@ -458,6 +458,8 @@ public:
         m_3DButton = new SwitchButton();
         m_3DGlobeButton = new SwitchButton();
 
+        m_3DButton->setValue(false);
+        m_3DGlobeButton->setValue(false);
 
         connect(m_3DButton,SIGNAL(valueChanged(bool)),this,SLOT(On3DToggled(bool)));
         connect(m_3DGlobeButton,SIGNAL(valueChanged(bool)),this,SLOT(On3DGlobeToggled(bool)));
@@ -689,7 +691,7 @@ public:
         TitleLayout->addWidget(saveButton);
         TitleLayout->addItem(spacer);
         TitleLayout->addWidget(new QLabeledWidget("3D",m_3DButton));
-        //TitleLayout->addWidget(new QLabeledWidget("Globe",m_3DGlobeButton));
+        TitleLayout->addWidget(new QLabeledWidget("Globe",m_3DGlobeButton));
         TitleLayout->addItem(spacer2);
         TitleLayout->addWidget(addButton);
         TitleLayout->addWidget(addVButton);
@@ -2535,7 +2537,10 @@ public slots:
 
     inline void On3DToggled(bool x)
     {
+        m_3DGlobeButton->setEnabled(x);
+
         m_WorldWindow->SetDraw3D(x);
+
     }
     inline void On3DGlobeToggled(bool x)
     {

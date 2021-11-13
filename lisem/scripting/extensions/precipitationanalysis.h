@@ -4,7 +4,8 @@
 
 #include "matrixtable.h"
 #include "optimization/leastsquares.h"
-
+#include "stat/quantile.h"
+#include "scriptarrayhelpers.h"
 
 inline static MatrixTable * CreateAveragedHyetograph(CScriptArray * data_precipitation, double timestep, bool is_intensity, double event_mm, int timesteps_event, int break_timesteps)
 {
@@ -254,6 +255,13 @@ inline static void RegisterPrecipitationAnalysisToScriptEngine(LSMScriptEngine *
 
     int r = sm->RegisterGlobalFunction("Table @IDFCurves(array<double> & in precipitation, double timestep, bool is_intensities, int n_durations, array<double> & in return_periods)",asFUNCTIONPR(CreateIDF,(CScriptArray*, double , bool, int, CScriptArray* ),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );
     sm->RegisterGlobalFunction("Table @ABHyetograph(Table & in idf)",asFUNCTIONPR(CreateAlternatingBlockHyetograph,(MatrixTable*),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );
+
+    sm->RegisterGlobalSTDFunction("array<double> @Quantiles(array<double> &in data, array<double> &in probs)", GetFuncConvert(AS_Quantile));
+    sm->RegisterGlobalSTDFunction("array<double> @Quantiles(array<float> &in data, array<float> &in probs)", GetFuncConvert(AS_Quantilef));
+    sm->RegisterGlobalSTDFunction("double Average(array<double> &in data)", GetFuncConvert(AS_Average));
+    sm->RegisterGlobalSTDFunction("double Average(array<float> &in data)", GetFuncConvert(AS_Averagef));
+    sm->RegisterGlobalSTDFunction("double StdDev(array<double> &in data)", GetFuncConvert(AS_StdDev));
+    sm->RegisterGlobalSTDFunction("double StdDev(array<float> &in data)", GetFuncConvert(AS_StdDevf));
 
     //r = sm->RegisterGlobalFunction("array<double> @FitGumbel(array<double> & in x, array<double> & in y)",asFUNCTIONPR(OptimizeGumbel,(CScriptArray*,CScriptArray*),CScriptArray*),asCALL_CDECL);  assert( r >= 0 );
     //if(r < 0){LISEM_DEBUG("error in registering scripting array<double>  &FitGumbel(array<double> x, array<double> y)");};

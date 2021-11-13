@@ -441,6 +441,56 @@ void WorldWindow::InputToLayers()
         }
     }
 
+
+    //now do any drag element detection
+
+
+
+    for(int j = 0;j < m_MouseState.MouseButtonEvents.length(); j++)
+    {
+        for(int i = m_DragElements.size()-1; i > -1; i--)
+        {
+            DragElement e = m_DragElements.at(i);
+
+            if(shift)
+            {
+                if(m_MouseState.MouseButtonEvents.at(j) == GLFW_MOUSE_BUTTON_1 && m_MouseState.MouseButtonKeyAction.at(j) == GLFW_PRESS)
+                {
+                    std::cout << "check collide " << std::endl;
+                    if(e.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y))
+                    {
+                        std::cout << "selected drag element "<< std::endl;
+                        m_SelectedDragElement = e;
+                        m_SelectedDragElement.exists = true;
+                        break;
+                    }
+                }
+
+            }
+
+        }
+        if(m_MouseState.MouseButtonEvents.at(j) == GLFW_MOUSE_BUTTON_1 && m_MouseState.MouseButtonKeyAction.at(j) == GLFW_RELEASE)
+        {
+            m_SelectedDragElement.Layer = nullptr;
+            m_SelectedDragElement.exists = false;
+        }
+    }
+
+    if(m_SelectedDragElement.exists && shift)
+    {
+        //apply drag movement to drag element
+
+        float dragx = m_MouseState.Drag_x;
+        float dragy = m_MouseState.Drag_y;
+
+        if(dragx != 0.0f || dragy != 0.0f)
+        {
+            std::cout << "drag element " << dragx << " " << dragy << std::endl;
+            m_SelectedDragElement.Drag(dragx,dragy);
+        }
+
+    }
+
     m_Prev_GeoLoc = GeoLoc;
 
 

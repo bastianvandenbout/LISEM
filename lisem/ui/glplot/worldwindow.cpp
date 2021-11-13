@@ -486,8 +486,6 @@ bool WorldWindow::Draw()
     if(require_redraw )
     {
 
-        std::cout<< "draw current dims " << widtht << " " << heightt << " " <<  m_OpenGLCLManager->GL_GLOBAL.Height << " " << m_OpenGLCLManager->GL_GLOBAL.Width << " " << m_3DRenderTarget->GetWidth() << " " << m_3DRenderTarget->GetHeight() <<  std::endl;
-
 
         //std::cout << "redraw " << m_GLDT << " " << " " <<  m_RedrawNeed <<  std::endl;
 

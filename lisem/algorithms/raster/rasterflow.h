@@ -3534,7 +3534,7 @@ inline cTMap * AS_TransientFlow(cTMap * DEM, cTMap * SD, cTMap * KSat, cTMap * T
                     double qx = QX->data[r][c];
                     double qy = QY->data[r][c];
 
-                    hn = h - qx - qy;
+                    hn = h - std::fabs(qx) - std::fabs(qy);
                     map->data[r][c] = hn;
 
                     if(c > 0)

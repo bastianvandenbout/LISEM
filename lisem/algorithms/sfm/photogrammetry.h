@@ -3,6 +3,11 @@
 
 #define OPENMVG_USE_OPENMP
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
+
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerMaxPair.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerStellar.hpp"
@@ -89,6 +94,12 @@
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
 #include "MVS.h"
+
+#include "openMVG/geometry/pose3_io.hpp"
+#include "openMVG/sfm/sfm_landmark_io.hpp"
+#include <cereal/types/map.hpp>
+#include "openMVG/sfm/sfm_data_io_ply.hpp"
+#include "openMVG/sfm/sfm_data_io_baf.hpp"
 
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
@@ -277,21 +288,14 @@ public:
       const image::Image<unsigned char>* mask = nullptr
   )
   {
-    std::cout << "photogrammetry siftopencv 1 " << std::endl;
     // Convert for opencv
     cv::Mat img;
-    std::cout << "photogrammetry siftopencv 1 " << std::endl;
     cv::eigen2cv(image.GetMat(), img);
-
-    std::cout << "photogrammetry siftopencv 1 " << std::endl;
-
     // Convert mask image into cv::Mat
     cv::Mat m_mask;
     if (mask != nullptr) {
       cv::eigen2cv(mask->GetMat(), m_mask);
     }
-
-    std::cout << "photogrammetry siftopencv 2 " << std::endl;
 
     // Create a SIFT detector
     std::vector< cv::KeyPoint > v_keypoints;
@@ -300,28 +304,21 @@ public:
 
     cv::Ptr<cv::Feature2D> siftdetector = cv::xfeatures2d::SURF::create(m_Threshold * 100.0,4,3,true,false);
 
-    std::cout << "photogrammetry siftopencv 3 " << std::endl;
 
     // Process SIFT computation
     siftdetector->detectAndCompute(img, m_mask, v_keypoints, m_desc);
 
-    std::cout << "photogrammetry siftopencv 4 " << std::endl;
 
     auto regions = std::unique_ptr<Regions_type>(new Regions_type);
-
-    std::cout << "photogrammetry siftopencv 5 " << std::endl;
 
     // reserve some memory for faster keypoint saving
     regions->Features().reserve(v_keypoints.size());
     regions->Descriptors().reserve(v_keypoints.size());
 
-    std::cout << "photogrammetry siftopencv 6" << std::endl;
 
     // Prepare a column vector with the sum of each descriptor
     cv::Mat m_siftsum;
     cv::reduce(m_desc, m_siftsum, 1, cv::REDUCE_SUM);
-
-    std::cout << "photogrammetry siftopencv 7 " << m_desc.size().width << "  " << m_desc.size().height <<  std::endl;
 
     // Copy keypoints and descriptors in the regions
     int cpt = 0;
@@ -341,7 +338,6 @@ public:
       }
       regions->Descriptors().push_back(desc);
     }
-    std::cout << "photogrammetry siftopencv 8 " << std::endl;
 
     return regions;
   };
@@ -683,6 +679,443 @@ inline void AS_Photogrammetry_PrepareList(std::vector<QString> files, QString te
 }
 
 
+namespace openMVG {
+namespace sfm {
+
+/// Here a View description object that was used before OpenMVG v1.1
+/// This object is used in order to be able to load old project files.
+struct View_version_1
+{
+  std::string s_Img_path; // image path on disk
+  IndexT id_view; // Id of the view
+  IndexT id_intrinsic, id_pose; // Index of intrinsics and the pose
+  IndexT ui_width, ui_height; // image size
+
+  // Constructor (use unique index for the view_id)
+  View_version_1(
+    const std::string & sImgPath = "",
+    IndexT view_id = UndefinedIndexT,
+    IndexT intrinsic_id = UndefinedIndexT,
+    IndexT pose_id = UndefinedIndexT,
+    IndexT width = UndefinedIndexT, IndexT height = UndefinedIndexT)
+    :s_Img_path(sImgPath), id_view(view_id), id_intrinsic(intrinsic_id),
+    id_pose(pose_id), ui_width(width), ui_height(height)
+    {}
+
+  /**
+  * @brief Serialization in
+  * @param ar Archive
+  */
+  template <class Archive>
+  void LSMload( Archive & ar )
+  {
+    //Define a view with two string (base_path & basename)
+    std::string local_path = s_Img_path;
+    std::string filename = s_Img_path;
+
+    ar(cereal::make_nvp("local_path", local_path),
+       cereal::make_nvp("filename", filename),
+       cereal::make_nvp("width", ui_width),
+       cereal::make_nvp("height", ui_height),
+       cereal::make_nvp("id_view", id_view),
+       cereal::make_nvp("id_intrinsic", id_intrinsic),
+       cereal::make_nvp("id_pose", id_pose));
+
+    s_Img_path = stlplus::create_filespec(local_path, filename);
+  }
+};
+
+template <
+// JSONInputArchive/ ...
+typename archiveType
+>
+inline bool LSMLoad_Cereal(
+  SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part)
+{
+  const bool bBinary = stlplus::extension_part(filename) == "bin";
+
+  // List which part of the file must be considered
+  const bool b_views = (flags_part & VIEWS) == VIEWS;
+  const bool b_intrinsics = (flags_part & INTRINSICS) == INTRINSICS;
+  const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
+  const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
+
+
+  std::cout << "load views "<< b_views << " " << b_intrinsics << " " << filename.c_str() << std::endl;
+
+  //Create the stream and check it is ok
+  std::ifstream stream(filename.c_str(), std::ios::binary | std::ios::in);
+  if (!stream.is_open())
+    return false;
+
+  // Data serialization
+  try
+  {
+    archiveType archive(stream);
+
+    std::string version;
+    archive(cereal::make_nvp("sfm_data_version", version));
+    archive(cereal::make_nvp("root_path", data.s_root_path));
+
+    if (b_views)
+    {
+      if ( version >= "0.3" )
+      {
+        archive(cereal::make_nvp("views", data.views));
+      }
+      else // sfm_data version is < to v0.3 => Previous to OpenMVG v1.1
+      {
+        // It means that it use the View that does not support inheritance
+        using Views_v1 = Hash_Map<IndexT, std::shared_ptr<View_version_1>>;
+        Views_v1 views;
+        try
+        {
+
+            std::cout << "test1" << std::endl;
+
+          archive(cereal::make_nvp("views", views));
+          // Convert views to old to new format
+          for (const auto v_it : views)
+          {
+              std::cout << "view i " << std::endl;
+            data.views[v_it.first] =
+              std::make_shared<View>(
+                v_it.second->s_Img_path,
+                v_it.second->id_view,
+                v_it.second->id_intrinsic,
+                v_it.second->id_pose,
+                v_it.second->ui_width,
+                v_it.second->ui_height);
+          }
+        }
+        catch (cereal::Exception& e)
+        {
+          std::cerr << e.what() << std::endl;
+          stream.close();
+          return false;
+        }
+      }
+
+
+      std::cout << "data.views " << data.views.size() << std::endl;
+
+
+    }
+    else
+    {
+      if (bBinary)
+      {
+        // Binary file requires to read all the member,
+        // read in a temporary object since the data is not needed.
+        if ( version >= "0.3" )
+        {
+          Views views;
+          archive(cereal::make_nvp("views", views));
+        }
+        else // sfm_data version is < to v0.3 => Previous to OpenMVG v1.1
+        {
+          // It means that it use the View that does not support inheritance
+          using Views_v1 = Hash_Map<IndexT, std::shared_ptr<View_version_1>>;
+          Views_v1 views;
+          archive(cereal::make_nvp("views", views));
+        }
+      }
+    }
+    if (b_intrinsics)
+      archive(cereal::make_nvp("intrinsics", data.intrinsics));
+    else
+      if (bBinary)
+      {
+        // Binary file requires to read all the member,
+        // read in a temporary object since the data is not needed.
+        Intrinsics intrinsics;
+        archive(cereal::make_nvp("intrinsics", intrinsics));
+      }
+
+    if (b_extrinsics)
+      archive(cereal::make_nvp("extrinsics", data.poses));
+    else
+      if (bBinary)
+      {
+        // Binary file requires to read all the member,
+        // read in a temporary object since the data is not needed.
+        Poses poses;
+        archive(cereal::make_nvp("extrinsics", poses));
+      }
+
+    if (b_structure)
+      archive(cereal::make_nvp("structure", data.structure));
+    else
+      if (bBinary)
+      {
+        // Binary file requires to read all the member,
+        // read in a temporary object since the data is not needed.
+        Landmarks structure;
+        archive(cereal::make_nvp("structure", structure));
+      }
+
+    if (version != "0.1") // fast check to assert we are at least using version 0.2
+    {
+      if (b_control_point)
+        archive(cereal::make_nvp("control_points", data.control_points));
+      else
+        if (bBinary)
+        {
+          // Binary file requires to read all the member,
+          // read in a temporary object since the data is not needed.
+          Landmarks control_points;
+          archive(cereal::make_nvp("control_points", control_points));
+        }
+    }
+  }
+  catch (const cereal::Exception & e)
+  {
+    std::cerr << e.what() << std::endl;
+    stream.close();
+    return false;
+  }
+  stream.close();
+  return true;
+}
+
+template <
+// JSONOutputArchive/ ...
+typename archiveType
+>
+inline bool LSMSave_Cereal(
+  const SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part)
+{
+  // List which part of the file must be considered
+  const bool b_views = (flags_part & VIEWS) == VIEWS;
+  const bool b_intrinsics = (flags_part & INTRINSICS) == INTRINSICS;
+  const bool b_extrinsics = (flags_part & EXTRINSICS) == EXTRINSICS;
+  const bool b_structure = (flags_part & STRUCTURE) == STRUCTURE;
+  const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
+
+  //Create the stream and check it is ok
+  std::ofstream stream(filename.c_str(), std::ios::binary | std::ios::out);
+  if (!stream.is_open())
+    return false;
+
+  // Data serialization
+  {
+    archiveType archive(stream);
+    // since OpenMVG 0.9, the sfm_data version 0.2 is introduced
+    //  - it adds control_points storage
+    // since OpenMVG 1.1, the sfm_data version 0.3 is introduced
+    //  - it introduce polymorphic View data
+    const std::string version = "0.3";
+    archive(cereal::make_nvp("sfm_data_version", version));
+    archive(cereal::make_nvp("root_path", data.s_root_path));
+
+    if (b_views)
+      archive(cereal::make_nvp("views", data.views));
+    else
+      archive(cereal::make_nvp("views", Views()));
+
+    if (b_intrinsics)
+      archive(cereal::make_nvp("intrinsics", data.intrinsics));
+    else
+      archive(cereal::make_nvp("intrinsics", Intrinsics()));
+
+    if (b_extrinsics)
+      archive(cereal::make_nvp("extrinsics", data.poses));
+    else
+      archive(cereal::make_nvp("extrinsics", Poses()));
+
+    // Structure -> See for export in another file
+    if (b_structure)
+      archive(cereal::make_nvp("structure", data.structure));
+    else
+      archive(cereal::make_nvp("structure", Landmarks()));
+
+    if (version != "0.1") // fast check to assert we are at least using version 0.2
+    {
+      if (b_control_point)
+        archive(cereal::make_nvp("control_points", data.control_points));
+      else
+        archive(cereal::make_nvp("control_points", Landmarks()));
+    }
+  }
+
+  stream.close();
+  return true;
+}
+
+//
+// Explicit template instantiation
+//
+
+template bool LSMLoad_Cereal
+<cereal::BinaryInputArchive>
+(
+  SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMLoad_Cereal
+<cereal::PortableBinaryInputArchive>
+(
+  SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMLoad_Cereal
+<cereal::JSONInputArchive>
+(
+  SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMLoad_Cereal
+<cereal::XMLInputArchive>
+(
+  SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMSave_Cereal
+<cereal::BinaryOutputArchive>
+(
+  const SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMSave_Cereal
+<cereal::PortableBinaryOutputArchive>
+(
+  const SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMSave_Cereal
+<cereal::JSONOutputArchive>
+(
+  const SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+template bool LSMSave_Cereal
+<cereal::XMLOutputArchive>
+(
+  const SfM_Data & data,
+  const std::string & filename,
+  ESfM_Data flags_part
+);
+
+} // namespace sfm
+} // namespace openMVG
+
+
+
+///Check that each pose have a valid intrinsic and pose id in the existing View ids
+inline bool LSMValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
+{
+  const bool bCheck_Intrinsic = (flags_part & INTRINSICS) == INTRINSICS;
+  const bool bCheck_Extrinsic = (flags_part & EXTRINSICS) == EXTRINSICS;
+
+  std::set<IndexT> set_id_intrinsics;
+  transform(sfm_data.GetIntrinsics().begin(), sfm_data.GetIntrinsics().end(),
+    std::inserter(set_id_intrinsics, set_id_intrinsics.begin()), stl::RetrieveKey());
+
+  std::set<IndexT> set_id_extrinsics; //unique so can use a set
+  transform(sfm_data.GetPoses().begin(), sfm_data.GetPoses().end(),
+    std::inserter(set_id_extrinsics, set_id_extrinsics.begin()), stl::RetrieveKey());
+
+  // Collect existing id_intrinsic && id_extrinsic from views
+  std::set<IndexT> reallyDefined_id_intrinsics;
+  std::set<IndexT> reallyDefined_id_extrinsics;
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
+    iter != sfm_data.GetViews().end();
+    ++iter)
+  {
+    // If a pose is defined, at least the intrinsic must be valid,
+    // In order to generate a valid camera.
+    const IndexT id_pose = iter->second->id_pose;
+    const IndexT id_intrinsic = iter->second->id_intrinsic;
+
+    if (set_id_extrinsics.count(id_pose))
+      reallyDefined_id_extrinsics.insert(id_pose); //at least it exists
+
+    if (set_id_intrinsics.count(id_intrinsic))
+      reallyDefined_id_intrinsics.insert(id_intrinsic); //at least it exists
+  }
+  // Check if defined intrinsic & extrinsic are at least connected to views
+  bool bRet = true;
+  if (bCheck_Intrinsic)
+    bRet &= set_id_intrinsics.size() == reallyDefined_id_intrinsics.size();
+
+  if (bCheck_Extrinsic)
+    bRet &= set_id_extrinsics.size() == reallyDefined_id_extrinsics.size();
+
+  if (bRet == false)
+    std::cout << "There is orphan intrinsics data or poses (do not depend on any view)" << std::endl;
+
+  return bRet;
+}
+
+
+inline bool LSMLoad(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
+{
+  bool bStatus = false;
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    bStatus = LSMLoad_Cereal<cereal::JSONInputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "bin")
+    bStatus = LSMLoad_Cereal<cereal::PortableBinaryInputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "xml")
+    bStatus = LSMLoad_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
+  else
+  {
+    std::cerr << "Unknown sfm_data input format: " << ext << "file: " << filename << std::endl;
+    return false;
+  }
+
+  // Assert that loaded intrinsics | extrinsics are linked to valid view
+  if ( bStatus &&
+    (flags_part & VIEWS) == VIEWS && (
+    (flags_part & INTRINSICS) == INTRINSICS ||
+    (flags_part & EXTRINSICS) == EXTRINSICS))
+  {
+    return LSMValidIds(sfm_data, flags_part);
+  }
+  return bStatus;
+}
+
+inline bool LSMSave(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
+{
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    return LSMSave_Cereal<cereal::JSONOutputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "bin")
+    return LSMSave_Cereal<cereal::PortableBinaryOutputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "xml")
+    return LSMSave_Cereal<cereal::XMLOutputArchive>(sfm_data, filename, flags_part);
+  else if (ext == "ply")
+    return Save_PLY(sfm_data, filename, flags_part);
+  else if (ext == "baf") // Bundle Adjustment file
+    return Save_BAF(sfm_data, filename, flags_part);
+  else
+  {
+    std::cerr << "Unknown sfm_data export format: " << ext << std::endl;
+  }
+  return false;
+}
+
+
+
 inline void AS_Photogrammetry_FeatureCompute(QString temp_file, QString outputdir, QString method,  float threshold ,QString order)
 {
 
@@ -703,15 +1136,20 @@ inline void AS_Photogrammetry_FeatureCompute(QString temp_file, QString outputdi
          }
        }
 
+
     SfM_Data sfm_data;
-    if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+    if (!LSMLoad(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+        std::cout << "error"<< std::endl;
       LISEMS_ERROR("Can not load view listing at " + AS_DIR+ temp_file);
       throw 1;
     }
 
 
+
     using namespace openMVG::features;
     std::unique_ptr<Image_describer> image_describer;
+
+    std::cout << "load data 2" << &sfm_data  << std::endl;
 
     {
 
@@ -777,6 +1215,8 @@ inline void AS_Photogrammetry_FeatureCompute(QString temp_file, QString outputdi
 
     }
 
+
+
     std::atomic<bool> preemptive_exit(false);
 
     std::atomic<int> n;
@@ -794,6 +1234,7 @@ inline void AS_Photogrammetry_FeatureCompute(QString temp_file, QString outputdi
 
         if (!ReadImage(sView_filename.c_str(), &imageGray))
                   continue;
+
 
 
         if (!preemptive_exit)
@@ -816,11 +1257,12 @@ inline void AS_Photogrammetry_FeatureCompute(QString temp_file, QString outputdi
         LISEMS_STATUS("Image feature description generated (" + QString::number(n++) + "/" + QString::number(static_cast<int>(sfm_data.views.size())) + ")");
     }
 
+
 }
 
 
 
-inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir, QString geometrymodel)
+inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir, QString geometrymodel, QString MatchMethod)
 {
 
     std::string sMatchesDirectory = (AS_DIR + outputdir).toStdString();
@@ -828,7 +1270,7 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
     float fDistRatio = 0.8f;
     int iMatchingVideoMode = -1;
     std::string sPredefinedPairList = "";
-    std::string sNearestMatchingMethod = "AUTO";
+    std::string sNearestMatchingMethod = MatchMethod.toStdString();
     bool bForce = false;
     bool bGuided_matching = false;
     int imax_iteration = 2048;
@@ -876,7 +1318,7 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
       }
 
       SfM_Data sfm_data;
-      if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+      if (!LSMLoad(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
         LISEMS_ERROR("Can not load view listing at " + AS_DIR+ temp_file);
         throw 1;
       }
@@ -1035,6 +1477,8 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
                 throw 1;
             }
 
+            std::cout << "test a " << std::endl;
+
             const double d_distance_ratio = 0.6;
 
             PairWiseMatches map_GeometricMatches;
@@ -1052,6 +1496,7 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
                   break;
                   case FUNDAMENTAL_MATRIX:
                   {
+
                     filter_ptr->Robust_model_estimation(
                       GeometricFilter_FMatrix_AC(4.0, imax_iteration),
                       map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
@@ -1109,8 +1554,6 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
                   }
                   break;
                 }
-
-
 
                     if (!Save(map_GeometricMatches,
                           std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename)))
@@ -1202,7 +1645,7 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
 
     // Load input SfM_Data scene
       SfM_Data sfm_data;
-      if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+      if (!LSMLoad(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
           LISEMS_ERROR("Can not load view listing at " + AS_DIR+ file_temp);
           throw 1;
       }
@@ -1216,6 +1659,7 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
             throw 1;
         }
 
+        std::cout << "read features "<< std::endl;
 
         // Features reading
           std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
@@ -1236,6 +1680,7 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
               throw 1;
           }
 
+          std::cout << "initialize scene "<< std::endl;
           ESfMSceneInitializer scene_initializer_enum = ESfMSceneInitializer::INITIALIZE_MAX_PAIR;
 
 
@@ -1291,17 +1736,19 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
             sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(resection_method));
 
 
+            std::cout << "processes " << std::endl;
 
-            if (sfmEngine.Process())
+            if (sfmEngine.LSMProcess())
             {
+                std::cout << "processing done " << std::endl;
               Generate_SfM_Report(sfmEngine.Get_SfM_Data(),
                 stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
 
-              Save(sfmEngine.Get_SfM_Data(),
+              LSMSave(sfmEngine.Get_SfM_Data(),
                 stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
                 ESfM_Data(ALL));
 
-              Save(sfmEngine.Get_SfM_Data(),
+              LSMSave(sfmEngine.Get_SfM_Data(),
                 stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
                 ESfM_Data(ALL));
 

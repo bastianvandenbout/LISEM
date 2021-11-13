@@ -1,6 +1,33 @@
 #ifndef CLABEL_H
 #define CLABEL_H
 #include "qlabel.h"
+#include "QStackedWidget"
+#include "QLineEdit"
+
+class EditLabel : public QStackedWidget
+{
+public:
+    QLabel * m_Label;
+    QLineEdit * m_LineEdit;
+
+    inline EditLabel() : QStackedWidget()
+    {
+
+        m_Label = new QLabel();
+        m_LineEdit = new QLineEdit();
+
+        addWidget(m_Label);
+        addWidget(m_LineEdit);
+        setCurrentWidget(m_Label);
+
+    }
+
+
+
+
+
+
+};
 
 class CLabel : public QLabel {
     Q_OBJECT

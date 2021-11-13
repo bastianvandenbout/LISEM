@@ -43,6 +43,7 @@
 #include "raster/rasterseismic.h"
 #include "raster/rasterprofile.h"
 #include "raster/rasterdeformation.h"
+#include "raster/rasterunwrap.h"
 
 inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 {
@@ -114,12 +115,15 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("int RasterEstimateEndmemberCount(array<Map> &in source, string method = \"HFC-VD\")", asFUNCTIONPRCONV( AS_SpectralEndmemberEstimate,(std::vector<cTMap*>,QString),int),  asCALL_CDECL);
     r = engine->RegisterGlobalSTDFunction("array<array<float>> @RasterVCA(array<Map> &in source, int count)", asFUNCTIONPRCONV( AS_SpectralVCA,(std::vector<cTMap*>,int),std::vector<std::vector<float>>),  asCALL_CDECL);
 
+    r = engine->RegisterGlobalSTDFunction("Map @Unwrap(const Map &in source)", asFUNCTIONPRCONV( AS_Unwrap2D,(cTMap *),cTMap *),  asCALL_CDECL);
+
+
 
     //Photogrammetry code
 
     r = engine->RegisterGlobalSTDFunction("void PhotogrammetryListPrepare(array<string> &in files,string listfile =\"photogrammetry_list.txt\",double focal_pixels = -1.0,bool use_pos = false)", asFUNCTIONPRCONV( AS_Photogrammetry_PrepareList,(std::vector<QString>,QString,double,bool),void),  asCALL_CDECL);
     r = engine->RegisterGlobalFunction("void PhotogrammetryFeatureCompute(string listfile =\"photogrammetry_list.txt\", string outputdir = \"temp_phtgrm\",string method = \"SIFT\", float threshold = 1.0, string order = \"HIGH\")", asFUNCTIONPR( AS_Photogrammetry_FeatureCompute,(QString,QString,QString,float,QString),void),  asCALL_CDECL);
-    r = engine->RegisterGlobalFunction("void PhotogrammetryFeatureMatch(string listfile, string outputdir = \"temp_phtgrm\", string geometrymodel = \"f\")", asFUNCTIONPR( AS_Photogrammetry_FeatureMatch,(QString,QString,QString),void),  asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("void PhotogrammetryFeatureMatch(string listfile, string outputdir = \"temp_phtgrm\", string geometrymodel = \"f\", string method = \"AUTO\")", asFUNCTIONPR( AS_Photogrammetry_FeatureMatch,(QString,QString,QString,QString),void),  asCALL_CDECL);
     r = engine->RegisterGlobalFunction("void PhotogrammetryStructureCompute(string listfile, string outputdir =\"temp_phtgrm\")",asFUNCTIONPR( AS_Photogrammetry_IncrementalSFM,(QString,QString),void),  asCALL_CDECL);
     r = engine->RegisterGlobalSTDFunction("void PhotogrammetryRegister(array<vec3> &in gcp, array<string> &in image1, array<vec2> &in image1_pos, array<string> &in image2, array<vec2> &in image2_pos, string listfile =\"photogrammetry_list.txt\",string outputdir =\"temp_phtgrm\")",asFUNCTIONPRCONV( AS_Photogrammetry_Register,(std::vector<LSMVector3>,std::vector<QString>,std::vector<LSMVector2>,std::vector<QString>,std::vector<LSMVector2>,QString, QString),void),  asCALL_CDECL);
     r = engine->RegisterGlobalFunction("void PhotogrammetryDensify(string outputdir =\"temp_phtgrm\")",asFUNCTIONPR( AS_PhotogrammetryDensifyPointCloud,(QString),void),  asCALL_CDECL);
@@ -206,6 +210,7 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityISS(const Map & in elevation, const Map &in SoilDepth, const Map &in Cohesion, const Map&in InternalFrictionAngle, const Map &in Density, const Map&in WaterHeight, const Map&in PGA, float sfmax)", GetFuncConvert(AS_SlopeStabilityISS));
 
     engine->RegisterGlobalSTDFunction("array<Map> @SlopeStabilityRES(const Map & in elevation, const array<Map> &in SoilDepth, const array<Map> &in Cohesion, const array<Map> &in InternalFrictionAngle, const array<Map> &in Density, const array<Map> &in Saturation, const Map&in WaterHeight, float sample_density, float h_min, float h_max, float size_min, float size_max, float size_lat_min, float size_lat_max, float size_vert_min, float size_vert_max, float rot_min, float rot_max, float rot_lat_min, float rot_lat_max, float vol_min)",GetFuncConvert(AS_SlopeStabilityRES));
+    engine->RegisterGlobalSTDFunction("array<array<Map>> @SlopeStabilityRESAll(const Map & in elevation, const array<Map> &in SoilDepth, const array<Map> &in Cohesion, const array<Map> &in InternalFrictionAngle, const array<Map> &in Density, const array<Map> &in Saturation, const Map&in WaterHeight, float sample_density, float h_min, float h_max, float size_min, float size_max, float size_lat_min, float size_lat_max, float size_vert_min, float size_vert_max, float rot_min, float rot_max, float rot_lat_min, float rot_lat_max, float vol_min)",GetFuncConvert(AS_SlopeStabilityRESAll));
 
     engine->RegisterGlobalFunction("Map @TerrainErode(const Map &in DEM, float p_erode, float p_deposit, float p_gravity, float p_tc, float p_evapo, float p_intertia, float p_minslope, float radius)", asFUNCTION(AS_LandscapeErode),asCALL_CDECL);
     //vector stuff

@@ -13,8 +13,128 @@
 #include "raster/rasternetwork.h"
 
 
+
+namespace cv
+{
+namespace dnn_superres
+{
+
+/** @brief Class for importing DepthToSpace layer from the ESPCN model
+*/
+class DepthToSpace CV_FINAL : public cv::dnn::Layer
+{
+public:
+    DepthToSpace(const cv::dnn::LayerParams &params);
+
+    static cv::Ptr<cv::dnn::Layer> create(cv::dnn::LayerParams& params);
+
+    virtual bool getMemoryShapes(const std::vector<std::vector<int> > &inputs,
+                                 const int,
+                                 std::vector<std::vector<int> > &outputs,
+                                 std::vector<std::vector<int> > &) const CV_OVERRIDE;
+
+    virtual void forward(cv::InputArrayOfArrays inputs_arr,
+                         cv::OutputArrayOfArrays outputs_arr,
+                         cv::OutputArrayOfArrays) CV_OVERRIDE;
+
+    /// Register this layer
+    static void registerLayer()
+    {
+        static bool initialized = false;
+        if (!initialized)
+        {
+            //Register custom layer that implements pixel shuffling
+            std::string name = "DepthToSpace";
+            dnn::LayerParams layerParams = dnn::LayerParams();
+            cv::dnn::LayerFactory::registerLayer("DepthToSpace", DepthToSpace::create);
+            initialized = true;
+        }
+    }
+};
+
+inline DepthToSpace::DepthToSpace(const cv::dnn::LayerParams &params) : Layer(params)
+{
+}
+
+inline cv::Ptr<cv::dnn::Layer> DepthToSpace::create(cv::dnn::LayerParams &params)
+{
+    return cv::Ptr<cv::dnn::Layer>(new DepthToSpace(params));
+}
+
+inline bool DepthToSpace::getMemoryShapes(const std::vector <std::vector<int>> &inputs,
+        const int, std::vector <std::vector<int>> &outputs, std::vector <std::vector<int>> &) const
+{
+    std::vector<int> outShape(4);
+
+    int scale;
+    if( inputs[0][1] == 4 || inputs[0][1] == 9 || inputs[0][1] == 16 ) //Only one image channel
+    {
+        scale = static_cast<int>(sqrt(inputs[0][1]));
+    }
+    else // Three image channels
+    {
+        scale = static_cast<int>(sqrt(inputs[0][1]/3));
+    }
+
+    outShape[0] = inputs[0][0];
+    outShape[1] = static_cast<int>(inputs[0][1] / pow(scale,2));
+    outShape[2] = static_cast<int>(scale * inputs[0][2]);
+    outShape[3] = static_cast<int>(scale * inputs[0][3]);
+
+    outputs.assign(4, outShape);
+
+    return false;
+}
+
+inline void DepthToSpace::forward(cv::InputArrayOfArrays inputs_arr, cv::OutputArrayOfArrays outputs_arr,
+    cv::OutputArrayOfArrays)
+{
+    std::vector <cv::Mat> inputs, outputs;
+    inputs_arr.getMatVector(inputs);
+    outputs_arr.getMatVector(outputs);
+    cv::Mat &inp = inputs[0];
+    cv::Mat &out = outputs[0];
+    const float *inpData = (float *) inp.data;
+    float *outData = (float *) out.data;
+
+    const int inpHeight = inp.size[2];
+    const int inpWidth = inp.size[3];
+
+    const int numChannels = out.size[1];
+    const int outHeight = out.size[2];
+    const int outWidth = out.size[3];
+
+    int scale = int(outHeight / inpHeight);
+    int count = 0;
+
+    for (int ch = 0; ch < numChannels; ch++)
+    {
+        for (int y = 0; y < outHeight; y++)
+        {
+            for (int x = 0; x < outWidth; x++)
+            {
+                int x_coord = static_cast<int>(floor((y / scale)));
+                int y_coord = static_cast<int>(floor((x / scale)));
+                int c_coord = numChannels * scale * (y % scale) + numChannels * (x % scale) + ch;
+
+                int index = (((c_coord * inpHeight) + x_coord) * inpWidth) + y_coord;
+
+                outData[count++] = inpData[index];
+            }
+        }
+    }
+}
+
+}
+
+}
+
+
+
 inline std::vector<cTMap *> ApplyMLBModel(std::vector<cTMap *> Maps, QString modelpath, int patchsize_x, int patchsize_y, std::vector<int> inputorder, bool fill = false)
 {
+
+    cv::dnn_superres::DepthToSpace::registerLayer();
 
     if(patchsize_x <= 0 || patchsize_y <= 0)
     {

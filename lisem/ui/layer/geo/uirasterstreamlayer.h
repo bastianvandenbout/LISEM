@@ -217,6 +217,7 @@ private:
     int m_CurrentTime = 0;
     int m_CurrentTimeIndex = 0;
     bool m_DataHasChanged = false;
+    bool m_HasDoneDraw = false;
 
     bool m_HasbeenChangedByScript = false;
 
@@ -240,6 +241,11 @@ private:
 
 
     QList<BoundingBox> m_DataEdits;
+
+
+    QMutex m_RedrawNeedMutex;
+    bool m_RedrawNeeded;
+
 
 public:
 
@@ -313,7 +319,6 @@ public:
 
         m_Style.m_Bands = map->GetBandCount();
 
-        std::cout << "set num bands " << m_Style.m_Bands << std::endl;
         if(map->IsDuoMap())
         {
             m_Style.m_HasDuoBand = true;
@@ -377,17 +382,14 @@ public:
         {
             if(m_RDP->HasTime()  && (m_RDP->GetTimes().length() > 0))
             {
-                std::cout << "has time " << m_RDP->GetTimes().length() << std::endl;
                 if(maps.length() != m_RDP->GetTimes().length())
                 {
-                    std::cout << "no direct replace due to timing1" << std::endl;
                     return false;
                 }
             }else
             {
                 if(maps.length() > 1)
                 {
-                    std::cout << "no direct replace due to timing2" << std::endl;
                     return false;
                 }
             }
@@ -396,7 +398,6 @@ public:
             {
                 if(maps.at(i).length() != maps.at(i).length())
                 {
-                    std::cout << "no direct replace due to bands" << std::endl;
                     return false;
                 }
                 for(int j = 0; j < maps.at(i).length(); j++)
@@ -405,14 +406,10 @@ public:
                     cTMap * m = m_RDP->GetMemoryMap(i,j);
                     if(m->nrRows() != maps.at(i).at(j)->nrRows())
                     {
-
-                        std::cout << "no direct replace due to rows " <<  m->nrRows() << " " << maps.at(i).at(j)->nrRows() << std::endl;
                         return false;
                     }
                     if(m->nrCols() != maps.at(i).at(j)->nrCols())
                     {
-
-                        std::cout << "no direct replace due to cols" <<  m->nrCols() << " " << maps.at(i).at(j)->nrCols() <<  std::endl;
                         return false;
                     }
                 }
@@ -424,7 +421,6 @@ public:
     }
     inline void DirectReplace(QList<QList<cTMap *>> maps)
     {
-        std::cout << "doing direct replace " << std::endl;
         RasterDataProvider * RDP = new RasterDataProvider(maps,false,true);
         if(m_RDP != nullptr)
         {
@@ -576,7 +572,6 @@ public:
             QJsonValue sval = (*obj)["Style"];
             if(sval.isObject() && !sval.isUndefined())
             {
-                std::cout << "layer restore 2" << std::endl;
 
                 LSMStyle st;
                 QJsonObject o =sval.toObject();
@@ -789,6 +784,8 @@ public:
             //check if the stream buffer is available for this geowindowstate
             RasterStreamBuffer * rsb = nullptr;
 
+            //std::cout << "data has changed ?" << m_DataHasChanged << " " << Buffers.length() << std::endl;
+
             bool unloaded_exists = false;
             if(!m_DataHasChanged)
             {
@@ -799,6 +796,7 @@ public:
 
                     //check if this buffer is good in terms of pixels
 
+                    //std::cout << "check " << i << " " << rsb_i->bufferused << " " << rsb_i->rRead_Started << " " << band << " " <<  rsb_i->band << std::endl;
 
                     rsb_i->m_SignMutex->lock();
 
@@ -822,9 +820,9 @@ public:
                                 BoundingBox b2 = BoundingBox(rsb_i->tlx,rsb_i->brx, rsb_i->tly ,rsb_i->bry);
                                 BoundingBox b3 = b1;
                                 b3.And(b2);
-                                //std::cout  << std::setprecision(10) << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " "  << bfinal.GetMaxY() << std::endl;
-                                //std::cout  << std::setprecision(10) << rsb_i->tlx << " " << rsb_i->brx << " " << rsb_i->tly << " "  << rsb_i->bry << std::endl;
-                                //std::cout  << std::setprecision(10) << b3.GetMinX() << " " << b3.GetMaxX() << " " << b3.GetMinY() << " "  << b3.GetMaxY() << std::endl;
+                                std::cout  << std::setprecision(10) << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " "  << bfinal.GetMaxY() << std::endl;
+                                std::cout  << std::setprecision(10) << rsb_i->tlx << " " << rsb_i->brx << " " << rsb_i->tly << " "  << rsb_i->bry << std::endl;
+                                std::cout  << std::setprecision(10) << b3.GetMinX() << " " << b3.GetMaxX() << " " << b3.GetMinY() << " "  << b3.GetMaxY() << std::endl;
 
                                 //std::cout << b1.GetArea() << " " << b3.GetArea() << " " << !(bfinal.GetMinX() < rsb_i->tlx) << " " << (b3.GetArea() / b1.GetArea())<< std::endl;
                                 //!(bfinal.GetMinX() < rsb_i->tlx) && !(bfinal.GetMinY() < rsb_i->tly) && !(bfinal.GetMaxX() > rsb_i->brx) && !(bfinal.GetMaxY() > rsb_i->bry)
@@ -832,7 +830,7 @@ public:
                                 if(b1.GetArea() > 1e-12)
                                 {
                                     //is it inside?
-                                    if((b3.GetArea() / b1.GetArea()) > 0.995)
+                                    if((b3.GetArea() / b1.GetArea()) > 0.95)
                                     {
 
                                         //std::cout << "check4 " <<  std::endl;
@@ -869,7 +867,7 @@ public:
                                             {
                                                 //std::cout << "found " <<  std::endl;
 
-                                               //std::cout << "found buffer" << std::endl;
+                                                //std::cout << "found buffer" << std::endl;
                                                 rsb = rsb_i;
                                                 rsb_i->m_SignMutex->unlock();
 
@@ -969,7 +967,7 @@ public:
                 //make new one
                 if(rsb == nullptr)
                 {
-                    std::cout << "create  buffer " << std::endl;
+                    //std::cout << "create  buffer " << std::endl;
                     //create new buffer object
 
 
@@ -1007,7 +1005,7 @@ public:
                             rsb->m_SignMutex->unlock();
 
 
-                            //std::cout << "read values pre " << std::endl;
+                            //std::cout << "read values pre " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
                             m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex,[this, rsb,bfinal,band]()
                             {
 
@@ -1020,6 +1018,13 @@ public:
                                 rsb->write_done = true;
                                 rsb->update_gpu = true;
                                 rsb->m_SignMutex->unlock();
+
+                                m_RedrawNeedMutex.lock();
+
+                                m_RedrawNeeded = true;
+
+                                m_RedrawNeedMutex.unlock();
+
 
                             });
                         };
@@ -1045,6 +1050,7 @@ public:
 
             rsb->m_SignMutex->lock();
 
+            //std::cout << "set buffer used true"<< std::endl;
             rsb->bufferused = true;
 
             rsb->m_SignMutex->unlock();
@@ -1065,13 +1071,9 @@ public:
 
     void Draw_Raster(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm,bool raw_value, float zscale = 1.0f)
     {
-
-        std::cout << "timeseries test 1 " << std::endl;
-        std::cout << "timeseries test 2 " << this->GetProjection().IsGeneric() << std::endl;
-        std::cout << "timeseries test 3 " << state.projection.IsGeneric() << std::endl;
+        m_HasDoneDraw = true;
 
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
-        std::cout << "timeseries test 4 " << gltransform <<  std::endl;
         LSMStyle s = GetStyle();
         BoundingBox bb = GetBoundingBox();
 
@@ -2380,6 +2382,7 @@ public:
 
     virtual void OnDrawGeoElevation(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
     {
+        m_HasDoneDraw = true;
         LSMStyle style = GetStyle();
 
         if(style.m_IsSurface && this->CouldBeDEM())
@@ -2391,6 +2394,7 @@ public:
 
     inline void OnDraw3DTransparentLayer(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
     {
+        m_HasDoneDraw = true;
 
         //is this a raster that acts as a seperate surface layer (value indicates density of objects)
         //in case of transparancy, we need a double pass that provides us with an indication of the depth of the closest surface fragment
@@ -2595,6 +2599,7 @@ public:
 
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
     {
+        m_HasDoneDraw = true;
         LSMStyle style = GetStyle();
 
         if(style.m_IsSurface && this->CouldBeDEM())
@@ -2606,6 +2611,15 @@ public:
 
     inline void CheckDeleteFromBuffers(OpenGLCLManager * m,QList<RasterStreamBuffer *> &list)
     {
+        if(!m_HasDoneDraw)
+        {
+            //std::cout << "return from delete buffers " << std::endl;
+            return;
+        }else
+        {
+            m_HasDoneDraw = false;
+        }
+        //std::cout << "set all buffers as non-used " << std::endl;
         for(int i = list.length()-1; i >-1 ; i--)
         {
             RasterStreamBuffer * rsb_i =  list.at(i);
@@ -2622,6 +2636,7 @@ public:
                 if(rsb_i->write_done == true && !rsb_i->rRead_Started && !rsb_i->update_gpu)
                 {
 
+                    //std::cout << "delete rsb " << std::endl;
                     rsb_i->m_MapMutex->lock();
                     rsb_i->m_MapMutex->unlock();
                     rsb_i->Destroy(m);
@@ -2664,9 +2679,22 @@ public:
                     delete rsb_i;
                 }
             }
-
         }
     }
+
+    inline bool RequiresDraw(GeoWindowState s)
+    {
+        //we assume that if we indicate a redras is needed, its definately going to happen
+
+        bool ret = false;
+        m_RedrawNeedMutex.lock();
+        ret = m_RedrawNeeded;
+        m_RedrawNeeded = false;
+        m_RedrawNeedMutex.unlock();
+
+        return ret;
+    }
+
 
     inline void OnDraw(OpenGLCLManager * m,GeoWindowState s) override
     {
@@ -2692,10 +2720,14 @@ public:
         CheckDeleteFromBuffers(m,m_Buffersg);
         CheckDeleteFromBuffers(m,m_Buffersb);
 
+
+        m_HasDoneDraw = false;
+
         if(m_RDP->IsNative())
         {
             m_RDP->UpdateBandStats();
         }
+
     }
 
     inline void CreateGLTextures(OpenGLCLManager * m,GeoWindowState s)

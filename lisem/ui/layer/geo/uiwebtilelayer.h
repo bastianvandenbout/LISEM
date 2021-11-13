@@ -324,6 +324,9 @@ private:
     int64_t time_ms_detailtile = 0;
 
     QMutex m_TileMutex;
+    QMutex m_RedrawNeededMutex;
+    bool m_RedrawNeeded = false;
+    bool m_HasDoneDraw = false;
 
     DownloadManager * m_DownloadManager;
 
@@ -480,7 +483,11 @@ public:
         }
         inline void OnDownloadFinished(DownloadTask * dl)
         {
-            std::cout << "download done:  "<< dl->Url.toStdString() << std::endl;
+
+
+            m_RedrawNeededMutex.lock();
+            m_RedrawNeeded = true;
+            m_RedrawNeededMutex.unlock();
 
             if(QNetworkReply::NetworkError::NoError == dl->Download->error())
             {
@@ -1390,6 +1397,8 @@ public:
 
         inline void OnDrawGeoElevation(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
         {
+            m_HasDoneDraw = true;
+
             if(IsDraw())
             {
                 int z = GetRequiredTiles(s,tm);
@@ -1399,183 +1408,214 @@ public:
 
         inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm) override
         {
+
+            m_HasDoneDraw = true;
+
             if(IsDraw() && !IsDrawAsDEM())
                 {
                     int z = GetRequiredTiles(state,tm);
                     UpdateMap(m,state, tm,z);
                 }
-
         }
+
+        inline bool RequiresDraw(GeoWindowState s)
+        {
+            //we assume that if we indicate a redras is needed, its definately going to happen
+
+            bool ret = false;
+            m_RedrawNeededMutex.lock();
+            ret = m_RedrawNeeded;
+            m_RedrawNeeded = false;
+            m_RedrawNeededMutex.unlock();
+
+            return ret;
+        }
+
 
         inline void OnDraw(OpenGLCLManager * m,GeoWindowState s) override
         {
-            m_TileMutex.lock();
-            int n_in = 0;
-            for(int i = m_RequiredTiles.length()-1; i> 0; i--)
+
+
+
+            if(!m_HasDoneDraw)
             {
-                if(!m_RequiredTiles.at(i).is_in)
-                {
-                    TileInfo ti = m_RequiredTiles.at(i);
 
-
-                    //cleanup of ti
-                    if(!ti.is_done)
-                    {
-                        //m_RequiredTiles.removeAt(i);
-                        //m_RequiresTileRedraw = true;
-                        //m_DownloadManager->StopDownload(ti.download);
-                    }else
-                    {
-                        std::cout << "delete without cleanup" << std::endl;
-                        if(ti.is_done)
-                        {
-                            delete[] ti.red;
-                            delete[] ti.green;
-                            delete[] ti.blue;
-                            ti.red = nullptr;
-                            ti.green = nullptr;
-                            ti.blue = nullptr;
-                            if(this->m_TileServerInfo.m_IsTiff)
-                            {
-                                delete ti.TifMap;
-                                ti.TifMap = nullptr;
-                            }else
-                            {
-                                delete ti.PixMap;
-                                ti.PixMap = nullptr;
-                            }
-                            if(ti.Image != nullptr)
-                            {
-                                delete ti.Image;
-                                ti.Image = nullptr;
-                            }
-                            if(ti.is_gl_created)
-                            {
-                                m_TextureCache.append(ti.T_R);
-                                m_TextureCache.append(ti.T_G);
-                                m_TextureCache.append(ti.T_B);
-                                ti.T_R = nullptr;
-                                ti.T_G = nullptr;
-                                ti.T_B = nullptr;
-                            }
-                            if(ti.download != nullptr)
-                            {
-                                if(ti.download->Download != nullptr)
-                                {
-                                    ti.download->Download->deleteLater();
-                                    ti.download = nullptr;
-                                }
-                            }
-                        }else {
-                            if(ti.download->Download != nullptr)
-                            {
-                                m_DownloadManager->StopDownload(ti.download);
-                                delete ti.download;
-                                ti.download = nullptr;
-                            }
-                        }
-                        m_RequiredTiles.removeAt(i);
-                    }
-                }
-
-            }
-            for(int i = m_RequiredTiles.length()-1; i> m_TileServerInfo.m_cache_size; i--)
+            }else
             {
-                if(m_RequiredTiles.at(i).is_in)
-                {
-                    n_in ++;
-                }
-            }
 
-            for(int i = m_RequiredTiles.length()-1; i> 0; i--)
-            {
-                if(i > n_in + m_TileServerInfo.m_cache_size)
+                m_HasDoneDraw = false;
+                m_TileMutex.lock();
+
+                int n_in = 0;
+                for(int i = m_RequiredTiles.length()-1; i> 0; i--)
                 {
-                    //check if this tile is no longer needed anymore
-                    //if so, we either remove or add to cache
                     if(!m_RequiredTiles.at(i).is_in)
                     {
                         TileInfo ti = m_RequiredTiles.at(i);
 
-                        std::cout << "cleanup tile " << std::endl;
+
                         //cleanup of ti
-                        if(ti.is_done)
+                        if(!ti.is_done)
                         {
-                            delete[] ti.red;
-                            delete[] ti.green;
-                            delete[] ti.blue;
-                            ti.red = nullptr;
-                            ti.green = nullptr;
-                            ti.blue = nullptr;
-                            if(this->m_TileServerInfo.m_IsTiff)
+                            //m_RequiredTiles.removeAt(i);
+                            //m_RequiresTileRedraw = true;
+                            //m_DownloadManager->StopDownload(ti.download);
+                        }else
+                        {
+                            std::cout << "delete without cleanup" << std::endl;
+                            if(ti.is_done)
                             {
-                                delete ti.TifMap;
-                                ti.TifMap = nullptr;
-                            }else
-                            {
-                                delete ti.PixMap;
-                                ti.PixMap = nullptr;
-                            }
-                            if(ti.Image != nullptr)
-                            {
-                                delete ti.Image;
-                                ti.Image = nullptr;
-                            }
-                            if(ti.is_gl_created)
-                            {
-                                m_TextureCache.append(ti.T_R);
-                                m_TextureCache.append(ti.T_G);
-                                m_TextureCache.append(ti.T_B);
-                                ti.T_R = nullptr;
-                                ti.T_G = nullptr;
-                                ti.T_B = nullptr;
-                            }
-                            if(ti.download != nullptr)
-                            {
+                                delete[] ti.red;
+                                delete[] ti.green;
+                                delete[] ti.blue;
+                                ti.red = nullptr;
+                                ti.green = nullptr;
+                                ti.blue = nullptr;
+                                if(this->m_TileServerInfo.m_IsTiff)
+                                {
+                                    delete ti.TifMap;
+                                    ti.TifMap = nullptr;
+                                }else
+                                {
+                                    delete ti.PixMap;
+                                    ti.PixMap = nullptr;
+                                }
+                                if(ti.Image != nullptr)
+                                {
+                                    delete ti.Image;
+                                    ti.Image = nullptr;
+                                }
+                                if(ti.is_gl_created)
+                                {
+                                    m_TextureCache.append(ti.T_R);
+                                    m_TextureCache.append(ti.T_G);
+                                    m_TextureCache.append(ti.T_B);
+                                    ti.T_R = nullptr;
+                                    ti.T_G = nullptr;
+                                    ti.T_B = nullptr;
+                                }
+                                if(ti.download != nullptr)
+                                {
+                                    if(ti.download->Download != nullptr)
+                                    {
+                                        ti.download->Download->deleteLater();
+                                        ti.download = nullptr;
+                                    }
+                                }
+                            }else {
                                 if(ti.download->Download != nullptr)
                                 {
-                                    ti.download->Download->deleteLater();
+                                    m_DownloadManager->StopDownload(ti.download);
+                                    delete ti.download;
                                     ti.download = nullptr;
                                 }
                             }
-                        }else {
-                            if(ti.download->Download != nullptr)
-                            {
-                                m_DownloadManager->StopDownload(ti.download);
-                                delete ti.download;
-                                ti.download = nullptr;
-                            }
+                            m_RequiredTiles.removeAt(i);
                         }
-
-                        m_RequiredTiles.removeAt(i);
-                        m_RequiresTileRedraw = true;
                     }
-                }else if(!m_RequiredTiles.at(i).is_in)
-                    {
-                        TileInfo ti = m_RequiredTiles.at(i);
 
-                        /*if(ti.is_gl_created)
-                        {
-                            ti.is_gl_created = false;
-                                m_TextureCache.append(ti.T_R);
-                                m_TextureCache.append(ti.T_G);
-                                m_TextureCache.append(ti.T_B);
-                                ti.T_R = nullptr;
-                                ti.T_G = nullptr;
-                                ti.T_B = nullptr;
-                            m_RequiredTiles.replace(i,ti);
-                        }*/
+                }
+                for(int i = m_RequiredTiles.length()-1; i> m_TileServerInfo.m_cache_size; i--)
+                {
+                    if(m_RequiredTiles.at(i).is_in)
+                    {
+                        n_in ++;
+                    }
                 }
 
+                for(int i = m_RequiredTiles.length()-1; i> 0; i--)
+                {
+                    if(i > n_in + m_TileServerInfo.m_cache_size)
+                    {
+                        //check if this tile is no longer needed anymore
+                        //if so, we either remove or add to cache
+                        if(!m_RequiredTiles.at(i).is_in)
+                        {
+                            TileInfo ti = m_RequiredTiles.at(i);
+
+                            std::cout << "cleanup tile " << std::endl;
+                            //cleanup of ti
+                            if(ti.is_done)
+                            {
+                                delete[] ti.red;
+                                delete[] ti.green;
+                                delete[] ti.blue;
+                                ti.red = nullptr;
+                                ti.green = nullptr;
+                                ti.blue = nullptr;
+                                if(this->m_TileServerInfo.m_IsTiff)
+                                {
+                                    delete ti.TifMap;
+                                    ti.TifMap = nullptr;
+                                }else
+                                {
+                                    delete ti.PixMap;
+                                    ti.PixMap = nullptr;
+                                }
+                                if(ti.Image != nullptr)
+                                {
+                                    delete ti.Image;
+                                    ti.Image = nullptr;
+                                }
+                                if(ti.is_gl_created)
+                                {
+                                    m_TextureCache.append(ti.T_R);
+                                    m_TextureCache.append(ti.T_G);
+                                    m_TextureCache.append(ti.T_B);
+                                    ti.T_R = nullptr;
+                                    ti.T_G = nullptr;
+                                    ti.T_B = nullptr;
+                                }
+                                if(ti.download != nullptr)
+                                {
+                                    if(ti.download->Download != nullptr)
+                                    {
+                                        ti.download->Download->deleteLater();
+                                        ti.download = nullptr;
+                                    }
+                                }
+                            }else {
+                                if(ti.download->Download != nullptr)
+                                {
+                                    m_DownloadManager->StopDownload(ti.download);
+                                    delete ti.download;
+                                    ti.download = nullptr;
+                                }
+                            }
+
+                            m_RequiredTiles.removeAt(i);
+                            m_RequiresTileRedraw = true;
+                        }
+                    }else if(!m_RequiredTiles.at(i).is_in)
+                        {
+                            TileInfo ti = m_RequiredTiles.at(i);
+
+                            /*if(ti.is_gl_created)
+                            {
+                                ti.is_gl_created = false;
+                                    m_TextureCache.append(ti.T_R);
+                                    m_TextureCache.append(ti.T_G);
+                                    m_TextureCache.append(ti.T_B);
+                                    ti.T_R = nullptr;
+                                    ti.T_G = nullptr;
+                                    ti.T_B = nullptr;
+                                m_RequiredTiles.replace(i,ti);
+                            }*/
+                    }
+
+                }
+                for(int i = m_RequiredTiles.length()-1; i >0; i--)
+                {
+                    TileInfo ti = m_RequiredTiles.at(i);
+                    ti.is_in = false;
+                    ti.is_in_current = false;
+                    m_RequiredTiles.replace(i,ti);
+                }
+
+                m_TileMutex.unlock();
+
             }
-            for(int i = m_RequiredTiles.length()-1; i >0; i--)
-            {
-                TileInfo ti = m_RequiredTiles.at(i);
-                ti.is_in = false;
-                ti.is_in_current = false;
-                m_RequiredTiles.replace(i,ti);
-            }
-            m_TileMutex.unlock();
+
         }
 
         inline bool GetDetailedElevationAtPosition(LSMVector2 pos,  GeoProjection proj, float & val) override

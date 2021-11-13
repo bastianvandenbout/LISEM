@@ -478,11 +478,17 @@ public:
     }
 
 
-    inline void DrawLine3D(LSMVector3 p0, LSMVector3 p1, LSMVector3 CameraPosition, float width, LSMVector4 color, LSMMatrix4x4 cameramatrix, bool with_is_cameraspace)
+    inline void DrawLine3D(LSMVector3 p0, LSMVector3 p1, LSMVector3 CameraPosition, float width, LSMVector4 color, LSMMatrix4x4 cameramatrix, bool with_is_cameraspace, bool depthtest = true)
     {
 
         //glad_glBindFramebuffer(GL_FRAMEBUFFER, m_RenderTarget);
-        glad_glEnable(GL_DEPTH_TEST);
+        if(depthtest)
+        {
+            glad_glEnable(GL_DEPTH_TEST);
+        }else
+        {
+            glad_glDisable(GL_DEPTH_TEST);
+        }
         // bind shader
         glad_glUseProgram(m_GLProgram_Draw3DLine->m_program);
 
@@ -546,6 +552,82 @@ public:
 
         glad_glBindVertexArray(0);
         glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+        glad_glEnable(GL_DEPTH_TEST);
+    }
+
+    inline void DrawSquare3D(LSMVector3 p0, LSMVector3 p1, LSMVector3 p2, LSMVector3 p3, LSMVector3 CameraPosition, float width, LSMVector4 color, LSMMatrix4x4 cameramatrix, bool with_is_cameraspace, bool depthtest = true)
+    {
+
+        if(depthtest)
+        {
+            glad_glEnable(GL_DEPTH_TEST);
+        }else
+        {
+            glad_glDisable(GL_DEPTH_TEST);
+        }
+
+        //glad_glBindFramebuffer(GL_FRAMEBUFFER, m_RenderTarget);
+        glad_glEnable(GL_DEPTH_TEST);
+        // bind shader
+        glad_glUseProgram(m_GLProgram_Draw3DLine->m_program);
+
+        int mat_loc = glad_glGetUniformLocation(m_GLProgram_Draw3DLine->m_program,"projection");
+        glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,cameramatrix.GetMatrixDataPtr());
+
+        glad_glUniform4f(glad_glGetUniformLocation(m_GLProgram_Draw3DLine->m_program, "inColor"), color.x, color.y, color.z, color.w);
+        glad_glActiveTexture(GL_TEXTURE0);
+        glad_glBindVertexArray(VAO3D);
+
+        LSMVector3 c1 = p0;
+        LSMVector3 c2 = p1;
+        LSMVector3 c3 = p2;
+        LSMVector3 c4 = p3;
+
+                    // Update VBO for each character
+                    GLfloat vertices[6][3] = {
+                        { c1.x,c1.y,c1.z},
+                        { c3.x,c3.y,c3.z},
+                        { c2.x,c2.y,c2.z},
+
+                        { c1.x,c1.y,c1.z},
+                        { c4.x,c4.y,c4.z},
+                        { c3.x,c3.y,c3.z},
+
+                    };
+
+                    GLfloat uv[6][2] = {
+                        { 0.0, 0.0 },
+                        { 1.0, 1.0 },
+                        { 0.0, 1.0 },
+
+                        { 1.0, 1.0},
+                        { 0.0, 0.0 },
+                        { 1.0, 0.0 }
+
+                    };
+
+                    // Update content of VBO memory
+                    glad_glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
+                    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+                    glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                    glad_glBindBuffer(GL_ARRAY_BUFFER, TBO3D);
+                    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(uv), uv);
+                    glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+                    glad_glCullFace(GL_FRONT_AND_BACK);
+
+                    // Render quad
+                    glad_glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+
+        glad_glBindVertexArray(0);
+        glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+        glad_glEnable(GL_DEPTH_TEST);
 
     }
 

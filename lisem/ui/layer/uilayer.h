@@ -224,11 +224,17 @@ public:
     {
 
 
+        m_Scale.x *=s.x;
+        m_Scale.y *=s.y;
+        m_Scale.z *=s.z;
     }
 
     inline virtual void Move(LSMVector3 m)
     {
 
+        m_Position.x += m.x;
+        m_Position.y += m.y;
+        m_Position.z += m.z;
 
     }
     inline virtual void Rotate(LSMVector3 r)
@@ -252,6 +258,7 @@ public:
     {
         return false;
     }
+
 
     virtual void OnDraw(OpenGLCLManager * m,GeoWindowState s) = 0;
     virtual void OnDestroy(OpenGLCLManager * m) = 0;

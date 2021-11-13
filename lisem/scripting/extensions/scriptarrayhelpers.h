@@ -408,6 +408,8 @@ public:
 
     inline static CScriptArray * asbind_convert(std::vector<float> x)
     {
+        std::cout << "convert float 1"<< std::endl;
+
         // Obtain a pointer to the engine
         asIScriptContext *ctx = asGetActiveContext();
         if(ctx != nullptr)
@@ -425,6 +427,44 @@ public:
                 array->SetValue(i,(void*)(new float(x.at(i))),false);
             }
 
+            std::cout << "convert float 2"<< std::endl;
+            return array;
+
+        }
+        LISEMS_ERROR("Could not convert list to std::vector");
+        throw 1;
+    }
+
+};
+
+template<>
+class asbindc_convert<std::vector<double>,CScriptArray*>
+{
+
+public:
+
+    inline static CScriptArray * asbind_convert(std::vector<double> x)
+    {
+        std::cout << "convert double 1"<< std::endl;
+
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        if(ctx != nullptr)
+        {
+            asIScriptEngine *engine = ctx->GetEngine();
+            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<double>");
+
+            // Create the array object
+            CScriptArray *array = CScriptArray::Create(arrayType);
+
+            array->Resize(x.size());
+
+            for(int i = 0; i < x.size(); ++i)
+            {
+                array->SetValue(i,(void*)(new double(x.at(i))),false);
+            }
+
+            std::cout << "convert double 2"<< std::endl;
             return array;
 
         }
@@ -492,6 +532,52 @@ public:
     }
 };
 
+template<>
+class asbindc_convert<std::vector<std::vector<cTMap*>>,CScriptArray*>
+{
+
+public:
+
+    inline static CScriptArray* asbind_convert(std::vector<std::vector<cTMap*>> x)
+    {
+        std::cout << "convert " << std::endl;
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        asIScriptEngine *engine = ctx->GetEngine();
+
+        // TODO: This should only be done once
+        // TODO: This assumes that CScriptArray was already registered
+        asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<array<Map>>");
+
+        // Create the array object
+        CScriptArray *array = CScriptArray::Create(arrayType);
+        array->Resize(x.size());
+        for(int i = 0; i < x.size(); i++)
+        {
+            // Obtain a pointer to the engine
+            asIScriptContext *ctx = asGetActiveContext();
+            asIScriptEngine *engine = ctx->GetEngine();
+
+            // TODO: This should only be done once
+            // TODO: This assumes that CScriptArray was already registered
+            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<Map>");
+
+            // Create the array object
+            CScriptArray *array2 = CScriptArray::Create(arrayType);
+            array2->Resize(x.at(i).size());
+            for(int j = 0; j < x.at(i).size(); j++)
+            {
+                array2->SetValue(j,x.at(i).at(j),false);
+            }
+
+            array->SetValue(i,array2,false);
+        }
+
+
+        return array;
+    }
+};
+
 
 template<>
 class asbindc_convert<std::vector<Field*>,CScriptArray*>
@@ -544,7 +630,7 @@ public:
         array->Resize(x.size());
         for(int i = 0; i < x.size(); i++)
         {
-            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<array<float>>");
+            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<float>");
 
             // Create the array object
             CScriptArray *array2 = CScriptArray::Create(arrayType);

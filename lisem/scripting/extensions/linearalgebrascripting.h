@@ -12,9 +12,51 @@
 
 
 
+static inline void AS_ASVector2C0(void * mem)
+{
+
+    new(mem)  LSMVector2();
+}
+
+static inline void AS_ASVector2C1(void * mem, float x, float y)
+{
+
+    new(mem)  LSMVector2(x,y);
+}
+
+static inline void AS_ASVector3C0(void * mem)
+{
+
+    new(mem)  LSMVector3();
+}
+
+static inline void AS_ASVector3C1(void * mem, float x, float y, float z)
+{
+
+    new(mem)  LSMVector3(x,y,z);
+}
+
+static inline void AS_ASVector4C0(void * mem)
+{
+
+    new(mem)  LSMVector4();
+}
+
+static inline void AS_ASVector4C1(void * mem, float x, float y, float z, float w)
+{
+
+    new(mem)  LSMVector4(x,y,z,w);
+}
+
 
 inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
 {
+    //lifetime tracking with custom constructor, destructor and assign operator
+    //int r = sm->m_Engine->RegisterObjectType("UILayer", sizeof(ASUILayer), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUILayer>());
+    //sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUILayerC0,(void*),void), asCALL_CDECL_OBJLAST);
+    //sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUILayerD0), asCALL_CDECL_OBJLAST);
+    //sm->m_Engine->RegisterObjectMethod("UILayer", "UILayer& opAssign(const UILayer &in m)", asMETHODPR(ASUILayer,Assign,(ASUILayer *),ASUILayer*), asCALL_THISCALL); assert( r >= 0 );
+
 
     //vec2
     int r = 1;
@@ -22,10 +64,14 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectProperty("vec2", "float x", asOFFSET(LSMVector2,x)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec2", "float y", asOFFSET(LSMVector2,y)); assert( r >= 0 );
     engine->RegisterObjectBehaviour("vec2", asBEHAVE_LIST_CONSTRUCT, "void f(int &in) {float,float}", asMETHODPR(LSMVector2,AS_FromList, (void*),void), asCALL_THISCALL);
+    engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASVector2C0,(void*),void), asCALL_CDECL_OBJFIRST);
+    engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y)", asFUNCTIONPR(AS_ASVector2C1,(void*,float,float),void), asCALL_CDECL_OBJFIRST);
 
     //vec3
     engine->RegisterObjectType("vec3", sizeof(LSMVector3), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS| asGetTypeTraits<LSMVector3>()); assert( r >= 0 );
     engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT, "void f(int &in) {float,float,float}", asMETHODPR(LSMVector3,AS_FromList, (void*),void), asCALL_THISCALL);
+    engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASVector3C0,(void*),void), asCALL_CDECL_OBJFIRST);
+    engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y, float z)", asFUNCTIONPR(AS_ASVector3C1,(void*,float,float,float),void), asCALL_CDECL_OBJFIRST);
 
 
     engine->RegisterObjectProperty("vec3", "float x", asOFFSET(LSMVector3,x)); assert( r >= 0 );
@@ -61,7 +107,12 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectProperty("vec4", "float y", asOFFSET(LSMVector4,y)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec4", "float z", asOFFSET(LSMVector4,z)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec4", "float w", asOFFSET(LSMVector4,w)); assert( r >= 0 );
+
+    engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASVector4C0,(void*),void), asCALL_CDECL_OBJFIRST);
+    engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y, float z, float w)", asFUNCTIONPR(AS_ASVector4C1,(void*,float,float,float,float),void), asCALL_CDECL_OBJFIRST);
+
     //vecn
+
 
 
     //quaternion
@@ -82,6 +133,8 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
 
 
     //helper functions
+
+
 
 
 

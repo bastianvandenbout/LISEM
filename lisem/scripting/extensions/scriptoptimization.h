@@ -303,7 +303,7 @@ struct FunctionalFunctionError
                     {
                         val = val + 1.0;
                     }else {
-                        val = -1.0/(-1.0 + val);
+                        val = -1.0/(val) + 1.0;
                     }
                 }
                 array.push_back(val);
@@ -360,7 +360,8 @@ inline static CScriptArray * OptimizeCustom(CScriptArray * data_parameters,CScri
                     initialGuess(i) = -1.0 + params->at(i);
                 }else {
                     params->replace(i,std::max(1e-20,params->at(i)));
-                    initialGuess(i) = 1.0/initialGuess(i) - 1.0;
+                    initialGuess(i) = -1.0/(params->at(i)) +1;
+                    std::cout << "initial guess " << params->at(i) << " " << initialGuess(i) << std::endl;
                 }
             }else {
                 LISEMS_ERROR("Parameter "+ QString::number(i) +" must be positive, but initial value is negative!");
@@ -504,7 +505,8 @@ inline static std::vector<double> OptimizeCustom2(std::vector<double> data_param
                     initialGuess(i) = -1.0 + params.at(i);
                 }else {
                     params[i] = std::max(1e-20,params.at(i));
-                    initialGuess(i) = 1.0/initialGuess(i) - 1.0;
+                    initialGuess(i) = -1.0/(params.at(i)) +1;
+                    std::cout << "initial guess " << params.at(i) << " " << initialGuess(i) << std::endl;
                 }
             }else {
                 LISEMS_ERROR("Parameter "+ QString::number(i) +" must be positive, but initial value is negative!");
