@@ -348,14 +348,6 @@ endif()
 
 endif()
 
-#if(LISEM_BUILD_DEPLOY )
-#    if(LISEM_BUILD_APP)
-#add_custom_command(OUTPUT deploylisemi2
-#                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#                     COMMAND cpack
-#                     DEPENDS lisem_app
-#                     COMMENT bd2)
-#
-#add_custom_target(deploylisem2 DEPENDS deploylisemi2)
-#endif()
-#endif()
+
+
+message("${CMAKE_CXX_FLAGS}")

@@ -10,10 +10,21 @@
 #include "lsmio.h"
 #include "defines.h"
 
+#define DENSE_USE_OPENMP
+
 LISEM_API extern bool optdense_done_init;
+
+static inline void logMVS(std::string message)
+{
+    std::cout << "message MVS: " << message << std::endl;
+
+}
 
 inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
 {
+
+    GET_LOG().RegisterListener(logMVS);
+
     outputdir = outputdir + "/MVS";
     std::string strInputFileName = (AS_DIR + outputdir + "/scene.mvs").toStdString();
 
@@ -52,10 +63,17 @@ inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
     std::cout << scene.images.size() << std::endl;
 
     if ((ARCHIVE_TYPE)(0) != ARCHIVE_MVS) {
-            if (scene.DenseReconstruction(0)) {
+            if (scene.LSMDenseReconstruction(0)) {
 
             }else
             {
+                /*SEACAVE::cList<ClbkRecordMsg> logl = GET_LOG().ClbkRecordMsgArray();
+                std::cout << "logl size " << logl.size() << std::endl;
+                for(int i = 0; i < logl.size(); i++)
+                {
+                    std::cout logl.GetNth(i).
+              }*/
+
                 LISEMS_ERROR("Could not densify point cloud");
                 throw 1;
             }
@@ -139,7 +157,7 @@ inline static void AS_PhotogrammetryToMesh(QString outputdir)
         throw 1;
     }
 
-    if (!scene.ReconstructMesh(fDistInsert, bUseFreeSpaceSupport, 4, fThicknessFactor, fQualityFactor))
+    if (!scene.LSMReconstructMesh(fDistInsert, bUseFreeSpaceSupport, 4, fThicknessFactor, fQualityFactor))
     {
         LISEMS_ERROR("Error during mesh reconstruction");
     }

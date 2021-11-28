@@ -117,6 +117,8 @@
 #include "site.h"
 #include <omp.h>
 
+#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 /// OpenCV Includes
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/eigen.hpp"
@@ -1345,7 +1347,7 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
             throw 1;
         }
 
-      C_Progress_display progress;
+      openMVG::system::ProgressInterface progress;
       if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {
           LISEMS_ERROR("Invalid regions");
           throw 1;
@@ -1371,9 +1373,11 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
           }
         }
 
+        std::unique_ptr<Cascade_Hashing_Matcher_Regions> collectionMatcher;
+        std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
+        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
 
-        std::unique_ptr<Matcher> collectionMatcher;
-            if (sNearestMatchingMethod == "AUTO")
+        /*if (sNearestMatchingMethod == "AUTO")
             {
               if (regions_type->IsScalar())
               {
@@ -1422,7 +1426,7 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
             {
               std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
               collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
-            }
+            }*/
 
 
             if (!collectionMatcher)
@@ -1442,9 +1446,15 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
                 case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
 
               }
+
+              std::cout << "match "<< std::endl;
+
               // Photometric matching of putative pairs
-              collectionMatcher->Match(regions_provider, pairs, map_PutativesMatches, &progress);
-              //---------------------------------------
+              collectionMatcher->LSMMatch(regions_provider, pairs, map_PutativesMatches, &progress);
+
+              std::cout << "match done "<< std::endl;//---------------------------------------
+
+
               //-- Export putative matches
               //---------------------------------------
               if (!Save(map_PutativesMatches, std::string(sMatchesDirectory + "/matches.putative.bin")))
@@ -1553,7 +1563,20 @@ inline void AS_Photogrammetry_FeatureMatch(QString temp_file, QString outputdir,
                     map_GeometricMatches = filter_ptr->Get_geometric_matches();
                   }
                   break;
-                }
+
+
+                    for (auto & structure_landmark_it : sfm_data.structure)
+                    {
+                      const Observations & obs = structure_landmark_it.second.obs;
+
+                      for (const auto & obs_it : obs)
+                      {
+                          std::cout << "test1 " << obs_it.first << " " << sfm_data.views.size() << std::endl;
+
+                        // Build the residual block corresponding to the track observation:
+
+                      }
+                    }}
 
                     if (!Save(map_GeometricMatches,
                           std::string(sMatchesDirectory + "/" + sGeometricMatchesFilename)))
@@ -1645,7 +1668,7 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
 
     // Load input SfM_Data scene
       SfM_Data sfm_data;
-      if (!LSMLoad(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
+      if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
           LISEMS_ERROR("Can not load view listing at " + AS_DIR+ file_temp);
           throw 1;
       }
@@ -1744,11 +1767,17 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
               Generate_SfM_Report(sfmEngine.Get_SfM_Data(),
                 stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
 
-              LSMSave(sfmEngine.Get_SfM_Data(),
+
+              std::cout << "processing done2 " << std::endl;
+
+              Save(sfmEngine.Get_SfM_Data(),
                 stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
                 ESfM_Data(ALL));
 
-              LSMSave(sfmEngine.Get_SfM_Data(),
+
+              std::cout << "processing done3 " << std::endl;
+
+              Save(sfmEngine.Get_SfM_Data(),
                 stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
                 ESfM_Data(ALL));
 
@@ -1757,6 +1786,9 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
                 LISEMS_ERROR("Error during geometry reconstruction for sparse point-cloud");
                 throw 1;
             }
+
+
+            std::cout << "colorize " << std::endl;
 
             std::vector<openMVG::Vec3> vec_3dPoints, vec_tracksColor, vec_camPosition;
             if (ColorizeTracks(sfmEngine.Get_SfM_Data(), vec_3dPoints, vec_tracksColor))
@@ -1774,8 +1806,10 @@ inline void AS_Photogrammetry_IncrementalSFM(QString file_temp, QString outputdi
                 throw 1;
             }
 
+            std::cout << "convert to vms " << std::endl;
             AS_MGStoVMS(sfmEngine.Get_SfM_Data(),sSfM_Data_Filename,AS_DIR.toStdString() + outputdir.toStdString());
 
+            std::cout << "done " << std::endl;
 }
 
 #include "openMVG/sfm/sfm_data.hpp"
@@ -1994,8 +2028,6 @@ inline void AS_Photogrammetry_Register(std::vector<LSMVector3> pos_gcp, std::vec
           }
         }
 
-
-
        openMVG::sfm::Save(sfm_data,
                                     stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
                                     openMVG::sfm::ESfM_Data(openMVG::sfm::ALL));
@@ -2005,5 +2037,4 @@ inline void AS_Photogrammetry_Register(std::vector<LSMVector3> pos_gcp, std::vec
        AS_MGStoVMS(sfm_data,sSfM_Data_Filename,AS_DIR.toStdString() + outputdir.toStdString());
 
 }
-
 

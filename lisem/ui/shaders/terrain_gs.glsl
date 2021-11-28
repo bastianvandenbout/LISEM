@@ -152,6 +152,260 @@ void main() {
         EndPrimitive();
     }
 
+    if(position0.y < -1e20f && position1.y >  -1e20f && position2.y >  -1e20f )
+    {
+
+        {
+            vec4 temp0 = position1;
+            temp0.y =0.0f;
+            Out.worldPosition = temp0;
+            Out.position = CMatrix * temp0;
+            Out.color = In[1].color;
+            Out.normal = In[1].normal;
+            Out.patchdist = In[1].patchdist;
+            Out.tridist = vec3(1.0,0.0,0.0);
+            Out.alpha = In[1].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp0; EmitVertex();
+
+            vec4 temp1 = position2;
+            temp1.y =0.0f;
+            Out.worldPosition = temp1;
+            Out.position = CMatrix * temp1;
+            Out.color = In[2].color;
+            Out.normal = In[2].normal;
+            Out.patchdist = In[2].patchdist;
+            Out.tridist = vec3(0.0,1.0,0.0);
+            Out.alpha = In[2].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp1; EmitVertex();
+
+            vec4 temp2 = position1;
+            Out.worldPosition = temp2;
+            Out.position = CMatrix *temp2;
+            Out.color = In[1].color;
+            Out.normal = In[1].normal;
+            Out.patchdist = In[1].patchdist;
+            Out.tridist = vec3(0.0,0.0,1.0);
+            Out.alpha = In[1].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp2; EmitVertex();
+
+            EndPrimitive();
+        }
+
+        {
+
+            vec4 temp0 = position2;
+            temp0.y =0.0f;
+            Out.worldPosition = temp0;
+            Out.position = CMatrix * temp0;
+            Out.color = In[2].color;
+            Out.normal = In[2].normal;
+            Out.patchdist = In[2].patchdist;
+            Out.tridist = vec3(1.0,0.0,0.0);
+            Out.alpha = In[2].alpha;
+            Out.tess_level = In[2].tess_level;
+            gl_Position = CMatrix *temp0; EmitVertex();
+
+            vec4 temp1 = position2;
+            Out.worldPosition = temp1;
+            Out.position = CMatrix * temp1;
+            Out.color = In[2].color;
+            Out.normal = In[2].normal;
+            Out.patchdist = In[2].patchdist;
+            Out.tridist = vec3(0.0,1.0,0.0);
+            Out.alpha = In[2].alpha;
+            Out.tess_level = In[2].tess_level;
+            gl_Position = CMatrix *temp1; EmitVertex();
+
+            vec4 temp2 = position1;
+            Out.worldPosition = temp2;
+            Out.position = CMatrix *temp2;
+            Out.color = In[1].color;
+            Out.normal = In[1].normal;
+            Out.patchdist = In[1].patchdist;
+            Out.tridist = vec3(0.0,0.0,1.0);
+            Out.alpha = In[1].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp2; EmitVertex();
+
+            EndPrimitive();
+        }
+
+
+    }
+
+    if(position0.y > -1e20f && position1.y <  -1e20f && position2.y >  -1e20f )
+    {
+
+        {
+            vec4 temp0 = position0;
+            temp0.y =0.0f;
+            Out.worldPosition = temp0;
+            Out.position = CMatrix * temp0;
+            Out.color = In[0].color;
+            Out.normal = In[0].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(1.0,0.0,0.0);
+            Out.alpha = In[0].alpha;
+            Out.tess_level = In[0].tess_level;
+            gl_Position = CMatrix *temp0; EmitVertex();
+
+            vec4 temp1 = position2;
+            temp1.y =0.0f;
+            Out.worldPosition = temp1;
+            Out.position = CMatrix * temp1;
+            Out.color = In[2].color;
+            Out.normal = In[2].normal;
+            Out.patchdist = In[2].patchdist;
+            Out.tridist = vec3(0.0,1.0,0.0);
+            Out.alpha = In[2].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp1; EmitVertex();
+
+            vec4 temp2 = position0;
+            Out.worldPosition = temp2;
+            Out.position = CMatrix *temp2;
+            Out.color = In[0].color;
+            Out.normal = In[0].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(0.0,0.0,1.0);
+            Out.alpha = In[0].alpha;
+            Out.tess_level = In[0].tess_level;
+            gl_Position = CMatrix *temp2; EmitVertex();
+
+            EndPrimitive();
+        }
+
+        {
+
+            vec4 temp0 = position2;
+            temp0.y =0.0f;
+            Out.worldPosition = temp0;
+            Out.position = CMatrix * temp0;
+            Out.color = In[2].color;
+            Out.normal = In[2].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(1.0,0.0,0.0);
+            Out.alpha = In[2].alpha;
+            Out.tess_level = In[2].tess_level;
+            gl_Position = CMatrix *temp0; EmitVertex();
+
+            vec4 temp1 = position2;
+            Out.worldPosition = temp1;
+            Out.position = CMatrix * temp1;
+            Out.color = In[2].color;
+            Out.normal = In[2].normal;
+            Out.patchdist = In[2].patchdist;
+            Out.tridist = vec3(0.0,1.0,0.0);
+            Out.alpha = In[2].alpha;
+            Out.tess_level = In[2].tess_level;
+            gl_Position = CMatrix *temp1; EmitVertex();
+
+            vec4 temp2 = position0;
+            Out.worldPosition = temp2;
+            Out.position = CMatrix *temp2;
+            Out.color = In[0].color;
+            Out.normal = In[0].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(0.0,0.0,1.0);
+            Out.alpha = In[0].alpha;
+            Out.tess_level = In[0].tess_level;
+            gl_Position = CMatrix *temp2; EmitVertex();
+
+            EndPrimitive();
+        }
+
+
+    }
+
+    if(position0.y > -1e20f && position1.y >  -1e20f && position2.y <  -1e20f )
+    {
+
+        {
+            vec4 temp0 = position0;
+            temp0.y =0.0f;
+            Out.worldPosition = temp0;
+            Out.position = CMatrix * temp0;
+            Out.color = In[0].color;
+            Out.normal = In[0].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(1.0,0.0,0.0);
+            Out.alpha = In[0].alpha;
+            Out.tess_level = In[0].tess_level;
+            gl_Position = CMatrix *temp0; EmitVertex();
+
+            vec4 temp1 = position1;
+            temp1.y =0.0f;
+            Out.worldPosition = temp1;
+            Out.position = CMatrix * temp1;
+            Out.color = In[1].color;
+            Out.normal = In[1].normal;
+            Out.patchdist = In[1].patchdist;
+            Out.tridist = vec3(0.0,1.0,0.0);
+            Out.alpha = In[1].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp1; EmitVertex();
+
+            vec4 temp2 = position0;
+            Out.worldPosition = temp2;
+            Out.position = CMatrix *temp2;
+            Out.color = In[0].color;
+            Out.normal = In[0].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(0.0,0.0,1.0);
+            Out.alpha = In[0].alpha;
+            Out.tess_level = In[0].tess_level;
+            gl_Position = CMatrix *temp2; EmitVertex();
+
+            EndPrimitive();
+        }
+
+        {
+
+            vec4 temp0 = position1;
+            temp0.y =0.0f;
+            Out.worldPosition = temp0;
+            Out.position = CMatrix * temp0;
+            Out.color = In[1].color;
+            Out.normal = In[1].normal;
+            Out.patchdist = In[1].patchdist;
+            Out.tridist = vec3(1.0,0.0,0.0);
+            Out.alpha = In[1].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp0; EmitVertex();
+
+            vec4 temp1 = position1;
+            Out.worldPosition = temp1;
+            Out.position = CMatrix * temp1;
+            Out.color = In[1].color;
+            Out.normal = In[1].normal;
+            Out.patchdist = In[1].patchdist;
+            Out.tridist = vec3(0.0,1.0,0.0);
+            Out.alpha = In[1].alpha;
+            Out.tess_level = In[1].tess_level;
+            gl_Position = CMatrix *temp1; EmitVertex();
+
+            vec4 temp2 = position0;
+            Out.worldPosition = temp2;
+            Out.position = CMatrix *temp2;
+            Out.color = In[0].color;
+            Out.normal = In[0].normal;
+            Out.patchdist = In[0].patchdist;
+            Out.tridist = vec3(0.0,0.0,1.0);
+            Out.alpha = In[0].alpha;
+            Out.tess_level = In[0].tess_level;
+            gl_Position = CMatrix *temp2; EmitVertex();
+
+            EndPrimitive();
+        }
+
+
+    }
+    //detect edges, extrapolate triangel to direct neighbors of same size (so same tesselation is assumed)
+
+
 
 
 }
