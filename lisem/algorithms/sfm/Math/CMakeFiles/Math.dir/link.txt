@@ -1,2 +1,0 @@
-C:\msys64\mingw64\bin\ar.exe qc ..\..\lib\libMath.a CMakeFiles/Math.dir/Common.cpp.obj CMakeFiles/Math.dir/IBFS/IBFS.cpp.obj CMakeFiles/Math.dir/LMFit/lmmin.cpp.obj
-C:\msys64\mingw64\bin\ranlib.exe ..\..\lib\libMath.a
