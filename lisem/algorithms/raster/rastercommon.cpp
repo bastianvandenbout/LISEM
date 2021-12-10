@@ -1,6 +1,8 @@
 #include "raster/rastercommon.h"
 
 
+int n_warnhypergeom = 0;
+
 bool OUTORMV(cTMap * LDD, int r, int c)
 {
     if(r>=0 && r<LDD->nrRows() && c>=0 && c<LDD->nrCols())

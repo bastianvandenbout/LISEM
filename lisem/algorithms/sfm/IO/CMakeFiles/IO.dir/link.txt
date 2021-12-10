@@ -1,0 +1,2 @@
+C:\msys64\mingw64\bin\ar.exe qc ..\..\lib\libIO.a CMakeFiles/IO.dir/Common.cpp.obj CMakeFiles/IO.dir/Image.cpp.obj CMakeFiles/IO.dir/ImageBMP.cpp.obj CMakeFiles/IO.dir/ImageDDS.cpp.obj CMakeFiles/IO.dir/ImageJPG.cpp.obj CMakeFiles/IO.dir/ImagePNG.cpp.obj CMakeFiles/IO.dir/ImageSCI.cpp.obj CMakeFiles/IO.dir/ImageTGA.cpp.obj CMakeFiles/IO.dir/ImageTIFF.cpp.obj CMakeFiles/IO.dir/OBJ.cpp.obj CMakeFiles/IO.dir/PLY.cpp.obj
+C:\msys64\mingw64\bin\ranlib.exe ..\..\lib\libIO.a

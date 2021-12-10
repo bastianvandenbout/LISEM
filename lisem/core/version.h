@@ -3,7 +3,7 @@
 
 
 #define LISEM_VERSION_MAJOR 0
-#define LISEM_VERSION_MINOR 1
+#define LISEM_VERSION_MINOR 2
 #define LISEM_VERSION_PATCH 1
 
 // Preprocessor to string conversion

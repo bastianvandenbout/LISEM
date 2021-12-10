@@ -734,6 +734,27 @@ public slots:
 
                 LISEMS_ERROR("Exception encountered when running script");
 
+                                        try
+                                          {
+                                            // Retrow the original exception so we can catch it again
+                                            throw;
+                                          }
+                                          catch( std::exception &e )
+                                          {
+                                            // Tell the VM the type of exception that occurred
+                                           LISEMS_ERROR("std::exception " +QString(e.what()));
+                                            //ctx->SetException(e.what());
+                                          }catch(int e)
+                                        {
+                                           LISEMS_ERROR("int exception " +QString::number(e));
+                                         }
+                                          catch(...)
+                                          {
+                                            LISEMS_ERROR("Unknown exception");
+                                            // The callback must not allow any exception to be thrown, but it is not necessary
+                                            // to explicitly set an exception string if the default exception string is sufficient
+                                          }
+
                 ce->SetHighlightErrorLocation( ctx->GetLineNumber(), -1);
                 std::cout << 1  << std::endl;
                 st->m_StackDisplay->SetFromContext(ctx,0,true);

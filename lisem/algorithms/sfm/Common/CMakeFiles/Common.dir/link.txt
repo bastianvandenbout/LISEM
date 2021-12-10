@@ -1,0 +1,2 @@
+C:\msys64\mingw64\bin\ar.exe qc ..\..\lib\libCommon.a CMakeFiles/Common.dir/Common.cpp.obj CMakeFiles/Common.dir/CUDA.cpp.obj CMakeFiles/Common.dir/ConfigTable.cpp.obj CMakeFiles/Common.dir/EventQueue.cpp.obj CMakeFiles/Common.dir/Log.cpp.obj CMakeFiles/Common.dir/SML.cpp.obj CMakeFiles/Common.dir/Timer.cpp.obj CMakeFiles/Common.dir/Types.cpp.obj CMakeFiles/Common.dir/Util.cpp.obj
+C:\msys64\mingw64\bin\ranlib.exe ..\..\lib\libCommon.a

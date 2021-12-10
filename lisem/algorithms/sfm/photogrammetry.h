@@ -383,13 +383,13 @@ enum EPairMode
   PAIR_FROM_FILE  = 2
 };
 
-std::pair<bool, SEACAVE::MSVec3> checkGPS
+std::pair<bool, Eigen::Matrix<double,3,1> > checkGPS
 (
   const std::string & filename,
   const int & GPS_to_XYZ_method = 0
 )
 {
-  std::pair<bool, SEACAVE::MSVec3> val(false, SEACAVE::MSVec3(0.0,0.0,0.0));
+  std::pair<bool, Eigen::Matrix<double,3,1>> val(false, Eigen::Matrix<double,3,1>(0.0,0.0,0.0));
   std::unique_ptr<openMVG::exif::Exif_IO> exifReader(new Exif_IO_EasyExif);
   if (exifReader)
   {
@@ -457,7 +457,7 @@ inline void AS_Photogrammetry_PrepareList(std::vector<QString> files, QString te
 
     bool b_Group_camera_model = true;
     std::string sPriorWeights;
-    std::pair<bool, SEACAVE::MSVec3> prior_w_info(false, SEACAVE::MSVec3(1.0,1.0,1.0));
+    std::pair<bool, Eigen::Matrix<double,3,1>> prior_w_info(false, Eigen::Matrix<double,3,1>(1.0,1.0,1.0));
 
     std::string sfileDatabase = (GetSite() + LISEM_FOLDER_ASSETS + "sensor_width_camera_database.txt").toStdString();
 
@@ -610,7 +610,7 @@ inline void AS_Photogrammetry_PrepareList(std::vector<QString> files, QString te
 
 
         // Build the view corresponding to the image
-            const std::pair<bool, SEACAVE::MSVec3> gps_info = checkGPS(sImageFilename, 1);
+            const std::pair<bool, Eigen::Matrix<double,3,1>> gps_info = checkGPS(sImageFilename, 1);
             if (gps_info.first && use_prior)
             {
               ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0)
 
+
 #We make our project and set the languages we use
 #Lisem Integrated Spatial Earth Modeller
 project(LISEM C CXX Fortran)
@@ -174,6 +175,7 @@ ENDIF()
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/model/kernels/" DESTINATION "bin/kernels")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/ui/shaders/" DESTINATION "bin/shaders")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/dist/" DESTINATION "bin/")
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/dist/mvs/" DESTINATION "bin/mvs/")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/resources/" DESTINATION "bin/assets")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/model/kernels/" DESTINATION "bin/shaders")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/lisem/ui/shaders/" DESTINATION "bin/kernels")

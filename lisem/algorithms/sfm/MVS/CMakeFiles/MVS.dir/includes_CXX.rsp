@@ -1,0 +1,1 @@
+-IC:/Apps/openMVS-master -IC:/msys64/mingw64/include/eigen3 -IC:/Apps/vcglib -isystem C:/msys64/mingw64/include/opencv4

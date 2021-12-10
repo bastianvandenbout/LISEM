@@ -20,6 +20,12 @@ LISEM Classis provides a focus on detailed modelling of hydrology, flow and eros
 The new LISEM software, a geo-spatial modelling and analysis tool focusing on multi-hazards, is now public in alpha-relase. 
 WARNING: Contains various bugs!! 
 
+Version 0.2.1
+
+| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.1.zip/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.1-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.1-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
+
 Version 0.1.1
 
 | [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.1.1.zip/download) | ![LISEM](/assets/img/logonav.png) |
@@ -60,7 +66,13 @@ The following models are currently not yet working within LISEM, but could be us
 
 #### Example dataset for the LISEM model
 
-The following links provide example datasets, featuring terrain elevation, geophysical parameters, land cover, soil types and precipitation data.
+Below are the example datasets for the LISEM tutorials on the youtube channel:
+
+[LISEM model landslide simulation for Acheron](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/acheron.zip/download)
+[Dominica Grande-Bay data](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/dominica.zip/download)
+[Test Lake](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/ExampleGeoData/lake.zip/download)
+
+The following links provide some more example datasets, featuring terrain elevation, geophysical parameters, land cover, soil types and precipitation data.
 These can be used to test the physically-based model. They were originally created for the old OpenLISEM Hazard software,
 but provide enough information to run LISEM or LISEM classic.
 

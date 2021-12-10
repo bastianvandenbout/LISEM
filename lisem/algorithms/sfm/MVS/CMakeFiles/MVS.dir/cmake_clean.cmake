@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "../../bin/libMVS.dll"
+  "../../bin/libMVS.dll.manifest"
+  "../../bin/libMVS.pdb"
+  "../../lib/libMVS.dll.a"
+  "CMakeFiles/MVS.dir/Camera.cpp.obj"
+  "CMakeFiles/MVS.dir/Camera.cpp.obj.d"
+  "CMakeFiles/MVS.dir/Common.cpp.obj"
+  "CMakeFiles/MVS.dir/Common.cpp.obj.d"
+  "CMakeFiles/MVS.dir/DepthMap.cpp.obj"
+  "CMakeFiles/MVS.dir/DepthMap.cpp.obj.d"
+  "CMakeFiles/MVS.dir/Image.cpp.obj"
+  "CMakeFiles/MVS.dir/Image.cpp.obj.d"
+  "CMakeFiles/MVS.dir/Mesh.cpp.obj"
+  "CMakeFiles/MVS.dir/Mesh.cpp.obj.d"
+  "CMakeFiles/MVS.dir/Platform.cpp.obj"
+  "CMakeFiles/MVS.dir/Platform.cpp.obj.d"
+  "CMakeFiles/MVS.dir/PointCloud.cpp.obj"
+  "CMakeFiles/MVS.dir/PointCloud.cpp.obj.d"
+  "CMakeFiles/MVS.dir/RectsBinPack.cpp.obj"
+  "CMakeFiles/MVS.dir/RectsBinPack.cpp.obj.d"
+  "CMakeFiles/MVS.dir/Scene.cpp.obj"
+  "CMakeFiles/MVS.dir/Scene.cpp.obj.d"
+  "CMakeFiles/MVS.dir/SceneDensify.cpp.obj"
+  "CMakeFiles/MVS.dir/SceneDensify.cpp.obj.d"
+  "CMakeFiles/MVS.dir/SceneReconstruct.cpp.obj"
+  "CMakeFiles/MVS.dir/SceneReconstruct.cpp.obj.d"
+  "CMakeFiles/MVS.dir/SceneRefine.cpp.obj"
+  "CMakeFiles/MVS.dir/SceneRefine.cpp.obj.d"
+  "CMakeFiles/MVS.dir/SceneRefineCUDA.cpp.obj"
+  "CMakeFiles/MVS.dir/SceneRefineCUDA.cpp.obj.d"
+  "CMakeFiles/MVS.dir/SceneTexture.cpp.obj"
+  "CMakeFiles/MVS.dir/SceneTexture.cpp.obj.d"
+  "CMakeFiles/MVS.dir/SemiGlobalMatcher.cpp.obj"
+  "CMakeFiles/MVS.dir/SemiGlobalMatcher.cpp.obj.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/MVS.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

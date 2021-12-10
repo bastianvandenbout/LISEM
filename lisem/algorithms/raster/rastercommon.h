@@ -24,6 +24,10 @@
     ( ldd != 0 && rFrom >= 0 && cFrom >= 0 && rFrom+dy[ldd]==rTo && cFrom+dx[ldd]==cTo )
 
 
+extern int n_warnhypergeom;
+
+
+
 /// linked list structure for network in kin wave
 typedef struct LDD_LINKEDLIST {
     int rowNr;

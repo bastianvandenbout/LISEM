@@ -3649,7 +3649,203 @@ inline cTMap * AS_Diffusion(cTMap * VAL, float coeff, float dt, int iter = 1)
 
 
 }
+#include "rastercommon.h"
+// Note convergence restrictions: abs(x) < 1 and c not a negative integer or zero
+#include "gsl/gsl_errno.h"
+#include "gsl/gsl_sf_hyperg.h"
+inline static double hypergeometric( double a, double b, double c, double x )
+{
 
+
+    //does not converge well
+    /*if(std::fabs(x) >= 1.0001f || c < 1.0e-12)
+   {
+        return 1.0;
+   }
+   const double TOLERANCE = 1.0e-10;
+   double term = a * b * x / c;
+   double value = 1.0 + term;
+   int n = 1;
+
+   while ( abs( term ) > TOLERANCE )
+   {
+      a++, b++, c++, n++;
+      term *= a * b * x / c / n;
+      value += term;
+      if(n > 50)
+      {
+          break;
+      }
+   }
+
+   return value;*/
+
+    gsl_set_error_handler_off();
+
+
+    if(std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(x))
+    {
+        double ret = gsl_sf_hyperg_2F1(a,b,c,x);
+        if(std::isfinite(ret))
+        {
+            return ret;
+        }else
+        {
+            if(n_warnhypergeom < 5)
+            {
+                LISEMS_ERROR("Could not run hyper-geometric function with values " + QString::number(a) + " " + QString::number(b)+ " " + QString::number(c) + " " + QString::number(x));
+
+                 n_warnhypergeom += 1;
+                if(n_warnhypergeom == 5)
+                {
+                    LISEMS_ERROR("Stopping ouput for this error");
+
+                }
+            }
+            return 1.0;
+        }
+    }else
+    {
+        if(n_warnhypergeom < 5)
+        {
+            LISEMS_ERROR("Could not run hyper-geometric function with infinite values " + QString::number(a) + " " + QString::number(b)+ " " + QString::number(c) + " " + QString::number(x));
+
+            n_warnhypergeom += 1;
+            if(n_warnhypergeom == 5)
+            {
+                LISEMS_ERROR("Stopping ouput for this error");
+
+            }
+        }
+        return 1.0;
+    }
+
+}
+
+#include "gsl/gsl_sf_gamma.h"
+
+
+inline static cTMap * AS_SteadyStateCorrection(cTMap * b, cTMap * Trel)
+{
+
+    if(!(b->nrRows() == Trel->nrRows() && b->nrCols() == Trel->nrCols()))
+    {
+        LISEMS_ERROR("Steay state correction called with maps of different numbers of rows and columns");
+        throw 1;
+    }
+
+    cTMap * ret =b->GetCopy();
+
+    for(int r = 0; r < ret->nrRows(); r++)
+    {
+        for(int c = 0; c < ret->nrCols();c++)
+        {
+            if(!pcr::isMV(b->data[r][c]) && !pcr::isMV(Trel->data[r][c]))
+            {
+                if(!(b->data[r][c] > 0.0 && Trel->data[r][c] >= 0.0 && Trel->data[r][c] <= 1.0))
+                {
+
+                    pcr::setMV(ret->data[r][c]);
+                    continue;
+                }
+                double There = Trel->data[r][c];
+                double bhere = b->data[r][c];
+
+
+                double log2 =0.69314718055994530943;
+                double bsolve =  log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere));
+                double hg2 = hypergeometric(1.0/(1.0+bhere),log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)),1.0+1.0/(1.0+bhere),std::pow(There,(1.0+bhere)));
+                double p1 =(1.0/log2)*(log2 - std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)));
+
+                double final = p1 *
+                        (
+                            ((bhere+1) * log2 * std::pow(There,bhere+1) * hg2 / std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)))
+                                    - ((log2 * std::pow(1.0 - std::pow(There,bhere+1.0),1.0 - bsolve)))/(log2 - std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)))
+                         - (((bhere + 1) * log2 * std::pow(There,bhere) * gsl_sf_gamma(1.0 + 1.0/(bhere+1.0)) * gsl_sf_gamma(1 - log2/(std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)))))/(std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)) * gsl_sf_gamma(-log2/(std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere))) + 1.0/(bhere  +1.0) + 1.0)))
+                         + (log2/(log2 - std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere))))
+
+                            );
+
+
+                //hypergeometric is unstable due to singularities at high values of b, and x-value of 1
+
+                /*
+                //solve for median balance with distribution
+
+
+                    double dev2 = std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere));
+
+                double hg1 = hypergeometric(1.0/(1.0+bhere),log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)),1.0+1.0/(1.0+bhere),0.9999);
+                    double hg2 = hypergeometric(1.0/(1.0+bhere),log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)),1.0+1.0/(1.0+bhere),std::pow(There,(1.0+bhere)));
+
+                    //total probabilistic normalized integral of discharges?
+                    double p1 = (((std::pow(1.0,1.0-bsolve)*log2)/dev1)
+                                             - ((std::pow((1.0 - std::pow(There,1+bhere)),1.0-bsolve)*log2)/dev1));
+
+                    double p2 = (((std::pow(1.0,1.0-bsolve)*log2)/dev1)) ;
+
+
+                    double final = (p1 - ((1.0+bhere)*std::pow(There,bhere) * hg1 * log2)/dev2 + ((1.0+bhere)*std::pow(There,bhere) * There * hg2 * log2)/dev2)/p2;
+
+                    std::cout << r << " " << c << " " << bsolve << " " << dev1 << " " << dev2 << " " << p1 << " " << p2 << " "  << hg1 << " " << hg2 << " " <<  bhere << " " << There << " " << final << std::endl;
+                    */
+
+
+
+
+                if(std::isfinite(final))
+                {
+                    ret->data[r][c] = std::min(1.0,std::max(0.0,final));
+                }else
+                {
+                    //okey, so if we dont get the convergence with the gamma functions and hypergeometric 2F1 functions, this is generally because we are on the very far right of the distribution.
+                    //simply set the value to 1.0 seems to work well enough
+                    ret->data[r][c] = 1.0;
+                }
+
+
+            }else
+            {
+                pcr::setMV(ret->data[r][c]);
+            }
+        }
+    }
+
+    return ret;
+
+
+    //solved using Mathematica
+    //represents the fractional loss of discharge with power law paramter bhere and relative event duration There
+    //
+    /*(((((1 - 0^(1 + bhere))^(
+               1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])
+                Log[2])/(
+              Log[2] -
+               Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) - ((1 - There^(
+                 1 + bhere))^(
+               1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])
+                Log[2])/(
+              Log[2] -
+               Log[1 - (1 - 2^(-(1/2)/bhere))^(
+                 1 + bhere)])) + ((-(((1 + bhere) There^
+                 bhere 1 Hypergeometric2F1[1/(1 + bhere), Log[2]/
+                  Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)],
+                  1 + 1/(1 + bhere), 1^(1 + bhere)] Log[2])/
+                Log[1 - (1 - 2^(-(1/2)/bhere))^(
+                  1 + bhere)])) - (-(((1 + bhere) There^
+                 bhere There Hypergeometric2F1[1/(1 + bhere), Log[2]/
+                  Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)],
+                  1 + 1/(1 + bhere), There^(1 + bhere)] Log[2])/
+                Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]))))/(((1 - 0^(
+               1 + bhere))^(
+             1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) Log[2])/(
+            Log[2] -
+             Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) - ((1 - 1^(
+               1 + bhere))^(
+             1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) Log[2])/(
+            Log[2] - Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])))*/
+
+}
 
 
 

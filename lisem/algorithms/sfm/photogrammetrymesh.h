@@ -9,6 +9,9 @@
 #include <string>
 #include "lsmio.h"
 #include "defines.h"
+#include "QApplication"
+#include "QProcess"
+
 
 #define DENSE_USE_OPENMP
 
@@ -23,7 +26,11 @@ static inline void logMVS(std::string message)
 inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
 {
 
-    GET_LOG().RegisterListener(logMVS);
+    //old approach, for some reason i can not get the MVS patch-match algorithm to work
+    //somewhere in the random iterative part something goes wrong whereby seemingly random depths in the view spectrum get higher accuracies and
+    //are therefore accepted.. sort of, since in the final filtering nothing is left
+
+    /*GET_LOG().RegisterListener(logMVS);
 
     outputdir = outputdir + "/MVS";
     std::string strInputFileName = (AS_DIR + outputdir + "/scene.mvs").toStdString();
@@ -63,16 +70,11 @@ inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
     std::cout << scene.images.size() << std::endl;
 
     if ((ARCHIVE_TYPE)(0) != ARCHIVE_MVS) {
-            if (scene.LSMDenseReconstruction(0)) {
+            if (scene.DenseReconstruction(0)) {
 
             }else
             {
-                /*SEACAVE::cList<ClbkRecordMsg> logl = GET_LOG().ClbkRecordMsgArray();
-                std::cout << "logl size " << logl.size() << std::endl;
-                for(int i = 0; i < logl.size(); i++)
-                {
-                    std::cout logl.GetNth(i).
-              }*/
+
 
                 LISEMS_ERROR("Could not densify point cloud");
                 throw 1;
@@ -89,7 +91,90 @@ inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
     }
 
     scene.Save((AS_DIR + outputdir + "/scene_dense.mvs").toStdString(), (ARCHIVE_TYPE)(0));
-    scene.pointcloud.Save((AS_DIR + outputdir + "/dense.ply").toStdString());
+    scene.pointcloud.Save((AS_DIR + outputdir + "/dense.ply").toStdString());*/
+
+
+
+
+    //now instead, we just call the pre-compiled executable through QProcess
+
+
+   QString Dir = QCoreApplication::applicationDirPath();
+
+   Dir = Dir + "/mvs/";
+
+   QProcess p;
+   QStringList params;
+   QString program = QString(Dir + "DensifyPointCloud.exe");
+   program = program.replace("/","\\");
+   std::cout << "program " << program.toStdString()<<std::endl;
+   p.setProgram(program);
+   p.setWorkingDirectory(QString(AS_DIR + outputdir + "/MVS/").replace("/","\\"));
+   std::cout << "run program " << Dir.toStdString() << std::endl;
+   std::cout << "wd " << QString(AS_DIR).toStdString() << std::endl;
+   std::string arg  = QString( "-i " + AS_DIR + outputdir + "/MVS/scene.mvs").toStdString();
+   std::cout << "arg " << arg << std::endl;
+
+   QObject::connect(&p, &QProcess::errorOccurred, [=](QProcess::ProcessError error)
+   {
+       std::cout << "error enum val = " << error << endl;
+   });
+
+   params << QString(arg.c_str()) << "-o scene_dense" << " -v 4";
+   p.setArguments(params);
+
+   QEventLoop loop;
+   QObject::connect(&p, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), [&loop](int e, QProcess::ExitStatus s)
+   {
+       std::cout << "Program done " << e << " " << ((s == QProcess::NormalExit) ? 1.0:0.0) <<std::endl;
+       loop.quit();
+   });
+
+
+   p.start(program + QString( " -i " + AS_DIR + outputdir + "/MVS/scene.mvs") + " -o scene_dense -v 4");
+
+   if(!p.waitForStarted(3000))
+   {
+       LISEMS_ERROR("Could not start cloud densification");
+       throw 1;
+   }
+
+
+   p.waitForReadyRead();
+   std::cout << "process output "<< std::endl;
+   std::cout << p.readAllStandardOutput().toStdString() << std::endl;
+
+   loop.exec();
+
+
+
+   p.waitForReadyRead();
+   std::cout << "process output "<< std::endl;
+   std::cout << p.readAllStandardOutput().toStdString() << std::endl;
+
+   p.waitForFinished(-1);
+   QProcess::ProcessError e = p.error();
+   switch(e) {
+   case QProcess::FailedToStart:
+       LISEMS_ERROR("Could not start cloud densification");
+       throw 1;
+   case QProcess::Crashed:
+       LISEMS_ERROR("Crash during cloud densification");
+       throw 1;
+   case QProcess::WriteError:
+       LISEMS_ERROR("Could communicate with cloud densification");
+       throw 1;
+   case QProcess::ReadError:
+       LISEMS_ERROR("Could not read cloud densification");
+       throw 1;
+   }
+
+   std::cout << "process output "<< std::endl;
+   std::cout << p.readAllStandardOutput().toStdString() << std::endl;
+   std::cout << "error " << std::endl;
+   std::cout << p.readAllStandardError().toStdString() << std::endl;
+
+   std::cout << "done " << std::endl;
 
 }
 
@@ -157,7 +242,7 @@ inline static void AS_PhotogrammetryToMesh(QString outputdir)
         throw 1;
     }
 
-    if (!scene.LSMReconstructMesh(fDistInsert, bUseFreeSpaceSupport, 4, fThicknessFactor, fQualityFactor))
+    if (!scene.ReconstructMesh(fDistInsert, bUseFreeSpaceSupport, 4, fThicknessFactor, fQualityFactor))
     {
         LISEMS_ERROR("Error during mesh reconstruction");
     }

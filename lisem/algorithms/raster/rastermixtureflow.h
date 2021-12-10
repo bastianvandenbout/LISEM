@@ -35,13 +35,20 @@ static LSMVector3 ASF_HLL2FS(float h_L,float ho_L,float u_L,float v_L,float h_R,
         float dc_R = dragmult * sf_dev_R * ff_dev_R * (1.0f/(std::max(0.0001f,srocksize)))* std::max(0.0f,sdensity-1000.0f)/std::max(0.1f,1000.0f);//den > 0.0f? 100.0*ff_dev * sf_dev* (1.0f - (1.0f/std::max(1.0f,density)))/den : 0.0f;
         float fac_dc_R = std::max(0.0f,1.0f - (4.0f *(1.0f-std::min(1.0f,std::max(std::max(0.0f,(ff_dev_R)),(exp(-(dc_R /ff_dev_R)) + ((sf_dev_R *sdensity)/(1000.0f))*tan(sifa))/tan(sifa))))));
 
+        float dc = (dc_L * h_L + dc_R * h_R)/std::max(0.0001f,(h_L + h_R));
+        float ff_tot = std::max(0.001f,std::max(ho_L,ho_R)/std::max(0.0001f,std::max(h_L + ho_L,h_R + ho_R)));
+
+        ff_tot = std::max(0.0f,std::min(1.0f, (ff_tot -0.2f) * 10.0f));
+
         //and pressure-momentum based on the solid content
         float grav_h_L = GRAV*h_L;//*  pow(std::min(1.0f,std::max(0.0f,(1.0f-1.25f*sf_dev_L))),4.0f);
         float grav_h_R = GRAV*h_R;//*  pow(std::min(1.0f,std::max(0.0f,(1.0f-1.25f*sf_dev_R))),4.0f) ;
-        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * fac_dc_L;  // wave velocity
-        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * fac_dc_R ;
+        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * ff_tot;// * fac_dc_L;  // wave velocity
+        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * ff_tot;// * fac_dc_R ;
         q_R = u_R*h_R;
         q_L = u_L*h_L;
+
+
 
         float sc1 = std::min((float)(u_L - sqrt_grav_h_L),(float)(u_R - sqrt_grav_h_R));
         float sc2 = std::max((float)(u_L + sqrt_grav_h_L),(float)(u_R + sqrt_grav_h_R));
@@ -56,6 +63,9 @@ static LSMVector3 ASF_HLL2FS(float h_L,float ho_L,float u_L,float v_L,float h_R,
         ret.y = t1*(q_R*u_R + grav_h_R*h_R*0.5f) + t2*(q_L*u_L + grav_h_L*h_L*0.5f) - t3*(q_R - q_L);
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
 
+        //ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
+        //ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
+        //ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
                 return ret;
 }
 
@@ -93,11 +103,18 @@ static inline LSMVector3 ASF_HLL2SF(float h_L,float ho_L,float u_L,float v_L,flo
         float dc_R = dragmult * sf_dev_R * ff_dev_R * (1.0f/(std::max(0.0001f,srocksize)))* std::max(0.0f,sdensity-1000.0f)/std::max(0.1f,1000.0f);//den > 0.0f? 100.0*ff_dev * sf_dev* (1.0f - (1.0f/std::max(1.0f,density)))/den : 0.0f;
         float fac_dc_R = std::max(0.0f,1.0f - (4.0f *(1.0f-std::min(1.0f,std::max(std::max(0.0f,(ff_dev_R)),(exp(-(dc_R /ff_dev_R)) + ((sf_dev_R *sdensity)/(1000.0f))*tan(sifa))/tan(sifa))))));
 
+
+        float dc = (dc_L * h_L + dc_R * h_R)/std::max(0.0001f,(h_L + h_R));
+        float ff_tot = std::max(0.001f,std::max(h_L,h_R)/std::max(0.0001f,std::max(h_L + ho_L,h_R + ho_R)));
+
+        ff_tot = std::max(0.0f,std::min(1.0f,(ff_tot -0.2f) * 10.0f));
+
+
         //and pressure-momentum based on the solid content
         float grav_h_L = GRAV*h_L;//*  pow(std::min(1.0f,std::max(0.0f,(1.0f-1.25f*sf_dev_L))),4.0f);
         float grav_h_R = GRAV*h_R;//*  pow(std::min(1.0f,std::max(0.0f,(1.0f-1.25f*sf_dev_R))),4.0f) ;
-        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * fac_dc_L;  // wave velocity
-        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * fac_dc_R ;
+        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * ff_tot;// * fac_dc_L;  // wave velocity
+        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * ff_tot;// * fac_dc_R ;
         q_R = u_R*h_R;
         q_L = u_L*h_L;
 
@@ -114,6 +131,12 @@ static inline LSMVector3 ASF_HLL2SF(float h_L,float ho_L,float u_L,float v_L,flo
         ret.y = t1*(q_R*u_R + grav_h_R*h_R*0.5f) + t2*(q_L*u_L + grav_h_L*h_L*0.5f) - t3*(q_R - q_L);
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
 
+
+        //ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
+        //ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
+        //ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
+
+        //switch betweeen non-shock capturing gudanov and shock-capturing hll solver based on solid content
         return ret;
 }
 
@@ -230,7 +253,7 @@ static inline float AS_GetVNFX(float v,float hn, float dt, float dx, float n,
                 float vpow = pow((vn - us) * (vn - us) + (vf - vs) * (vf - vs),UF_j - 1.0f);
                 float lfacu = std::max(0.0f,dt * dc);
                 float fac_dc = std::min(1.0f,std::max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
-                float v_balance = (1.0f - fac_dc) *(ff * vn + sf * us) + (fac_dc) * us;
+                float v_balance = us;// (1.0f - fac_dc) *(ff * vn + sf * us) + (fac_dc) * us;
                 vn = v_balance + (vn - v_balance) * exp(-lfacu);
         }
 
@@ -363,7 +386,7 @@ static inline float AS_GetVNFY(float v,float hn, float dt, float dx, float n,
                 float vpow = pow((vn - vs) * (vn - vs) + (uf - us) * (uf - us),UF_j - 1.0f);
                 float lfacv = std::max(0.0f,dt * dc);
                 float fac_dc = std::min(1.0f,std::max(0.0f,(exp(-(dc * vpow/ff_dev)) + ((sf_dev *density)/(1000.0f))*tan(ifa))/tan(ifa)));
-                float v_balance = (1.0f - fac_dc) *(ff * vn + sf * vs) + (fac_dc) * vs;
+                float v_balance = vs;//(1.0f - fac_dc) *(ff * vn + sf * vs) + (fac_dc) * vs;
                 vn = v_balance + (vn - v_balance) * exp(-lfacv);
         }
 
@@ -477,9 +500,9 @@ static inline float AS_GetVNSX(float v,float hn, float dt, float dx, float n,
     float nsq = nsq1*vsq*dt;
     vn = (float)((vn/(1.0f+nsq)));
 
-    float vn_ifa = vn > 0.0f? std::max(0.0f,(float)(vn - sf * dt *GRAV * tan(ifa))) : std::min(0.0f,(float)(vn + sf * dt * GRAV * tan(ifa)));
+    float vn_ifa = vn > 0.0f? std::max(0.0f,(float)(vn - std::max(0.0f,(sf - ff * (1000.0f/density))) * dt *GRAV * tan(ifa))) : std::min(0.0f,(float)(vn + std::max(0.0f,(sf - ff * (1000.0f/density))) * dt * GRAV * tan(ifa)));
     float fac_dc = std::min(1.0f,std::max(0.0f,(exp(-(dc * vpow/ff_dev)))/tan(ifa)));// + ((sf_dev *density)/(1000.0f))*tan(ifa)
-    vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn;
+    vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn_ifa;
 
     return vn;
 }
@@ -565,9 +588,9 @@ static inline float AS_GetVNSY(float v,float hn, float dt, float dx, float n,
         float nsq = nsq1*vsq*dt;
         vn = (float)((vn/(1.0f+nsq)));
 
-        float vn_ifa = vn > 0? std::max(0.0f,(float)(vn - sf * dt *GRAV * tan(ifa))) : std::min(0.0f,(float)(vn + sf * dt * GRAV * tan(ifa)));
+        float vn_ifa = vn > 0? std::max(0.0f,(float)(vn - std::max(0.0f,(sf - ff * (1000.0f/density))) * dt *GRAV * tan(ifa))) : std::min(0.0f,(float)(vn + std::max(0.0f,(sf - ff * (1000.0f/density))) * dt * GRAV * tan(ifa)));
         float fac_dc = std::min(1.0f,std::max(0.0f,(exp(-(dc * vpow/ff_dev)))/tan(ifa)));// + ((sf_dev *density)/(1000.0f))*tan(ifa)
-        vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn;
+        vn = vn_ifa * fac_dc + (1.0f-fac_dc) * vn_ifa;
         return vn;
 }
 
