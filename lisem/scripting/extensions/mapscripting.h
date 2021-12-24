@@ -39,6 +39,8 @@
 #include "raster/rasterchannel.h"
 #include "raster/rasterfiberbundle.h"
 
+#include "omp.h"
+
 inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
 {
     QList<cTMap *> list = array->ToQList<cTMap*>();
@@ -266,10 +268,34 @@ inline void RegisterMapToScriptEngine(LSMScriptEngine *engine)
 
 }
 
+#include "stack/threadpool.h"
+
+static inline void AS_SetNumThreads(int i)
+{
+    if(!(i < 1024 && i > 0))
+    {
+        LISEMS_ERROR("Can not set the number of threads to be" + QString::number(i));
+        throw 1;
+    }
+    try
+    {
+        pool.reset(i);
+        omp_set_num_threads(i);
+
+    }catch(...)
+    {
+        LISEMS_ERROR("Could not set the number of threads to be" + QString::number(i));
+        throw 1;
+    }
+}
+
 inline void RegisterMapMathToScriptEngine(asIScriptEngine *engine)
 {
 
     //register mathematical functions for maps
+
+    engine->RegisterGlobalFunction("void SetNumThreads(int i)", asFUNCTION( AS_SetNumThreads),  asCALL_CDECL); assert( r >= 0 );
+
 
     int r = engine->RegisterGlobalFunction("Map @sin(const Map &in s)", asFUNCTION( AS_Mapsin),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @cos(const Map &in s)", asFUNCTION( AS_Mapcos),  asCALL_CDECL); assert( r >= 0 );
@@ -292,6 +318,7 @@ inline void RegisterMapMathToScriptEngine(asIScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @ceil(const Map &in s)", asFUNCTION( AS_Mapceil),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @floor(const Map &in s)", asFUNCTION( AS_Mapfloor),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @fraction(const Map &in s)", asFUNCTION( AS_Mapfraction),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("void as_mtest(int i)", asFUNCTION( AS_MapTest),  asCALL_CDECL); assert( r >= 0 );
 
     //register functions related to missing values
 

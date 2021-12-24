@@ -59,16 +59,33 @@ const float curlStrain = 3.0;
 #define _constant(T) const T
 #define mul(a, b) (a) * (b)
 
+float hash(
+        _in(float) n
+){
+        return fract(sin(n)*753.5453123);
+}
+
+
 float noise(
         _in(vec3) x
 ){
-        vec3 p = floor(x);
+        /*vec3 p = floor(x);
         vec3 f = fract(x);
         f = f*f*(3.0 - 2.0*f);
 
         vec2 uv = (p.xy + vec2(37.0, 17.0)*p.z) + f.xy;
         vec2 rg = textureLod( iChannel0, (uv+.5)/256., 0.).yx;
-        return mix(rg.x, rg.y, f.z);
+        return mix(rg.x, rg.y, f.z);*/
+    vec3 p = floor(x);
+            vec3 f = fract(x);
+            f = f*f*(3.0 - 2.0*f);
+
+
+        float n = p.x + p.y*157.0 + 113.0*p.z;
+        return mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
+                       mix( hash(n+157.0), hash(n+158.0),f.x),f.y),
+                   mix(mix( hash(n+113.0), hash(n+114.0),f.x),
+                       mix( hash(n+270.0), hash(n+271.0),f.x),f.y),f.z);
 }
 
 
@@ -99,7 +116,7 @@ float densityf(
         _in(float) t
 ){
         // signal
-        vec3 p = pos * .0212242 + offset;
+        vec3 p = pos * .0212242 + offset ;
         float dens = get_noise(p);
 
         float cov = 1. - COVERAGE;
@@ -130,97 +147,14 @@ float light(
                 //if (T < .01) break;
 
                 pos += dir_step;
+                if(pos.y > 40)
+                {
+                    break;
+                }
         }
 
         return T;//;
 }
-
-vec4 cloud3d_raymarch( in vec3 ro, in vec3 rd, in vec3 bgcol, in ivec2 px, in vec3 suncol, in vec3 wpos)
-{
-     vec3 sundir = iSunDir;
-
-        float mirror = 0.0;
-
-
-
-    ro.x = mod(ro.x,1e4); //for number precision stuff
-    ro.z = mod(ro.z,1e4);
-
-    vec3 ro_org = ro;
-
-        float lay_min = 10.0;
-        float lay_max = 40.0;
-
-    //we start far above the cloud layer, get started at the intersect
-    if(ro.y < 10 && rd.y > 0.0)
-    {
-        float dist_y = ro.y -10;
-        float l_vec = abs(dist_y)/abs(rd.y);
-        ro = ro + rd * l_vec;
-    }else if(ro.y > lay_max && rd.y < 0.0)
-        {
-                float dist_y = ro.y - lay_max;
-        float l_vec = abs(dist_y)/abs(rd.y);
-        ro = ro + rd * l_vec;
-        }else if(!(ro.y >= 10 && ro.y <= lay_max))
-        {
-                return vec4(0.0,0.0,0.0,0.0);
-        }else{
-                ro = ro;
-        }
-
-    vec3 roc = ro;
-    vec3 ro_orgnm = ro;
-        int steps =  STEPS;
-
-        float T = 1.; // transmitance
-        vec3 C = vec3(0, 0, 0); // color
-        float alpha = 0.;
-
-        vec3 pos = ro;
-
-    float ro_dif =abs(ro.y+15.0);
-
-    float angle = min(acos(dot(rd,vec3(0.0,1.0,0.0))),acos(dot(rd,vec3(0.0,-1.0,0.0))));
-    //float fac_tadd = max(0.0f,min(1.0f,(ro_dif)/15.0f)); // base the step progression on distance and angle
-    //float fac_tadd2 = max(0.0f,min(1.0f,(ro_dif-15.0f)/100.0f)); // base the step progression on distance and angle
-    //float tadd = max(0.05f,min(5.0,fac_tadd2/atan(angle)*0.05 + (1.0 - fac_tadd2)* (fac_tadd * 2.5f + (1.0f-fac_tadd) * 0.1f)));
-        float tadd = 1.5f*atan(angle);// * 30.0f/steps;
-    float march_step = tadd;
-
-    vec3 C_highlight = vec3(0.0,0.0,0.0);
-        for (int i = 0; i < steps; i++) {
-                float h = float(i) / float(steps);
-                float dens = densityf(pos, WIND, h);
-
-
-                float T_i = exp(-ABSORPTION * max(0.3,pow(abs(1.0-0.93*dot(rd,iSunDir)),0.25)) * dens * march_step);
-                T *= T_i;
-                if (T < .01) break;
-
-        C_highlight += T *
-
-                        (exp(h) / 1.75) *
-                        dens * march_step *0.4;
-
-                C += T *
-                        light(pos) *
-                        dens * march_step * suncol * (1.0/max(0.2,pow(abs(1.0-0.93*dot(rd,iSunDir)),0.1))) * 3.0 * suncol.b;
-                alpha += (1. - T_i) * (1. - alpha);
-
-                pos += tadd * rd;
-                                if(length(pos - ro_org) > length(wpos - ro_org)){break;};
-                                if(pos.y >lay_max + 0.01 || pos.y < 9.990)
-                                {
-                                break;}
-        }
-
-        return vec4(C + C_highlight, alpha);
-
-
-
-}
-
 
 
 const float pi = 3.14159265359;
@@ -289,6 +223,112 @@ vec3 jodieReinhardTonemap(vec3 c){
 }
 
 
+vec4 cloud3d_raymarch( in vec3 ro, in vec3 rd, in vec3 bgcol, in ivec2 px, in vec3 suncol, in vec3 wpos)
+{
+     vec3 sundir = iSunDir;
+
+        float mirror = 0.0;
+
+
+
+    //ro.x = mod(ro.x,1e4); //for number precision stuff
+    //ro.z = mod(ro.z,1e4);
+
+    vec3 ro_org = ro;
+
+        float lay_min = 10.0;
+        float lay_max = 40.0;
+
+    //we start far above the cloud layer, get started at the intersect
+    if(ro.y < 10 && rd.y > 0.0)
+    {
+        float dist_y = ro.y -10;
+        float l_vec = abs(dist_y)/abs(rd.y);
+        ro = ro + rd * l_vec;
+    }else if(ro.y > lay_max && rd.y < 0.0)
+        {
+                float dist_y = ro.y - lay_max;
+        float l_vec = abs(dist_y)/abs(rd.y);
+        ro = ro + rd * l_vec;
+        }else if(!(ro.y >= 10 && ro.y <= lay_max))
+        {
+                return vec4(0.0,0.0,0.0,0.0);
+        }else{
+                ro = ro;
+        }
+
+    vec3 roc = ro;
+    vec3 ro_orgnm = ro;
+        int steps =  STEPS;
+
+        float T = 1.; // transmitance
+        vec3 C = vec3(0, 0, 0); // color
+        float alpha = 0.;
+
+        vec3 pos = ro;
+
+    float ro_dif =abs(ro.y+15.0);
+
+    float angle = min(acos(dot(rd,vec3(0.0,1.0,0.0))),acos(dot(rd,vec3(0.0,-1.0,0.0))));
+    //float fac_tadd = max(0.0f,min(1.0f,(ro_dif)/15.0f)); // base the step progression on distance and angle
+    //float fac_tadd2 = max(0.0f,min(1.0f,(ro_dif-15.0f)/100.0f)); // base the step progression on distance and angle
+    //float tadd = max(0.05f,min (5.0,fac_tadd2/atan(angle)*0.05 + (1.0 - fac_tadd2)* (fac_tadd * 2.5f + (1.0f-fac_tadd) * 0.1f)));
+        float tadd = max(0.25,1.5f*atan(angle));// * 30.0f/steps;
+    float march_step = tadd;
+
+    if(ro.y >= 5.0f && ro.y <= 45.0f)
+    {
+        float tadd_add = min(min(0.5f,max(0.0f,0.5 - 0.1f*(10.0f-ro.y))),max(0.0f,0.5 - 0.1f*(ro.y-40.0f)));
+        tadd = tadd + tadd_add;
+        march_step = tadd;
+    }
+
+    vec3 C_highlight = vec3(0.0,0.0,0.0);
+    //further distance of ray marching step indicates we might want to not do this pixel (aliasing makes far-away clouds ugly anyway)
+    float fac_fog = min(1.0f,max(0.0f,sqrt(length(ro.xz- ro_org.xz)/2500.0)));
+    fac_fog = fac_fog;
+    fac_fog = 1.0 - fac_fog;
+
+    {
+        for (int i = 0; i < steps; i++) {
+                float h = float(i) / float(steps);
+                float dens = fac_fog  * densityf(pos, WIND, h);
+
+
+                float T_i = exp(-ABSORPTION * max(0.3,pow(abs(1.0-0.93*dot(rd,iSunDir)),0.25)) * dens * march_step);
+                T *= T_i;
+                if (T < .01) break;
+
+        C_highlight +=  T *
+
+                        (exp(h) / 1.75) *
+                        dens * march_step *0.4;
+
+                C +=  T *
+                        light(pos) *
+                        dens * march_step * suncol * (1.0/max(0.2,pow(abs(1.0-0.93*dot(rd,iSunDir)),0.1))) * 3.0 * suncol.b;
+                alpha += (1. - T_i) * (1. - alpha);
+
+                pos += tadd * rd;
+
+                //
+                if(length(pos - ro_org) > length(wpos - ro_org))
+                {
+                    break;};
+                                if(pos.y >lay_max + 0.01 || pos.y < 9.990)
+                                {
+                                break;}
+        }
+    }
+        return vec4(C + C_highlight, alpha);
+
+
+
+}
+
+
+
+
 vec4 GetFinalSkyColor(vec3 uv, vec2 screencoord, ivec2 pixcoord)
 {
     float cloudiness = 0.4;
@@ -315,15 +355,15 @@ vec4 GetFinalSkyColor(vec3 uv, vec2 screencoord, ivec2 pixcoord)
 
     //raymarch
 
-    vec3 CameraPosition_mod = CameraPosition;//vec3(mod(CameraPosition.x,1e5),CameraPosition.y,mod(CameraPosition.z,1e5));
+    vec3 CameraPosition_mod = CameraPosition;//vec3(mod(CameraPosition.x,1e4),CameraPosition.y,mod(CameraPosition.z,1e4));
 
     vec4 cloudres = cloud3d_raymarch(
-                vec3(CameraPosition_mod.x, (CameraPosition.y)/iCloudThickness - iCloudHeight/iCloudThickness, CameraPosition_mod.z),
+                vec3(CameraPosition_mod.x/iCloudThickness , (CameraPosition.y)/iCloudThickness - iCloudHeight/iCloudThickness, CameraPosition_mod.z/iCloudThickness),
                 uv,
                 vec3(0.0,0.0,0.0),
                 pixcoord ,
                 colors,
-                vec3((posx + CameraPosition_mod.x),-2 + posy/iCloudThickness - iCloudHeight/iCloudThickness,(posz + CameraPosition_mod.z)));
+                vec3((posx + CameraPosition_mod.x)/iCloudThickness,-2 + posy/iCloudThickness - iCloudHeight/iCloudThickness,(posz + CameraPosition_mod.z/iCloudThickness)));
 
     return cloudres;
 }

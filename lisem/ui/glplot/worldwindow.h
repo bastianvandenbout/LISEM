@@ -44,6 +44,7 @@
 #include "layer/uilight.h"
 #include "layer/light/uidirectionallight.h"
 #include "layer/post/postdebug.h"
+#include "layer/post/lighting.h"
 #include "opengl3dobject.h"
 
 #include "geometry/geometrybase.h"
@@ -354,6 +355,7 @@ private:
     bool m_GizmoMode = 0;
     bool m_Draw3DGlobe = false;
     bool m_DrawShadows = false;
+    bool m_DrawLighting = false;
     bool m_DoSet3DViewFrom2DOnce =false;
 
     std::vector<DragElement> m_DragElements;
@@ -444,6 +446,7 @@ public:
         AddUILayer(new UIMapEdgeLayer());
         //AddUILayer(new UISkyBoxLayer());
         AddUILayer(new UITerrainLayer());
+        AddUILayer(new UIPostLightingLayer());
         AddUILayer(new UIPostFXAALayer());
         AddUILayer(new UIPostDebugLayer());
         AddLight(new UIDirectionalLight());
@@ -475,6 +478,7 @@ public:
     void SetLinesDraw(bool d);
     void SetUIScale(double d);
     void SetShadowDraw(bool d);
+    void SetLightingDraw(bool d);
     void SetLegendDraw(bool d);
     GeoProjection GetCurrentProjection();
     void SetCurrentProjection(GeoProjection p, bool forceupdate = false);

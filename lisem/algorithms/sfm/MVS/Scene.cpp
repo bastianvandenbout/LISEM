@@ -409,7 +409,10 @@ bool Scene::Load(const String& fileName, bool bImport)
 	// open the input stream
 	std::ifstream fs(fileName, std::ios::in | std::ios::binary);
 	if (!fs.is_open())
+    {
+        std::cout << "could not open file " <<std::endl;
 		return false;
+    }
 	// load project header ID
 	char szHeader[4];
 	fs.read(szHeader, 4);
@@ -419,14 +422,14 @@ bool Scene::Load(const String& fileName, bool bImport)
 			return true;
 		if (LoadInterface(fileName))
 			return true;
-		VERBOSE("error: invalid project");
+        std::cout << "error: invalid project" <<std::endl;
 		return false;
 	}
 	// load project version
 	uint32_t nVer;
 	fs.read((char*)&nVer, sizeof(uint32_t));
 	if (!fs || nVer != PROJECT_VER) {
-		VERBOSE("error: different project version");
+        std::cout << "error: different project version" << std::endl;
 		return false;
 	}
 	// load stream type
@@ -437,7 +440,10 @@ bool Scene::Load(const String& fileName, bool bImport)
 	fs.read((char*)&nReserved, sizeof(uint64_t));
 	// serialize in the current state
 	if (!SerializeLoad(*this, fs, (ARCHIVE_TYPE)nType))
+    {
+        std::cout << "could not serialize " << std::endl;
 		return false;
+    }
 	// init images
 	nCalibratedImages = 0;
 	size_t nTotalPixels(0);

@@ -88,6 +88,39 @@ public:
         m_ZFar = x;
     }
 
+    inline LSMVector2 ProjectVector(LSMVector3 v, float width, float height)
+    {
+        LSMVector4 pix = GetProjectionMatrixNoTranslationXZ() * LSMVector4(v.x,v.y,v.z,1.0);
+        pix = pix/pix.w;
+        pix.x = ((pix.x+1.0)/2.0) *((float)( width));
+        pix.y = height - ((pix.y+1.0)/2.0) *((float)( height));
+        return LSMVector2(pix.x,pix.y);
+    }
+
+    inline float ProjectLineSegmentLength(LSMVector3 a, LSMVector3 b, float width, float height)
+    {
+        LSMVector4 pix = GetProjectionMatrixNoTranslationXZ() * LSMVector4(a.x,a.y,a.z,1.0);
+        pix = pix/pix.w;
+        pix.x = ((pix.x+1.0)/2.0) *((float)( width));
+        pix.y = height - ((pix.y+1.0)/2.0) *((float)( height));
+        LSMVector4 pix2 = GetProjectionMatrixNoTranslationXZ() * LSMVector4(b.x,b.y,b.z,1.0);
+        pix2 = pix2/pix2.w;
+        pix2.x = ((pix2.x+1.0)/2.0) *((float)( width));
+        pix2.y = height - ((pix2.y+1.0)/2.0) *((float)( height));
+
+        return (LSMVector2(pix.x,pix.y) - LSMVector2(pix2.x,pix2.y)).length();
+    }
+
+    inline bool IsVectorVisible(LSMVector3 a, float width, float height)
+    {
+        LSMVector4 pix = GetProjectionMatrixNoTranslationXZ() * LSMVector4(a.x,a.y,a.z,1.0);
+        pix = pix/pix.w;
+        pix.x = ((pix.x+1.0)/2.0) *((float)( width));
+        pix.y = height - ((pix.y+1.0)/2.0) *((float)( height));
+        return ((pix.x > 0.0f) && (pix.x < width) && (pix.y > 0.0) && (pix.y < height));
+    }
+
+
 
     void ResizeViewPort(int w, int h);
 

@@ -1717,11 +1717,12 @@ void Scene::DenseReconstructionEstimate(void* pData)
 				break;
 			}
 			// try to load already compute depth-map for this image
-            if(false)// (data.nFusionMode >= 0 && File::access(ComposeDepthFilePath(depthData.GetView().GetID(), "dmap")))
+            if(true)// (data.nFusionMode >= 0 && File::access(ComposeDepthFilePath(depthData.GetView().GetID(), "dmap")))
             {	if (OPTDENSE::nOptimize & OPTDENSE::OPTIMIZE) {
-					if (!depthData.Load(ComposeDepthFilePath(depthData.GetView().GetID(), "dmap"))) {
+                    if (!depthData.Load(dmap_path + ComposeDepthFilePath(depthData.GetView().GetID(), "dmap"))) {
 						VERBOSE("error: invalid depth-map '%s'", ComposeDepthFilePath(depthData.GetView().GetID(), "dmap").c_str());
-						exit(EXIT_FAILURE);
+                        std::cout << "could not read depth-map " << (dmap_path + ComposeDepthFilePath(depthData.GetView().GetID(), "dmap")).c_str() << std::endl;
+                        throw 1;
 					}
 					// optimize depth-map
 					data.events.AddEventFirst(new EVTOptimizeDepthMap(evtImage.idxImage));

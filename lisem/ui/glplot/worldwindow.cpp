@@ -566,6 +566,13 @@ void WorldWindow::SetShadowDraw(bool d)
     m_UILayerMutex.unlock();
 }
 
+void WorldWindow::SetLightingDraw(bool d)
+{
+    m_UILayerMutex.lock();
+    m_DrawLighting = d;
+    m_UILayerMutex.unlock();
+}
+
 void WorldWindow::SetLegendDraw(bool d)
 {
     m_UILayerMutex.lock();

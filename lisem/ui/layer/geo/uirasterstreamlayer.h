@@ -2592,8 +2592,117 @@ public:
 
     }
 
+    inline float Distance3DPointLine( LSMVector3 p, LSMVector3 a, LSMVector3 b, float r )
+    {
+      LSMVector3 pa = p - a, ba = b - a;
+      float h = std::max(0.0,std::min( pa.dot(ba)/ba.dot(ba), 1.0 ));
+      return (pa - ba*h).length() - r;
+    }
+
     inline void OnDraw3D(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
     {
+
+        //draw 3d axes and base layer,
+        //baseplane automatically shadowmapped, but do not cast shadows themselves
+        LSMStyle style = GetStyle();
+
+
+        //std::cout  << " " << style.m_DrawBasePlane << " " << style.m_DrawEdge << "  " << style.m_Draw3DAxes << std::endl;
+        if(this->CouldBeDEM() && this->IsDrawAsDEM())
+        {
+            BoundingBox bb = this->GetBoundingBox();
+            float hmax = -1e31f;
+            float hmin = 1e31f;
+            hmax = m_RDP->GetBandStats(0).max;
+            hmin = m_RDP->GetBandStats(0).min;
+
+            s.GL_3DFrameBuffer->SetAsTarget();
+
+            glad_glDepthMask(GL_TRUE);
+            glad_glEnable(GL_DEPTH_TEST);
+            glad_glViewport(0,0,s.scr_pixwidth,s.scr_pixheight);
+
+            double zscale = 1.0f;//s.projection.GetUnitZMultiplier();
+
+
+            LSMVector3 camerapos = s.Camera3D->GetPosition();
+
+            bool is_in = bb.Contains(camerapos.x,camerapos.z);
+
+            double xmin_rel = bb.GetMinX() - camerapos.x;
+            double xmax_rel = bb.GetMaxX() - camerapos.x;
+            double zmin_rel = bb.GetMinY() - camerapos.z;
+            double zmax_rel = bb.GetMaxY() - camerapos.z;
+
+            if(style.m_DrawBasePlane)
+            {
+
+                m->m_ShapePainter->DrawSquare3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),1.0,LSMVector4(style.m_BasePlaneColor.r,style.m_BasePlaneColor.g,style.m_BasePlaneColor.b,style.m_BasePlaneColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+            }
+            if(style.m_Draw3DAxes)
+            {
+                //if(!(x < xmin_rel))
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                }
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                }
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                }
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                }
+
+
+                //bottom edges
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                }
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                }
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                }
+                {
+                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),0.0);
+                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                }
+
+
+            }
+        }
+
+        //determine line size and line interval
+
+
+        //determine text size based on distance
+
+
+
+
+        //determine base plane size and level
+
+
+
+        //
+
 
     }
 

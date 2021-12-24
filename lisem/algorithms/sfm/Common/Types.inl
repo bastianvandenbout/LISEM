@@ -3786,15 +3786,18 @@ bool SerializeLoad(TYPE& obj, std::ifstream& fs, ARCHIVE_TYPE type, unsigned fla
 		// serialize in the saved state
 		switch (type) {
 		case ARCHIVE_TEXT: {
+            std::cout << "text archive "<<std::endl;
 			boost::archive::text_iarchive ar(fs, flags);
 			ar >> obj;
 			break; }
 		case ARCHIVE_BINARY: {
-			boost::archive::binary_iarchive ar(fs, flags);
+            std::cout << "binary archive "<<std::endl;
+            boost::archive::binary_iarchive ar(fs, flags);
 			ar >> obj;
 			break; }
 		case ARCHIVE_BINARY_ZIP: {
-			namespace io = boost::iostreams;
+            std::cout << "binary zip archive "<<std::endl;
+            namespace io = boost::iostreams;
 			io::filtering_streambuf<io::input> ffs;
 			ffs.push(io::zlib_decompressor());
 			ffs.push(fs);
@@ -3802,12 +3805,12 @@ bool SerializeLoad(TYPE& obj, std::ifstream& fs, ARCHIVE_TYPE type, unsigned fla
 			ar >> obj;
 			break; }
 		default:
-			VERBOSE("error: Can not load the object, invalid archive type");
+            std::cout << "error: Can not load the object, invalid archive type" <<std::endl;
 			return false;
 		}
 	}
 	catch (const std::exception& e) {
-		VERBOSE("error: invalid stream (%s)", e.what());
+        std::cout << "error: invalid stream " <<  e.what() <<std::endl;
 		return false;
 	}
 	return true;
@@ -3818,7 +3821,10 @@ bool SerializeLoad(TYPE& obj, const SEACAVE::String& fileName, ARCHIVE_TYPE type
 	// open the input stream
 	std::ifstream fs(fileName, std::ios::in | std::ios::binary);
 	if (!fs.is_open())
+    {
+        std::cout << "could not open serialize stream"<<std::endl;
 		return false;
+    }
 	// serialize in the saved state
 	return SerializeLoad(obj, fs, type, flags);
 } // SerializeLoad

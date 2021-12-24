@@ -31,67 +31,7 @@ inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
     //are therefore accepted.. sort of, since in the final filtering nothing is left
 
     /*GET_LOG().RegisterListener(logMVS);
-
-    outputdir = outputdir + "/MVS";
-    std::string strInputFileName = (AS_DIR + outputdir + "/scene.mvs").toStdString();
-
-    if(!optdense_done_init)
-    {
-        optdense_done_init = true;
-
-        MVS::OPTDENSE::init();
-    }
-
-    MVS::OPTDENSE::nResolutionLevel = 1;
-    MVS::OPTDENSE::nMaxResolution = 3200;
-    MVS::OPTDENSE::nMinResolution = 640;
-    MVS::OPTDENSE::nNumViews = 5;
-    MVS::OPTDENSE::nMinViewsFuse = 3;
-    MVS::OPTDENSE::nEstimateColors = 2;
-    MVS::OPTDENSE::nEstimateNormals = 2;
-
-
-    MVS::Scene scene(omp_get_num_threads());
-
-    // load and estimate a dense point-cloud
-    if (!scene.Load(MAKE_PATH_SAFE(strInputFileName.c_str())))
-    {
-
-        LISEMS_ERROR("Could not load scene");
-        throw 1;
-    }
-    if (scene.pointcloud.IsEmpty()) {
-
-        LISEMS_ERROR("Empty scene");
-        throw 1;
-    }
-
-    std::cout << "npoints before: " << scene.pointcloud.GetSize() << std::endl;
-    std::cout << scene.images.size() << std::endl;
-
-    if ((ARCHIVE_TYPE)(0) != ARCHIVE_MVS) {
-            if (scene.DenseReconstruction(0)) {
-
-            }else
-            {
-
-
-                LISEMS_ERROR("Could not densify point cloud");
-                throw 1;
-            }
-    }
-
-    std::cout << "npoints after: " << scene.pointcloud.GetSize() << std::endl;
-
-
-    if (scene.pointcloud.IsEmpty()) {
-
-        LISEMS_ERROR("Empty dense reconstruction");
-        throw 1;
-    }
-
-    scene.Save((AS_DIR + outputdir + "/scene_dense.mvs").toStdString(), (ARCHIVE_TYPE)(0));
-    scene.pointcloud.Save((AS_DIR + outputdir + "/dense.ply").toStdString());*/
+*/
 
 
 
@@ -176,6 +116,82 @@ inline static void AS_PhotogrammetryDensifyPointCloud(QString outputdir)
 
    std::cout << "done " << std::endl;
 
+   //remove the generated archive
+
+   QFile file (QString(AS_DIR + outputdir + "/MVS/scene_dense.mvs"));
+       file.remove();
+
+   //generate the archive using our version of MVS and boost::archive but re-using the depth maps (vast majority of the computation
+
+
+
+
+   {
+
+       outputdir = outputdir + "/MVS";
+       std::string strInputFileName = (AS_DIR + outputdir + "/scene.mvs").toStdString();
+
+       if(!optdense_done_init)
+       {
+           optdense_done_init = true;
+
+           MVS::OPTDENSE::init();
+       }
+
+       MVS::OPTDENSE::nResolutionLevel = 1;
+       MVS::OPTDENSE::nMaxResolution = 3200;
+       MVS::OPTDENSE::nMinResolution = 640;
+       MVS::OPTDENSE::nNumViews = 5;
+       MVS::OPTDENSE::nMinViewsFuse = 3;
+       MVS::OPTDENSE::nEstimateColors = 2;
+       MVS::OPTDENSE::nEstimateNormals = 2;
+
+
+       MVS::Scene scene(omp_get_num_threads(),(AS_DIR +outputdir + "/").toStdString());
+
+       // load and estimate a dense point-cloud
+       if (!scene.Load(MAKE_PATH_SAFE(strInputFileName.c_str())))
+       {
+
+           LISEMS_ERROR("Could not load scene");
+           throw 1;
+       }
+       if (scene.pointcloud.IsEmpty()) {
+
+           LISEMS_ERROR("Empty scene");
+           throw 1;
+       }
+
+       std::cout << "npoints before: " << scene.pointcloud.GetSize() << std::endl;
+       std::cout << scene.images.size() << std::endl;
+
+       if ((ARCHIVE_TYPE)(0) != ARCHIVE_MVS) {
+               if (scene.DenseReconstruction(0)) {
+
+               }else
+               {
+
+
+                   LISEMS_ERROR("Could not densify point cloud");
+                   throw 1;
+               }
+       }
+
+       std::cout << "npoints after: " << scene.pointcloud.GetSize() << std::endl;
+
+
+       if (scene.pointcloud.IsEmpty()) {
+
+           LISEMS_ERROR("Empty dense reconstruction");
+           throw 1;
+       }
+
+       scene.Save((AS_DIR + outputdir + "/scene_dense.mvs").toStdString(), (ARCHIVE_TYPE)(0));
+       scene.pointcloud.Save((AS_DIR + outputdir + "/dense.ply").toStdString());
+
+   }
+
+
 }
 
 
@@ -198,7 +214,7 @@ inline static void AS_PhotogrammetryToMesh(QString outputdir)
 
     MVS::Scene scene(omp_get_num_threads());
 
-    // load and estimate a dense point-cloud
+    std::cout << "load mvs " << strInputFileName << std::endl;    // load and estimate a dense point-cloud
     if (!scene.Load(MAKE_PATH_SAFE(strInputFileName.c_str())))
     {
 

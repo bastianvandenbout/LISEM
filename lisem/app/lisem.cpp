@@ -11,6 +11,13 @@
 #include "QMessageBox"
 #include "resourcemanager.h"
 #include "gl/openglcldatamanager.h"
+#include <QDesktopServices>
+#include <QSysInfo>
+#include <QUrl>
+#include <QProcess>
+#include "omp.h"
+#include "QThread"
+#include "QString"
 
 #include <mpi.h>
 
@@ -59,6 +66,15 @@ bool SPHazard::OnGLCLFrame()
     return false;
 }
 
+int omp_thread_count() {
+    int n = 0;
+    #pragma omp parallel reduction(+:n)
+    {
+        n += 1;
+    }
+    return n;
+}
+
 int SPHazard::execute(int argc, char *argv[])
 {
 
@@ -68,10 +84,18 @@ int SPHazard::execute(int argc, char *argv[])
     InitMessages();
     InitMessagesS();
     LISEM_STATUS("============================");
-    LISEM_STATUS("=      SPHazard Model       ");
-    LISEM_STATUS("= Opening main structure    ");
-    LISEM_STATUS("=                           ");
+    LISEM_STATUS("=        LISEM Model        ");
+    LISEM_STATUS("=   see www.lisemmodel.com  ");
+    LISEM_STATUS("=   ITC - Twente University ");
     LISEM_STATUS("============================");
+    LISEM_STATUS("");
+    LISEM_STATUS("System info:");
+    LISEM_STATUS(QString("OS:   ") + (QSysInfo::kernelType() + " version: "+ QSysInfo::productVersion()));
+    LISEM_STATUS(QString("PPN:  ") + QSysInfo::prettyProductName());
+    LISEM_STATUS(QString("ARCH: ") + QSysInfo::currentCpuArchitecture());
+    LISEM_STATUS(QString("OMP:  ") + QString::number(omp_thread_count()));
+    LISEM_STATUS(QString("ITC:  ") + QString::number(QThread::idealThreadCount()));
+    LISEM_STATUS("");
     LISEM_STATUS("");
     LISEM_DEBUG("Initiated Messages");
     LISEM_DEBUG("Updating console");

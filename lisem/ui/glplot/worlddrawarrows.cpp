@@ -182,12 +182,12 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
 
                     std::cout << "arrow stuff " << 0.3 * DrawCenter.length() << " " << lxpixv.x << " " << lxpixv.y << std::endl;
 
-                    lx.fac_x =  0.3 * DrawCenter.length()/lxpixv.x;
-                    lx.fac_y = 0.3 * DrawCenter.length()/lxpixv.y;
-                    ly.fac_x = 0.3 * DrawCenter.length()/lypixv.x;
-                    ly.fac_y =  0.3 * DrawCenter.length()/lypixv.y;
-                    lz.fac_x = 0.3 * DrawCenter.length()/lzpixv.x;
-                    lz.fac_y =  0.3 * DrawCenter.length()/lzpixv.y;
+                    lx.fac_x =  0.3 * DrawCenter.length()*lxpixv.x;
+                    lx.fac_y = 0.3 * DrawCenter.length()*lxpixv.y;
+                    ly.fac_x = 0.3 * DrawCenter.length()*lypixv.x;
+                    ly.fac_y =  0.3 * DrawCenter.length()*lypixv.y;
+                    lz.fac_x = 0.3 * DrawCenter.length()*lzpixv.x;
+                    lz.fac_y =  0.3 * DrawCenter.length()*lzpixv.y;
 
 
 

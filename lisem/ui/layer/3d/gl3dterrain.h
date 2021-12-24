@@ -87,6 +87,8 @@ public:
             glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureD"),1);
             glad_glActiveTexture(GL_TEXTURE1);
             glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DElevation.at(i)->GetTexture());
+            glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 
             // now render stuff

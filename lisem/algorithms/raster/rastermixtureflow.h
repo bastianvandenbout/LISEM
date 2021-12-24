@@ -76,7 +76,7 @@ static inline LSMVector3 ASF_HLL2SF(float h_L,float ho_L,float u_L,float v_L,flo
         LSMVector3 retnw;
 
 
-                float c = std::max(fabs(u_L),fabs(u_R));
+        float c = std::max(fabs(u_L),fabs(u_R));
         float cd = c*0.5f;
         float q_R = u_R*h_R;
         float q_L = u_L*h_L;
@@ -607,23 +607,25 @@ static inline float flow_pudasainidt(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,
     {
         for (int c = 0; c < DEM->nrCols(); c++)
         {
+            if(!pcr::isMV(DEM->data[r][c]))
+            {
+                int x = r;
+                int y = c;
 
-            int x = r;
-            int y = c;
+                const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
+                const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
 
-            const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
-            const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
+                float vmax = 100.0;
 
-            float vmax = 100.0;
+                float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
+                float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
+                float vxs = std::min(vmax,std::max(-vmax,VXS->data[gy][gx]));
+                float vys = std::min(vmax,std::max(-vmax,VYS->data[gy][gx]));
 
-            float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
-            float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
-            float vxs = std::min(vmax,std::max(-vmax,VXS->data[gy][gx]));
-            float vys = std::min(vmax,std::max(-vmax,VYS->data[gy][gx]));
-
-            float dt_req = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
-            float dt_reqs = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vxs*vxs + vys * vys)))));
-            dt_min = std::min(dt_min,std::min(dt_reqs,dt_req));
+                float dt_req = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
+                float dt_reqs = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vxs*vxs + vys * vys)))));
+                dt_min = std::min(dt_min,std::min(dt_reqs,dt_req));
+            }
 
         }
     }
@@ -922,6 +924,409 @@ static inline void flow_pudasaini(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTM
     return;
 }
 
+
+
+
+
+
+
+
+
+static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY,cTMap * HS,cTMap * VXS,cTMap * VYS, cTMap * IFA, cTMap * RS, cTMap * D, cTMap * HN,cTMap * VXN,cTMap * VYN, cTMap * HSN,cTMap * VXSN,cTMap * VYSN, cTMap * IFAN, cTMap * RSN, cTMap * DN,cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float dragmult = 1.0)
+{
+
+    int dim0 = DEM->nrCols();
+    int dim1 = DEM->nrRows();
+    float dx = DEM->cellSize();
+
+    float dt_min = 1e6;
+    float dt_store = _dt;
+    bool stop = false;
+
+    #pragma omp parallel shared(stop)
+    {
+        double t = 0;
+        double t_end = _dt;
+
+        int iter = 0;
+        while(true)
+        {
+
+            if(!(t < t_end))
+            {
+                stop = true;
+            }
+            #pragma omp barrier
+            if(stop)
+            {
+                break;
+            }
+
+            double dt_min_this = 1e6;
+            double dt;
+            #pragma omp for collapse(2)
+            //get dt
+            for(int r = 0; r < DEM->nrRows(); r++)
+            {
+                for (int c = 0; c < DEM->nrCols(); c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        int x = r;
+                        int y = c;
+
+                        const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
+                        const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
+
+                        float vmax = 100.0;
+
+                        float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
+                        float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
+                        float vxs = std::min(vmax,std::max(-vmax,VXS->data[gy][gx]));
+                        float vys = std::min(vmax,std::max(-vmax,VYS->data[gy][gx]));
+
+                        float dt_req = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
+                        float dt_reqs = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vxs*vxs + vys * vys)))));
+                        dt_min_this = std::min((float)dt_min_this,std::min(dt_reqs,dt_req));
+                    }
+
+                }
+            }
+
+            #pragma omp critical
+            {
+                dt_min = std::min(dt_min,(float)dt_min_this);
+                dt_store = std::min(t_end - t,std::max((double)dt_min,1e-6));
+
+                //reset already for next time
+                dt_min = 1e6;
+            }
+
+
+            //wait
+            #pragma omp barrier
+
+            //reduce for minimum dt
+            //#pragma omp single
+            {
+                dt = dt_store;
+            }
+
+
+            //wait
+            #pragma omp barrier
+
+            float tx = dt/dx;
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->nrRows(); r++)
+            {
+                for (int c = 0; c < DEM->nrCols(); c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        int x = r;
+                        int y = c;
+                        const int gy = std::min(dim1-(int)(1),std::max((int)(0),(int)(x)));
+                        const int gx = std::min(dim0-(int)(1),std::max((int)(0),(int)(y)));
+
+                        const int gx_x1 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx - 1 )));
+                        const int gy_x1 = gy;
+                        const int gx_x2 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx + 1)));
+                        const int gy_x2 = gy;
+                        const int gx_y1 = gx;
+                        const int gy_y1 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy - 1)));
+                        const int gx_y2 = gx;
+                        const int gy_y2 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy + 1)));
+
+                        float z = DEM->data[gy][gx];
+                        float n = std::max(0.00001f,N->data[gy][gx]);
+
+                        float z_x1 = DEM->data[gy][gx_x1];
+                        float z_x2 = DEM->data[gy][gx_x2];
+                        float z_y1 = DEM->data[gy_y1][gx];
+                        float z_y2 = DEM->data[gy_y2][gx];
+
+
+                        if(gx + 1 > dim0-1)
+                        {
+                            z_x2 = -99999;
+                        }
+                        if(gx - 1 < 0)
+                        {
+                            z_x1 = -99999;
+                        }
+                        if(gy + 1 > dim1-1)
+                        {
+                            z_y2 = -99999;
+                        }
+                        if(gy - 1 < 0)
+                        {
+                            z_y1 = -99999;
+                        }
+                        float zc_x1 = z_x1 < -99995? z : z_x1;
+                        float zc_x2 = z_x2 < -99995? z : z_x2;
+                        float zc_y1 = z_y1 < -99995? z : z_y1;
+                        float zc_y2 = z_y2 < -99995? z : z_y2;
+
+                        float vmax = 0.1f * dx/dt;
+
+                        float h = std::max(0.0f,H->data[gy][gx]);
+                        float h_x1 = std::max(0.0f,H->data[gy][gx_x1]);
+                        float h_x2 = std::max(0.0f,H->data[gy][gx_x2]);
+                        float h_y1 = std::max(0.0f,H->data[gy_y1][gx]);
+                        float h_y2 = std::max(0.0f,H->data[gy_y2][gx]);
+
+                        float hs = std::max(0.0f,HS->data[gy][gx]);
+                        float hs_x1 = std::max(0.0f,HS->data[gy][gx_x1]);
+                        float hs_x2 = std::max(0.0f,HS->data[gy][gx_x2]);
+                        float hs_y1 = std::max(0.0f,HS->data[gy_y1][gx]);
+                        float hs_y2 = std::max(0.0f,HS->data[gy_y2][gx]);
+
+                        float sifa = std::min(3.0f,std::max(0.00001f,IFA->data[gy][gx]));
+                        float srocksize = std::min(100.0f,std::max(0.00001f,RS->data[gy][gx]));
+                        float sdensity = std::min(3000.0f,std::max(1000.00f,D->data[gy][gx]));
+
+                        float sifa_x1 = IFA->data[gy][gx_x1];
+                        float sifa_x2 = IFA->data[gy][gx_x2];
+                        float sifa_y1 = IFA->data[gy_y1][gx];
+                        float sifa_y2 = IFA->data[gy_y2][gx];
+                        float srocksize_x1 = RS->data[gy][gx_x1];
+                        float srocksize_x2 = RS->data[gy][gx_x2];
+                        float srocksize_y1 = RS->data[gy_y1][gx];
+                        float srocksize_y2 = RS->data[gy_y2][gx];
+                        float sdensity_x1 = D->data[gy][gx_x1];
+                        float sdensity_x2 = D->data[gy][gx_x2];
+                        float sdensity_y1 = D->data[gy_y1][gx];
+                        float sdensity_y2 = D->data[gy_y2][gx];
+
+                        float vsx = std::min(vmax,std::max(-vmax,VXS->data[gy][gx]));
+                        float vsy = std::min(vmax,std::max(-vmax,VYS->data[gy][gx]));
+
+                        float vsx_x1 = std::min(vmax,std::max(-vmax,VXS->data[gy][gx_x1]));
+                        float vsy_x1 = std::min(vmax,std::max(-vmax,VYS->data[gy][gx_x1]));
+                        float vsx_x2 = std::min(vmax,std::max(-vmax,VXS->data[gy][gx_x2]));
+                        float vsy_x2 = std::min(vmax,std::max(-vmax,VYS->data[gy][gx_x2]));
+                        float vsx_y1 = std::min(vmax,std::max(-vmax,VXS->data[gy_y1][gx]));
+                        float vsy_y1 = std::min(vmax,std::max(-vmax,VYS->data[gy_y1][gx]));
+                        float vsx_y2 = std::min(vmax,std::max(-vmax,VXS->data[gy_y2][gx]));
+                        float vsy_y2 = std::min(vmax,std::max(-vmax,VYS->data[gy_y2][gx]));
+
+                        float vsx_x1y1 = std::min(vmax,std::max(-vmax,VXS->data[gy_y1][gx_x1]));
+                        float vsy_x1y1 = std::min(vmax,std::max(-vmax,VYS->data[gy_y1][gx_x1]));
+                        float vsx_x2y2 = std::min(vmax,std::max(-vmax,VXS->data[gy_y2][gx_x2]));
+                        float vsy_x2y2 = std::min(vmax,std::max(-vmax,VYS->data[gy_y2][gx_x2]));
+                        float vsx_x1y2 = std::min(vmax,std::max(-vmax,VXS->data[gy_y2][gx_x1]));
+                        float vsy_x1y2 = std::min(vmax,std::max(-vmax,VYS->data[gy_y2][gx_x1]));
+                        float vsx_x2y1 = std::min(vmax,std::max(-vmax,VXS->data[gy_y1][gx_x2]));
+                        float vsy_x2y1 = std::min(vmax,std::max(-vmax,VYS->data[gy_y1][gx_x2]));
+
+                        float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
+                        float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
+
+                        float vx_x1 = std::min(vmax,std::max(-vmax,VX->data[gy][gx_x1]));
+                        float vy_x1 = std::min(vmax,std::max(-vmax,VY->data[gy][gx_x1]));
+                        float vx_x2 = std::min(vmax,std::max(-vmax,VX->data[gy][gx_x2]));
+                        float vy_x2 = std::min(vmax,std::max(-vmax,VY->data[gy][gx_x2]));
+                        float vx_y1 = std::min(vmax,std::max(-vmax,VX->data[gy_y1][gx]));
+                        float vy_y1 = std::min(vmax,std::max(-vmax,VY->data[gy_y1][gx]));
+                        float vx_y2 = std::min(vmax,std::max(-vmax,VX->data[gy_y2][gx]));
+                        float vy_y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx]));
+
+                        float vx_x1y1 = std::min(vmax,std::max(-vmax,VX->data[gy_y1][gx_x1]));
+                        float vy_x1y1 = std::min(vmax,std::max(-vmax,VY->data[gy_y1][gx_x1]));
+                        float vx_x2y2 = std::min(vmax,std::max(-vmax,VX->data[gy_y2][gx_x2]));
+                        float vy_x2y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx_x2]));
+                        float vx_x1y2 = std::min(vmax,std::max(-vmax,VX->data[gy_y2][gx_x1]));
+                        float vy_x1y2 = std::min(vmax,std::max(-vmax,VY->data[gy_y2][gx_x1]));
+                        float vx_x2y1 = std::min(vmax,std::max(-vmax,VX->data[gy_y1][gx_x2]));
+                        float vy_x2y1 = std::min(vmax,std::max(-vmax,VY->data[gy_y1][gx_x2]));
+
+                        float hsurf = z +hs + h;
+                        float hsurfs = z +hs;
+                        float sx_zh_x2 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((z_x2 + hs_x2 + h_x2-hsurf)/dx)));
+                        float sy_zh_y1 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((hsurf-z_y1 - hs_y1 - h_y1)/dx)));
+                        float sx_zh_x1 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((hsurf-z_x1 - hs_x1 - h_x1)/dx)));
+                        float sy_zh_y2 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((z_y2 + hs_y2 + h_y2-hsurf)/dx)));
+
+                        float sx_zh = std::min(1.0f,std::max(-1.0f,minmod(sx_zh_x1,sx_zh_x2)));
+                        float sy_zh = std::min(1.0f,std::max(-1.0f,minmod(sy_zh_y1,sy_zh_y2)));
+
+                        float sxs_zh_x2 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((z_x2 + hs_x2 -hsurfs)/dx)));
+                        float sys_zh_y1 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((hsurfs-z_y1 - hs_y1)/dx)));
+                        float sxs_zh_x1 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((hsurfs-z_x1 - hs_x1)/dx)));
+                        float sys_zh_y2 = std::min((float)(0.5f),std::max((float)(-0.5f),(float)((z_y2 + hs_y2 -hsurfs)/dx)));
+
+                        float sxs_zh = std::min(1.0f,std::max(-1.0f,minmod(sxs_zh_x1,sxs_zh_x2)));
+                        float sys_zh = std::min(1.0f,std::max(-1.0f,minmod(sys_zh_y1,sys_zh_y2)));
+
+                        float C = 0.1f;
+                        float err = 0.0000f;
+
+
+                        LSMVector3 hlls_x1 = z_x1 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2SF(std::max(0.0f,hs_x1 -std::max(0.0f,z - z_x1)),std::max(0.0f,h_x1 -std::max(0.0f,z - z_x1)),vsx_x1,vsy_x1,std::max(0.0f,hs -std::max(0.0f,z_x1-z)) ,std::max(0.0f,h -std::max(0.0f,z_x1-z)),vsx,vsy,sifa, srocksize, sdensity, dragmult);
+                        LSMVector3 hlls_x2 = z_x2 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2SF(std::max(0.0f,hs -std::max(0.0f,z_x2 - z)),std::max(0.0f,h -std::max(0.0f,z_x2 - z)),vsx,vsy,std::max(0.0f,hs_x2 -std::max(0.0f,z - z_x2)),std::max(0.0f,h_x2 -std::max(0.0f,z - z_x2)),vsx_x2,vsy_x2,sifa, srocksize, sdensity, dragmult);
+                        LSMVector3 hlls_y1 = z_y1 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2SF(std::max(0.0f,hs_y1 -std::max(0.0f,z - z_y1)),std::max(0.0f,h_y1 -std::max(0.0f,z - z_y1)),vsy_y1,vsx_y1,std::max(0.0f,hs -std::max(0.0f,z_y1 - z)),std::max(0.0f,h -std::max(0.0f,z_y1 - z)),vsy,vsx,sifa, srocksize, sdensity, dragmult);
+                        LSMVector3 hlls_y2 = z_y2 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2SF(std::max(0.0f,hs -std::max(0.0f,z_y2 - z)),std::max(0.0f,h -std::max(0.0f,z_y2 - z)),vsy,vsx,std::max(0.0f,hs_y2 -std::max(0.0f,z - z_y2)),std::max(0.0f,h_y2 -std::max(0.0f,z - z_y2)),vsy_y2,vsx_y2,sifa, srocksize, sdensity, dragmult);
+
+                        //float3 hlls_x1 = z_x1 < -1000? LSMVector3(0.0f,0.0f,0.0f):F_HLL2SF(hs_x1,h_x1,vsx_x1,vsy_x1,hs,h,vsx,vsy);
+                        //float3 hlls_x2 = z_x2 < -1000? LSMVector3(0.0f,0.0f,0.0f):F_HLL2SF(hs,h,vsx,vsy,hs_x2,h_x2,vsx_x2,vsy_x2);
+                        //float3 hlls_y1 = z_y1 < -1000? LSMVector3(0.0f,0.0f,0.0f):F_HLL2SF(hs_y1,h_y1,vsy_y1,vsx_y1,hs,h,vsy,vsx);
+                        //float3 hlls_y2 = z_y2 < -1000? LSMVector3(0.0f,0.0f,0.0f):F_HLL2SF(hs,h,vsy,vsx,hs_y2,h_y2,vsy_y2,vsx_y2);
+                        float fluxs_x1 = z_x1 < -99995? std::max(-hs * C,(float)(-hs * sqrt(hs) *dt* sqrt(hs)/(dx*(0.001f+n)))):std::max(-std::max(err,hs) * C,std::min(std::max(err,hs_x1) * C,(float)(+tx*(hlls_x1.x))));
+                        float fluxs_x2 = z_x2 < -99995? std::max(-hs * C,(float)(-hs * sqrt(hs) *dt* sqrt(hs)/(dx*(0.001f+n)))):std::max(-std::max(err,hs) * C,std::min(std::max(err,hs_x2) * C,(float)(-tx*(hlls_x2.x))));
+                        float fluxs_y1 = z_y1 < -99995? std::max(-hs * C,(float)(-hs * sqrt(hs) *dt* sqrt(hs)/(dx*(0.001f+n)))):std::max(-std::max(err,hs) * C,std::min(std::max(err,hs_y1) * C,(float)(+tx*(hlls_y1.x))));
+                        float fluxs_y2 = z_y2 < -99995? std::max(-hs * C,(float)(-hs * sqrt(hs) *dt* sqrt(hs)/(dx*(0.001f+n)))):std::max(-std::max(err,hs) * C,std::min(std::max(err,hs_y2) * C,(float)(-tx*(hlls_y2.x))));
+
+                        float hsold = hs;
+                        float hsn = ((std::max(0.00f,(float)(hs + fluxs_x1 + fluxs_x2 + fluxs_y1 + fluxs_y2))));
+                        float a_sx = 0.5f * GRAV *sx_zh;
+                        float a_sy = 0.5f * GRAV *sy_zh;
+                        float qsxn = hs * vsx - tx*(hlls_x2.y - hlls_x1.y) - tx*(hlls_y2.z - hlls_y1.z);
+                        float qsyn = hs * vsy - tx*(hlls_x2.z - hlls_x1.z) - tx*(hlls_y2.y - hlls_y1.y);
+                        float vsxn = (float)((qsxn))/std::max(0.01f,(float)(hsn));
+                        float vsyn = (float)((qsyn))/std::max(0.01f,(float)(hsn));
+
+                        vsxn = AS_GetVNSX(vsxn, hsn,dt, dx, n,
+                                           z, z_x1, z_x2, z_y1, z_y2,
+                                           hs, hs_x1, hs_x2, hs_y1, hs_y2,
+                                           vsx, vsx_x1, vsx_x2, vsx_y1, vsx_y2,
+                                           vsy, vsy_x1, vsy_x2, vsy_y1, vsy_y2,
+                                           vsx_x1y1, vsx_x1y2, vsx_x2y1, vsx_x2y2,
+                                           vsy_x1y1, vsy_x1y2, vsy_x2y1, vsy_x2y2,
+                                           h, h_x1, h_x2, h_y1, h_y2,
+                                           vx, vx_x1, vx_x2, vx_y1, vx_y2,
+                                           vy, vy_x1, vy_x2, vy_y1, vy_y2,
+                                           vx_x1y1, vx_x1y2, vx_x2y1, vx_x2y2,
+                                           vy_x1y1, vy_x1y2, vy_x2y1, vy_x2y2,
+                                           sifa, srocksize, sdensity, dragmult);
+
+                        vsyn = AS_GetVNSY(vsyn,hsn, dt, dx, n,
+                                           z, z_x1, z_x2, z_y1, z_y2,
+                                           hs, hs_x1, hs_x2, hs_y1, hs_y2,
+                                           vsx, vsx_x1, vsx_x2, vsx_y1, vsx_y2,
+                                           vsy, vsy_x1, vsy_x2, vsy_y1, vsy_y2,
+                                           vsx_x1y1, vsx_x1y2, vsx_x2y1, vsx_x2y2,
+                                           vsy_x1y1, vsy_x1y2, vsy_x2y1, vsy_x2y2,
+                                           h, h_x1, h_x2, h_y1, h_y2,
+                                           vx, vx_x1, vx_x2, vx_y1, vx_y2,
+                                           vy, vy_x1, vy_x2, vy_y1, vy_y2,
+                                           vx_x1y1, vx_x1y2, vx_x2y1, vx_x2y2,
+                                           vy_x1y1, vy_x1y2, vy_x2y1, vy_x2y2,
+                                           sifa, srocksize, sdensity, dragmult);
+
+                        float ff_dev_dc = std::max(0.001f,h/std::max(0.001f,(h + hs)));
+                        float sf_dev_dc = std::max(0.001f,hs/std::max(0.001f,(h + hs)));
+
+                        float dc = dragmult * ff_dev_dc * sf_dev_dc * (1.0f/(std::max(0.0001f,srocksize)))* std::max(0.0f,sdensity-1000.0f)/std::max(0.1f,1000.0f);
+
+                        LSMVector3 hll_x1 = z_x1 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2FS(std::max(0.0f,h_x1 -std::max(0.0f,z - z_x1)),std::max(0.0f,hs_x1 -std::max(0.0f,z - z_x1)),vx_x1,vy_x1,std::max(0.0f,h -std::max(0.0f,z_x1-z)) ,std::max(0.0f,hs -std::max(0.0f,z_x1-z)),vx,vy,sifa, srocksize, sdensity, dragmult);
+                        LSMVector3 hll_x2 = z_x2 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2FS(std::max(0.0f,h -std::max(0.0f,z_x2 - z)),std::max(0.0f,hs -std::max(0.0f,z_x2 - z)),vx,vy,std::max(0.0f,h_x2 -std::max(0.0f,z - z_x2)),std::max(0.0f,hs_x2 -std::max(0.0f,z - z_x2)),vx_x2,vy_x2,sifa, srocksize, sdensity, dragmult);
+                        LSMVector3 hll_y1 = z_y1 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2FS(std::max(0.0f,h_y1 -std::max(0.0f,z - z_y1)),std::max(0.0f,hs_y1 -std::max(0.0f,z - z_y1)),vy_y1,vx_y1,std::max(0.0f,h -std::max(0.0f,z_y1 - z)),std::max(0.0f,hs -std::max(0.0f,z_y1 - z)),vy,vx,sifa, srocksize, sdensity, dragmult);
+                        LSMVector3 hll_y2 = z_y2 < -99995? LSMVector3(0.0f,0.0f,0.0f):ASF_HLL2FS(std::max(0.0f,h -std::max(0.0f,z_y2 - z)),std::max(0.0f,hs -std::max(0.0f,z_y2 - z)),vy,vx,std::max(0.0f,h_y2 -std::max(0.0f,z - z_y2)),std::max(0.0f,hs_y2 -std::max(0.0f,z - z_y2)),vy_y2,vx_y2,sifa, srocksize, sdensity, dragmult);
+                        float flux_x1 = z_x1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):std::max(-std::max(err,h) * C,std::min(std::max(err,h_x1) * C,(float)(+tx*(hll_x1.x))));
+                        float flux_x2 = z_x2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):std::max(-std::max(err,h) * C,std::min(std::max(err,h_x2) * C,(float)(-tx*(hll_x2.x))));
+                        float flux_y1 = z_y1 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):std::max(-std::max(err,h) * C,std::min(std::max(err,h_y1) * C,(float)(+tx*(hll_y1.x))));
+                        float flux_y2 = z_y2 < -99995? std::max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):std::max(-std::max(err,h) * C,std::min(std::max(err,h_y2) * C,(float)(-tx*(hll_y2.x))));
+
+
+
+                        float hold = h;
+                        float hn = ((std::max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
+                        float a_fx = 0.5f * GRAV *sx_zh;
+                        float a_fy = 0.5f * GRAV *sy_zh;
+                        float qxn = h * vx - tx*(hll_x2.y - hll_x1.y) - tx*(hll_y2.z - hll_y1.z);
+                        float qyn = h * vy - tx*(hll_x2.z - hll_x1.z) - tx*(hll_y2.y - hll_y1.y);
+                        float vxn = (float)((qxn))/std::max(0.01f,(float)(hn));
+                        float vyn = (float)((qyn))/std::max(0.01f,(float)(hn));
+
+                        vxn = AS_GetVNFX(vxn,hn, dt, dx, n,
+                                           z, z_x1, z_x2, z_y1, z_y2,
+                                           hs, hs_x1, hs_x2, hs_y1, hs_y2,
+                                           vsx, vsx_x1, vsx_x2, vsx_y1, vsx_y2,
+                                           vsy, vsy_x1, vsy_x2, vsy_y1, vsy_y2,
+                                           vsx_x1y1, vsx_x1y2, vsx_x2y1, vsx_x2y2,
+                                           vsy_x1y1, vsy_x1y2, vsy_x2y1, vsy_x2y2,
+                                           h, h_x1, h_x2, h_y1, h_y2,
+                                           vx, vx_x1, vx_x2, vx_y1, vx_y2,
+                                           vy, vy_x1, vy_x2, vy_y1, vy_y2,
+                                           vx_x1y1, vx_x1y2, vx_x2y1, vx_x2y2,
+                                           vy_x1y1, vy_x1y2, vy_x2y1, vy_x2y2,
+                                           sifa, srocksize, sdensity, dragmult);
+
+                        vyn = AS_GetVNFY(vyn,hn, dt, dx, n,
+                                           z, z_x1, z_x2, z_y1, z_y2,
+                                           hs, hs_x1, hs_x2, hs_y1, hs_y2,
+                                           vsx, vsx_x1, vsx_x2, vsx_y1, vsx_y2,
+                                           vsy, vsy_x1, vsy_x2, vsy_y1, vsy_y2,
+                                           vsx_x1y1, vsx_x1y2, vsx_x2y1, vsx_x2y2,
+                                           vsy_x1y1, vsy_x1y2, vsy_x2y1, vsy_x2y2,
+                                           h, h_x1, h_x2, h_y1, h_y2,
+                                           vx, vx_x1, vx_x2, vx_y1, vx_y2,
+                                           vy, vy_x1, vy_x2, vy_y1, vy_y2,
+                                           vx_x1y1, vx_x1y2, vx_x2y1, vx_x2y2,
+                                           vy_x1y1, vy_x1y2, vy_x2y1, vy_x2y2,
+                                           sifa, srocksize, sdensity, dragmult);
+
+
+                        int edges = ((z_x1 < -1000)?1:0) +((z_x2 < -1000)?1:0)+((z_y1 < -1000)?1:0)+((z_y2 < -1000)?1:0);
+
+                        bool edge = (z_x1 < -1000 || z_x2 < -1000 || z_y1 < -1000 || z_y2 < -1000);
+
+
+                        HSN->data[gy][gx] = edges > 2? 0.0f:isnan(hsn)? 0.0f:hsn;
+                        VXSN->data[gy][gx] = edges > 2? 0.0f:isnan(vsxn)? 0.0f:vsxn;
+                        VYSN->data[gy][gx] = edges > 2? 0.0f:isnan(vsyn)? 0.0f:vsyn;
+                        HN->data[gy][gx] = edges > 2? 0.0f:isnan(hn)? 0.0f:hn;
+                        VXN->data[gy][gx] = edges > 2? 0.0f:isnan(vxn)? 0.0f:vxn;
+                        VYN->data[gy][gx] = edges > 2? 0.0f:isnan(vyn)? 0.0f:vyn;
+
+                        float hsleft = hs + std::min(0.0f,fluxs_x1) +std::min(0.0f,fluxs_x2) + std::min(0.0f,fluxs_y1) + std::min(0.0f,fluxs_y2);
+                        float sifan = (sifa * hsleft + std::max(0.0f,fluxs_x1) * sifa_x1 + std::max(0.0f,fluxs_x2) * sifa_x2 + std::max(0.0f,fluxs_y1) * sifa_y1 + std::max(0.0f,fluxs_y2) * sifa_y2)/(std::max(0.0001f,hsn));
+                        float srocksizen = (srocksize * hsleft + std::max(0.0f,fluxs_x1) * srocksize_x1 + std::max(0.0f,fluxs_x2) * srocksize_x2 + std::max(0.0f,fluxs_y1) * srocksize_y1 + std::max(0.0f,fluxs_y2) * srocksize_y2)/(std::max(0.0001f,hsn));
+                        float sdensityn = (sdensity * hsleft + std::max(0.0f,fluxs_x1) * sdensity_x1 + std::max(0.0f,fluxs_x2) * sdensity_x2 + std::max(0.0f,fluxs_y1) * sdensity_y1 + std::max(0.0f,fluxs_y2) * sdensity_y2)/(std::max(0.0001f,hsn));
+
+                        IFAN->data[r][c] = isnan(sifan)? 0.3f : sifan;
+                        RSN->data[r][c] = isnan(srocksizen)? 0.1f : srocksizen;
+                        DN->data[r][c] = isnan(sdensityn)? 2000.0f : sdensityn;
+
+
+                    }
+                }
+            }
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < H->nrRows(); r++)
+            {
+                for(int c = 0; c < H->nrCols(); c++)
+                {
+                    H->Drc = HN->Drc;
+                    VX->Drc = VXN->Drc;
+                    VY->Drc = VYN->Drc;
+                    HS->Drc = HSN->Drc;
+                    VXS->Drc = VXSN->Drc;
+                    VYS->Drc = VYSN->Drc;
+                    IFA->Drc = IFAN->Drc;
+                    RS->Drc = RSN->Drc;
+                    D->Drc = DN->Drc;
+
+
+
+                }
+            }
+
+            //wait
+            #pragma omp barrier
+
+            t = t+dt;
+            iter ++;
+        }
+    }
+    return;
+}
+
+
+
 inline std::vector<cTMap*> AS_DebrisWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap * VX, cTMap * VY, cTMap * HS, cTMap * VXS, cTMap * VYS, cTMap * IFA, cTMap * RS, cTMap * D,  float dragmult, float _dt, float courant)
 {
     if(!(DEM->data.nr_rows() == N->data.nr_rows() && DEM->data.nr_cols() == N->data.nr_cols()))
@@ -958,8 +1363,11 @@ inline std::vector<cTMap*> AS_DebrisWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap 
     double t = 0;
     double t_end = _dt;
 
+    flow_pudasainidtandflow(_dt,DEM,N,H,VX,VY,HS,VXS,VYS,IFA,RS,D,HN,VXN,VYN,HSN,VXSN,VYSN,IFAN,RSN,DN,nullptr,nullptr,nullptr,nullptr,dragmult);
 
-    int iter = 0;
+
+
+    /*int iter = 0;
     while(t < t_end)
     {
 
@@ -991,7 +1399,7 @@ inline std::vector<cTMap*> AS_DebrisWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap 
 
             }
         }
-    }
+    }*/
 
 
 

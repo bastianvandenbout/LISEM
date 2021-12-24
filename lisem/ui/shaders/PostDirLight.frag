@@ -36,6 +36,7 @@ uniform vec3 iSolarColor;
 uniform vec3 iSkyColor;
 uniform vec3 iBaseColor;
 
+uniform vec3 DirectionalLightDir;
 
 out vec4 fragColor;
 
@@ -57,97 +58,125 @@ void main()
     float y = texture(PosY,uv).r;
     float z = texture(PosX,uv).r;
 
-    //project to position in shadowmap coords
+    float bias = 0.01;
 
-    vec4 pos_sh = CMatrixShadowMap0 * vec4(x,y,z,1.0);
-    vec3 pos_cop = pos_sh.xyz/pos_sh.w;
-    pos_sh.x = pos_cop.x * 0.5 + 0.5;
-    pos_sh.y = pos_cop.y * 0.5 + 0.5;
-    pos_sh.z = pos_cop.z * 0.5 + 0.5;
-    //use uv in shadowmap coords to get shadowmap depth
+    vec3 normal = texture(Normal,uv).rgb;
 
-    vec4 pos_sh1 = CMatrixShadowMap1 * vec4(x,y,z,1.0);
-    vec3 pos_cop1 = pos_sh1.xyz/pos_sh1.w;
-    pos_sh1.x = pos_cop1.x * 0.5 + 0.5;
-    pos_sh1.y = pos_cop1.y * 0.5 + 0.5;
-    pos_sh1.z = pos_cop1.z * 0.5 + 0.5;
+    float dotdir = dot(normalize(normal),-normalize(iSolarDir));
 
-    bool do_shadow = false;
-    bool do_shadow1 = false;
-    float shadow_depth = 0.0;
-    float shadow_depth1 = 0.0;
-    if(pos_sh.x > 0 && pos_sh.x < 1.0 && pos_sh.y < 1.0 && pos_sh.y > 0.0)
-    {
-        do_shadow= true;
-        shadow_depth = 1.0 * texture(ShadowMap0,pos_sh.xy).r;
+    float dirfac = smoothstep(-0.05,0.05,dotdir);
+        //project to position in shadowmap coords
 
-    }
+        vec4 pos_sh = CMatrixShadowMap0 * vec4(x,y,z,1.0);
+        vec3 pos_cop = pos_sh.xyz/pos_sh.w;
+        pos_sh.x = pos_cop.x * 0.5 + 0.5;
+        pos_sh.y = pos_cop.y * 0.5 + 0.5;
+        pos_sh.z = pos_cop.z * 0.5 + 0.5;
+        //use uv in shadowmap coords to get shadowmap depth
 
+        vec4 pos_sh1 = CMatrixShadowMap1 * vec4(x,y,z,1.0);
+        vec3 pos_cop1 = pos_sh1.xyz/pos_sh1.w;
+        pos_sh1.x = pos_cop1.x * 0.5 + 0.5;
+        pos_sh1.y = pos_cop1.y * 0.5 + 0.5;
+        pos_sh1.z = pos_cop1.z * 0.5 + 0.5;
 
-    float shadow0 = 0.0;
-    vec2 texelSize0 = 1.0 / textureSize(ShadowMap0, 0);
-    for(int xi = -1; xi <= 1; ++xi)
-    {
-        for(int yi = -1; yi <= 1; ++yi)
+        bool do_shadow = false;
+        bool do_shadow1 = false;
+        float shadow_depth = 0.0;
+        float shadow_depth1 = 0.0;
+        if(pos_sh.x > 0 && pos_sh.x < 1.0 && pos_sh.y < 1.0 && pos_sh.y > 0.0)
         {
-            float pcfDepth = texture(ShadowMap0, pos_sh.xy + vec2(xi, yi) * texelSize0).r;
-            float s = do_shadow? (pcfDepth < pos_sh.z - 0.005 ? 0.0 : 1.0):1.0;
-            if(pcfDepth > 0.99995 || pcfDepth < 0.0005)
-            {
-                s = 1.0;
-            }
-            shadow0 += s;
+            do_shadow= true;
+            shadow_depth = 1.0 * texture(ShadowMap0,pos_sh.xy).r;
+
         }
-    }
 
 
-    if(pos_sh1.x > 0 && pos_sh1.x < 1.0 && pos_sh1.y < 1.0 && pos_sh1.y > 0.0)
-    {
-        do_shadow1= true;
-        shadow_depth1 = 1.0 * texture(ShadowMap1,pos_sh1.xy).r;
-    }
-
-
-    float shadow1 = 0.0;
-    vec2 texelSize1 = 1.0 / textureSize(ShadowMap1, 0);
-    for(int xi = -1; xi <= 1; ++xi)
-    {
-        for(int yi = -1; yi <= 1; ++yi)
+        float shadow0 = 0.0;
+        vec2 texelSize0 = 1.0 / textureSize(ShadowMap0, 0);
+        for(int xi = -1; xi <= 1; ++xi)
         {
-            float pcfDepth = texture(ShadowMap1, pos_sh1.xy + vec2(xi, yi) * texelSize1).r;
-            float s1 = do_shadow1? (pcfDepth < pos_sh1.z - 0.005 ? 0.0 : 1.0):1.0;
-            if(pcfDepth > 0.99995 || pcfDepth < 0.0005)
+            for(int yi = -1; yi <= 1; ++yi)
             {
-                s1 = 1.0;
+                float pcfDepth = texture(ShadowMap0, pos_sh.xy + vec2(xi, yi) * texelSize0).r;
+                float s = do_shadow? (pcfDepth < pos_sh.z - bias ? 0.0 : 1.0):1.0;
+                if(pcfDepth > 0.99995 || pcfDepth < 0.0005)
+                {
+                    s = 1.0;
+                }
+                shadow0 += s;
             }
-            shadow1 += s1;
         }
-    }
 
 
-    //compare depths to detect shadows
-
-    float light0 = do_shadow? (shadow_depth < pos_sh.z - 0.005 ? 0.0 : 1.0):1.0;
-    if(shadow_depth > 0.99995 || shadow_depth < 0.0005)
-    {
-        light0 = 1.0;
-    }
-    float light1 = do_shadow1? (shadow_depth1 < pos_sh1.z - 0.005 ? 0.0 : 1.0):1.0;
-    if(shadow_depth1 > 0.99995 || shadow_depth1 < 0.0005)
-    {
-        light1 = 1.0;
-    }
-    shadow0 += light0;
-    shadow1 += light1;
-
-    shadow0 /= 10.0;
-
-    shadow1 /= 10.0;
+        if(pos_sh1.x > 0 && pos_sh1.x < 1.0 && pos_sh1.y < 1.0 && pos_sh1.y > 0.0)
+        {
+            do_shadow1= true;
+            shadow_depth1 = 1.0 * texture(ShadowMap1,pos_sh1.xy).r;
+        }
 
 
+        float shadow1 = 0.0;
+        vec2 texelSize1 = 1.0 / textureSize(ShadowMap1, 0);
+        for(int xi = -1; xi <= 1; ++xi)
+        {
+            for(int yi = -1; yi <= 1; ++yi)
+            {
+                float pcfDepth = texture(ShadowMap1, pos_sh1.xy + vec2(xi, yi) * texelSize1).r;
+                float s1 = do_shadow1? (pcfDepth < pos_sh1.z - bias ? 0.0 : 1.0):1.0;
+                if(pcfDepth > 0.99995 || pcfDepth < 0.0005)
+                {
+                    s1 = 1.0;
+                }
+                shadow1 += s1;
+            }
+        }
 
-    float light = shadow0 * shadow1;
 
-    fragColor = vec4(iSolarColor * light,1.0);//texture(ShadowMap0,uv);
+        //compare depths to detect shadows
+
+        float light0 = do_shadow? (shadow_depth < pos_sh.z - bias ? 0.0 : 1.0):1.0;
+        if(shadow_depth > 0.99995 || shadow_depth < 0.0005)
+        {
+            light0 = 1.0;
+        }
+        float light1 = do_shadow1? (shadow_depth1 < pos_sh1.z - 0.005 ? 0.0 : 1.0):1.0;
+        if(shadow_depth1 > 0.99995 || shadow_depth1 < 0.0005)
+        {
+            light1 = 1.0;
+        }
+
+        //get distance from edge of shadow map 0
+        float dist_0 = max(max(pos_sh.x,1.0-pos_sh.x),max(pos_sh.y,1.0-pos_sh.y));
+        float dist_fac =  smoothstep(0.0,0.1,dist_0);
+
+
+        //smoothstep
+        shadow0 += light0;
+        shadow1 += light1;
+
+        shadow0 /= 10.0;
+
+        shadow1 /= 10.0;
+
+
+
+        float lightmerge = shadow1;
+        float lightnmerge = shadow0;
+
+        float light = 1.0;
+
+        if(do_shadow)
+        {
+            light = dist_fac * lightnmerge + (1.0-dist_fac) * lightmerge;
+
+        }else
+        {
+            light = shadow1;
+        }
+
+        //dirfac * light*iSolarColor
+        fragColor = vec4((0.2 + 0.2 * length(iSolarColor) + 0.6 * dirfac * light ) * vec3(1.0,1.0,1.0)* iSolarColor,1.0);//texture(ShadowMap0,uv);
+
 
 }

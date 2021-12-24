@@ -61,8 +61,10 @@ public:
 
 	unsigned nMaxThreads; // maximum number of threads used to distribute the work load
 
+    String dmap_path;
+
 public:
-	inline Scene(unsigned _nMaxThreads=0) : nMaxThreads(Thread::getMaxThreads(_nMaxThreads)) {}
+    inline Scene(unsigned _nMaxThreads=0, String dmappath = "") : nMaxThreads(Thread::getMaxThreads(_nMaxThreads)), dmap_path(dmappath) {}
 
 	void Release();
 	bool IsEmpty() const;
@@ -107,10 +109,15 @@ public:
 	// implement BOOST serialization
 	template <class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/) {
+        std::cout << "do platforms " <<std::endl;
 		ar & platforms;
-		ar & images;
-		ar & pointcloud;
-		ar & mesh;
+        std::cout << "do images " <<std::endl;
+        ar & images;
+        std::cout << "do pointcloud " <<std::endl;
+        ar & pointcloud;
+        std::cout << "do mesh " <<std::endl;
+        ar & mesh;
+        std::cout << "done "<<std::endl;
 	}
 	#endif
 };

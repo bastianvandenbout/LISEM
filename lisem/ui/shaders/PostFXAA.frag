@@ -89,12 +89,23 @@ void main()
         {
                 fragColor.xyz=rgbB;
                 fragColor.a = 1.0;
-
         }
 
+        //light calculation
 
-        //vec3 wpos = vec3(texture(PosX,uv).r,texture(PosX,uv).g,texture(PosX,uv).b);
-        fragColor.rgb = fragColor.rgb * (0.5 + 0.5 * vec3(texture(Light,uv).r,texture(Light,uv).g,texture(Light,uv).b));
-        //fragColor.a = 1.0f;
+        vec3 props =  texture(Props,uv).rgb;
+
+
+        //object type 1 is terrain, 2 is terrain edge
+        if(props.b > 0.5)//&& !(props.b > 1.5 && props.b < 2.5))
+        {
+            fragColor.rgb = fragColor.rgb;
+
+        }else
+        {
+            fragColor.rgb = fragColor.rgb;
+        }
+
+        fragColor.a = 1.0;
 
 }

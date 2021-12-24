@@ -162,20 +162,22 @@ inline cTMap * AS_Mapsqrt(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
-
-#pragma omp parallel for collapse(2)
-    for(int r = 0; r < Other->data.nr_rows();r++)
+    int r=0;
+    int rmax = Other->data.nr_rows() * Other->data.nr_cols();
+    float * data = map->data._cells.data();
+    float * datao = Other->data._cells.data();
+    #pragma omp parallel for private(r) shared(data,datao) schedule(static)
+    for(r = 0; r < rmax;r++)
     {
-        for(int c = 0; c < Other->data.nr_cols();c++)
-        {
-            if(pcr::isMV(Other->data[r][c]) || pcr::isMV(Other->data[r][c]))
+
+            if(pcr::isMV(datao[r]))
             {
-                pcr::setMV(map->data[r][c]);
+                pcr::setMV(data[r]);
             }else
             {
-                map->data[r][c] = sqrtf(Other->data[r][c]);
+                data[r] = sqrt(datao[r]);
             }
-        }
+
     }
     map->AS_IsSingleValue = Other->AS_IsSingleValue;
     return map;
@@ -183,7 +185,40 @@ inline cTMap * AS_Mapsqrt(cTMap * Other)
 
 }
 
+#include "stack/threadpool.h"
 
+inline void AS_MapTest(int rmax)
+{
+
+    std::cout << "number of threads " <<  pool.get_thread_count() << std::endl;
+    int r=0;
+    auto loop = [](const int &a, const int &b)
+    {
+        float k = 0;
+        for (int i = a; i < b; i++)
+        {
+           k = sqrt(k +1.0);
+        }
+        std::cout << "thread end " << k << " " << a << " " << b <<  std::endl;
+    };
+    pool.parallelize_loop(0, rmax, loop, 0);
+
+
+    /*#pragma omp parallel for private(r) shared(data,datao) schedule(static)
+    for(r = 0; r < rmax;r++)
+    {
+
+           data[r] = 3 + datao[r] / 5.0;
+
+
+    }
+    map->AS_IsSingleValue = Other->AS_IsSingleValue;*/
+
+
+    return;
+
+
+}
 
 
 

@@ -753,7 +753,7 @@ public:
         QCheckBox * m_CheckBoxUI = new QCheckBox("Draw UI");
         QCheckBox * m_CheckBoxLegend = new QCheckBox("Draw Legends");
         QCheckBox * m_CheckBoxShadow = new QCheckBox("Draw Shadows");
-        QCheckBox * m_CheckBoxReflections = new QCheckBox("Draw Reflections");
+        QCheckBox * m_CheckBoxLighting = new QCheckBox("Light Rendering");
         QCheckBox * m_CheckBoxLines = new QCheckBox("Draw Coordinate Lines");
         QDoubleSpinBox *m_UIScale = new QDoubleSpinBox();
         m_CheckBoxUI->setChecked(true);
@@ -765,12 +765,14 @@ public:
 
         connect(m_CheckBoxLines,SIGNAL(toggled(bool)),this,SLOT(OnLinesToggled(bool)));
         connect(m_CheckBoxUI,SIGNAL(toggled(bool)),this,SLOT(OnUIToggled(bool)));
-        connect(m_CheckBoxLegend,SIGNAL(toggled(bool)),this,SLOT(OnShadowToggled(bool)));
-        connect(m_CheckBoxShadow,SIGNAL(toggled(bool)),this,SLOT(OnLegendToggled(bool)));
+        connect(m_CheckBoxLegend,SIGNAL(toggled(bool)),this,SLOT(OnLegendToggled(bool)));
+        connect(m_CheckBoxShadow,SIGNAL(toggled(bool)),this,SLOT(OnShadowToggled(bool)));
+        connect(m_CheckBoxLighting,SIGNAL(toggled(bool)),this,SLOT(OnLightingToggled(bool)));
         connect(m_UIScale,SIGNAL(valueChanged(double)),this,SLOT(onUIScaleChanged(double)));
         m_DrawingOptionsLayout->addWidget(m_CheckBoxUI);
         m_DrawingOptionsLayout->addWidget(m_CheckBoxLegend);
         m_DrawingOptionsLayout->addWidget(m_CheckBoxShadow);
+        m_DrawingOptionsLayout->addWidget(m_CheckBoxLighting);
         m_DrawingOptionsLayout->addWidget(new QLabeledWidget("UI Scale Multiplier",m_UIScale));
         m_DrawingOptionsLayout->setSpacing(0);
         m_DrawingOptionsLayout->setMargin(0);
@@ -2529,6 +2531,11 @@ public slots:
     {
         m_WorldWindow->SetShadowDraw(b);
     }
+    inline void OnLightingToggled(bool b)
+    {
+        m_WorldWindow->SetLightingDraw(b);
+    }
+
 
     inline void onUIScaleChanged(double s)
     {

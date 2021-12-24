@@ -66,6 +66,14 @@ public:
         LSMSerialize::From(obj,"PlaySpeed",m_PlaySpeed);
         LSMSerialize::From(obj,"Play",m_Play);
 
+        LSMSerialize::From(obj,"DrawEdge",m_DrawEdge);
+        LSMSerialize::From(obj,"EdgeLevel",m_EdgeLevel);
+        LSMSerialize::From(obj,"DrawAxes",m_Draw3DAxes);
+        LSMSerialize::From(obj,"AxesScale",m_3DAxesSize);
+        LSMSerialize::From(obj,"DrawBasePlane",m_DrawBasePlane);
+        LSMSerialize::From(obj,"BasePlaneLevel",m_BasePlaneLevel);
+        LSMSerialize::From(obj,"BasePlaneScale",m_BasePlaneScale);
+
         LSMSerialize::From<ColorF>(obj,"SunColor",SunColor);
         LSMSerialize::From(obj,"AngleVertical", angle_vert);
         LSMSerialize::From(obj,"AngleHorizontal", angle_hor);
@@ -108,6 +116,14 @@ public:
         LSMSerialize::To(obj,"PlaySpeed",m_PlaySpeed);
         LSMSerialize::To(obj,"Play",m_Play);
 
+        LSMSerialize::To(obj,"DrawEdge",m_DrawEdge);
+        LSMSerialize::To(obj,"EdgeLevel",m_EdgeLevel);
+        LSMSerialize::To(obj,"DrawAxes",m_Draw3DAxes);
+        LSMSerialize::To(obj,"AxesScale",m_3DAxesSize);
+        LSMSerialize::To(obj,"DrawBasePlane",m_DrawBasePlane);
+        LSMSerialize::To(obj,"BasePlaneLevel",m_BasePlaneLevel);
+        LSMSerialize::To(obj,"BasePlaneScale",m_BasePlaneScale);
+
         LSMSerialize::To<ColorF>(obj,"SunColor",SunColor);
         LSMSerialize::To(obj,"AngleVertical", angle_vert);
         LSMSerialize::To(obj,"AngleHorizontal", angle_hor);
@@ -117,6 +133,17 @@ public:
         LSMSerialize::To(obj,"IsDuoFractional",m_IsFractional);
         LSMSerialize::To(obj,"ArrowSpacing",m_VelSpacing);
     }
+
+    bool m_DrawEdge = false;
+    double m_EdgeLevel = 0.0;
+    bool m_Draw3DAxes = false;
+    double m_3DAxesSize = 1.0;
+    bool m_DrawBasePlane = false;
+    double m_BasePlaneLevel = 0.0;
+    double m_BasePlaneScale = 10.0;
+    ColorF m_EdgeColor = ColorF(0.95,0.95,0.95,1.0);
+    ColorF m_AxesColor = ColorF(0.1,0.1,0.1,1.0);
+    ColorF m_BasePlaneColor = ColorF(0.75,0.75,0.75,1.0);
 
     //these options are available to determine what a user can choose
     float m_Transparancy = 0.0;

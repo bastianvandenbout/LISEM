@@ -583,12 +583,88 @@ public:
                 wl->addWidget(m_HSAngle1);
                 wl->addWidget(m_HSAngle2);
 
+
                 //connections
                 connect(m_DemBox, &QCheckBox::clicked, this, &LayerStyleWidget::OnDemClicked);
                 connect(m_HSBox, &QCheckBox::clicked, this, &LayerStyleWidget::OnHSClicked);
                 connect(m_DemScale, SIGNAL(valueChanged(double)), this, SLOT(OnDemScaleChanged(double)));
                 connect(m_HSAngle1, &QDial::valueChanged, this, &LayerStyleWidget::OnHSAngle1Changed);
                 connect(m_HSAngle2, &QSlider::valueChanged, this, &LayerStyleWidget::OnHSAngle2Changed);
+
+
+                QWidget * wdp = new QWidget();
+                QVBoxLayout * wdpl = new QVBoxLayout();
+                wdp->setLayout(wdpl);
+
+                QCheckBox * m_EdgeBox = new QCheckBox("Draw Terrain Edge");
+                m_EdgeBox->setChecked(m_Style->m_DrawEdge);
+                QDoubleSpinBox *m_EdgeLevel = new QDoubleSpinBox();
+                m_EdgeLevel->setValue(m_Style->m_EdgeLevel);
+                ColorWheel * EdgeColor = new ColorWheel();
+                EdgeColor->setMaximumSize(150,150);
+                EdgeColor->setColor(m_Style->m_EdgeColor.ToQColor());
+
+                QCheckBox * m_AxesBox = new QCheckBox("Draw Terrain Axes");
+                m_AxesBox->setChecked(m_Style->m_Draw3DAxes);
+                QDoubleSpinBox *m_AxesScale = new QDoubleSpinBox();
+                m_AxesScale->setValue(m_Style->m_3DAxesSize);
+                ColorWheel * AxesColor = new ColorWheel();
+                AxesColor->setMaximumSize(150,150);
+                AxesColor->setColor(m_Style->m_AxesColor.ToQColor());
+
+                QCheckBox * m_BaseBox = new QCheckBox("Draw Terrain BasePlane");
+                m_BaseBox->setChecked(m_Style->m_DrawBasePlane);
+                QDoubleSpinBox *m_BasePlaneScale = new QDoubleSpinBox();
+                m_BasePlaneScale->setValue(m_Style->m_BasePlaneScale);
+                QDoubleSpinBox *m_BasePlaneLevel = new QDoubleSpinBox();
+                m_BasePlaneLevel->setValue(m_Style->m_BasePlaneLevel);
+                ColorWheel * BaseColor = new ColorWheel();
+                BaseColor->setMaximumSize(150,150);
+                BaseColor->setColor(m_Style->m_BasePlaneColor.ToQColor());
+
+                connect(m_EdgeBox, &QCheckBox::clicked, this, &LayerStyleWidget::OnEdgeClicked);
+                connect(m_AxesBox, &QCheckBox::clicked, this, &LayerStyleWidget::OnAxesClicked);
+                connect(m_BaseBox, &QCheckBox::clicked, this, &LayerStyleWidget::OnBaseClicked);
+
+                connect(BaseColor,static_cast<void (ColorWheel::*)(const QColor &)>(&ColorWheel::colorChange),
+                        [this,BaseColor](const QColor & c)
+                {
+                    m_Style->m_BasePlaneColor = ColorF(c.redF(),c.greenF(),c.blueF(),c.alphaF());
+                });
+
+                connect(AxesColor,static_cast<void (ColorWheel::*)(const QColor &)>(&ColorWheel::colorChange),
+                        [this,AxesColor](const QColor & c)
+                {
+                    m_Style->m_AxesColor = ColorF(c.redF(),c.greenF(),c.blueF(),c.alphaF());
+                });
+
+
+                connect(m_BasePlaneScale, SIGNAL(valueChanged(double)),this,SLOT(OnBasePlaneScale));
+
+                connect(m_BasePlaneLevel, SIGNAL(valueChanged(double)),this,SLOT(OnBasePlaneLevel));
+
+                connect(m_AxesScale, SIGNAL(valueChanged(double)),this,SLOT(OnAxesScale));
+
+                connect(m_EdgeLevel, SIGNAL(valueChanged(double)),this,SLOT(OnEdgeLevel));
+
+
+                wdpl->addWidget(m_EdgeBox);
+                wdpl->addWidget(m_EdgeLevel);
+                wdpl->addWidget(EdgeColor);
+                wdpl->addWidget(m_AxesBox);
+                wdpl->addWidget(m_AxesScale);
+                wdpl->addWidget(AxesColor);
+                wdpl->addWidget(m_BaseBox);
+                wdpl->addWidget(m_BasePlaneScale);
+                wdpl->addWidget(m_BasePlaneLevel);
+                wdpl->addWidget(BaseColor );
+
+                wl->addWidget(wdp);
+
+
+
+
+
             }
 
             if(m_Style->m_HasDuoBand)
@@ -1253,6 +1329,44 @@ public slots:
     {
         m_Style->m_IsSurfaceFlow = x;
     }
+
+    inline void OnEdgeClicked(bool x)
+    {
+        m_Style->m_DrawEdge = x;
+    }
+
+    inline void OnAxesClicked(bool x)
+    {
+        m_Style->m_Draw3DAxes = x;
+    }
+
+    inline void OnBaseClicked(bool x)
+    {
+        m_Style->m_DrawBasePlane = x;
+    }
+
+    inline void  OnBasePlaneScale( double x)
+    {
+        m_Style->m_BasePlaneScale =x;
+
+    }
+    inline void  OnBasePlaneLevel( double x)
+    {
+        m_Style->m_BasePlaneLevel =x;
+
+    }
+    inline void  OnAxesScale( double x)
+    {
+        m_Style->m_3DAxesSize=x;
+
+    }
+    inline void  OnEdgeLevel( double x)
+    {
+        m_Style->m_EdgeLevel =x;
+
+    }
+
+
 };
 
 
