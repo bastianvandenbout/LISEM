@@ -62,10 +62,12 @@ public:
     QList<Font *> m_MainFonts;
 
     QString m_FontDir;
+    QString m_ShaderDir;
     QString m_AssetDir;
     OpenGLProgram * m_GLProgram_DrawText;
+    OpenGLProgram * m_GLProgram_DrawTexturedPolygon3D;
 
-    GLuint VAO, VBO;
+    GLuint VAO, VBO, VAO3D, VBO3D,TBO3D,NBO3D;
 
     inline OpenGLTextPainter()
     {
@@ -82,6 +84,7 @@ public:
 
         m_FontDir = GetSite()+"/assets/";
         m_AssetDir = GetSite()+"/kernels/";
+        m_ShaderDir = GetSite()+"/shaders/";
 
 
     }
@@ -117,7 +120,11 @@ public:
         m_MainFonts.append(m_MainFont);
 
         m_GLProgram_DrawText = new OpenGLProgram();
-        m_GLProgram_DrawText->LoadProgram(m_AssetDir+ "UITextDraw.vert", m_AssetDir+ "UITextDraw.frag");
+        m_GLProgram_DrawText->LoadProgram(m_ShaderDir+ "UITextDraw.vert", m_ShaderDir+ "UITextDraw.frag");
+
+        m_GLProgram_DrawTexturedPolygon3D = new OpenGLProgram();
+        m_GLProgram_DrawTexturedPolygon3D->LoadProgram(m_ShaderDir+ "UI3DPolyDraw.vert", m_ShaderDir+ "UI3DPolyDraw.frag");
+
 
         glad_glGenVertexArrays(1, &VAO);
         glad_glGenBuffers(1, &VBO);
@@ -126,6 +133,30 @@ public:
         glad_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
         glad_glEnableVertexAttribArray(0);
         glad_glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glad_glBindVertexArray(0);
+
+
+        glad_glGenVertexArrays(1, &VAO3D);
+        glad_glGenBuffers(1, &VBO3D);
+        glad_glGenBuffers(1, &TBO3D);
+        glad_glGenBuffers(1, &NBO3D);
+        glad_glBindVertexArray(VAO3D);
+
+        glad_glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
+        glad_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 3, NULL, GL_DYNAMIC_DRAW);
+        glad_glEnableVertexAttribArray(0);
+        glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, TBO3D);
+        glad_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 2, NULL, GL_DYNAMIC_DRAW);
+        glad_glEnableVertexAttribArray(1);
+        glad_glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, NBO3D);
+        glad_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 3, NULL, GL_DYNAMIC_DRAW);
+        glad_glEnableVertexAttribArray(2);
+        glad_glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+
         glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
         glad_glBindVertexArray(0);
 
@@ -306,16 +337,6 @@ public:
                 { xpos + w, ypos + h,   1.0, 0.0 }
             };
 
-            /*float dev = 500.0;
-            GLfloat vertices[6][4] = {
-                { xpos/dev,     (ypos + h)/dev,   0.0, 0.0 },
-                { xpos/dev,     ypos/dev,       0.0, 1.0 },
-                { (xpos + w)/dev, ypos/dev,       1.0, 1.0 },
-
-                { xpos/dev,     (ypos + h)/dev,   0.0, 0.0 },
-                { (xpos + w)/dev, ypos/dev,       1.0, 1.0 },
-                { (xpos + w)/dev, (ypos + h)/dev,   1.0, 0.0 }
-            };*/
             // Render glyph texture over quad
             glad_glBindTexture(GL_TEXTURE_2D, ch.TextureID);
             // Update content of VBO memory
@@ -331,6 +352,166 @@ public:
         glad_glBindTexture(GL_TEXTURE_2D, 0);
 
         delete[] ortho;
+    }
+
+
+    inline void DrawText3D(QString in_text, Font * f,LSMVector3 topleft, LSMVector3 normal, LSMVector4 color, float size,LSMVector3 CameraPosition, LSMMatrix4x4 cameramatrix, bool test_depth)
+    {
+
+        glad_glDepthMask(GL_FALSE);
+        if(test_depth)
+        {
+            glad_glEnable(GL_DEPTH_TEST);
+        }else
+        {
+            glad_glDisable(GL_DEPTH_TEST);
+        }
+
+        //glad_glBindFramebuffer(GL_FRAMEBUFFER, m_RenderTarget);
+        //glad_glEnable(GL_DEPTH_TEST);
+        // bind shader
+        glad_glUseProgram(m_GLProgram_DrawTexturedPolygon3D->m_program);
+        glad_glActiveTexture(GL_TEXTURE0);
+        glad_glBindVertexArray(VAO3D);
+
+
+        LSMVector3 updir = LSMVector3(0.0,1.0,0.0);
+        LSMVector3 rightdir = -LSMVector3::CrossProduct(normal,updir).Normalize();
+
+
+        Font * useFont = nullptr;
+        if(f == nullptr)
+        {
+            /*float minsizedif = 1e31;
+            bool found = false;
+            for(int i = 0; i < m_MainFonts.size(); i++)
+            {
+                float sizedif = std::fabs((m_MainFonts.at(i)->size - size));
+                if(sizedif < minsizedif)
+                {
+                    found = true;
+                    useFont = m_MainFonts.at(i);
+                    minsizedif = sizedif;
+                }
+            }*/
+
+            //if(!found)
+            {
+                useFont = m_MainFont;
+            }
+        }else
+        {
+            useFont = f;
+        }
+
+        float x = 0.0;
+        float y = 0.0;
+
+        std::string text = in_text.toStdString();
+
+        // Iterate through all characters
+        std::string::const_iterator c;
+        for (c = text.begin(); c != text.end(); c++)
+        {
+            Character ch = useFont->Glyphs_Rendered[*c];
+
+            float scale = size/ch.size_org;
+
+            GLfloat xpos = x + ch.Bearing.x * scale + ch.buffer;
+            GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale + 0.5 * ch.buffer;
+
+            GLfloat w = ch.Size.x * scale;
+            GLfloat h = ch.Size.y * scale;
+
+            LSMVector3 pos = topleft + xpos * rightdir + ypos * updir;
+            LSMVector3 pos1 = topleft + xpos * rightdir + (ypos+h) * updir;
+            LSMVector3 pos2 = topleft + (xpos+w) * rightdir + ypos * updir;
+            LSMVector3 pos3 = topleft + (xpos+w) * rightdir + (ypos+h) * updir;
+
+            GLfloat vertices[6][3] = {
+                { pos1.x,pos1.y,pos1.z},
+                { pos.x,pos.y,pos.z},
+                { pos2.x,pos2.y,pos2.z},
+
+                { pos1.x,pos1.y,pos1.z},
+                { pos2.x,pos2.y,pos2.z},
+                { pos3.x,pos3.y,pos3.z},
+
+            };
+
+            GLfloat uv[6][2] = {
+
+                { 0.0, 0.0},
+                { 0.0, 1.0 },
+                { 1.0, 1.0 },
+                { 0.0, 0.0},
+                { 1.0, 1.0 },
+                { 1.0, 0.0 }
+
+            };
+
+            GLfloat normals[6][3] = {
+                { normal.x,normal.y,normal.z},
+                { normal.x,normal.y,normal.z},
+                { normal.x,normal.y,normal.z},
+
+                { normal.x,normal.y,normal.z},
+                { normal.x,normal.y,normal.z},
+                { normal.x,normal.y,normal.z},
+
+            };
+
+
+
+            // Update content of VBO memory
+            glad_glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glad_glBindBuffer(GL_ARRAY_BUFFER, TBO3D);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(uv), uv);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glad_glBindBuffer(GL_ARRAY_BUFFER, NBO3D);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(normals), normals);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+            int mat_loc = glad_glGetUniformLocation(m_GLProgram_DrawTexturedPolygon3D->m_program,"projection");
+            glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,cameramatrix.GetMatrixDataPtr());
+
+            glad_glUniform4f(glad_glGetUniformLocation(m_GLProgram_DrawTexturedPolygon3D->m_program, "inColor"), color.x, color.y, color.z, color.w);
+            glad_glActiveTexture(GL_TEXTURE0);
+            glad_glBindVertexArray(VAO3D);
+
+            glad_glUniform1i(glad_glGetUniformLocation(m_GLProgram_DrawTexturedPolygon3D->m_program,"TextureIsText"),1);
+            glad_glUniform1i(glad_glGetUniformLocation(m_GLProgram_DrawTexturedPolygon3D->m_program,"SampleTexture"),1);
+            glad_glUniform1i(glad_glGetUniformLocation(m_GLProgram_DrawTexturedPolygon3D->m_program,"tex1"),0);
+            glad_glActiveTexture(GL_TEXTURE0);
+            glad_glBindTexture(GL_TEXTURE_2D,ch.TextureID);
+
+            glad_glCullFace(GL_FRONT_AND_BACK);
+
+            // Render quad
+            glad_glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+            x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
+        }
+        glad_glBindVertexArray(0);
+        glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+        glad_glEnable(GL_DEPTH_TEST);
+
+        glad_glDepthMask(GL_TRUE);
+    }
+
+
+    inline void DrawText3DBillboard(QString text, LSMVector3 topleft, LSMVector4 Color, float size)
+    {
+
+
+
     }
 
     inline void Destroy()

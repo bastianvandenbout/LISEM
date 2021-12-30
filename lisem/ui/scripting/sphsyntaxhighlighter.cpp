@@ -59,6 +59,14 @@ Highlighter::Highlighter(QTextDocument *parent)
     highlightingRules.append(rule);
 
 
+    functionFormat.setFontWeight(QFont::Bold);
+    functionFormat.setFontItalic(false);
+    functionFormat.setForeground(Qt::blue);
+    rule.pattern = QRegularExpression(QStringLiteral("\\b(if|else)"));
+    rule.format = functionFormat;
+    highlightingRules.append(rule);
+
+
     commentStartExpression = QRegularExpression(QStringLiteral("/\\*"));
     commentEndExpression = QRegularExpression(QStringLiteral("\\*/"));
 }

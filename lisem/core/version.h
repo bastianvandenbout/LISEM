@@ -4,7 +4,7 @@
 
 #define LISEM_VERSION_MAJOR 0
 #define LISEM_VERSION_MINOR 2
-#define LISEM_VERSION_PATCH 1
+#define LISEM_VERSION_PATCH 2
 
 // Preprocessor to string conversion
 #define LISEM_TO_STRING_HELPER(x) #x

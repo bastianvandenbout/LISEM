@@ -107,63 +107,127 @@ public:
 
         //get the 3d window we are currently closest to
 
-        int i = 0;
-        if(scale_level > -1 && scale_level < s.GL_FrameBuffer3DWindow.size())
         {
-            i =scale_level;
+            //do the larger scale drawing of terrain first
+            int i = 0;
+            if(scale_level+1 > -1 && scale_level+1 < s.GL_FrameBuffer3DWindow.size() && scale_level == 0)
+            {
+                i =scale_level+1;
 
+            }
+
+            double zscale = 1.0f;//s.projection.GetUnitZMultiplier();
+
+
+            //set framebuffer to the rendertarget
+
+            target->SetAsTarget();
+            glad_glViewport(0,0,target->GetWidth(),target->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
+
+
+            glad_glClear(GL_DEPTH_BUFFER_BIT);
+
+            glad_glDepthMask(GL_TRUE);
+            glad_glEnable(GL_DEPTH_TEST);
+            //set shader uniform values
+            OpenGLProgram * program = m_ColoredTerrainShadowProgram;
+
+            // bind shader
+            glad_glUseProgram(program->m_program);
+
+            glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,perspectiveview.GetMatrixDataPtr());
+            glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"viewportSize"),target->GetWidth(),target->GetHeight());
+            glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(i).GetCenterX(),0.0,s.GL_FrameBuffer3DWindow.at(i).GetCenterY());
+            glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSize"),s.GL_FrameBuffer3DWindow.at(i).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i).GetSizeY());
+
+            if(i > 0)
+            {
+                glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeY());
+            }else
+            {
+                glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),0,0);
+            }
+
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ZScale"),zscale);
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureC"),0);
+            glad_glActiveTexture(GL_TEXTURE0);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DColor.at(i)->GetTexture());
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureD"),1);
+            glad_glActiveTexture(GL_TEXTURE1);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DElevation.at(i)->GetTexture());
+
+
+            // now render stuff
+            glad_glBindVertexArray(m->m_GeometryPlane->m_vao);
+            glad_glPatchParameteri(GL_PATCH_VERTICES,3);
+            glad_glDrawElements(GL_PATCHES,m->m_GeometryPlane->m_IndexLength,GL_UNSIGNED_INT,0);
+            glad_glBindVertexArray(0);
+
+            glad_glBindTexture(GL_TEXTURE_2D,0);
         }
 
-        double zscale = 1.0f;//s.projection.GetUnitZMultiplier();
-
-
-        //set framebuffer to the rendertarget
-
-        target->SetAsTarget();
-        glad_glViewport(0,0,target->GetWidth(),target->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
-
-
-        glad_glClear(GL_DEPTH_BUFFER_BIT);
-
-        glad_glDepthMask(GL_TRUE);
-        glad_glEnable(GL_DEPTH_TEST);
-        //set shader uniform values
-        OpenGLProgram * program = m_ColoredTerrainShadowProgram;
-
-        // bind shader
-        glad_glUseProgram(program->m_program);
-
-        glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,perspectiveview.GetMatrixDataPtr());
-        glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"viewportSize"),target->GetWidth(),target->GetHeight());
-        glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(i).GetCenterX(),0.0,s.GL_FrameBuffer3DWindow.at(i).GetCenterY());
-        glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSize"),s.GL_FrameBuffer3DWindow.at(i).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i).GetSizeY());
-
-        if(i > 0)
         {
-            glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeY());
-        }else
-        {
-            glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),0,0);
+            int i = 0;
+            if(scale_level > -1 && scale_level < s.GL_FrameBuffer3DWindow.size())
+            {
+                i =scale_level;
+
+            }
+
+            double zscale = 1.0f;//s.projection.GetUnitZMultiplier();
+
+
+            //set framebuffer to the rendertarget
+
+            target->SetAsTarget();
+            glad_glViewport(0,0,target->GetWidth(),target->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);
+
+
+            glad_glClear(GL_DEPTH_BUFFER_BIT);
+
+            glad_glDepthMask(GL_TRUE);
+            glad_glEnable(GL_DEPTH_TEST);
+            //set shader uniform values
+            OpenGLProgram * program = m_ColoredTerrainShadowProgram;
+
+            // bind shader
+            glad_glUseProgram(program->m_program);
+
+            glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,perspectiveview.GetMatrixDataPtr());
+            glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"viewportSize"),target->GetWidth(),target->GetHeight());
+            glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(i).GetCenterX(),0.0,s.GL_FrameBuffer3DWindow.at(i).GetCenterY());
+            glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSize"),s.GL_FrameBuffer3DWindow.at(i).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i).GetSizeY());
+
+            if(i > 0)
+            {
+                glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeY());
+            }else
+            {
+                glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),0,0);
+            }
+
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ZScale"),zscale);
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureC"),0);
+            glad_glActiveTexture(GL_TEXTURE0);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DColor.at(i)->GetTexture());
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureD"),1);
+            glad_glActiveTexture(GL_TEXTURE1);
+            glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DElevation.at(i)->GetTexture());
+
+
+            // now render stuff
+            glad_glBindVertexArray(m->m_GeometryPlane->m_vao);
+            glad_glPatchParameteri(GL_PATCH_VERTICES,3);
+            glad_glDrawElements(GL_PATCHES,m->m_GeometryPlane->m_IndexLength,GL_UNSIGNED_INT,0);
+            glad_glBindVertexArray(0);
+
+            glad_glBindTexture(GL_TEXTURE_2D,0);
         }
 
-        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ZScale"),zscale);
-
-        glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureC"),0);
-        glad_glActiveTexture(GL_TEXTURE0);
-        glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DColor.at(i)->GetTexture());
-
-        glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"TextureD"),1);
-        glad_glActiveTexture(GL_TEXTURE1);
-        glad_glBindTexture(GL_TEXTURE_2D,s.GL_FrameBuffer3DElevation.at(i)->GetTexture());
-
-
-        // now render stuff
-        glad_glBindVertexArray(m->m_GeometryPlane->m_vao);
-        glad_glPatchParameteri(GL_PATCH_VERTICES,3);
-        glad_glDrawElements(GL_PATCHES,m->m_GeometryPlane->m_IndexLength,GL_UNSIGNED_INT,0);
-        glad_glBindVertexArray(0);
-
-        glad_glBindTexture(GL_TEXTURE_2D,0);
 
     }
 

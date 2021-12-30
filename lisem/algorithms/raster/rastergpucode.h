@@ -210,6 +210,304 @@ LISEM_API extern OpenCLProgram * CGLArrFKernelSign;
 
 
 
+//one input
+LISEM_API extern OpenCLProgram * CGLKernelRedMin;
+LISEM_API extern OpenCLProgram * CGLKernelRedMax;
+LISEM_API extern OpenCLProgram * CGLKernelRedTotal;
+LISEM_API extern OpenCLProgram * CGLKernelRedSum;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedMin;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedMax;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedTotal;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedSum;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedMin;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedMax;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedTotal;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedSum;
+LISEM_API extern OpenCLProgram * CGLKernelRedRemMin;
+LISEM_API extern OpenCLProgram * CGLKernelRedRemMax;
+LISEM_API extern OpenCLProgram * CGLKernelRedRemTotal;
+LISEM_API extern OpenCLProgram * CGLKernelRedRemSum;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedRemMin;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedRemMax;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedRemTotal;
+LISEM_API extern OpenCLProgram * CGLArrIKernelRedRemSum;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemMin;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemMax;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemTotal;
+LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemSum;
+
+inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString expression, bool isint, bool is_array)
+{
+    QString typs = isint? QString("int"):QString("float");
+
+    QString code  = "";
+    /*if(is_array)
+    {
+        code +="__kernel void sph_function(__global const " +typs + " *input, __global " +typs + " *output, const int inputSize, __local " +typs + "* reductionSums) {";
+        code +="const int globalID = get_global_id(0); \n";
+        code +="const int localID = get_local_id(0); \n";
+        code +="const int localSize = get_local_size(0); \n";
+        code +="const int workgroupID = globalID / localSize; \n";
+
+        code +="reductionSums[localID] = input[globalID]; \n";
+
+        code +="for(int offset = localSize / 2; offset > 0; offset /= 2) { \n";
+        code +="barrier(CLK_LOCAL_MEM_FENCE); \n";
+        code +="if(localID < offset) { \n";
+        code +=typs + " val1 = reductionSums[localID]; \n";
+        code +=typs + " val2 = reductionSums[localID + offset]; \n";
+        code +="reductionSums[localID] = "+ expression+ "; \n";
+        code +="} \n";
+        code +="} \n";
+
+        code +="if(localID == 0) {	\n";
+        code +="output[workgroupID] = reductionSums[0]; \n";
+        code +="} \n";
+        code +="} \n";
+
+    }else
+    {
+        code +="__kernel void sph_function(int dim0, int dim1 , __read_only image2d_t input, __global float *output, const int inputSize, __local float * reductionSums) {";
+        code +="const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;\n";
+        code +="const int globalID = get_global_id(0); \n";
+        code +="const int localID = get_local_id(0); \n";
+        code +="const int localSize = get_local_size(0); \n";
+        code +="const int workgroupID = globalID / localSize; \n";
+
+        code += "int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(globalID % dim1))), min(dim1-(int)(1),max((int)(0),(int)(globalID/dim1))));\n";
+        code += "float valt = read_imagef(image1, sampler, pixelcoord).x;\n";
+
+        code +="reductionSums[localID] = valt; \n";
+
+        code +="for(int offset = localSize / 2; offset > 0; offset /= 2) { \n";
+        code +="barrier(CLK_LOCAL_MEM_FENCE); \n";
+        code +="if(localID < offset) { \n";
+        code +="float val1 = reductionSums[localID]; \n";
+        code +="float val2 = reductionSums[localID + offset]; \n";
+        code +="reductionSums[localID] = "+ expression+ "; \n";
+        code +="} \n";
+        code +="} \n";
+
+        code +="if(localID == 0) {	\n";
+        code +="output[workgroupID] = reductionSums[0]; \n";
+        code +="} \n";
+        code +="} \n";
+
+    }*/
+    //highly optimized cl reduction stuff for group-sizes of 256
+    //https://github.com/gante/OpenCL-Parallel-Reduction/blob/master/code/CR_version_8/device/kernel_8.cl
+    if(is_array)
+    {
+
+        code +="__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void kernel_8( __global "+ typs + " *A, __global "+ typs+ " *B){";
+
+        //Get the indexes of the local item
+        code +=" unsigned int tid = get_local_id(0);";
+        code +=" unsigned int wid = get_group_id(0);";
+        code +=" unsigned int dim = get_local_size(0);";
+        code +=" unsigned int i = wid*dim*2 + tid;";
+        code +=" unsigned int gridSize = get_global_size(0)*2;";
+
+         //Declares the shared memory
+        code +=" __local " + typs + " sdata[256];";
+        code +=" sdata[tid] = 0;";
+
+         // 2^3 external sums, or 2^2 * 2
+        code +="for(int aux = 0; aux<4; aux++) {";
+        code +="    sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","A[i]") + ";";
+        code +="    sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","A[i + dim]") + ";";
+        code +="    i += gridSize;";
+        code +="}";
+
+         //syncs the threads (to ensure the local memory is properly loaded)
+        code +=" barrier(CLK_LOCAL_MEM_FENCE);";
+
+         // the parallel reduction itself (workgroup = 2^7 -> 7 times)
+        code +=" if (tid < 128){";
+        code +="     sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 128]") + ";";
+        code +="     barrier(CLK_LOCAL_MEM_FENCE);";
+
+        code +="     if (tid < 64){";
+        code +="        sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 64]") + ";";
+        code +="        barrier(CLK_LOCAL_MEM_FENCE);";
+
+
+        code +="        if (tid < 32){";
+        code +="            sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 32]") + ";";
+        code +="            barrier(CLK_LOCAL_MEM_FENCE);";
+
+        code +="            //if (tid < 16){";
+        code +="                sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 16]") + ";";
+        code +="                barrier(CLK_LOCAL_MEM_FENCE);";
+
+                        //if (tid < 8){
+        code +="                    sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 8]") + ";";
+        code +="                    barrier(CLK_LOCAL_MEM_FENCE);";
+
+                            //if (tid < 4){
+        code +="                        sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 4]") + ";";
+        code +="                        barrier(CLK_LOCAL_MEM_FENCE);";
+
+                                //if (tid < 2){
+        code +="                            sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 2]") + ";";
+        code +="                            barrier(CLK_LOCAL_MEM_FENCE);";
+
+        code +="                            if (tid < 1){";
+                                         // write result for this block to global mem
+        code +="                                B[wid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 1]") + ";";
+        code +="                            }";
+                                //}
+                            //}
+                        //}
+                    //}
+        code +="        }";
+        code +="    }";
+        code +=" }";
+
+
+        code +="};";
+
+
+
+    }else
+    {
+
+
+        code +="__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void kernel_8(int dim0, int dim1,   __read_only image2d_t A, __global float *B){";
+        code +="const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;\n";
+
+        //Get the indexes of the local item
+        code +=" unsigned int tid = get_local_id(0);";
+        code +=" unsigned int wid = get_group_id(0);";
+        code +=" unsigned int dim = get_local_size(0);";
+        code +=" unsigned int i = wid*dim*2 + tid;";
+        code +=" unsigned int gridSize = get_global_size(0)*2;";
+
+         //Declares the shared memory
+        code +=" __local float sdata[256];";
+        code +=" sdata[tid] = 0;";
+
+         // 2^3 external sums, or 2^2 * 2
+        code +="for(int aux = 0; aux<4; aux++) {";
+        code += "int2 pixelcoord1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));\n";
+        code += "float valt1 = read_imagef(A, sampler, pixelcoord1).x;\n";
+        code += "int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));\n";
+        code += "float valt2 = read_imagef(A, sampler, pixelcoord2).x;\n";
+
+        code +="    sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","valt1") + ";";
+        code +="    sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","valt2") + ";";
+        code +="    i += gridSize;";
+        code +="}";
+
+         //syncs the threads (to ensure the local memory is properly loaded)
+        code +=" barrier(CLK_LOCAL_MEM_FENCE);";
+
+         // the parallel reduction itself (workgroup = 2^7 -> 7 times)
+        code +=" if (tid < 128){";
+        code +="     sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 128]") + ";";
+        code +="     barrier(CLK_LOCAL_MEM_FENCE);";
+
+        code +="     if (tid < 64){";
+        code +="        sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 64]") + ";";
+        code +="        barrier(CLK_LOCAL_MEM_FENCE);";
+
+
+        code +="        if (tid < 32){";
+        code +="            sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 32]") + ";";
+        code +="            barrier(CLK_LOCAL_MEM_FENCE);";
+
+        code +="            //if (tid < 16){";
+        code +="                sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 16]") + ";";
+        code +="                barrier(CLK_LOCAL_MEM_FENCE);";
+
+                        //if (tid < 8){
+        code +="                    sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 8]") + ";";
+        code +="                    barrier(CLK_LOCAL_MEM_FENCE);";
+
+                            //if (tid < 4){
+        code +="                        sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 4]") + ";";
+        code +="                        barrier(CLK_LOCAL_MEM_FENCE);";
+
+                                //if (tid < 2){
+        code +="                            sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 2]") + ";";
+        code +="                            barrier(CLK_LOCAL_MEM_FENCE);";
+
+        code +="                            if (tid < 1){";
+                                         // write result for this block to global mem
+        code +="                                B[wid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 1]") + ";";
+        code +="                            }";
+                                //}
+                            //}
+                        //}
+                    //}
+        code +="        }";
+        code +="    }";
+        code +=" }";
+
+
+        code +="};";
+
+
+    }
+
+
+    OpenCLProgram * p = new OpenCLProgram();
+    p->LoadProgramString(CGlobalGLCLManager->context,CGlobalGLCLManager->m_device,code.toStdString(),"sph_function");
+
+    CGLGPUKernels.append(p);
+
+    return p;
+
+}
+
+inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QString expression, bool isint, bool is_array)
+{
+    QString typs = isint? QString("int"):QString("float");
+
+    QString code  = "";
+    if(is_array)
+    {
+        code +="__kernel void sph_function(__global const " +typs + " *input, __global " +typs + " *output, const int inputSize, const int inOffset,const int outputOffset) {";
+        code +="const int globalID = get_global_id(0); \n";
+        code +="const int localID = get_local_id(0); \n";
+        code +="const int localSize = get_local_size(0); \n";
+        code +="const int workgroupID = globalID / localSize; \n";
+        code += typs + " val1 = 0; \n";
+        code +="for(int i = inOffset; offset < inputSize; i++) { \n";
+        code += typs + " val2 = input[i]; \n";
+        code +="val1 = "+ expression+ "; \n";
+        code +="} \n";
+        code +="output[outputOffset] = result; \n";
+        code +="} \n";
+
+    }else
+    {
+        code +="__kernel void sph_function(int dim0, int dim1, __read_only image2d_t input, __global float *output, const int inputSize, const int inOffset,const int outputOffset) {";
+        code +="const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;\n";
+        code +="const int globalID = get_global_id(0); \n";
+        code +="const int localID = get_local_id(0); \n";
+        code +="const int localSize = get_local_size(0); \n";
+        code +="const int workgroupID = globalID / localSize; \n";
+        code +="float val1 = 0; \n";
+        code +="for(int i = inOffset; offset < inputSize; i++) { \n";
+        code += "int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));\n";
+        code += "float val2 = read_imagef(input, sampler, pixelcoord).x;\n";
+        code +="val1 = "+ expression+ "; \n";
+        code +="} \n";
+        code +="output[outputOffset] = result; \n";
+        code +="} \n";
+    }
+
+    OpenCLProgram * p = new OpenCLProgram();
+    p->LoadProgramString(CGlobalGLCLManager->context,CGlobalGLCLManager->m_device,code.toStdString(),"sph_function");
+
+    CGLGPUKernels.append(p);
+
+    return p;
+
+}
+
+
 inline static OpenCLProgram * GetCLProgramFromBasicExpression(QString expression, bool two_op, bool map, bool isint, bool second_is_nonarray = false, bool reverse_args = false)
 {
 
@@ -442,6 +740,36 @@ inline static void LoadDefaultGPUModels()
     CGLKernelfrOr = GetCLProgramFromBasicExpression("((val1 >= 0.5f) || (val2 >= 0.5f))? 1.0f:0.0f",true,true,false,true,true);
     CGLKernelfrXOr = GetCLProgramFromBasicExpression("(((val1 >= 0.5f) || (val2 >= 0.5f)) && !((val1 >= 0.5f) && (val2 >= 0.5f)))? 1.0f:0.0f",true,true,false,true,true);
 
+    CGLKernelfrXOr = GetCLProgramFromBasicExpression("(((val1 >= 0.5f) || (val2 >= 0.5f)) && !((val1 >= 0.5f) && (val2 >= 0.5f)))? 1.0f:0.0f",true,true,false,true,true);
+    CGLKernelfrXOr = GetCLProgramFromBasicExpression("(((val1 >= 0.5f) || (val2 >= 0.5f)) && !((val1 >= 0.5f) && (val2 >= 0.5f)))? 1.0f:0.0f",true,true,false,true,true);
+    CGLKernelfrXOr = GetCLProgramFromBasicExpression("(((val1 >= 0.5f) || (val2 >= 0.5f)) && !((val1 >= 0.5f) && (val2 >= 0.5f)))? 1.0f:0.0f",true,true,false,true,true);
+    CGLKernelfrXOr = GetCLProgramFromBasicExpression("(((val1 >= 0.5f) || (val2 >= 0.5f)) && !((val1 >= 0.5f) && (val2 >= 0.5f)))? 1.0f:0.0f",true,true,false,true,true);
+
+
+    CGLKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",false,false);
+    CGLKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",false,false);
+    CGLKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",false,false);
+    CGLKernelRedSum = GetCLProgramFromBasicReductionExpression(" (val1 + val2) ",false,false);
+    CGLArrIKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",true,true);
+    CGLArrIKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",true,true);
+    CGLArrIKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",true,true);
+    CGLArrIKernelRedSum = GetCLProgramFromBasicReductionExpression(" (val1 + val2) ",true,true);
+    CGLArrFKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",false,true);
+    CGLArrFKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",false,true);
+    CGLArrFKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",false,true);
+    CGLArrFKernelRedSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,true);
+    CGLKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",false,false);
+    CGLKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",false,false);
+    CGLKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",false,false);
+    CGLKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,false);
+    CGLArrIKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",true,true);
+    CGLArrIKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",true,true);
+    CGLArrIKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",true,true);
+    CGLArrIKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",true,true);
+    CGLArrFKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",false,true);
+    CGLArrFKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",false,true);
+    CGLArrFKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",false,true);
+    CGLArrFKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,true);
 
     //ulong seed = randoms + globalID;
     //seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);

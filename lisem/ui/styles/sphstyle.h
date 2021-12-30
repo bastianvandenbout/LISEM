@@ -140,7 +140,7 @@ public:
     double m_3DAxesSize = 1.0;
     bool m_DrawBasePlane = false;
     double m_BasePlaneLevel = 0.0;
-    double m_BasePlaneScale = 10.0;
+    double m_BasePlaneScale = 1.0;
     ColorF m_EdgeColor = ColorF(0.95,0.95,0.95,1.0);
     ColorF m_AxesColor = ColorF(0.1,0.1,0.1,1.0);
     ColorF m_BasePlaneColor = ColorF(0.75,0.75,0.75,1.0);

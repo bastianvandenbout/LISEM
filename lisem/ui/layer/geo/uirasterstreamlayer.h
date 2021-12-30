@@ -2607,14 +2607,18 @@ public:
         LSMStyle style = GetStyle();
 
 
+        std::cout << style.m_BasePlaneScale << " " << style.m_BasePlaneLevel << std::endl;
         //std::cout  << " " << style.m_DrawBasePlane << " " << style.m_DrawEdge << "  " << style.m_Draw3DAxes << std::endl;
         if(this->CouldBeDEM() && this->IsDrawAsDEM())
         {
             BoundingBox bb = this->GetBoundingBox();
+            bb.Scale(style.m_BasePlaneScale);
+
             float hmax = -1e31f;
             float hmin = 1e31f;
             hmax = m_RDP->GetBandStats(0).max;
             hmin = m_RDP->GetBandStats(0).min;
+            hmin = hmin + style.m_BasePlaneLevel;
 
             s.GL_3DFrameBuffer->SetAsTarget();
 
@@ -2634,57 +2638,438 @@ public:
             double zmin_rel = bb.GetMinY() - camerapos.z;
             double zmax_rel = bb.GetMaxY() - camerapos.z;
 
+            //we need to draw all except the closest one
+
+            float dis1 = LSMVector3(xmin_rel,hmin - camerapos.y,zmin_rel).length();
+            float dis2 = LSMVector3(xmax_rel,hmin - camerapos.y,zmin_rel).length();
+            float dis3 = LSMVector3(xmax_rel,hmin - camerapos.y,zmax_rel).length();
+            float dis4 = LSMVector3(xmin_rel,hmin - camerapos.y,zmax_rel).length();
+
+            float dis1t = LSMVector3(xmin_rel,hmax - camerapos.y,zmin_rel).length();
+            float dis2t = LSMVector3(xmax_rel,hmax - camerapos.y,zmin_rel).length();
+            float dis3t = LSMVector3(xmax_rel,hmax - camerapos.y,zmax_rel).length();
+            float dis4t = LSMVector3(xmin_rel,hmax - camerapos.y,zmax_rel).length();
+
+            //we want to draw the vertical legend ticks to the most left visible axis
+
+
+
+            //we want to draw the horizontal legend ticks for those two horizontal axes that are closest to the camera
+
+            float line_thickness= 3  * style.m_3DAxesSize;
+
             if(style.m_DrawBasePlane)
             {
 
-                m->m_ShapePainter->DrawSquare3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),1.0,LSMVector4(style.m_BasePlaneColor.r,style.m_BasePlaneColor.g,style.m_BasePlaneColor.b,style.m_BasePlaneColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
-
+                //m->m_ShapePainter->DrawSquare3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),1.0,LSMVector4(style.m_BasePlaneColor.r,style.m_BasePlaneColor.g,style.m_BasePlaneColor.b,style.m_BasePlaneColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                m->m_3DPainter->Draw3DSquare(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),LSMVector4(style.m_BasePlaneColor.r,style.m_BasePlaneColor.g,style.m_BasePlaneColor.b,style.m_BasePlaneColor.a));
             }
             if(style.m_Draw3DAxes)
             {
-                //if(!(x < xmin_rel))
-                {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
 
-                }
-                {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
-                }
-                {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
 
-                }
+                float pixelysize_y1 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),s.scr_width,s.scr_height);
+                float pixelysize_x1 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),s.scr_width,s.scr_height);
+                float pixelysize_x2 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),s.scr_width,s.scr_height);
+                float pixelysize_y2 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmax,zmax_rel),s.scr_width,s.scr_height);
+
+
+                float pixelxpos_1 = s.Camera3D->ProjectVector(LSMVector3(xmin_rel,hmin,zmin_rel),s.scr_width,s.scr_height).x;
+                float pixelxpos_2 = s.Camera3D->ProjectVector(LSMVector3(xmax_rel,hmax,zmin_rel),s.scr_width,s.scr_height).x;
+                float pixelxpos_3 = s.Camera3D->ProjectVector(LSMVector3(xmax_rel,hmin,zmax_rel),s.scr_width,s.scr_height).x;
+                float pixelxpos_4 = s.Camera3D->ProjectVector(LSMVector3(xmin_rel,hmin,zmax_rel),s.scr_width,s.scr_height).x;
+
+                if(!(dis1 < dis2 && dis1 < dis3 && dis1 < dis4))
                 {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
 
+                }else
+                {
+                    pixelxpos_1 = 1e30;
                 }
+                if(!(dis2 < dis1 && dis2 < dis3 && dis2 < dis4))
+                {
+                }else
+                {
+                    pixelxpos_2 = 1e30;
+                }
+                if(!(dis3 < dis1 && dis3 < dis2 && dis3 < dis4))
+                {
+                }else
+                {
+                    pixelxpos_3 = 1e30;
+                }
+                if(!(dis4 < dis1 && dis4 < dis3 && dis4 < dis3))
+                {
 
+                }else
+                {
+                    pixelxpos_4 = 1e30;
+                }
 
                 //bottom edges
+                float distancey1 = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),0.0);
+                float distancex1 = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),0.0);
+                float distancex2 = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),0.0);
+                float distancey2 = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),0.0);
+
+                LSMVector3 axes_start;
+                LSMVector3 axes_end;
+                int n_tick = 0;
+
                 {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                    if(!(dis1 <= dis2 && dis1 <= dis3 && dis1 <= dis4))
+                    {
+                        float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),0.0);
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        if(pixelxpos_1 < pixelxpos_2 && pixelxpos_1 < pixelxpos_3 && pixelxpos_1 < pixelxpos_4)
+                        {
+                            axes_start = LSMVector3(xmin_rel,hmin,zmin_rel);
+                            axes_end =  LSMVector3(xmin_rel,hmax,zmin_rel);
+                            n_tick = std::min(10.0, std::max(0.0,pixelysize_y1/(20.0 * line_thickness)));
+                            //m->m_TextPainter->DrawText3D(QString::number(hmin),nullptr,LSMVector3(xmin_rel,hmin,zmin_rel),(LSMVector3(xmin_rel,hmin,zmin_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis1,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                            //m->m_TextPainter->DrawText3D(QString::number(hmax),nullptr,LSMVector3(xmin_rel,hmax,zmin_rel),(LSMVector3(xmin_rel,hmax,zmin_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis1t,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                        }
+                    }
+                    if(!(dis2 <= dis1 && dis2 <= dis3 && dis2 <= dis4))
+                    {
+                        float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),0.0);
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmax,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                        if(pixelxpos_2 < pixelxpos_1 && pixelxpos_2 < pixelxpos_3 && pixelxpos_2 < pixelxpos_4)
+                        {
+                            axes_start = LSMVector3(xmax_rel,hmin,zmin_rel);
+                            axes_end =  LSMVector3(xmax_rel,hmax,zmin_rel);
+                            n_tick = std::min(10.0, std::max(0.0,pixelysize_x1/(20.0 * line_thickness)));
+                            //m->m_TextPainter->DrawText3D(QString::number(hmin),nullptr,LSMVector3(xmax_rel,hmin,zmin_rel),(LSMVector3(xmax_rel,hmin,zmin_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis2,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                            //m->m_TextPainter->DrawText3D(QString::number(hmax),nullptr,LSMVector3(xmax_rel,hmax,zmin_rel),(LSMVector3(xmax_rel,hmax,zmin_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis2t,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                        }
+                    }
+                    if(!(dis3 < dis1 && dis3 < dis2 && dis3 < dis4))
+                    {
+                        float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),0.0);
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmax,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        if(pixelxpos_3 < pixelxpos_2 && pixelxpos_3 < pixelxpos_1 && pixelxpos_3 < pixelxpos_4)
+                        {
+                            axes_start = LSMVector3(xmax_rel,hmin,zmax_rel);
+                            axes_end =  LSMVector3(xmax_rel,hmax,zmax_rel);
+                            n_tick = std::min(10.0, std::max(0.0,pixelysize_x2/(20.0 * line_thickness)));
+                            //m->m_TextPainter->DrawText3D(QString::number(hmin),nullptr,LSMVector3(xmax_rel,hmin,zmax_rel),(LSMVector3(xmax_rel,hmin,zmax_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis3,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                            //m->m_TextPainter->DrawText3D(QString::number(hmax),nullptr,LSMVector3(xmax_rel,hmax,zmax_rel),(LSMVector3(xmax_rel,hmax,zmax_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis3t,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                        }
+                    }
+                    if(!(dis4 < dis1 && dis4 < dis3 && dis4 < dis3))
+                    {
+                        float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmax,zmax_rel),0.0);
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmax,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        if(pixelxpos_4 < pixelxpos_2 && pixelxpos_4 < pixelxpos_3 && pixelxpos_4 < pixelxpos_1)
+                        {
+                            axes_start = LSMVector3(xmin_rel,hmin,zmax_rel);
+                            axes_end =  LSMVector3(xmin_rel,hmax,zmax_rel);
+                            n_tick = std::min(10.0, std::max(0.0,pixelysize_y2/(20.0 * line_thickness)));
+                            //m->m_TextPainter->DrawText3D(QString::number(hmin),nullptr,LSMVector3(xmin_rel,hmin,zmax_rel),(LSMVector3(xmin_rel,hmin,zmax_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis4,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                            //m->m_TextPainter->DrawText3D(QString::number(hmax),nullptr,LSMVector3(xmin_rel,hmax,zmax_rel),(LSMVector3(xmin_rel,hmax,zmax_rel)-camerapos).Normalize(),LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * dis4t,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                        }
+                    }
+
+                    for(int i = 0; i < n_tick+2; i++)
+                    {
+                        float step = ((float)(i))/(n_tick + 1.0);
+                        LSMVector3 pos = axes_start + step * (axes_end- axes_start);
+                        QString text = QString::number(pos.y);
+                        if(i ==  n_tick+1)
+                        {
+                            text = "z = "+ text;
+                        }
+                        LSMVector3 normal = (pos-LSMVector3(0.0,camerapos.y,0.0)).Normalize();
+
+                        LSMVector3 updir = LSMVector3(0.0,1.0,0.0);
+                        LSMVector3 rightdir = -LSMVector3::CrossProduct(normal,updir).Normalize();
+                        float disthis = (pos - LSMVector3(0.0,camerapos.y,0.0)).length();
+                        float size = line_thickness*0.025* 0.5 * disthis;
+                        m->m_TextPainter->DrawText3D(text,nullptr,pos - rightdir * (2.0 + 0.4 * ((float)text.size())) * size,normal,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),size,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+
+                    }
 
                 }
+
+
+
+                float pixelsize_y1 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),s.scr_width,s.scr_height);
+                float pixelsize_x1 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),s.scr_width,s.scr_height);
+                float pixelsize_x2 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),s.scr_width,s.scr_height);
+                float pixelsize_y2 = s.Camera3D->ProjectLineSegmentLength(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),s.scr_width,s.scr_height);
+
                 {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                    LSMVector3 axes_start_x;
+                    LSMVector3 axes_end_x;
+                    LSMVector3 axes_start_y;
+                    LSMVector3 axes_end_y;
+
+                    int n_tick_x = 0;
+                    int n_tick_y = 0;
+
+                    {
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distancey1,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                        if(distancey1 < distancey2)
+                        {
+                            axes_start_y = LSMVector3(xmin_rel,hmin,zmin_rel);
+                            axes_end_y = LSMVector3(xmin_rel,hmin,zmax_rel);
+                            n_tick_y = std::min(10.0, std::max(1.0,pixelsize_y1/(60.0 * line_thickness)));
+
+                        }
+
+                    }
+                    {
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmin_rel,hmin,zmin_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distancex1,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        if(distancex1 < distancex2)
+                        {
+                            axes_start_x = LSMVector3(xmin_rel,hmin,zmin_rel);
+                            axes_end_x = LSMVector3(xmax_rel,hmin,zmin_rel);
+                            n_tick_x = std::min(10.0, std::max(1.0,pixelsize_x1/(60.0 * line_thickness)));
+
+                        }
+                    }
+                    {
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distancex2,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        if(distancex2 < distancex1)
+                        {
+                            axes_start_x = LSMVector3(xmin_rel,hmin,zmax_rel);
+                            axes_end_x = LSMVector3(xmax_rel,hmin,zmax_rel);
+                            n_tick_x = std::min(10.0, std::max(1.0,pixelsize_x1/(60.0 * line_thickness)));
+
+                        }
+                    }
+                    {
+                        m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.003* 0.5 * distancey2,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        if(distancey2 < distancey1)
+                        {
+                            axes_start_y = LSMVector3(xmax_rel,hmin,zmin_rel);
+                            axes_end_y = LSMVector3(xmax_rel,hmin,zmax_rel);
+                            n_tick_y = std::min(10.0, std::max(1.0,pixelsize_y1/(60.0 * line_thickness)));
+
+                        }
+                    }
+
+                    //draw tick lines
+
+
+                    if(distancey2 < distancey1)
+                    {
+                        //axes_start_y = LSMVector3(xmin_rel,hmin,zmin_rel);
+                        //axes_end_y = LSMVector3(xmin_rel,hmin,zmax_rel);
+
+                        for(int i = 0; i < n_tick+2; i++)
+                        {
+                            float step = ((float)(i))/(n_tick + 1.0);
+                            LSMVector3 pos = axes_start + step * (axes_end- axes_start);
+                            LSMVector3 a = LSMVector3(xmin_rel,pos.y,zmin_rel);
+                            LSMVector3 b = LSMVector3(xmin_rel,pos.y,zmax_rel);
+                            float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                            m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        }
+
+
+
+                    }else
+                    {
+                        //axes_start_y = LSMVector3(xmax_rel,hmin,zmin_rel);
+                        //axes_end_y = LSMVector3(xmax_rel,hmin,zmax_rel);
+
+                        for(int i = 0; i < n_tick+2; i++)
+                        {
+                            float step = ((float)(i))/(n_tick + 1.0);
+                            LSMVector3 pos = axes_start + step * (axes_end- axes_start);
+                            LSMVector3 a = LSMVector3(xmax_rel,pos.y,zmin_rel);
+                            LSMVector3 b = LSMVector3(xmax_rel,pos.y,zmax_rel);
+                            float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                            m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        }
+
+                    }
+
+
+                    if(distancex2 < distancex1)
+                    {
+                        //axes_start_x = LSMVector3(xmin_rel,hmin,zmin_rel);
+                        //axes_end_x = LSMVector3(xmax_rel,hmin,zmin_rel);
+
+                        for(int i = 0; i < n_tick+2; i++)
+                        {
+                            float step = ((float)(i))/(n_tick + 1.0);
+                            LSMVector3 pos = axes_start + step * (axes_end- axes_start);
+                            LSMVector3 a = LSMVector3(xmin_rel,pos.y,zmin_rel);
+                            LSMVector3 b = LSMVector3(xmax_rel,pos.y,zmin_rel);
+                            float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                            m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        }
+
+
+
+                    }else
+                    {
+                        //axes_start_x = LSMVector3(xmin_rel,hmin,zmax_rel);
+                        //axes_end_x = LSMVector3(xmax_rel,hmin,zmax_rel);
+
+                        for(int i = 0; i < n_tick+2; i++)
+                        {
+                            float step = ((float)(i))/(n_tick + 1.0);
+                            LSMVector3 pos = axes_start + step * (axes_end- axes_start);
+                            LSMVector3 a = LSMVector3(xmin_rel,pos.y,zmax_rel);
+                            LSMVector3 b = LSMVector3(xmax_rel,pos.y,zmax_rel);
+                            float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                            m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+                        }
+
+
+                    }
+
+
+                    for(int i = 0; i < n_tick_x+2; i++)
+                    {
+                        float step = ((float)(i))/(n_tick_x + 1.0);
+                        LSMVector3 pos = axes_start_x + step * (axes_end_x- axes_start_x);
+                        LSMVector3 a = LSMVector3(pos.x,hmin + 1e-6,zmin_rel);
+                        LSMVector3 b = LSMVector3(pos.x,hmin + 1e-6,zmax_rel);
+                        float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                        m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                    }
+
+                    for(int i = 0; i < n_tick_y+2; i++)
+                    {
+                        float step = ((float)(i))/(n_tick_y + 1.0);
+                        LSMVector3 pos = axes_start_y + step * (axes_end_y- axes_start_y);
+                        LSMVector3 a = LSMVector3(xmin_rel,hmin + 1e-6,pos.z);
+                        LSMVector3 b = LSMVector3(xmax_rel,hmin + 1e-6,pos.z);
+                        float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                        m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                    }
+
+                    for(int i = 0; i < n_tick_x+2; i++)
+                    {
+                        float ythis = axes_start_y.x;
+                        if(distancex2 > distancex1)
+                        {
+                             ythis = zmax_rel;
+                        }else
+                        {
+                            ythis = zmin_rel;
+                        }
+                        float step = ((float)(i))/(n_tick_x + 1.0);
+                        LSMVector3 pos = axes_start_x + step * (axes_end_x- axes_start_x);
+                        LSMVector3 a = LSMVector3(pos.x,hmin,ythis);
+                        LSMVector3 b = LSMVector3(pos.x,hmax,ythis);
+                        float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                        m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                    }
+
+                    for(int i = 0; i < n_tick_y+2; i++)
+                    {
+                        float xthis = axes_start_y.x;
+                        if(distancey2 > distancey1)
+                        {
+                             xthis = xmax_rel;
+                        }else
+                        {
+                            xthis = xmin_rel;
+                        }
+                        float step = ((float)(i))/(n_tick_y + 1.0);
+                        LSMVector3 pos = axes_start_y + step * (axes_end_y- axes_start_y);
+                        LSMVector3 a = LSMVector3(xthis,hmin,pos.z);
+                        LSMVector3 b = LSMVector3(xthis,hmax,pos.z);
+                        float disline = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),a,b,0.0);
+                        m->m_ShapePainter->DrawLine3D(a,b,LSMVector3(0.0,camerapos.y,0.0),line_thickness*0.0015* 0.5 * disline,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a*0.5),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
+
+                    }
+
+
+                    //draw tick labels
+                    for(int i = 0; i < n_tick_x+2; i++)
+                    {
+                        float step = ((float)(i))/(n_tick_x + 1.0);
+                        LSMVector3 pos = axes_start_x + step * (axes_end_x- axes_start_x);
+                        if((axes_start - pos).length() < 1e-6)
+                        {
+                            continue;
+                        }
+                        QString text = QString::number(pos.x + camerapos.x);
+                        if(i ==  0 && (axes_start_x -LSMVector3(0.0,camerapos.y,0.0)).length() < (axes_end_x -LSMVector3(0.0,camerapos.y,0.0)).length())
+                        {
+                            text = "x = "+ text;
+                        }else if(i == n_tick_x+1 && !((axes_start_x -LSMVector3(0.0,camerapos.y,0.0)).length() < (axes_end_x -LSMVector3(0.0,camerapos.y,0.0)).length()))
+                        {
+                            text = "x = "+ text;
+                        }
+                        LSMVector3 normal1 = (pos-LSMVector3(0.0,camerapos.y,0.0)).Normalize();
+                        LSMVector3 normal = ((axes_end_x- axes_start_x)).Normalize();
+                        bool flip = false;
+                        if(normal1.dot(normal) < 0.0)
+                        {
+                            normal = -normal;
+                        }
+                        normal = 0.5*(normal + normal1).Normalize();
+
+                        LSMVector3 updir = LSMVector3(0.0,1.0,0.0);
+                        LSMVector3 rightdir = -LSMVector3::CrossProduct(normal,updir).Normalize();
+
+
+                        float mult = 0.7;
+                        if((pos- rightdir - LSMVector3((xmin_rel + xmax_rel)*0.5,pos.y,(zmin_rel + zmax_rel)*0.5)).length() < (pos - LSMVector3((xmin_rel + xmax_rel)*0.5,pos.y,(zmin_rel + zmax_rel)*0.5)).length() )
+                        {
+                            mult = -0.1;
+                        }
+
+                       float disthis = (pos - LSMVector3(0.0,camerapos.y,0.0)).length();
+                        float size = line_thickness*0.025* 0.5 * disthis;
+                        m->m_TextPainter->DrawText3D(text,nullptr,pos-mult * rightdir * ((float)text.size()) * size,normal,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * disthis,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+                    }
+
+
+                    for(int i = 0; i < n_tick_y+2; i++)
+                    {
+                        float step = ((float)(i))/(n_tick_y + 1.0);
+                        LSMVector3 pos = axes_start_y + step * (axes_end_y- axes_start_y);
+
+                        if((axes_start - pos).length() < 1e-6)
+                        {
+                            continue;
+                        }
+                        QString text = QString::number(pos.z + camerapos.z);
+                        if(i ==  0 && (axes_start_y -LSMVector3(0.0,camerapos.y,0.0)).length() < (axes_end_y -LSMVector3(0.0,camerapos.y,0.0)).length())
+                        {
+                            text = "y = "+ text;
+                        }else if(i == n_tick_x+1 && !((axes_start_y -LSMVector3(0.0,camerapos.y,0.0)).length() < (axes_end_y -LSMVector3(0.0,camerapos.y,0.0)).length()))
+                        {
+                            text = "y = "+ text;
+                        }
+                        LSMVector3 normal1 = (pos-LSMVector3(0.0,camerapos.y,0.0)).Normalize();
+                        LSMVector3 normal =((axes_end_y- axes_start_y)).Normalize();
+                        if(normal1.dot(normal) < 0.0)
+                        {
+                            normal = -normal;
+                        }
+                        normal = 0.5*(normal + normal1).Normalize();
+
+
+                        LSMVector3 updir = LSMVector3(0.0,1.0,0.0);
+                        LSMVector3 rightdir = -LSMVector3::CrossProduct(normal,updir).Normalize();
+
+                        float mult = 0.6;
+                        if((pos- rightdir - LSMVector3((xmin_rel + xmax_rel)*0.5,pos.y,(zmin_rel + zmax_rel)*0.5)).length() < (pos - LSMVector3((xmin_rel + xmax_rel)*0.5,pos.y,(zmin_rel + zmax_rel)*0.5)).length() )
+                        {
+                            mult = -0.1;
+                        }
+                        float disthis = (pos - LSMVector3(0.0,camerapos.y,0.0)).length();
+                        float size = line_thickness*0.025* 0.5 * disthis;
+                        m->m_TextPainter->DrawText3D(text,nullptr,pos- mult *rightdir * ((float)text.size()) * size,normal,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),line_thickness*0.025* 0.5 * disthis,camerapos,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),true);
+
+                    }
+
 
                 }
-                {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmin_rel,hmin,zmax_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
-                }
-                {
-                    float distance = Distance3DPointLine(LSMVector3(0.0,camerapos.y,0.0),LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),0.0);
-                    m->m_ShapePainter->DrawLine3D(LSMVector3(xmax_rel,hmin,zmax_rel),LSMVector3(xmax_rel,hmin,zmin_rel),LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * distance,LSMVector4(style.m_AxesColor.r,style.m_AxesColor.g,style.m_AxesColor.b,style.m_AxesColor.a),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,true);
-
-                }
-
 
             }
         }

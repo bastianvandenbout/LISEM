@@ -51,6 +51,12 @@ public:
 public:
     OpenGLCLTexture();
 
+    inline static OpenGLCLTexture GetTempTextureFromExistingGLUINT(GLuint i)
+    {
+        OpenGLCLTexture ret;
+        ret.m_texgl = i;
+        return ret;
+    }
 
     inline void SetPath(QString t)
     {

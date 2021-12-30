@@ -639,24 +639,24 @@ public:
                 });
 
 
-                connect(m_BasePlaneScale, SIGNAL(valueChanged(double)),this,SLOT(OnBasePlaneScale));
+                connect(m_BasePlaneScale, SIGNAL(valueChanged(double)),this,SLOT(OnBasePlaneScale(double)));
 
-                connect(m_BasePlaneLevel, SIGNAL(valueChanged(double)),this,SLOT(OnBasePlaneLevel));
+                connect(m_BasePlaneLevel, SIGNAL(valueChanged(double)),this,SLOT(OnBasePlaneLevel(double)));
 
-                connect(m_AxesScale, SIGNAL(valueChanged(double)),this,SLOT(OnAxesScale));
+                connect(m_AxesScale, SIGNAL(valueChanged(double)),this,SLOT(OnAxesScale(double)));
 
-                connect(m_EdgeLevel, SIGNAL(valueChanged(double)),this,SLOT(OnEdgeLevel));
+                connect(m_EdgeLevel, SIGNAL(valueChanged(double)),this,SLOT(OnEdgeLevel(double)));
 
 
                 wdpl->addWidget(m_EdgeBox);
-                wdpl->addWidget(m_EdgeLevel);
+                wdpl->addWidget(new QLabeledWidget("Edge Base Level ",m_EdgeLevel));
                 wdpl->addWidget(EdgeColor);
                 wdpl->addWidget(m_AxesBox);
-                wdpl->addWidget(m_AxesScale);
+                wdpl->addWidget(new QLabeledWidget("3D Axes Size ",m_AxesScale));
                 wdpl->addWidget(AxesColor);
                 wdpl->addWidget(m_BaseBox);
-                wdpl->addWidget(m_BasePlaneScale);
-                wdpl->addWidget(m_BasePlaneLevel);
+                wdpl->addWidget(new QLabeledWidget("Base Plane Size Scale ",m_BasePlaneScale));
+                wdpl->addWidget(new QLabeledWidget("Base Plane Level ",m_BasePlaneLevel));
                 wdpl->addWidget(BaseColor );
 
                 wl->addWidget(wdp);
@@ -1345,22 +1345,23 @@ public slots:
         m_Style->m_DrawBasePlane = x;
     }
 
-    inline void  OnBasePlaneScale( double x)
+    inline void OnBasePlaneScale( double x)
     {
+        std::cout << "set baseplane scale " << x <<std::endl;
         m_Style->m_BasePlaneScale =x;
 
     }
-    inline void  OnBasePlaneLevel( double x)
+    inline void OnBasePlaneLevel( double x)
     {
         m_Style->m_BasePlaneLevel =x;
 
     }
-    inline void  OnAxesScale( double x)
+    inline void OnAxesScale( double x)
     {
         m_Style->m_3DAxesSize=x;
 
     }
-    inline void  OnEdgeLevel( double x)
+    inline void OnEdgeLevel( double x)
     {
         m_Style->m_EdgeLevel =x;
 

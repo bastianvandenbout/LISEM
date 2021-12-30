@@ -7,10 +7,10 @@ void OpenGL3DPainter::LoadShaders()
 
 
     m_GLProgram_DrawObject = new OpenGLProgram();
-    m_GLProgram_DrawObject->LoadProgram(m_AssetDir+ "UI3DObject.vert", m_AssetDir+ "UI3DObject.frag");
+    m_GLProgram_DrawObject->LoadProgram(m_ShaderDir+ "UI3DObject.vert", m_ShaderDir+ "UI3DObject.frag");
 
     m_GLProgram_DrawTexturedPolygon3D = new OpenGLProgram();
-    m_GLProgram_DrawTexturedPolygon3D->LoadProgram(m_AssetDir+ "UI3DPolyDraw.vert", m_AssetDir+ "UI3DPolyDraw.frag");
+    m_GLProgram_DrawTexturedPolygon3D->LoadProgram(m_ShaderDir+ "UI3DPolyDraw.vert", m_ShaderDir+ "UI3DPolyDraw.frag");
 
 
     glad_glGenVertexArrays(1, &VAO);
@@ -28,6 +28,7 @@ void OpenGL3DPainter::LoadShaders()
     glad_glGenBuffers(1, &TBO3D);
     glad_glGenBuffers(1, &NBO3D);
     glad_glBindVertexArray(VAO3D);
+
     glad_glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
     glad_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 3, NULL, GL_DYNAMIC_DRAW);
     glad_glEnableVertexAttribArray(0);
@@ -40,6 +41,8 @@ void OpenGL3DPainter::LoadShaders()
     glad_glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 3, NULL, GL_DYNAMIC_DRAW);
     glad_glEnableVertexAttribArray(2);
     glad_glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+
     glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
     glad_glBindVertexArray(0);
 

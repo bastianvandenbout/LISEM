@@ -286,7 +286,7 @@ public:
                     {
                         cl_int res = q.enqueueCopyBuffer(arg.data->m_buffercl, arg.data->m_buffergl, 0, 0, arg.data->m_size, NULL, NULL);
                         if (res!=CL_SUCCESS) {
-                            std::cout<<"Failed releasing GL object: "<<res<<std::endl;
+                            std::cout<<"Failed to copy GL object: "<<res<<std::endl;
                             exit(247);
                         }
                     }

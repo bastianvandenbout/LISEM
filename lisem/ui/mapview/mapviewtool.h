@@ -624,6 +624,15 @@ public:
 
         addEVButton->setPopupMode(QToolButton::MenuButtonPopup);
 
+        QAction * etAct = new QAction(tr("Text"), this);
+        etAct->setStatusTip(tr("Add a layer which displays text"));
+
+        QAction * eiAct = new QAction(tr("Image"), this);
+        eiAct->setStatusTip(tr("Add a layer with a simpe image"));
+
+        QAction * eaAct = new QAction(tr("Arrow"), this);
+        eaAct->setStatusTip(tr("Add a layer with an arrow"));
+
         QAction * eoAct = new QAction(tr("Ocean"), this);
         eoAct->setStatusTip(tr("Ocean layer at elevation 0.0"));
 
@@ -635,6 +644,10 @@ public:
 
         QAction * eclAct = new QAction(tr("Clouds"), this);
         eclAct->setStatusTip(tr("Add Volumetric Cloud Layer"));
+
+        connect(etAct,SIGNAL(triggered(bool)), this, SLOT(OnAddEVTextPressed()));
+        connect(eiAct,SIGNAL(triggered(bool)), this, SLOT(OnAddEVImagePressed()));
+        connect(eaAct,SIGNAL(triggered(bool)), this, SLOT(OnAddEVArrowPressed()));
 
         connect(eoAct,SIGNAL(triggered(bool)), this, SLOT(OnAddEVOceanPressed()));
         connect(esAct,SIGNAL(triggered(bool)), this, SLOT(OnAddEVSkyPressed()));
@@ -2066,6 +2079,39 @@ public slots:
             }
         }
 
+    }
+
+    inline void OnAddEVTextPressed()
+    {
+
+    }
+    inline void OnAddEVImagePressed()
+    {
+
+    }
+    inline void OnAddEVArrowPressed()
+    {
+
+        QString openDir = GetSite();
+
+        QString path = QFileDialog::getOpenFileName(this,
+                                            QString("Select object file"),
+                                            openDir,
+                                            GetExtensionsFileFilter(GetModelExtensions()));
+
+        if(!path.isEmpty())
+        {
+            QFileInfo fileInfo(path);
+            if(fileInfo.exists())
+            {
+                LISEM_DEBUG("File does not exist");
+                QString filename(fileInfo.fileName());
+                QString filedir(fileInfo.dir().path());
+
+
+                AddObjectLayerFromFile(path);
+            }
+        }
     }
 
     inline void OnAddEVOceanPressed()
