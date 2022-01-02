@@ -121,6 +121,7 @@ public:
             {
                  LISEM_DEBUG(QString("sucessfully compiled ")+ name.c_str());
             }
+            return 0;
         }
         m_kernel = cl::Kernel(m_program,name.c_str());
 

@@ -76,10 +76,92 @@ inline static bool HasDefaultGPUFlowModels()
 inline static std::vector<AS_GPUMap *> DynamicWaveGPU(AS_GPUMap * DEM, AS_GPUMap * N, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI, float _dt, float courant )
 {
 
+    if(!HasDefaultGPUFlowModels())
+    {
+        LoadDefaultGPUFlowModels();
+    }
+
+    //Run the actual kernel,
+    //set the arguments for input and output
 
 
+    AS_GPUMap * HN = HI->GetCopy0();
+    AS_GPUMap * VXN = VXI->GetCopy0();
+    AS_GPUMap * VYN = VYI->GetCopy0();
 
+
+    //get timestep kernel
+
+
+    //set arguments
+
+
+    //run timestep kernel
+
+
+    //get minimum timestep through opencl reduction
+
+
+    //get flow kernel
+
+    //set kernel arguments
+
+    //run flow kernel
+
+
+    //return new maps
+
+    return {HN,VXN,VYN};
 }
+
+
+
+inline static std::vector<AS_GPUMap *> MixtureWaveGPU(AS_GPUMap * DEM, AS_GPUMap * N, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI,AS_GPUMap * HSI,  AS_GPUMap * VSXI, AS_GPUMap * VSYI,AS_GPUMap * IFA, AS_GPUMap * ROCKSIZE, AS_GPUMap * DENSITY, float _dt, float courant )
+{
+
+    if(!HasDefaultGPUFlowModels())
+    {
+        LoadDefaultGPUFlowModels();
+    }
+
+    //Run the actual kernel,
+    //set the arguments for input and output
+
+
+    AS_GPUMap * HN = HI->GetCopy0();
+    AS_GPUMap * VXN = HI->GetCopy0();
+    AS_GPUMap * VYN = HI->GetCopy0();
+    AS_GPUMap * HSN = HI->GetCopy0();
+    AS_GPUMap * VSXN = HI->GetCopy0();
+    AS_GPUMap * VSYN = HI->GetCopy0();
+    AS_GPUMap * IFAN = HI->GetCopy0();
+    AS_GPUMap * ROCKSIZEN = HI->GetCopy0();
+    AS_GPUMap * DENSITYN = HI->GetCopy0();
+
+    //get timestep kernel
+
+
+    //set arguments
+
+
+    //run timestep kernel
+
+
+    //get minimum timestep through opencl reduction
+
+
+    //get flow kernel
+
+    //set kernel arguments
+
+    //run flow kernel
+
+
+    //return new maps
+
+    return {HN,VXN,VYN};
+}
+
 
 
 #endif // RASTERFLOWGPU_H

@@ -137,6 +137,25 @@ inline void RegisterGPUToScriptEngine(LSMScriptEngine *engine)
     //dual operators on float/map
 
 
+    r = engine->RegisterObjectType("GPUScript",0,asOBJ_REF );// | asGetTypeTraits<cTMap>()
+    if(r < 0){LISEM_DEBUG("error in registering scripting: class GPUScript");};
+
+    //register constructors by using factory functions
+    r = engine->RegisterObjectBehaviour("GPUScript",asBEHAVE_FACTORY,"GPUScript@ C0()",asFUNCTIONPR(GPUScriptConstructor,(),AS_GPUScript *),asCALL_CDECL); assert( r >= 0 );
+
+    //register reference counting for garbage collecting
+    r = engine->RegisterObjectBehaviour("GPUScript",asBEHAVE_ADDREF,"void f()",asMETHOD(AS_GPUScript,AS_AddRef),asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("GPUScript",asBEHAVE_RELEASE,"void f()",asMETHOD(AS_GPUScript,AS_ReleaseRef),asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("GPUScript", "GPUScript& opAssign(GPUScript &in m)", asMETHODPR(AS_GPUScript,AS_Assign,(AS_GPUScript *),AS_GPUScript*), asCALL_THISCALL); assert( r >= 0 );
+
+    r = engine->RegisterGlobalFunction("GPUScript @GPUScriptFromFile(string &in script, string &in kernelname)", asFUNCTION( AS_GPUScriptFromFile),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("GPUScript @GPUScriptFromFileAbsPath(string &in script, string &in kernelname)", asFUNCTION( AS_GPUScriptFromFileAbsPath),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("GPUScript @GPUScriptFromExpression(string &in script, string &in kernelname)", asFUNCTION( AS_GPUScriptFromExpression),  asCALL_CDECL); assert( r >= 0 );
+
+    r = engine->RegisterGlobalFunction("float MapMinimumRed(const GPUMap &in m)", asFUNCTION( AS_MapMinimumRedGPU),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("float MapMaximumRed(const GPUMap &in m)", asFUNCTION( AS_MapMaximumRedGPU),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("float MapTotalRed(const GPUMap &in m)", asFUNCTION( AS_MapTotalRedGPU),  asCALL_CDECL); assert( r >= 0 );
+
 
 }
 

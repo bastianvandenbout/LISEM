@@ -133,6 +133,17 @@ inline QString GetFileString(QString path)
     return res;
 }
 
+inline bool FileExists(QString path)
+{
+    QFile f(path);
+    if(f.exists())
+    {
+        return true;
+    }else
+    {
+        return false;
+    }
+}
 
 inline QStringList ReadFileAsText(QString path, bool trim = true, int * error = nullptr)
 {

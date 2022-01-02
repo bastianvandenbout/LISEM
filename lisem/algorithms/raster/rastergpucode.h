@@ -236,7 +236,7 @@ LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemMax;
 LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemTotal;
 LISEM_API extern OpenCLProgram * CGLArrFKernelRedRemSum;
 
-inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString expression, bool isint, bool is_array)
+inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString expression, bool isint, bool is_array, QString initial)
 {
     QString typs = isint? QString("int"):QString("float");
 
@@ -299,7 +299,7 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
     if(is_array)
     {
 
-        code +="__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void kernel_8( __global "+ typs + " *A, __global "+ typs+ " *B){";
+        code +="__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void sph_function( __global "+ typs + " *A, __global "+ typs+ " *B){";
 
         //Get the indexes of the local item
         code +=" unsigned int tid = get_local_id(0);";
@@ -310,12 +310,12 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
          //Declares the shared memory
         code +=" __local " + typs + " sdata[256];";
-        code +=" sdata[tid] = 0;";
+        code +=" sdata[tid] = "+ initial + ";";
 
          // 2^3 external sums, or 2^2 * 2
         code +="for(int aux = 0; aux<4; aux++) {";
-        code +="    sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","A[i]") + ";";
-        code +="    sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","A[i + dim]") + ";";
+        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","A[i]") + ";";
+        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","A[i + dim]") + ";";
         code +="    i += gridSize;";
         code +="}";
 
@@ -324,37 +324,37 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
          // the parallel reduction itself (workgroup = 2^7 -> 7 times)
         code +=" if (tid < 128){";
-        code +="     sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 128]") + ";";
+        code +="     sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 128]") + ";";
         code +="     barrier(CLK_LOCAL_MEM_FENCE);";
 
         code +="     if (tid < 64){";
-        code +="        sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 64]") + ";";
+        code +="        sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 64]") + ";";
         code +="        barrier(CLK_LOCAL_MEM_FENCE);";
 
 
         code +="        if (tid < 32){";
-        code +="            sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 32]") + ";";
+        code +="            sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 32]") + ";";
         code +="            barrier(CLK_LOCAL_MEM_FENCE);";
 
-        code +="            //if (tid < 16){";
-        code +="                sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 16]") + ";";
+                    //if (tid < 16){
+        code +="                sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 16]") + ";";
         code +="                barrier(CLK_LOCAL_MEM_FENCE);";
 
                         //if (tid < 8){
-        code +="                    sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 8]") + ";";
+        code +="                    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 8]") + ";";
         code +="                    barrier(CLK_LOCAL_MEM_FENCE);";
 
                             //if (tid < 4){
-        code +="                        sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 4]") + ";";
+        code +="                        sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 4]") + ";";
         code +="                        barrier(CLK_LOCAL_MEM_FENCE);";
 
                                 //if (tid < 2){
-        code +="                            sdata[tid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 2]") + ";";
+        code +="                            sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 2]") + ";";
         code +="                            barrier(CLK_LOCAL_MEM_FENCE);";
 
         code +="                            if (tid < 1){";
                                          // write result for this block to global mem
-        code +="                                B[wid] = "+ expression.replace("var1","sdata[tid]").replace("var2","sdata[tid + 1]") + ";";
+        code +="                                B[wid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 1]") + ";";
         code +="                            }";
                                 //}
                             //}
@@ -371,70 +371,70 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
     }else
     {
+//__attribute__((reqd_work_group_size(256, 1, 1)))
 
-
-        code +="__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void kernel_8(int dim0, int dim1,   __read_only image2d_t A, __global float *B){";
+        code +="__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void sph_function(int dim0, int dim1,   __read_only image2d_t A, __global float *B){\n";
         code +="const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;\n";
 
         //Get the indexes of the local item
-        code +=" unsigned int tid = get_local_id(0);";
-        code +=" unsigned int wid = get_group_id(0);";
-        code +=" unsigned int dim = get_local_size(0);";
-        code +=" unsigned int i = wid*dim*2 + tid;";
-        code +=" unsigned int gridSize = get_global_size(0)*2;";
+        code +=" unsigned int tid = get_local_id(0);\n";
+        code +=" unsigned int wid = get_group_id(0);\n";
+        code +=" unsigned int dim = get_local_size(0);\n";
+        code +=" unsigned int i = wid*dim*2 + tid;\n";
+        code +=" unsigned int gridSize = get_global_size(0)*2;\n";
 
          //Declares the shared memory
-        code +=" __local float sdata[256];";
-        code +=" sdata[tid] = 0;";
+        code +=" __local float sdata[256];\n";
+        code +=" sdata[tid] = "+ initial + ";\n";
 
          // 2^3 external sums, or 2^2 * 2
-        code +="for(int aux = 0; aux<4; aux++) {";
+        code +="for(int aux = 0; aux<4; aux++) {\n";
         code += "int2 pixelcoord1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));\n";
         code += "float valt1 = read_imagef(A, sampler, pixelcoord1).x;\n";
         code += "int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));\n";
         code += "float valt2 = read_imagef(A, sampler, pixelcoord2).x;\n";
 
-        code +="    sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","valt1") + ";";
-        code +="    sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","valt2") + ";";
-        code +="    i += gridSize;";
-        code +="}";
+        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","valt1") + ";\n";
+        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","valt2") + ";\n";
+        code +="    i += gridSize;\n";
+        code +="}\n";
 
          //syncs the threads (to ensure the local memory is properly loaded)
-        code +=" barrier(CLK_LOCAL_MEM_FENCE);";
+        code +=" barrier(CLK_LOCAL_MEM_FENCE);\n";
 
          // the parallel reduction itself (workgroup = 2^7 -> 7 times)
-        code +=" if (tid < 128){";
-        code +="     sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 128]") + ";";
+        code +=" if (tid < 128){\n";
+        code +="     sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 128]") + ";\n";
         code +="     barrier(CLK_LOCAL_MEM_FENCE);";
 
-        code +="     if (tid < 64){";
-        code +="        sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 64]") + ";";
-        code +="        barrier(CLK_LOCAL_MEM_FENCE);";
+        code +="     if (tid < 64){\n";
+        code +="        sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 64]") + ";\n";
+        code +="        barrier(CLK_LOCAL_MEM_FENCE);\n";
 
 
         code +="        if (tid < 32){";
-        code +="            sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 32]") + ";";
+        code +="            sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 32]") + ";";
         code +="            barrier(CLK_LOCAL_MEM_FENCE);";
 
-        code +="            //if (tid < 16){";
-        code +="                sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 16]") + ";";
+                    //if (tid < 16){
+        code +="                sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 16]") + ";";
         code +="                barrier(CLK_LOCAL_MEM_FENCE);";
 
                         //if (tid < 8){
-        code +="                    sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 8]") + ";";
+        code +="                    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 8]") + ";";
         code +="                    barrier(CLK_LOCAL_MEM_FENCE);";
 
                             //if (tid < 4){
-        code +="                        sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 4]") + ";";
+        code +="                        sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 4]") + ";";
         code +="                        barrier(CLK_LOCAL_MEM_FENCE);";
 
                                 //if (tid < 2){
-        code +="                            sdata[tid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 2]") + ";";
+        code +="                            sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 2]") + ";";
         code +="                            barrier(CLK_LOCAL_MEM_FENCE);";
 
         code +="                            if (tid < 1){";
                                          // write result for this block to global mem
-        code +="                                B[wid] = "+ expression.replace("val1","sdata[tid]").replace("val2","sdata[tid + 1]") + ";";
+        code +="                                B[wid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","sdata[tid + 1]") + ";";
         code +="                            }";
                                 //}
                             //}
@@ -446,6 +446,10 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
 
         code +="};";
+
+        std::cout << "   Begin code " << std::endl;
+        std::cout << code.toStdString() << std::endl;
+        std::cout << "   End code " << std::endl;
 
 
     }
@@ -460,7 +464,7 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
 }
 
-inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QString expression, bool isint, bool is_array)
+inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QString expression, bool isint, bool is_array, QString initial)
 {
     QString typs = isint? QString("int"):QString("float");
 
@@ -472,12 +476,12 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QStrin
         code +="const int localID = get_local_id(0); \n";
         code +="const int localSize = get_local_size(0); \n";
         code +="const int workgroupID = globalID / localSize; \n";
-        code += typs + " val1 = 0; \n";
-        code +="for(int i = inOffset; offset < inputSize; i++) { \n";
+        code += typs + " val1 = "+ initial + "; \n";
+        code +="for(int i = inOffset; i < inputSize; i++) { \n";
         code += typs + " val2 = input[i]; \n";
         code +="val1 = "+ expression+ "; \n";
         code +="} \n";
-        code +="output[outputOffset] = result; \n";
+        code +="output[outputOffset] = val1; \n";
         code +="} \n";
 
     }else
@@ -488,13 +492,13 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QStrin
         code +="const int localID = get_local_id(0); \n";
         code +="const int localSize = get_local_size(0); \n";
         code +="const int workgroupID = globalID / localSize; \n";
-        code +="float val1 = 0; \n";
-        code +="for(int i = inOffset; offset < inputSize; i++) { \n";
+        code +="float val1 = "+ initial + "; \n";
+        code +="for(int i = inOffset; i < inputSize; i++) { \n";
         code += "int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));\n";
         code += "float val2 = read_imagef(input, sampler, pixelcoord).x;\n";
         code +="val1 = "+ expression+ "; \n";
         code +="} \n";
-        code +="output[outputOffset] = result; \n";
+        code +="output[outputOffset] = val1; \n";
         code +="} \n";
     }
 
@@ -650,7 +654,6 @@ inline static OpenCLProgram * GetCLProgramFromBasicExpression(QString expression
     return p;
 }
 
-
 inline static void LoadDefaultGPUModels()
 {
     CGLKernelMutex.lock();
@@ -746,30 +749,30 @@ inline static void LoadDefaultGPUModels()
     CGLKernelfrXOr = GetCLProgramFromBasicExpression("(((val1 >= 0.5f) || (val2 >= 0.5f)) && !((val1 >= 0.5f) && (val2 >= 0.5f)))? 1.0f:0.0f",true,true,false,true,true);
 
 
-    CGLKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",false,false);
-    CGLKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",false,false);
-    CGLKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",false,false);
-    CGLKernelRedSum = GetCLProgramFromBasicReductionExpression(" (val1 + val2) ",false,false);
-    CGLArrIKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",true,true);
-    CGLArrIKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",true,true);
-    CGLArrIKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",true,true);
-    CGLArrIKernelRedSum = GetCLProgramFromBasicReductionExpression(" (val1 + val2) ",true,true);
-    CGLArrFKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",false,true);
-    CGLArrFKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",false,true);
-    CGLArrFKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",false,true);
-    CGLArrFKernelRedSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,true);
-    CGLKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",false,false);
-    CGLKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",false,false);
-    CGLKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",false,false);
-    CGLKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,false);
-    CGLArrIKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",true,true);
-    CGLArrIKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",true,true);
-    CGLArrIKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",true,true);
-    CGLArrIKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",true,true);
-    CGLArrFKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",false,true);
-    CGLArrFKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",false,true);
-    CGLArrFKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",false,true);
-    CGLArrFKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,true);
+    CGLKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",false,false,"1e31f");
+    CGLKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",false,false,"-1e31f");
+    CGLKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",false,false,"0.0");
+    CGLKernelRedSum = GetCLProgramFromBasicReductionExpression(" (val1 + val2) ",false,false,"0.0");
+    CGLArrIKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",true,true,"2147483647");
+    CGLArrIKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",true,true,"-2147483648");
+    CGLArrIKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",true,true, "0");
+    CGLArrIKernelRedSum = GetCLProgramFromBasicReductionExpression(" (val1 + val2) ",true,true, "0");
+    CGLArrFKernelRedMin = GetCLProgramFromBasicReductionExpression(" (min(val1,val2)) ",false,true,"1e31f");
+    CGLArrFKernelRedMax = GetCLProgramFromBasicReductionExpression(" (max(val1,val2)) ",false,true,"-1e31f");
+    CGLArrFKernelRedTotal = GetCLProgramFromBasicReductionExpression(" (val1 - val2) ",false,true,"0.0");
+    CGLArrFKernelRedSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,true,"0.0");
+    CGLKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",false,false,"1e31f");
+    CGLKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",false,false,"-1e31f");
+    CGLKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",false,false,"0.0");
+    CGLKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,false,"0.0");
+    CGLArrIKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",true,true,"2147483647");
+    CGLArrIKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",true,true,"-2147483648");
+    CGLArrIKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",true,true, "0");
+    CGLArrIKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",true,true, "0");
+    CGLArrFKernelRedRemMin = GetCLProgramFromBasicReductionRemExpression(" (min(val1,val2)) ",false,true,"1e31f");
+    CGLArrFKernelRedRemMax = GetCLProgramFromBasicReductionRemExpression(" (max(val1,val2)) ",false,true,"-1e31f");
+    CGLArrFKernelRedRemTotal = GetCLProgramFromBasicReductionRemExpression(" (val1 - val2) ",false,true,"0.0");
+    CGLArrFKernelRedRemSum = GetCLProgramFromBasicReductionRemExpression(" (val1 + val2) ",false,true,"0.0");
 
     //ulong seed = randoms + globalID;
     //seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
@@ -937,6 +940,8 @@ public:
         m->setwest(ulx);
     }
 
+    AS_GPUMap * GetCopy0();
+
     AS_GPUMap *    AS_Assign            (AS_GPUMap*);
     AS_GPUMap *    AS_Assign            (cTMap*);
     bool           AS_Created           = false;
@@ -1031,6 +1036,41 @@ inline AS_GPUMap * AS_GPUMap::AS_Assign(cTMap * m)
 
 
     return this;
+}
+
+inline AS_GPUMap * AS_GPUMap::GetCopy0()
+{
+    if(!HasDefaultGPUModels())
+    {
+        LoadDefaultGPUModels();
+    }
+
+
+    AS_GPUMap * ret = new AS_GPUMap();
+
+
+    if(ret->m_GPUData == nullptr)
+    {
+        ret->m_GPUData = new OpenCLTexture();
+        ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m->nrCols(),m->nrRows(),0.0);
+    }else
+    {
+        if(!((ret->m_GPUData->m_dims[0] == m->nrCols()) &&(ret->m_GPUData->m_dims[1] == m->nrRows())))
+        {
+            ret->m_GPUData->Destroy();
+            delete ret->m_GPUData;
+            ret->m_GPUData = nullptr;
+
+            ret->m_GPUData = new OpenCLTexture();
+            ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m->nrCols(),m->nrRows(),0.0);
+        }
+    }
+
+    ret->GeoPropsFromMap(this);
+
+    //no copy needed;
+
+    return ret;
 }
 
 inline AS_GPUMap * AS_GPUMap::AS_Assign(AS_GPUMap * gpum)
@@ -1794,55 +1834,512 @@ inline static AS_GPUMap * GPUfPowAssign(AS_GPUMap * m,float m2)
     return ApplyGPUKernelDoubleMap(CGLKernelfPow,m,m2,true);
 }
 
-class AS_GPUModel
+class AS_GPUScript
 {
 private:
     OpenCLProgram * program;
+    bool is_valid = false;
 
 
     public:
-    inline AS_GPUModel()
+    inline AS_GPUScript()
     {
 
     }
 
+    inline bool LoadFromExpression(QString expression, QString kernelname)
+    {
+        program = new OpenCLProgram();
+        try
+        {
+            if(program->LoadProgramString(CGlobalGLCLManager->context,CGlobalGLCLManager->m_device,expression.toStdString(),kernelname.toStdString()) == 0)
+            {
+                return false;
+            }
+        }catch(std::exception e)
+        {
+            return false;
+        }catch( ... )
+        {
+            return false;
+        }
 
-    inline bool CompileFile()
+        is_valid = true;
+        return true;
+    }
+
+    inline void SetArgumentMap()
     {
 
-        return false;
     }
-    inline bool CompileExpression()
+    inline void SetArgumentArrayI()
     {
-         return false;
+
     }
+
+    inline void SetArgumentArrayF()
+    {
+
+    }
+
+    inline void SetArgumentInt()
+    {
+
+    }
+    inline void SetArgumentFloat()
+    {
+
+    }
+
 
     inline bool Run()
     {
          return false;
     }
+
+    QString        AS_FileName = "";
+    AS_GPUScript * AS_Assign            (AS_GPUScript*);
+    bool           AS_Created           = false;
+    int            AS_refcount          = 1;
+    void           AS_AddRef            ();
+    void           AS_ReleaseRef        ();
+
+
+
 };
 
+//Angelscript related functionality
 
-
-
-inline static AS_GPUModel * AS_GPUModelFromFile(QString file, QString kernel, int ninputs, int noutputs)
+inline void AS_GPUScript::AS_AddRef()
 {
-    AS_GPUModel * ret = new AS_GPUModel();
+    AS_refcount = AS_refcount + 1;
 
+}
+
+inline void AS_GPUScript::AS_ReleaseRef()
+{
+
+    AS_refcount = AS_refcount - 1;
+    if(AS_refcount == 0)
+    {
+
+
+        delete this;
+
+    }
+
+}
+
+inline AS_GPUScript * AS_GPUScript::AS_Assign(AS_GPUScript * gpum)
+{
+
+
+
+    return this;
+}
+
+
+#include "lsmio.h"
+
+
+inline static AS_GPUScript * AS_GPUScriptFromFile(QString file, QString kernel)
+{
+    AS_GPUScript * ret = new AS_GPUScript();
+
+    if(!FileExists(AS_DIR+file))
+    {
+        LISEMS_ERROR("File could not be found: " + AS_DIR + file);
+        throw 1;
+    }
+    if(!ret->LoadFromExpression(GetFileString(AS_DIR + file),kernel))
+    {
+        LISEMS_ERROR("GPU Script could not be compiled: " + AS_DIR + file);
+        throw 1;
+    }
+    return ret;
+}
+
+inline static AS_GPUScript * AS_GPUScriptFromFileAbsPath(QString file, QString kernel)
+{
+    AS_GPUScript * ret = new AS_GPUScript();
+    if(!FileExists(AS_DIR+file))
+    {
+        LISEMS_ERROR("File could not be found: " + file);
+        throw 1;
+    }
+    if(!ret->LoadFromExpression(GetFileString(file),kernel))
+    {
+        LISEMS_ERROR("GPU Script could not be compiled: " + file);
+        throw 1;
+    }
 
     return ret;
 }
 
-inline static AS_GPUModel * AS_GPUModelFromExpression(QString expression, QString names)
+inline static AS_GPUScript * AS_GPUScriptFromExpression(QString expression, QString kernel)
 {
-    AS_GPUModel * ret = new AS_GPUModel();
+    AS_GPUScript * ret = new AS_GPUScript();
+
+    ret->LoadFromExpression(expression,kernel);
+
 
     return ret;
 
 }
 
+inline static AS_GPUScript * GPUScriptConstructor()
+{
+    if(!HasDefaultGPUModels())
+    {
+        LoadDefaultGPUModels();
+    }
 
+    AS_GPUScript * m = new AS_GPUScript();
+    return m;
+}
+
+
+inline static float ApplyReductionToMap(AS_GPUMap * m, OpenCLProgram * red, OpenCLProgram * redrem, std::function<float(float,float)> reduction, float val_start = 0.0)
+{
+
+    if(m->m_GPUData == nullptr)
+    {
+        LISEMS_ERROR("GPU Map is not valid");
+        throw 1;
+    }
+    //first create output buffer (size/1024 + 1)
+    int size = m->m_GPUData->m_dims[0] * m->m_GPUData->m_dims[1];
+    int size_workgroup = 256;
+    int size_workgroupcount = 256 * 8; //each workgroup has 256 threads, but does 8 items
+    int size_output = size / size_workgroupcount;
+    int size_corr = size_workgroupcount * (size/size_workgroupcount);
+    int remainder = size - size_output * size_workgroupcount;
+    if(remainder > 0)
+    {
+        size_output += 1;
+    }
+
+
+    //create buffer
+
+    int ret = CL_SUCCESS;
+    cl_mem outbuf = clCreateBuffer(CGlobalGLCLManager->context(), CL_MEM_READ_WRITE, sizeof(int)*size_output, NULL, &ret);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not create output buffer");
+        throw 1;
+    }
+
+    cl_kernel kernel1 = red->m_kernel();
+    cl_kernel kernel2 = redrem->m_kernel();
+    const size_t globalWorkSize = size_corr/8;
+    const size_t localWorkSize = size_workgroup;
+
+    //two kernels: first one runs reduction per 1024 items
+    //second kernel: runs a serial reduction on the remainder of the dataset (size % 1024)
+
+    int sizex = m->m_GPUData->m_dims[0];
+    int sizey = m->m_GPUData->m_dims[1];
+    int outputoffset = (size_output -1);
+    int inOffset = size_workgroupcount * (size/size_workgroupcount);
+    clSetKernelArg(kernel1, 0, sizeof(int), (void *)&sizex);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-1 ");
+        throw 1;
+    }
+    ret = clSetKernelArg(kernel1, 1, sizeof(int), (void *)&sizey);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-2 ");
+        throw 1;
+    }
+    cl_mem obj1 =m->m_GPUData->m_texcl();
+
+    ret = clSetKernelArg(kernel1, 2, sizeof(cl_mem), (void *)&obj1);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-3 ");
+        throw 1;
+    }
+    ret = clSetKernelArg(kernel1, 3, sizeof(cl_mem), (void *)&outbuf);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-4 ");
+        throw 1;
+    }
+    //then run the first kernel for (n-1) output buffer results
+
+    size_t wgSize[3] = {256, 1, 1};
+    size_t gSize[3] = {size_corr/8, 1, 1};
+
+
+    ret = clEnqueueNDRangeKernel(CGlobalGLCLManager->q(), kernel1, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Error while running kernel1 ");
+        std::cout << "error is "<< ret << std::endl;
+        throw 1;
+    }
+
+    //then run the second kernel for the last output buffer result
+
+    if(remainder > 0)
+    {
+        clSetKernelArg(kernel1, 0, sizeof(int), (void *)&sizex);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel2-1 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel1, 1, sizeof(int), (void *)&sizey);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel2-2 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel1, 2, sizeof(cl_mem), (void *)&obj1);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel1, 3, sizeof(cl_mem), outbuf);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-4 ");
+            throw 1;
+        }
+
+        ret = clSetKernelArg(kernel2, 4, sizeof(int), (void *)&size);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel2, 5, sizeof(int), (void *)&inOffset);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel2, 6, sizeof(int), (void *)&outputoffset);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+
+
+        ret = clEnqueueTask(CGlobalGLCLManager->q(),kernel2,0,NULL,NULL);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Error while running kernel2 ");
+            throw 1;
+        }
+    }
+
+
+    //read output buffer
+    float * results = (float*) malloc(sizeof(float)*size_output);
+    ret = clEnqueueReadBuffer(CGlobalGLCLManager->q(), outbuf, CL_TRUE, 0, sizeof(int)*size_output, results, 0, NULL, NULL);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not read buffer ");
+        throw 1;
+    }
+
+
+    float result = val_start;
+    // finally do a reduction on the final output buffer outputs
+    for(int i = 0; i < size_output; i++)
+    {
+        result = reduction(result,results[i]);
+    }
+
+    ret = clReleaseMemObject(outbuf);
+    free(results);
+
+    return result;
+
+}
+
+inline static float ApplyReductionToFArray(AS_GPUFArray * m, OpenCLProgram * red, OpenCLProgram * redrem, std::function<float(float,float)> reduction, float val_start = 0.0)
+{
+    /*if(m->m_GPUData == nullptr)
+    {
+        LISEMS_ERROR("GPU Map is not valid");
+        throw 1;
+    }
+    //first create output buffer (size/1024 + 1)
+    int size = m->m_GPUData->m_dims[0] * m->m_GPUData->m_dims[1];
+    int size_workgroup = 256;
+    int size_workgroupcount = 256 * 8; //each workgroup has 256 threads, but does 8 items
+    int size_output = size / size_workgroupcount;
+    int size_corr = size_workgroupcount * (size/size_workgroupcount);
+    int remainder = size - size_output * size_workgroupcount;
+    if(remainder > 0)
+    {
+        size_output += 1;
+    }
+
+
+    //create buffer
+
+    int ret = CL_SUCCESS;
+    cl_mem outbuf = clCreateBuffer(CGlobalGLCLManager->context(), CL_MEM_READ_WRITE, sizeof(int)*size_output, NULL, &ret);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not create output buffer");
+        throw 1;
+    }
+
+    cl_kernel kernel1 = red->m_kernel();
+    cl_kernel kernel2 = redrem->m_kernel();
+    const size_t globalWorkSize = size;
+    const size_t localWorkSize = size_workgroup;
+
+    //two kernels: first one runs reduction per 1024 items
+    //second kernel: runs a serial reduction on the remainder of the dataset (size % 1024)
+
+    int sizex = m->m_GPUData->m_dims[0];
+    int sizey = m->m_GPUData->m_dims[1];
+    int outputoffset = (size_output -1);
+    int inOffset = size_workgroupcount * (size/size_workgroupcount);
+    clSetKernelArg(kernel1, 0, sizeof(int), (void *)&sizex);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-1 ");
+        throw 1;
+    }
+    ret = clSetKernelArg(kernel1, 1, sizeof(int), (void *)&sizey);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-2 ");
+        throw 1;
+    }
+    ret = clSetKernelArg(kernel1, 2, sizeof(int), (void *)&m->m_GPUData->m_texcl);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-3 ");
+        throw 1;
+    }
+    ret = clSetKernelArg(kernel1, 3, sizeof(cl_mem), outbuf);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-4 ");
+        throw 1;
+    }
+    //then run the first kernel for (n-1) output buffer results
+
+    size_t wgSize[3] = {256, 1, 1};
+    size_t gSize[3] = {size_corr/8, 1, 1};
+
+
+    ret = clEnqueueNDRangeKernel(CGlobalGLCLManager->q(), kernel1, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Error while running kernel1 ");
+        throw 1;
+    }
+
+    //then run the second kernel for the last output buffer result
+
+    if(remainder > 0)
+    {
+        clSetKernelArg(kernel1, 0, sizeof(int), (void *)&sizex);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-1 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel1, 1, sizeof(int), (void *)&sizey);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-2 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel1, 2, sizeof(int), (void *)&m->m_GPUData->m_texcl);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel1, 3, sizeof(cl_mem), outbuf);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-4 ");
+            throw 1;
+        }
+
+        ret = clSetKernelArg(kernel2, 4, sizeof(int), (void *)&size);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel2, 5, sizeof(int), (void *)&inOffset);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+        ret = clSetKernelArg(kernel2, 6, sizeof(int), (void *)&outputoffset);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            throw 1;
+        }
+
+
+        ret = clEnqueueTask(CGlobalGLCLManager->q(),kernel2,0,NULL,NULL);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Error while running kernel2 ");
+            throw 1;
+        }
+    }
+
+
+    //read output buffer
+    float * results = (float*) malloc(sizeof(float)*size_output);
+    ret = clEnqueueReadBuffer(CGlobalGLCLManager->q(), outbuf, CL_TRUE, 0, sizeof(int)*size_output, results, 0, NULL, NULL);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not read buffer ");
+        throw 1;
+    }
+
+
+    float result = val_start;
+    // finally do a reduction on the final output buffer outputs
+    for(int i = 0; i < size_output; i++)
+    {
+        result = reduction(result,results[i]);
+    }
+
+    ret = clReleaseMemObject(outbuf);
+    free(results);
+
+    return result;*/
+
+    return 0.0;
+
+}
+
+
+inline static float AS_MapMinimumRedGPU(AS_GPUMap * m)
+{
+    return ApplyReductionToMap(m, CGLKernelRedMin,CGLKernelRedRemMin, std::function<float(float,float)>([](float a,float b){return std::min(a,b);}),1e31);
+}
+inline static float AS_MapMaximumRedGPU(AS_GPUMap * m)
+{
+    return ApplyReductionToMap(m, CGLKernelRedMax,CGLKernelRedRemMax, std::function<float(float,float)>([](float a,float b){return std::max(a,b);}),-1e31);
+}
+inline static float AS_MapTotalRedGPU(AS_GPUMap * m)
+{
+    return ApplyReductionToMap(m, CGLKernelRedSum,CGLKernelRedRemSum, std::function<float(float,float)>([](float a,float b){return  a +b;}),0.0);
+}
 /*inline static CScriptArray * AS_RunGPUModel(AS_GPUModel *, CScriptArray * input)
 {
 
