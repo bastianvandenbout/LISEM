@@ -3,6 +3,45 @@
 
 #include "raster/rastergpucode.h"
 #include "lsmscriptengine.h"
+#include "raster/rasterflowgpu.h"
+
+
+
+
+#include "scriptarrayhelpers.h"
+
+
+
+template<>
+class asbindc_convert<std::vector<AS_GPUMap*>,CScriptArray*>
+{
+
+public:
+
+    inline static CScriptArray* asbind_convert(std::vector<AS_GPUMap*> x)
+    {
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        asIScriptEngine *engine = ctx->GetEngine();
+
+        // TODO: This should only be done once
+        // TODO: This assumes that CScriptArray was already registered
+        asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<GPUMap>");
+
+        // Create the array object
+        CScriptArray *array = CScriptArray::Create(arrayType);
+        array->Resize(x.size());
+        for(int i = 0; i < x.size(); i++)
+        {
+            array->SetValue(i,x.at(i),false);
+        }
+
+        return array;
+    }
+};
+
+
+
 
 inline void RegisterGPUToScriptEngine(LSMScriptEngine *engine)
 {
@@ -156,6 +195,8 @@ inline void RegisterGPUToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("float MapMaximumRed(const GPUMap &in m)", asFUNCTION( AS_MapMaximumRedGPU),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("float MapTotalRed(const GPUMap &in m)", asFUNCTION( AS_MapTotalRedGPU),  asCALL_CDECL); assert( r >= 0 );
 
+    r = engine->RegisterGlobalSTDFunction("array<GPUMap> @FlowDynamic(const GPUMap &in DEM, const GPUMap &in N, const GPUMap &in H, const GPUMap &in VX, const GPUMap &in VY, float dt, float courant = 0.15)",GetFuncConvert( AS_DynamicWaveGPU),  asCALL_CDECL);
+    r = engine->RegisterGlobalSTDFunction("array<GPUMap> @FlowDebris(const GPUMap &in DEM, const GPUMap &in N, const GPUMap &in H, const GPUMap &in VX, const GPUMap &in VY,const GPUMap &in HS, const GPUMap &in VSX, const GPUMap &in VSY, const GPUMap &in IFA, const GPUMap &in ROCKSIZE, const GPUMap &in DENSITY,float dt, float courant = 0.15, float drag_mult = 1.0)", GetFuncConvert(  AS_MixtureWaveGPU),  asCALL_CDECL);
 
 }
 

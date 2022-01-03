@@ -20,7 +20,7 @@
 #define SIMPLECPP_WINDOWS
 #define NOMINMAX
 #endif
-#include "simplecpp.h"
+#include "cpppreprocess.h"
 
 #include <algorithm>
 #include <climits>

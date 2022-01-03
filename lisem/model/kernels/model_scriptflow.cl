@@ -2,6 +2,232 @@
 #define GRAV 9.81
 #define nonkernel
 
+#define int2(x,y) ((int2)((x),(y)))
+#define float3(x,y,z) ((float3)((x),(y),(z)))
+
+
+///OpenCL Reduction kernel for the timestep of the flow state
+
+__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reduceflowdt1(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __global float *B)
+{
+
+    const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+    unsigned int tid = get_local_id(0);
+    unsigned int wid = get_group_id(0);
+    unsigned int dim = get_local_size(0);
+    unsigned int i = wid*dim*2 + tid;
+    unsigned int gridSize = get_global_size(0)*2;
+
+
+    __local float sdata[256];
+    sdata[tid] = 1e31f;
+
+    for(int aux = 0; aux<4; aux++) {
+
+
+        int2 pixelcoord1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        float valt1 = read_imagef(DEM, sampler, pixelcoord1).x;
+        float valt2 = read_imagef(DEM, sampler, pixelcoord2).x;
+
+
+        if(isnormal(valt1) && isnormal(valt2))
+        {
+            float h1 = read_imagef(H, sampler, pixelcoord1).x;
+            float h2 = read_imagef(H, sampler, pixelcoord2).x;
+            float vx1 = read_imagef(VX, sampler, pixelcoord1).x;
+            float vx2 = read_imagef(VX, sampler, pixelcoord2).x;
+            float vy1 = read_imagef(VY, sampler, pixelcoord1).x;
+            float vy2 = read_imagef(VY, sampler, pixelcoord2).x;
+
+            valt1 = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx1*vx1 + vy1 * vy1)))));
+            valt2 = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx2*vx2 + vy2 * vy2)))));
+
+        }else
+        {
+            valt1 =1e31f;
+            valt2 =1e31f;
+        }
+
+        sdata[tid] =  (min(sdata[tid],valt1)) ;
+        sdata[tid] =  (min(sdata[tid],valt2)) ;
+
+        i += gridSize;
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    if (tid < 128){
+         sdata[tid] =  (min(sdata[tid],sdata[tid + 128])) ;
+         barrier(CLK_LOCAL_MEM_FENCE);     if (tid < 64){
+            sdata[tid] =  (min(sdata[tid],sdata[tid + 64])) ;
+            barrier(CLK_LOCAL_MEM_FENCE);
+            if (tid < 32){            sdata[tid] =  (min(sdata[tid],sdata[tid + 32])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 16])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 8])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 4])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 2])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                if (tid < 1){
+                    B[wid] =  (min(sdata[tid],sdata[tid + 1])) ;
+                }
+            }
+         }
+     }
+};
+
+
+__kernel void reduceflowdt2(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY,__global float *output, const int inputSize, const int inOffset,const int outputOffset)
+{
+    const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+    const int globalID = get_global_id(0);
+    const int localID = get_local_id(0);
+    const int localSize = get_local_size(0);
+    const int workgroupID = globalID / localSize;
+    float val1 = 1e6;
+
+    for(int i = inOffset; i < inputSize; i++) {
+
+        int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));
+        float val2 = read_imagef(DEM, sampler, pixelcoord).x;
+
+        if(isnormal(val2))
+        {
+            float h1 = read_imagef(H, sampler, pixelcoord).x;
+            float vx1 = read_imagef(VX, sampler, pixelcoord).x;
+            float vy1 = read_imagef(VY, sampler, pixelcoord).x;
+
+            val2 = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx1*vx1 + vy1 * vy1)))));
+
+        }else
+        {
+            val2 = 1e31f;
+        }
+
+        val1 = min(val1,val2);
+    }
+    output[outputOffset] = val1;
+}
+
+///OpenCL Reduction kernels for the timestep of the mixture flow state
+
+
+
+__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reducemixflowdt1(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __read_only image2d_t HS,  __read_only image2d_t VSX, __read_only image2d_t VSY, __global float *B)
+{
+
+    const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+    unsigned int tid = get_local_id(0);
+    unsigned int wid = get_group_id(0);
+    unsigned int dim = get_local_size(0);
+    unsigned int i = wid*dim*2 + tid;
+    unsigned int gridSize = get_global_size(0)*2;
+
+
+    __local float sdata[256];
+    sdata[tid] = 1e31f;
+
+    for(int aux = 0; aux<4; aux++) {
+
+
+        int2 pixelcoord1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        float valt1 = read_imagef(DEM, sampler, pixelcoord1).x;
+        float valt2 = read_imagef(DEM, sampler, pixelcoord2).x;
+
+        if(isnormal(valt1) && isnormal(valt2))
+        {
+
+            float h1 = read_imagef(H, sampler, pixelcoord1).x;
+            float h2 = read_imagef(H, sampler, pixelcoord2).x;
+            float vx1 = read_imagef(VX, sampler, pixelcoord1).x;
+            float vx2 = read_imagef(VX, sampler, pixelcoord2).x;
+            float vy1 = read_imagef(VY, sampler, pixelcoord1).x;
+            float vy2 = read_imagef(VY, sampler, pixelcoord2).x;
+            float vsx1 = read_imagef(VSX, sampler, pixelcoord1).x;
+            float vsx2 = read_imagef(VSX, sampler, pixelcoord2).x;
+            float vsy1 = read_imagef(VSY, sampler, pixelcoord1).x;
+            float vsy2 = read_imagef(VSY, sampler, pixelcoord2).x;
+
+            valt1 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(vsx1 * vsx1 + vsy1*vsy1),sqrt(vx1*vx1 + vy1 * vy1))))));
+            valt2 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(vsx2 * vsx2 + vsy2*vsy2),sqrt(vx2*vx2 + vy2 * vy2))))));
+        }else{
+
+            valt1 = 1e31f;
+            valt2 = 1e31f;
+
+        }
+
+        sdata[tid] =  (min(sdata[tid],valt1)) ;
+        sdata[tid] =  (min(sdata[tid],valt2)) ;
+
+        i += gridSize;
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    if (tid < 128){
+         sdata[tid] =  (min(sdata[tid],sdata[tid + 128])) ;
+         barrier(CLK_LOCAL_MEM_FENCE);     if (tid < 64){
+            sdata[tid] =  (min(sdata[tid],sdata[tid + 64])) ;
+            barrier(CLK_LOCAL_MEM_FENCE);
+            if (tid < 32){            sdata[tid] =  (min(sdata[tid],sdata[tid + 32])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 16])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 8])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 4])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                sdata[tid] =  (min(sdata[tid],sdata[tid + 2])) ;
+                barrier(CLK_LOCAL_MEM_FENCE);
+                if (tid < 1){
+                    B[wid] =  (min(sdata[tid],sdata[tid + 1])) ;
+                }
+            }
+         }
+     }
+};
+
+
+__kernel void reducemixflowdt2(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __read_only image2d_t HS,  __read_only image2d_t VSX, __read_only image2d_t VSY,__global float *output, const int inputSize, const int inOffset,const int outputOffset)
+{
+    const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+    const int globalID = get_global_id(0);
+    const int localID = get_local_id(0);
+    const int localSize = get_local_size(0);
+    const int workgroupID = globalID / localSize;
+    float val1 = 1e6;
+
+    for(int i = inOffset; i < inputSize; i++) {
+
+        int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));
+        float val2 = read_imagef(DEM, sampler, pixelcoord).x;
+
+        if(isnormal(val2))
+        {
+            float h1 = read_imagef(H, sampler, pixelcoord).x;
+            float vx1 = read_imagef(VX, sampler, pixelcoord).x;
+            float vy1 = read_imagef(VY, sampler, pixelcoord).x;
+            float vsx1 = read_imagef(VSX, sampler, pixelcoord).x;
+            float vsy1 = read_imagef(VSY, sampler, pixelcoord).x;
+
+            val2 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(vsx1*vsx1 + vsy1 * vsy1),sqrt(vx1*vx1 + vy1 * vy1))))));
+        }else
+        {
+            val2 = 1e31f;
+        }
+
+        val1 = min(val1,val2);
+    }
+    output[outputOffset] = val1;
+}
+
+
 
 
 
@@ -17,7 +243,6 @@ nonkernel float minmod(float a, float b)
 	}
 	return rec;
 }
-#endif
 
 
 nonkernel float maxmod(float x, float y)
@@ -29,19 +254,6 @@ nonkernel float maxmod(float x, float y)
     {
         return max(x,y);
     }
-}
-
-nonkernel bool flow_to(int x,int y, int x2, int y2, int ldd)
-{
-
-	if(x + ch_dx[ldd] == x2 && y + ch_dy[ldd] == y2)
-	{
-		return true;
-	}else
-	{
-		return false;
-	}
-
 }
 
 nonkernel float fcabs(float f)
@@ -742,72 +954,11 @@ nonkernel float GetVNSY(float v,float hn, float dt, float dx, float n,
 
 
 
-
-
-kernel
-void flow_dt( int dim0,
-              int dim1,
-              float dx,
-              __read_only image2d_t DEM,
-              __read_only image2d_t N,
-              __read_only image2d_t H,
-              __read_only image2d_t Vx,
-              __read_only image2d_t Vy)
-{
-
-    const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
-
-    const int id_1d = (int)(get_global_id(0));
-
-    const int idx = trunc((float)(id_1d)/(float)(dim1));
-    const int idy = id_1d % dim1;
-
-    const int gx_x = min(dim0-(int)(1),max((int)(0),(int)(idx)));
-    const int gy_y = min(dim1-(int)(1),max((int)(0),(int)(idy)));
-
-    int x = trunc(read_imagef(LOCX,sampler, int2(gx_x,gy_y)).x);
-    int y = trunc(read_imagef(LOCY,sampler, int2(gx_x,gy_y)).x);
-
-    const int gy = min(dim1-(int)(1),max((int)(0),(int)(x)));
-    const int gx = min(dim0-(int)(1),max((int)(0),(int)(y)));
-
-
-    const int gx_x1 = min(dim0-(int)(1),max((int)(0),(int)(gx - 1 )));
-    const int gy_x1 = gy;
-    const int gx_x2 = min(dim0-(int)(1),max((int)(0),(int)(gx + 1)));
-    const int gy_x2 = gy;
-    const int gx_y1 = gx;
-    const int gy_y1 = min(dim1-(int)(1),max((int)(0),(int)(gy - 1)));
-    const int gx_y2 = gx;
-    const int gy_y2 = min(dim1-(int)(1),max((int)(0),(int)(gy + 1)));
-
-    const int gx_x11 = min(dim0-(int)(1),max((int)(0),(int)(gx - 2 )));
-        const int gy_x11 = gy;
-    const int gx_x22 = min(dim0-(int)(1),max((int)(0),(int)(gx + 2)));
-        const int gy_x22 = gy;
-    const int gx_y11 = gx;
-        const int gy_y11 = min(dim1-(int)(1),max((int)(0),(int)(gy - 2)));
-    const int gx_y22 = gx;
-        const int gy_y22 = min(dim1-(int)(1),max((int)(0),(int)(gy + 2)));
-
-        float h = max(0.0f,read_imagef(H,sampler, int2(gx,gy)).x);
-
-        float vx = min(vmax,max(-vmax,read_imagef(Vx,sampler, int2(gx,gy)).x));
-        float vy = min(vmax,max(-vmax,read_imagef(Vy,sampler, int2(gx,gy)).x));
-
-
-    float dt_req = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx*vx + vy * vy)))));
-
-
-
-
-}
-
 kernel
 void flow( int dim0,
               int dim1,
               float dx,
-              float dt
+              float dt,
               __read_only image2d_t DEM,
               __read_only image2d_t N,
               __read_only image2d_t H,
@@ -861,12 +1012,10 @@ void flow( int dim0,
     if(z > -1000)
     {
 
-        float vmax = 0.25 * dx/dt;
-
-        float z_x1 = zhc_x1 + read_imagef(DEM,sampler, int2(gx_x1,gy)).x;
-        float z_x2 = zhc_x2 + read_imagef(DEM,sampler, int2(gx_x2,gy)).x;
-        float z_y1 = zhc_y1 + read_imagef(DEM,sampler, int2(gx,gy_y1)).x;
-        float z_y2 = zhc_y2 + read_imagef(DEM,sampler, int2(gx,gy_y2)).x;
+        float z_x1 = read_imagef(DEM,sampler, int2(gx_x1,gy)).x;
+        float z_x2 = read_imagef(DEM,sampler, int2(gx_x2,gy)).x;
+        float z_y1 = read_imagef(DEM,sampler, int2(gx,gy_y1)).x;
+        float z_y2 = read_imagef(DEM,sampler, int2(gx,gy_y2)).x;
 
         if(gx + 1 > dim0-1)
         {
@@ -897,16 +1046,19 @@ void flow( int dim0,
         float h_y1 = max(0.0f,read_imagef(H,sampler, int2(gx,gy_y1)).x);
         float h_y2 = max(0.0f,read_imagef(H,sampler, int2(gx,gy_y2)).x);
 
-        float h_x11 = max(0.0f,read_imagef(H,sampler, int2(gx_x11,gy)).x);
-        float h_x22 = max(0.0f,read_imagef(H,sampler, int2(gx_x22,gy)).x);
-        float h_y11 = max(0.0f,read_imagef(H,sampler, int2(gx,gy_y11)).x);
-        float h_y22 = max(0.0f,read_imagef(H,sampler, int2(gx,gy_y22)).x);
+
+        float h_corr_x1 = max(0.0f,(h_x1 -max(0.0f,z - z_x1)));
+        float h_corr_x1b = max(0.0f,(h -max(0.0f,z_x1-z)));
+        float h_corr_x2 = max(0.0f,(h -max(0.0f,z_x2 - z)));
+        float h_corr_x2b = max(0.0f,(h_x2 -max(0.0f,z - z_x2)));
+        float h_corr_y1 = max(0.0f,(h_y1 -max(0.0f,z - z_y1)));
+        float h_corr_y1b = max(0.0f,(h -max(0.0f,z_y1 - z)));
+        float h_corr_y2 = max(0.0f,(h -max(0.0f,z_y2 - z)));
+        float h_corr_y2b = max(0.0f,(h_y2 -max(0.0f,z - z_y2)));
 
 
-        float zcc_x1 =max(z,zc_x1);
-        float zcc_x2 =max(z,zc_x2);
-        float zcc_y1 =max(z,zc_y1);
-        float zcc_y2 =max(z,zc_y2);
+        float vmax = 0.1 * dx/dt;
+
 
         float vx = min(vmax,max(-vmax,read_imagef(Vx,sampler, int2(gx,gy)).x));
         float vy = min(vmax,max(-vmax,read_imagef(Vy,sampler, int2(gx,gy)).x));
@@ -920,69 +1072,34 @@ void flow( int dim0,
         float vx_y2 = min(vmax,max(-vmax,read_imagef(Vx,sampler, int2(gx,gy_y2)).x));
         float vy_y2 = min(vmax,max(-vmax,read_imagef(Vy,sampler, int2(gx,gy_y2)).x));
 
+        float zh = z + h;
+        float zh_x1 =min(1.0f,h_x1/max(0.0001f,h)) * (zc_x1 + h_x1) + (1.0f-min(1.0f,h_x1/max(0.0001f,h)))*min(zh,zc_x1 + h_x1);
+        float zh_x2 =min(1.0f,h_x2/max(0.0001f,h)) * (zc_x2 + h_x2) + (1.0f-min(1.0f,h_x2/max(0.0001f,h)))*min(zh,zc_x2 + h_x2);
+        float zh_y1 =min(1.0f,h_y1/max(0.0001f,h)) * (zc_y1 + h_y1) + (1.0f-min(1.0f,h_y1/max(0.0001f,h)))*min(zh,zc_y1 + h_y1);
+        float zh_y2 =min(1.0f,h_y2/max(0.0001f,h)) * (zc_y2 + h_y2) + (1.0f-min(1.0f,h_y2/max(0.0001f,h)))*min(zh,zc_y2 + h_y2);
 
-        float factor_flowx1f = 1.0-min(1.0f,max(0.0f,z-z_x1)/max(1e-6f,h_x1));
-        float factor_flowy1f = 1.0-min(1.0f,max(0.0f,z-z_y1)/max(1e-6f,h_y1));
-        float factor_flowx2f = 1.0-min(1.0f,max(0.0f,z-z_x2)/max(1e-6f,h_x2));
-        float factor_flowy2f = 1.0-min(1.0f,max(0.0f,z-z_y2)/max(1e-6f,h_y2));
+        float sx_zh_x2 = min((float)(0.5),max((float)(-0.5),(float)((zh_x2-zh)/dx)));
+        float sy_zh_y1 = min((float)(0.5),max((float)(-0.5),(float)((zh-zh_y1)/dx)));
+        float sx_zh_x1 = min((float)(0.5),max((float)(-0.5),(float)((zh-zh_x1)/dx)));
+        float sy_zh_y2 = min((float)(0.5),max((float)(-0.5),(float)((zh_y2-zh)/dx)));
 
-        float factor_flowx1t = 1.0-min(1.0f,max(0.0f,z_x1-z)/max(1e-6f,h));
-        float factor_flowy1t = 1.0-min(1.0f,max(0.0f,z_y1-z)/max(1e-6f,h));
-        float factor_flowx2t = 1.0-min(1.0f,max(0.0f,z_x2-z)/max(1e-6f,h));
-        float factor_flowy2t = 1.0-min(1.0f,max(0.0f,z_y2-z)/max(1e-6f,h));
+        float sx_zh = min(1.0f,max(-1.0f,0.5f * (sx_zh_x1 + sx_zh_x2)));
+        float sy_zh = min(1.0f,max(-1.0f,0.5f * (sy_zh_y1 + sy_zh_y2)));
 
-        float sx_zh_x2 = min((float)(0.5),max((float)(-0.5),(float)((zc_x2 + h_x2-z - h)/dx)));
-        float sy_zh_y1 = min((float)(0.5),max((float)(-0.5),(float)((z + h-zc_y1 - h_y1)/dx)));
-        float sx_zh_x1 = min((float)(0.5),max((float)(-0.5),(float)((z + h-zc_x1 - h_x1)/dx)));
-        float sy_zh_y2 = min((float)(0.5),max((float)(-0.5),(float)((zc_y2 + h_y2-z - h)/dx)));
 
-        float sx_zh = min(1.0f,max(-1.0f,minmod(sx_zh_x1,sx_zh_x2)));
-        float sy_zh = min(1.0f,max(-1.0f,minmod(sy_zh_y1,sy_zh_y2)));
-
-        float sx_z_x2 = min((float)(0.5),max((float)(-0.5),(float)((zc_x2 -z)/dx)));
-        float sy_z_y1 = min((float)(0.5),max((float)(-0.5),(float)((z -zc_y1 )/dx)));
-        float sx_z_x1 = min((float)(0.5),max((float)(-0.5),(float)((z -zc_x1 )/dx)));
-        float sy_z_y2 = min((float)(0.5),max((float)(-0.5),(float)((zc_y2 -z )/dx)));
-
-        float sx_z = min(1.0f,max(-1.0f,minmod(sx_z_x1,sx_z_x2)));
-        float sy_z = min(1.0f,max(-1.0f,minmod(sy_z_y1,sy_z_y2)));
-
-        float h_corr_x1 = max(0.0f,(h_x1 -max(0.0f,z - z_x1)));
-        float h_corr_x1b = max(0.0f,(h -max(0.0f,z_x1-z)));
-        float h_corr_x2 = max(0.0f,(h -max(0.0f,z_x2 - z)));
-        float h_corr_x2b = max(0.0f,(h_x2 -max(0.0f,z - z_x2)));
-        float h_corr_y1 = max(0.0f,(h_y1 -max(0.0f,z - z_y1)));
-        float h_corr_y1b = max(0.0f,(h -max(0.0f,z_y1 - z)));
-        float h_corr_y2 = max(0.0f,(h -max(0.0f,z_y2 - z)));
-        float h_corr_y2b = max(0.0f,(h_y2 -max(0.0f,z - z_y2)));
         float3 hll_x1 = z_x1 < -1000? float3(0.0,0.0,0.0):F_HLL2(h_corr_x1,vx_x1,vy_x1,h_corr_x1b,vx,vy);
         float3 hll_x2 = z_x2 < -1000? float3(0.0,0.0,0.0):F_HLL2(h_corr_x2,vx,vy,h_corr_x2b,vx_x2,vy_x2);
         float3 hll_y1 = z_y1 < -1000? float3(0.0,0.0,0.0):F_HLL2(h_corr_y1,vy_y1,vx_y1,h_corr_y1b,vy,vx);
         float3 hll_y2 = z_y2 < -1000? float3(0.0,0.0,0.0):F_HLL2(h_corr_y2,vy,vx,h_corr_y2b,vy_y2,vx_y2);
 
 
-        float C = 0.25f;
+        float C = 0.1f;
 
-        float fluxo_x1 = +tx*(hll_x1.x)
-        float fluxo_x2 = -tx*(hll_x2.x) + (blockvelx > 0? -h * dt *capture_x * blockvelx/dx : 0.0) + (blockvelx_x2 < 0? -h_x2 * dt *capture_x2 * blockvelx_x2/dx : 0.0);
-        float fluxo_y1 = +tx*(hll_y1.x) + (blockvely < 0? h * dt *capture_y * blockvely/dx : 0.0) + (blockvely_y1 > 0? h_y1 * dt *capture_y1 * blockvely_y1/dx : 0.0);
-        float fluxo_y2 = -tx*(hll_y2.x) + (blockvely > 0? -h * dt *capture_y * blockvely/dx : 0.0) + (blockvely_y2 < 0? -h_y2 * dt *capture_y2 * blockvely_y2/dx : 0.0);
+        float flux_x1 = z_x1 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  *  C,min((float)(+tx*(hll_x1.x)),h_x1 *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+        float flux_x2 = z_x2 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  *  C,min((float)(-tx*(hll_x2.x)),h_x2 *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+        float flux_y1 = z_y1 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  *  C,min((float)(+tx*(hll_y1.x)),h_y1 *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
+        float flux_y2 = z_y2 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  *  C,min((float)(-tx*(hll_y2.x)),h_y2 *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
 
-        float flux_x1 = z_x1 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  * factor_flowx1t * C,min((float)(fluxo_x1),h_x1 *factor_flowx1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-        float flux_x2 = z_x2 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  * factor_flowx2t * C,min((float)(fluxo_x2),h_x2 *factor_flowx2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-        float flux_y1 = z_y1 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  * factor_flowy1t * C,min((float)(fluxo_y1),h_y1 *factor_flowy1f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-        float flux_y2 = z_y2 < -1000? max(-h * C,(float)(-h * sqrt(h) *dt*  sqrt(h)/(dx*(0.001+n)))):max(-h  * factor_flowy2t * C,min((float)(fluxo_y2),h_y2 *factor_flowy2f *  C));//max(-h * C,(float)(-h * sqrt(h) *0.0*dt*  sqrt(h)/(dx*(0.001+n))))
-/*
-
-        qfout = qfout +z_x1 < -1000? flux_x1 : 0.0;
-        qfout = qfout +z_x2 < -1000? flux_x2 : 0.0;
-        qfout = qfout +z_y1 < -1000? flux_y1 : 0.0;
-        qfout = qfout +z_y2 < -1000? flux_y2 : 0.0;
-
-        write_imagef(QFX1, int2(gx,gy), flux_x1 *(dx*dx));
-        write_imagef(QFX2, int2(gx,gy), flux_x2 *(dx*dx));
-        write_imagef(QFY1, int2(gx,gy), flux_y1 *(dx*dx));
-        write_imagef(QFY2, int2(gx,gy), flux_y2 *(dx*dx));*/
 
         int edges = ((z_x1 < -1000)?1:0) +((z_x2 < -1000)?1:0)+((z_y1 < -1000)?1:0)+((z_y2 < -1000)?1:0);
 
@@ -993,10 +1110,8 @@ void flow( int dim0,
         //float qxn = h * vx - 0.5 * GRAV *hn*sx_z * dt- tx*(hll_x2.y - hll_x1.y) - tx*(hll_y2.z - hll_y1.z);
         //float qyn = h * vy - 0.5 * GRAV *hn*sy_z * dt- tx*(hll_x2.z - hll_x1.z) - tx*(hll_y2.y - hll_y1.y);
 
-
-
-        float f_centre_x = 0.5 * GRAV*(h)*(((h - h_corr_x2) - (h - h_corr_x1)) > 0.0? 1.0:-1.0)*fcabs((h - h_corr_x2) - (h - h_corr_x1));
-        float f_centre_y = 0.5 * GRAV*(h)*(((h - h_corr_y2) - (h - h_corr_y1)) > 0.0? 1.0:-1.0)*fcabs((h - h_corr_y2) - (h - h_corr_y1));
+        float f_centre_x = 0.5 * GRAV*((z<zc_x2?min(zc_x2,z + h) : min(z,zc_x2 + h_x2)) - (z<zc_x1?min(zc_x1,z + h) : min(z,zc_x1 + h_x1)))*(h_corr_x1 + h_corr_x2);
+        float f_centre_y = 0.5 * GRAV*((z<zc_y2?min(zc_y2,z + h) : min(z,zc_y2 + h_y2)) - (z<zc_y1?min(zc_y1,z + h) : min(z,zc_y1 + h_y1)))*(h_corr_y1 + h_corr_y2);
 
         float qxn = h * vx - tx*(hll_x2.y - hll_x1.y + f_centre_x)  - tx*(hll_y2.z - hll_y1.z);// + fluxmc_x1x + fluxmc_x2x + fluxmc_y1x + fluxmc_y2x ;//- 0.5 * GRAV *hn*sx_z * dt
         float qyn = h * vy - tx*(hll_x2.z - hll_x1.z) - tx*(hll_y2.y - hll_y1.y + f_centre_y);// + fluxmc_x1y + fluxmc_x2y + fluxmc_y1y + fluxmc_y2y ;//- 0.5 * GRAV *hn*sy_z * dt
@@ -1071,7 +1186,8 @@ void flowsolid( int dim0,
                 __write_only image2d_t VSyn,
                 __write_only image2d_t SIfan,
                 __write_only image2d_t SRocksizen,
-                __write_only image2d_t SDensityn)
+                __write_only image2d_t SDensityn,
+                float dragmult)
 {
 
 
@@ -1105,11 +1221,6 @@ void flowsolid( int dim0,
     if(z > -1000.0f)
     {
 
-        float qfout = read_imagef(QFOUT,sampler, int2(gx,gy)).x;
-        float qsout = read_imagef(QSOUT,sampler, int2(gx,gy)).x;
-
-
-        float rain = read_imagef(RAIN,sampler, int2(gx_x1,gy)).x;
 
 
         float z_x1 = read_imagef(DEM,sampler, int2(gx_x1,gy)).x;
@@ -1243,11 +1354,6 @@ void flowsolid( int dim0,
         float fluxs_y1 = z_y1 < -1000.0f? max(-hs * C,(float)(-hs * sqrt(hs) *dt* sqrt(hs)/(dx*(0.001f+n)))):max(-max(err,hs) * C,min(max(err,hs_y1) * C,(float)(+tx*(hlls_y1.x))));
         float fluxs_y2 = z_y2 < -1000.0f? max(-hs * C,(float)(-hs * sqrt(hs) *dt* sqrt(hs)/(dx*(0.001f+n)))):max(-max(err,hs) * C,min(max(err,hs_y2) * C,(float)(-tx*(hlls_y2.x))));
 
-        qsout = qsout +z_x1 < -1000.0f? fluxs_x1 : 0.0f;
-        qsout = qsout +z_x2 < -1000.0f? fluxs_x2 : 0.0f;
-        qsout = qsout +z_y1 < -1000.0f? fluxs_y1 : 0.0f;
-        qsout = qsout +z_y2 < -1000.0f? fluxs_y2 : 0.0f;
-
         float hsold = hs;
         float hsn = ((max(0.00f,(float)(hs + fluxs_x1 + fluxs_x2 + fluxs_y1 + fluxs_y2))));
         float a_sx = 0.5f * GRAV *sx_zh;
@@ -1298,16 +1404,6 @@ void flowsolid( int dim0,
         float flux_x2 = z_x2 < -1000.0f? max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):max(-max(err,h) * C,min(max(err,h_x2) * C,(float)(-tx*(hll_x2.x))));
         float flux_y1 = z_y1 < -1000.0f? max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):max(-max(err,h) * C,min(max(err,h_y1) * C,(float)(+tx*(hll_y1.x))));
         float flux_y2 = z_y2 < -1000.0f? max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):max(-max(err,h) * C,min(max(err,h_y2) * C,(float)(-tx*(hll_y2.x))));
-
-        qfout = qfout +z_x1 < -1000.0f? flux_x1 : 0.0f;
-        qfout = qfout +z_x2 < -1000.0f? flux_x2 : 0.0f;
-        qfout = qfout +z_y1 < -1000.0f? flux_y1 : 0.0f;
-        qfout = qfout +z_y2 < -1000.0f? flux_y2 : 0.0f;
-
-        write_imagef(QFX1, int2(gx,gy), flux_x1 *(dx*dx));
-        write_imagef(QFX2, int2(gx,gy), flux_x2 *(dx*dx));
-        write_imagef(QFY1, int2(gx,gy), flux_y1 *(dx*dx));
-        write_imagef(QFY2, int2(gx,gy), flux_y2 *(dx*dx));
 
         float hold = h;
         float hn = ((max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
@@ -1379,9 +1475,6 @@ void flowsolid( int dim0,
         write_imagef(SIfan, int2(gx,gy), sifan);
         write_imagef(SRocksizen, int2(gx,gy), srocksizen);
         write_imagef(SDensityn, int2(gx,gy), sdensityn);
-
-
-        float dt_req = 0.25f *dx/( min(100.0f,max(0.01f,max(sqrt(vsxn * vsxn + vsyn*vsyn),sqrt(vxn*vxn + vyn * vyn)))));
 
     }
 

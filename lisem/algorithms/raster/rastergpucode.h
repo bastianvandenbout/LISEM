@@ -314,8 +314,16 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
          // 2^3 external sums, or 2^2 * 2
         code +="for(int aux = 0; aux<4; aux++) {";
-        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","A[i]") + ";";
-        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","A[i + dim]") + ";";
+        code +="    " + typs + " temp1 = A[i];";
+        code +="    " + typs + " temp2 = A[i+dim];";
+        if(!isint)
+        {
+            code +="    temp1 = isnormal(temp1)? temp1 : "+ initial + ";";
+            code +="    temp2 = isnormal(temp2)? temp2 : "+ initial + ";";
+
+        }
+        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","temp1") + ";";
+        code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","temp2") + ";";
         code +="    i += gridSize;";
         code +="}";
 
@@ -394,6 +402,9 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
         code += "int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));\n";
         code += "float valt2 = read_imagef(A, sampler, pixelcoord2).x;\n";
 
+        code +="    valt1 = isnormal(valt1)? valt1 : "+ initial + ";";
+        code +="    valt2 = isnormal(valt2)? valt2 : "+ initial + ";";
+
         code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","valt1") + ";\n";
         code +="    sdata[tid] = "+ QString(expression).replace("val1","sdata[tid]").replace("val2","valt2") + ";\n";
         code +="    i += gridSize;\n";
@@ -447,10 +458,6 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionExpression(QString e
 
         code +="};";
 
-        std::cout << "   Begin code " << std::endl;
-        std::cout << code.toStdString() << std::endl;
-        std::cout << "   End code " << std::endl;
-
 
     }
 
@@ -479,6 +486,10 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QStrin
         code += typs + " val1 = "+ initial + "; \n";
         code +="for(int i = inOffset; i < inputSize; i++) { \n";
         code += typs + " val2 = input[i]; \n";
+        if(!isint)
+        {
+            code += "val2 = isnormal(val2)? val2 : " + initial + ";";
+        }
         code +="val1 = "+ expression+ "; \n";
         code +="} \n";
         code +="output[outputOffset] = val1; \n";
@@ -496,6 +507,10 @@ inline static OpenCLProgram * GetCLProgramFromBasicReductionRemExpression(QStrin
         code +="for(int i = inOffset; i < inputSize; i++) { \n";
         code += "int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));\n";
         code += "float val2 = read_imagef(input, sampler, pixelcoord).x;\n";
+        //if(!isint)
+        {
+            code += "val2 = isnormal(val2)? val2 : " + initial + ";";
+        }
         code +="val1 = "+ expression+ "; \n";
         code +="} \n";
         code +="output[outputOffset] = val1; \n";
@@ -941,6 +956,7 @@ public:
     }
 
     AS_GPUMap * GetCopy0();
+    void CopyFrom(AS_GPUMap * gpum);
 
     AS_GPUMap *    AS_Assign            (AS_GPUMap*);
     AS_GPUMap *    AS_Assign            (cTMap*);
@@ -965,8 +981,12 @@ inline void AS_GPUMap::AS_ReleaseRef()
     AS_refcount = AS_refcount - 1;
     if(AS_refcount == 0)
     {
-
-        m_GPUData->Destroy();
+        if(m_GPUData != nullptr)
+        {
+            m_GPUData->Destroy();
+            delete m_GPUData;
+            m_GPUData = nullptr;
+        }
         delete this;
 
     }
@@ -1040,37 +1060,99 @@ inline AS_GPUMap * AS_GPUMap::AS_Assign(cTMap * m)
 
 inline AS_GPUMap * AS_GPUMap::GetCopy0()
 {
+    std::cout << 1 << std::endl;
+
     if(!HasDefaultGPUModels())
     {
         LoadDefaultGPUModels();
     }
 
+    std::cout << 2 << std::endl;
 
     AS_GPUMap * ret = new AS_GPUMap();
+    std::cout << 3 << std::endl;
 
 
     if(ret->m_GPUData == nullptr)
     {
+        std::cout << 4 << std::endl;
+
         ret->m_GPUData = new OpenCLTexture();
-        ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m->nrCols(),m->nrRows(),0.0);
+        ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m_GPUData->m_dims[0],m_GPUData->m_dims[1],0.0);
     }else
     {
-        if(!((ret->m_GPUData->m_dims[0] == m->nrCols()) &&(ret->m_GPUData->m_dims[1] == m->nrRows())))
+        std::cout << 5 << std::endl;
+
+        if(!((ret->m_GPUData->m_dims[0] == m_GPUData->m_dims[0]) &&(ret->m_GPUData->m_dims[1] == m_GPUData->m_dims[1])))
         {
+            std::cout << 6 << std::endl;
+
             ret->m_GPUData->Destroy();
             delete ret->m_GPUData;
             ret->m_GPUData = nullptr;
 
+            std::cout << 7 << std::endl;
+
+
             ret->m_GPUData = new OpenCLTexture();
-            ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m->nrCols(),m->nrRows(),0.0);
+            ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m_GPUData->m_dims[0],m_GPUData->m_dims[1],0.0);
         }
     }
+    std::cout << 8 << std::endl;
+
 
     ret->GeoPropsFromMap(this);
 
     //no copy needed;
 
     return ret;
+}
+
+inline void AS_GPUMap::CopyFrom(AS_GPUMap * gpum)
+{
+    cl::CommandQueue &q = CGlobalGLCLManager->q;
+    cl::Event ev;
+
+    cl::size_t<3> src_origin;
+    src_origin[0] = 0;
+    src_origin[1] = 0;
+    src_origin[2] = 0;
+
+    cl::size_t<3> dst_origin ;
+    dst_origin[0] = 0;
+    dst_origin[1] = 0;
+    dst_origin[2] = 0;
+
+    cl::size_t<3> region ;
+    region[0] = m_GPUData->m_dims[0];
+    region[1] = m_GPUData->m_dims[1];
+    region[2] = 1;
+
+
+    try
+    {
+
+        q.enqueueCopyImage(
+        gpum->m_GPUData->m_texcl,
+        m_GPUData->m_texcl,
+        src_origin,
+        dst_origin,
+        region,
+        NULL,
+        NULL);
+
+
+        int res = q.finish();
+
+    }catch(cl::Error & e)
+    {
+        std::cout << "cl error " << e.err() << " " << e.what() << std::endl;
+        LISEMS_ERROR("Error during GPU copy : " + QString::number(e.err()) + " : " + QString(e.what()));
+        throw 1;
+    }
+
+
+
 }
 
 inline AS_GPUMap * AS_GPUMap::AS_Assign(AS_GPUMap * gpum)
@@ -1160,6 +1242,18 @@ inline static AS_GPUMap * GPUMapConstructor()
     return m;
 }
 
+inline static void GPUMapDestructor(AS_GPUMap * m)
+{
+
+    if(m->m_GPUData != nullptr)
+    {
+        m->m_GPUData->Destroy();
+        delete m->m_GPUData;
+        m->m_GPUData = nullptr;
+    }
+
+
+}
 inline static void AS_INT_GLSTART()
 {
     CGlobalGLCLManager->m_GLOutputUIMutex.lock();
@@ -2086,47 +2180,47 @@ inline static float ApplyReductionToMap(AS_GPUMap * m, OpenCLProgram * red, Open
 
     if(remainder > 0)
     {
-        clSetKernelArg(kernel1, 0, sizeof(int), (void *)&sizex);
+        clSetKernelArg(kernel2, 0, sizeof(int), (void *)&sizex);
         if(ret != CL_SUCCESS )
         {
             LISEMS_ERROR("Could not set argument for kernel2-1 ");
             throw 1;
         }
-        ret = clSetKernelArg(kernel1, 1, sizeof(int), (void *)&sizey);
+        ret = clSetKernelArg(kernel2, 1, sizeof(int), (void *)&sizey);
         if(ret != CL_SUCCESS )
         {
             LISEMS_ERROR("Could not set argument for kernel2-2 ");
             throw 1;
         }
-        ret = clSetKernelArg(kernel1, 2, sizeof(cl_mem), (void *)&obj1);
+        ret = clSetKernelArg(kernel2, 2, sizeof(cl_mem), (void *)&obj1);
         if(ret != CL_SUCCESS )
         {
-            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            LISEMS_ERROR("Could not set argument for kernel2-3 ");
             throw 1;
         }
-        ret = clSetKernelArg(kernel1, 3, sizeof(cl_mem), outbuf);
+        ret = clSetKernelArg(kernel2, 3, sizeof(cl_mem), (void *)&outbuf);
         if(ret != CL_SUCCESS )
         {
-            LISEMS_ERROR("Could not set argument for kernel1-4 ");
+            LISEMS_ERROR("Could not set argument for kernel2-4 ");
             throw 1;
         }
 
         ret = clSetKernelArg(kernel2, 4, sizeof(int), (void *)&size);
         if(ret != CL_SUCCESS )
         {
-            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            LISEMS_ERROR("Could not set argument for kernel2-5 ");
             throw 1;
         }
         ret = clSetKernelArg(kernel2, 5, sizeof(int), (void *)&inOffset);
         if(ret != CL_SUCCESS )
         {
-            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            LISEMS_ERROR("Could not set argument for kernel2-6 ");
             throw 1;
         }
         ret = clSetKernelArg(kernel2, 6, sizeof(int), (void *)&outputoffset);
         if(ret != CL_SUCCESS )
         {
-            LISEMS_ERROR("Could not set argument for kernel1-3 ");
+            LISEMS_ERROR("Could not set argument for kernel2-7 ");
             throw 1;
         }
 
@@ -2135,6 +2229,7 @@ inline static float ApplyReductionToMap(AS_GPUMap * m, OpenCLProgram * red, Open
         if(ret != CL_SUCCESS )
         {
             LISEMS_ERROR("Error while running kernel2 ");
+            std::cout << "error is "<< ret << "  " << outputoffset << " " << inOffset << " " << size << " " << std::endl;
             throw 1;
         }
     }

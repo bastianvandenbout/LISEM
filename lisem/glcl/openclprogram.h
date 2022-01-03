@@ -102,6 +102,10 @@ public:
         try{
 
             err = m_program.build(std::vector<cl::Device>(1, d),options.str().c_str());
+
+
+            m_kernel = cl::Kernel(m_program,name.c_str());
+
         } catch (cl::Error err) {
             LISEM_ERROR(QString("compilation error ") + err.what() + "(" + err.err() + ") " + OCL_GetErrorString(err.err()));
 
@@ -122,8 +126,15 @@ public:
                  LISEM_DEBUG(QString("sucessfully compiled ")+ name.c_str());
             }
             return 0;
+        }catch (std::exception e)
+        {
+            LISEMS_ERROR("Could not compile opencl kernel " + QString(name.c_str()) + " " + QString(e.what()));
+            std::cout << "Exception during opencl compile " << e.what() << std::endl;
+        }catch ( ...)
+        {
+            LISEMS_ERROR("Could not compile opencl kernel" + QString(name.c_str()) );
+            std::cout << "Exception during opencl compile " << std::endl;
         }
-        m_kernel = cl::Kernel(m_program,name.c_str());
 
         return 1;
     }

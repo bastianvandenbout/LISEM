@@ -3,6 +3,8 @@
 #include "layerwidget.h"
 #include <iostream>
 
+
+
 void CLabel::mousePressEvent(QMouseEvent* event)
 {
     /*LayerWidget *s = (LayerWidget*)(parent());

@@ -16,6 +16,8 @@ inline cTMap * AS_MapTotal(cTMap * Other)
 
     double total = 0.0;
 
+
+    #pragma omp parallel for collapse(2) reduction(+:total)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -30,6 +32,8 @@ inline cTMap * AS_MapTotal(cTMap * Other)
         }
     }
 
+
+    #pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -55,6 +59,8 @@ inline float AS_MapTotalRed(cTMap * Other)
 
     double total = 0.0;
 
+
+    #pragma omp parallel for collapse(2) reduction(+:total)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -82,6 +88,8 @@ inline cTMap * AS_MapAverage(cTMap * Other)
     double total = 0.0;
     double n = 0.0;
 
+
+    #pragma omp parallel for collapse(2) reduction(+:total,n)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -102,6 +110,8 @@ inline cTMap * AS_MapAverage(cTMap * Other)
     }
 
 
+
+    #pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -128,6 +138,8 @@ inline float AS_MapAverageRed(cTMap * Other)
     double total = 0.0;
     double n = 0.0;
 
+
+    #pragma omp parallel for collapse(2) reduction(+:total,n)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -156,10 +168,11 @@ inline cTMap * AS_MapMaximum(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
-    float max = -1e31;
+    float maxv = -1e31;
     double n = 0.0;
     bool found = false;
 
+    #pragma omp parallel for collapse(2) shared(found) reduction(max:maxv)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -168,7 +181,7 @@ inline cTMap * AS_MapMaximum(cTMap * Other)
             {
             }else
             {
-                max = std::max(max,Other->data[r][c]);
+                maxv = std::max(maxv,Other->data[r][c]);
                 found = true;
 
             }
@@ -179,7 +192,7 @@ inline cTMap * AS_MapMaximum(cTMap * Other)
     {
 
     }else {
-
+        pcr::setMV(maxv);
     }
 
     for(int r = 0; r < Other->data.nr_rows();r++)
@@ -191,7 +204,7 @@ inline cTMap * AS_MapMaximum(cTMap * Other)
                 pcr::setMV(map->data[r][c]);
             }else
             {
-                map->data[r][c] = max;
+                map->data[r][c] = maxv;
             }
         }
     }
@@ -203,12 +216,11 @@ inline cTMap * AS_MapMaximum(cTMap * Other)
 
 inline float AS_MapMaximumRed(cTMap * Other)
 {
-    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
-    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
-    float max = -1e31;
+    float maxv = -1e31;
     double n = 0.0;
     bool found = false;
 
+    #pragma omp parallel for collapse(2) shared(found) reduction(max:maxv)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -217,7 +229,7 @@ inline float AS_MapMaximumRed(cTMap * Other)
             {
             }else
             {
-                max = std::max(max,Other->data[r][c]);
+                maxv = std::max(maxv,Other->data[r][c]);
                 found = true;
 
             }
@@ -226,9 +238,9 @@ inline float AS_MapMaximumRed(cTMap * Other)
 
     if(found)
     {
-        return max;
+        return maxv;
     }else {
-        return max;
+        return maxv;
     }
 
 }
@@ -239,10 +251,12 @@ inline cTMap * AS_MapMinimum(cTMap * Other)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
-    float min = 1e31;
+    float minv = 1e31;
     double n = 0.0;
     bool found = false;
 
+
+    #pragma omp parallel for shared(found) collapse(2) reduction(min:minv)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -251,7 +265,7 @@ inline cTMap * AS_MapMinimum(cTMap * Other)
             {
             }else
             {
-                min = std::min(min,Other->data[r][c]);
+                minv = std::min(minv,Other->data[r][c]);
                 found = true;
 
             }
@@ -262,9 +276,10 @@ inline cTMap * AS_MapMinimum(cTMap * Other)
     {
 
     }else {
-
+        pcr::setMV(minv);
     }
 
+    #pragma omp parallel for collapse(2)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -274,7 +289,7 @@ inline cTMap * AS_MapMinimum(cTMap * Other)
                 pcr::setMV(map->data[r][c]);
             }else
             {
-                map->data[r][c] = min;
+                map->data[r][c] = minv;
             }
         }
     }
@@ -287,10 +302,11 @@ inline cTMap * AS_MapMinimum(cTMap * Other)
 
 inline float AS_MapMinimumRed(cTMap * Other)
 {
-    float min = 1e31;
+    float minv = 1e31;
     double n = 0.0;
     bool found = false;
 
+    #pragma omp parallel for shared(found) collapse(2) reduction(min:minv)
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -299,7 +315,7 @@ inline float AS_MapMinimumRed(cTMap * Other)
             {
             }else
             {
-                min = std::min(min,Other->data[r][c]);
+                minv = std::min(minv,Other->data[r][c]);
                 found = true;
 
             }
@@ -308,9 +324,9 @@ inline float AS_MapMinimumRed(cTMap * Other)
 
     if(found)
     {
-        return min;
+        return minv;
     }else {
-        return min;
+        return minv;
     }
 
 

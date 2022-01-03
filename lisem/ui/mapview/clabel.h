@@ -4,25 +4,23 @@
 #include "QStackedWidget"
 #include "QLineEdit"
 
-class EditLabel : public QStackedWidget
+class CEditLabel : public QStackedWidget
 {
 public:
     QLabel * m_Label;
     QLineEdit * m_LineEdit;
 
-    inline EditLabel() : QStackedWidget()
+    inline CEditLabel(QString name = "",QWidget* parent = Q_NULLPTR) : QStackedWidget(parent)
     {
 
-        m_Label = new QLabel();
-        m_LineEdit = new QLineEdit();
+        m_Label = new QLabel(name);
+        m_LineEdit = new QLineEdit(name);
 
         addWidget(m_Label);
         addWidget(m_LineEdit);
         setCurrentWidget(m_Label);
 
     }
-
-
 
 
 
