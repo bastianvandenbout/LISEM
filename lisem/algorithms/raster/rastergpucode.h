@@ -981,8 +981,10 @@ inline void AS_GPUMap::AS_ReleaseRef()
     AS_refcount = AS_refcount - 1;
     if(AS_refcount == 0)
     {
+        std::cout << "remove gpu map"<<std::endl;
         if(m_GPUData != nullptr)
         {
+            std::cout << "destroy gpu data " << std::endl;
             m_GPUData->Destroy();
             delete m_GPUData;
             m_GPUData = nullptr;
@@ -995,6 +997,7 @@ inline void AS_GPUMap::AS_ReleaseRef()
 
 inline AS_GPUMap * AS_GPUMap::AS_Assign(cTMap * m)
 {
+    std::cout << " new gpu map cpuassign" <<std::endl;
     if(!HasDefaultGPUModels())
     {
         LoadDefaultGPUModels();
@@ -1060,46 +1063,34 @@ inline AS_GPUMap * AS_GPUMap::AS_Assign(cTMap * m)
 
 inline AS_GPUMap * AS_GPUMap::GetCopy0()
 {
-    std::cout << 1 << std::endl;
 
     if(!HasDefaultGPUModels())
     {
         LoadDefaultGPUModels();
     }
 
-    std::cout << 2 << std::endl;
-
     AS_GPUMap * ret = new AS_GPUMap();
-    std::cout << 3 << std::endl;
-
 
     if(ret->m_GPUData == nullptr)
     {
-        std::cout << 4 << std::endl;
 
+        std::cout << "new gpu map (copy)" << std::endl;
         ret->m_GPUData = new OpenCLTexture();
         ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m_GPUData->m_dims[0],m_GPUData->m_dims[1],0.0);
     }else
     {
-        std::cout << 5 << std::endl;
 
         if(!((ret->m_GPUData->m_dims[0] == m_GPUData->m_dims[0]) &&(ret->m_GPUData->m_dims[1] == m_GPUData->m_dims[1])))
         {
-            std::cout << 6 << std::endl;
 
             ret->m_GPUData->Destroy();
             delete ret->m_GPUData;
             ret->m_GPUData = nullptr;
 
-            std::cout << 7 << std::endl;
-
-
             ret->m_GPUData = new OpenCLTexture();
             ret->m_GPUData->Create2DRF32(CGlobalGLCLManager->context,m_GPUData->m_dims[0],m_GPUData->m_dims[1],0.0);
         }
     }
-    std::cout << 8 << std::endl;
-
 
     ret->GeoPropsFromMap(this);
 
@@ -1169,12 +1160,18 @@ inline AS_GPUMap * AS_GPUMap::AS_Assign(AS_GPUMap * gpum)
     }
     if(m_GPUData == nullptr)
     {
+
+        std::cout << "New gpu map (GPUAssign)" <<std::endl;
+
         m_GPUData = new OpenCLTexture();
         m_GPUData->Create2DRF32(CGlobalGLCLManager->context,gpum->m_GPUData->m_dims[0],gpum->m_GPUData->m_dims[1],0.0);
     }else
     {
+
         if(!((gpum->m_GPUData->m_dims[0] == m_GPUData->m_dims[0]) &&(gpum->m_GPUData->m_dims[1] == m_GPUData->m_dims[1])))
         {
+            std::cout << "New gpu map (GPUAssign wrong size) " << gpum->m_GPUData->m_dims[0] << " " <<  m_GPUData->m_dims[0] << " " << gpum->m_GPUData->m_dims[1]<< " " <<  m_GPUData->m_dims[1] << std::endl;
+
             m_GPUData->Destroy();
             delete m_GPUData;
             m_GPUData = nullptr;
@@ -1384,7 +1381,6 @@ inline static AS_GPUMap * ApplyGPUKernelSingleMap(OpenCLProgram * p,AS_GPUMap * 
     p->PlaceArgument(3,&t2);
 
     p->SetRunDims(m->m_GPUData->m_dims[0],m->m_GPUData->m_dims[1]);
-    std::cout << "dims " << m->m_GPUData->m_dims[0] << " " <<m->m_GPUData->m_dims[1] << std::endl;
     p->Run(CGlobalGLCLManager->context,CGlobalGLCLManager->q);
 
     r->GeoPropsFromMap(m);
@@ -1433,7 +1429,6 @@ inline static AS_GPUMap * ApplyGPUKernelDoubleMap(OpenCLProgram * p,AS_GPUMap * 
     p->PlaceArgument(4,&t3);
 
     p->SetRunDims(m->m_GPUData->m_dims[0],m->m_GPUData->m_dims[1]);
-    std::cout << "dims " << m->m_GPUData->m_dims[0] << " " <<m->m_GPUData->m_dims[1] << std::endl;
     p->Run(CGlobalGLCLManager->context,CGlobalGLCLManager->q);
 
     if(assign_back)
@@ -1441,6 +1436,7 @@ inline static AS_GPUMap * ApplyGPUKernelDoubleMap(OpenCLProgram * p,AS_GPUMap * 
         m->AS_Assign(r);
 
         r->m_GPUData->Destroy();
+        delete r->m_GPUData;
         delete r;
         return m;
     }else
@@ -1480,7 +1476,6 @@ inline static AS_GPUMap * ApplyGPUKernelDoubleMap(OpenCLProgram * p,AS_GPUMap * 
     p->PlaceArgument(4,&t3);
 
     p->SetRunDims(m->m_GPUData->m_dims[0],m->m_GPUData->m_dims[1]);
-    std::cout << "dims " << m->m_GPUData->m_dims[0] << " " <<m->m_GPUData->m_dims[1] << std::endl;
     p->Run(CGlobalGLCLManager->context,CGlobalGLCLManager->q);
 
     if(assign_back)
@@ -1488,6 +1483,7 @@ inline static AS_GPUMap * ApplyGPUKernelDoubleMap(OpenCLProgram * p,AS_GPUMap * 
         m->AS_Assign(r);
 
         r->m_GPUData->Destroy();
+        delete r->m_GPUData;
         delete r;
         return m;
     }else

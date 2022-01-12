@@ -106,7 +106,7 @@ inline static bool HasDefaultGPUFlowModels()
     return has;
 }
 
-inline float GetDynamicWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI)
+inline float GetDynamicWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI, float courant)
 {
     if(m->m_GPUData == nullptr)
     {
@@ -147,8 +147,6 @@ inline float GetDynamicWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * 
     int sizex = m->m_GPUData->m_dims[0];
     int sizey = m->m_GPUData->m_dims[1];
     int outputoffset = (size_output -1);
-
-    std::cout << "size " << sizex << " " << sizey << " " << size_output << " " << size << std::endl;
 
     int inOffset = size_workgroupcount * (size/size_workgroupcount);
     ret = clSetKernelArg(kernel1, 0, sizeof(int), (void *)&sizex);
@@ -202,6 +200,12 @@ inline float GetDynamicWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * 
         throw 1;
     }
     ret = clSetKernelArg(kernel1, 7, sizeof(cl_mem), (void *)&outbuf);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-8 " + QString::number(ret));
+        throw 1;
+    }
+    ret = clSetKernelArg(kernel1, 8, sizeof(float), (void *)&courant);
     if(ret != CL_SUCCESS )
     {
         LISEMS_ERROR("Could not set argument for kernel1-8 " + QString::number(ret));
@@ -293,6 +297,12 @@ inline float GetDynamicWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * 
             LISEMS_ERROR("Could not set argument for kernel2-11 " + QString::number(ret));
             throw 1;
         }
+        ret = clSetKernelArg(kernel2, 11, sizeof(float), (void *)&courant);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel2-11 " + QString::number(ret));
+            throw 1;
+        }
 
 
         ret = clEnqueueTask(CGlobalGLCLManager->q(),kernel2,0,NULL,NULL);
@@ -343,22 +353,14 @@ inline static std::vector<AS_GPUMap *> AS_DynamicWaveGPU(AS_GPUMap * DEM, AS_GPU
     int sizex = DEM->m_GPUData->m_dims[0];
     int sizey = DEM->m_GPUData->m_dims[1];
 
-    std::cout << HI << " " << VXI << " " << VYI << std::endl;
-
     AS_GPUMap * HN = HI->GetCopy0();
     AS_GPUMap * VXN = VXI->GetCopy0();
-    std::cout << HI->dx << " " << " " << std::endl;
-    std::cout << VXI->dx << " " << " " << std::endl;
-    std::cout << VYI->dx << " " << " " << std::endl;
     AS_GPUMap * VYN = VYI->GetCopy0();
-    std::cout << "copy done " <<std::endl;
-
-
     float t = 0;
     while(t + 1e-6 < _dt)
     {
         //get timestep kernel
-        float timestep = GetDynamicWaveTimestep(DEM,HI,VXI,VYI);
+        float timestep = GetDynamicWaveTimestep(DEM,HI,VXI,VYI,courant);
         std::cout << "timestep " << timestep << std::endl;
         timestep = std::max(1e-6f,std::min(std::min(_dt - t,timestep),_dt));
         float dx = std::fabs(DEM->dx);
@@ -457,9 +459,9 @@ inline static std::vector<AS_GPUMap *> AS_DynamicWaveGPU(AS_GPUMap * DEM, AS_GPU
 
 
         //run flow kernel
-        size_t localWorkSize=16;
+        size_t localWorkSize=64;
         size_t globalWorkSize=size;
-        globalWorkSize = 16 * divup(size, localWorkSize);
+        globalWorkSize = 64 * divup(size, localWorkSize);
 
         ret = clEnqueueNDRangeKernel(CGlobalGLCLManager->q(), kernel1, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         if(ret != CL_SUCCESS )
@@ -482,7 +484,7 @@ inline static std::vector<AS_GPUMap *> AS_DynamicWaveGPU(AS_GPUMap * DEM, AS_GPU
 }
 
 
-inline float GetMixtureWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI, AS_GPUMap * HSI,  AS_GPUMap * VSXI, AS_GPUMap * VSYI)
+inline float GetMixtureWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI, AS_GPUMap * HSI,  AS_GPUMap * VSXI, AS_GPUMap * VSYI,float courant)
 {
     if(m->m_GPUData == nullptr)
     {
@@ -604,6 +606,12 @@ inline float GetMixtureWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * 
         LISEMS_ERROR("Could not set argument for kernel1-8 " + QString::number(ret));
         throw 1;
     }
+    ret = clSetKernelArg(kernel1, 11, sizeof(float), (void *)&courant);
+    if(ret != CL_SUCCESS )
+    {
+        LISEMS_ERROR("Could not set argument for kernel1-8 " + QString::number(ret));
+        throw 1;
+    }
     //then run the first kernel for (n-1) output buffer results
 
     size_t wgSize[3] = {256, 1, 1};
@@ -708,6 +716,12 @@ inline float GetMixtureWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * 
             LISEMS_ERROR("Could not set argument for kernel2-11 " + QString::number(ret));
             throw 1;
         }
+        ret = clSetKernelArg(kernel2, 14, sizeof(float), (void *)&courant);
+        if(ret != CL_SUCCESS )
+        {
+            LISEMS_ERROR("Could not set argument for kernel2-11 " + QString::number(ret));
+            throw 1;
+        }
 
 
         ret = clEnqueueTask(CGlobalGLCLManager->q(),kernel2,0,NULL,NULL);
@@ -776,7 +790,7 @@ inline static std::vector<AS_GPUMap *> AS_MixtureWaveGPU(AS_GPUMap * DEM, AS_GPU
     while(t + 1e-6 < _dt)
     {
         //get timestep kernel
-        float timestep = GetMixtureWaveTimestep(DEM,HI,VXI,VYI,HSI,VSXI,VSYI);
+        float timestep = GetMixtureWaveTimestep(DEM,HI,VXI,VYI,HSI,VSXI,VSYI,courant);
         std::cout << "timestep " << timestep << std::endl;
         timestep = std::max(1e-6f,std::min(std::min(_dt - t,timestep),_dt));
         float dx = std::fabs(DEM->dx);

@@ -6,9 +6,22 @@
 #define float3(x,y,z) ((float3)((x),(y),(z)))
 
 
+nonkernel float fcabs(float f)
+{
+    if(f > 0.0)
+    {
+        return f;
+    }else
+    {
+        return -f;
+    }
+}
+
+
+
 ///OpenCL Reduction kernel for the timestep of the flow state
 
-__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reduceflowdt1(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __global float *B)
+__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reduceflowdt1(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __global float *B, float courant)
 {
 
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
@@ -27,6 +40,15 @@ __kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reduceflowdt1(int
 
         int2 pixelcoord1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
         int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        int2 pixelcoord1_x1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)-1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord2_x1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1)-1)), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        int2 pixelcoord1_x2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)+1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord2_x2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1)+1)), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        int2 pixelcoord1_y1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)-1)));
+        int2 pixelcoord2_y1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1)-1)));
+        int2 pixelcoord1_y2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)+1)));
+        int2 pixelcoord2_y2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1)+1)));
+
         float valt1 = read_imagef(DEM, sampler, pixelcoord1).x;
         float valt2 = read_imagef(DEM, sampler, pixelcoord2).x;
 
@@ -35,13 +57,49 @@ __kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reduceflowdt1(int
         {
             float h1 = read_imagef(H, sampler, pixelcoord1).x;
             float h2 = read_imagef(H, sampler, pixelcoord2).x;
+            float h1_x1 = read_imagef(H, sampler, pixelcoord1_x1).x;
+            float h2_x1 = read_imagef(H, sampler, pixelcoord2_x1).x;
+            float h1_x2 = read_imagef(H, sampler, pixelcoord1_x2).x;
+            float h2_x2 = read_imagef(H, sampler, pixelcoord2_x2).x;
+            float h1_y1 = read_imagef(H, sampler, pixelcoord1_y1).x;
+            float h2_y1 = read_imagef(H, sampler, pixelcoord2_y1).x;
+            float h1_y2 = read_imagef(H, sampler, pixelcoord1_y2).x;
+            float h2_y2 = read_imagef(H, sampler, pixelcoord2_y2).x;
+
+            float z1_x1 = read_imagef(DEM,sampler, pixelcoord1_x1).x;
+            float z2_x1 = read_imagef(DEM,sampler, pixelcoord2_x1).x;
+            float z1_x2 = read_imagef(DEM,sampler, pixelcoord1_x2).x;
+            float z2_x2 = read_imagef(DEM,sampler, pixelcoord2_x2).x;
+            float z1_y1 = read_imagef(DEM,sampler, pixelcoord1_y1).x;
+            float z2_y1 = read_imagef(DEM,sampler, pixelcoord2_y1).x;
+            float z1_y2 = read_imagef(DEM,sampler, pixelcoord1_y2).x;
+            float z2_y2 = read_imagef(DEM,sampler, pixelcoord2_y2).x;
+
+            z1_x1 = isnormal(z1_x1)? z1_x1:valt1;
+            z2_x1 = isnormal(z2_x1)? z2_x1:valt2;
+            z1_x2 = isnormal(z1_x2)? z1_x2:valt1;
+            z2_x2 = isnormal(z2_x2)? z2_x2:valt2;
+            z1_y1 = isnormal(z1_y1)? z1_y1:valt1;
+            z2_y1 = isnormal(z2_y1)? z2_y1:valt2;
+            z1_y2 = isnormal(z1_y2)? z1_y2:valt1;
+            z2_y2 = isnormal(z2_y2)? z2_y2:valt2;
+
             float vx1 = read_imagef(VX, sampler, pixelcoord1).x;
             float vx2 = read_imagef(VX, sampler, pixelcoord2).x;
             float vy1 = read_imagef(VY, sampler, pixelcoord1).x;
             float vy2 = read_imagef(VY, sampler, pixelcoord2).x;
 
-            valt1 = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx1*vx1 + vy1 * vy1)))));
-            valt2 = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx2*vx2 + vy2 * vy2)))));
+            float hw1_x1 = h1 > h1_x1? max(0.0f,min(h1,h1+valt1 - (h1_x1 +z1_x1))) : 0.0;
+            float hw1_x2 = h1 > h1_x2? max(0.0f,min(h1,h1+valt1 - (h1_x2 +z1_x2))) : 0.0;
+            float hw1_y1 = h1 > h1_y1? max(0.0f,min(h1,h1+valt1 - (h1_y1 +z1_y1))) : 0.0;
+            float hw1_y2 = h1 > h1_y2? max(0.0f,min(h1,h1+valt1 - (h1_y2 +z1_y2))) : 0.0;
+            float hw2_x1 = h2 > h2_x1? max(0.0f,min(h2,h2+valt2 - (h2_x1 +z2_x1))) : 0.0;
+            float hw2_x2 = h2 > h2_x2? max(0.0f,min(h2,h2+valt2 - (h2_x2 +z2_x2))) : 0.0;
+            float hw2_y1 = h2 > h2_y1? max(0.0f,min(h2,h2+valt2 - (h2_y1 +z2_y1))) : 0.0;
+            float hw2_y2 = h2 > h2_y2? max(0.0f,min(h2,h2+valt2 - (h2_y2 +z2_y2))) : 0.0;
+
+            valt1 = courant *dx/( min(100.0f,max(sqrt(9.81f * fcabs(hw1_y2)),max(sqrt(9.81f * fcabs(hw1_y1)),max(sqrt(9.81f * fcabs(hw1_x2)),max(sqrt(9.81f * fcabs(hw1_x1)),max(0.01f,(sqrt(vx1*vx1 + vy1 * vy1)))))))));
+            valt2 = courant *dx/( min(100.0f,max(sqrt(9.81f * fcabs(hw2_y2)),max(sqrt(9.81f * fcabs(hw2_y1)),max(sqrt(9.81f * fcabs(hw2_x2)),max(sqrt(9.81f * fcabs(hw2_x1)),max(0.01f,(sqrt(vx2*vx2 + vy2 * vy2)))))))));
 
         }else
         {
@@ -81,7 +139,7 @@ __kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reduceflowdt1(int
 };
 
 
-__kernel void reduceflowdt2(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY,__global float *output, const int inputSize, const int inOffset,const int outputOffset)
+__kernel void reduceflowdt2(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY,__global float *output, const int inputSize, const int inOffset,const int outputOffset, float courant)
 {
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
     const int globalID = get_global_id(0);
@@ -93,6 +151,11 @@ __kernel void reduceflowdt2(int dim0, int dim1, float dx, __read_only image2d_t 
     for(int i = inOffset; i < inputSize; i++) {
 
         int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));
+        int2 pixelcoord1_x1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)-1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord1_x2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)+1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord1_y1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)-1)));
+        int2 pixelcoord1_y2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)+1)));
+
         float val2 = read_imagef(DEM, sampler, pixelcoord).x;
 
         if(isnormal(val2))
@@ -101,7 +164,27 @@ __kernel void reduceflowdt2(int dim0, int dim1, float dx, __read_only image2d_t 
             float vx1 = read_imagef(VX, sampler, pixelcoord).x;
             float vy1 = read_imagef(VY, sampler, pixelcoord).x;
 
-            val2 = 0.25f *dx/( min(100.0f,max(0.01f,(sqrt(vx1*vx1 + vy1 * vy1)))));
+            float h1_x1 = read_imagef(H, sampler, pixelcoord1_x1).x;
+            float h1_x2 = read_imagef(H, sampler, pixelcoord1_x2).x;
+            float h1_y1 = read_imagef(H, sampler, pixelcoord1_y1).x;
+            float h1_y2 = read_imagef(H, sampler, pixelcoord1_y2).x;
+
+            float z1_x1 = read_imagef(DEM,sampler, pixelcoord1_x1).x;
+            float z1_x2 = read_imagef(DEM,sampler, pixelcoord1_x2).x;
+            float z1_y1 = read_imagef(DEM,sampler, pixelcoord1_y1).x;
+            float z1_y2 = read_imagef(DEM,sampler, pixelcoord1_y2).x;
+
+            z1_x1 = isnormal(z1_x1)? z1_x1:val2;
+            z1_x2 = isnormal(z1_x2)? z1_x2:val2;
+            z1_y1 = isnormal(z1_y1)? z1_y1:val2;
+            z1_y2 = isnormal(z1_y2)? z1_y2:val2;
+
+            float hw1_x1 = h1 > h1_x1? max(0.0f,min(h1,h1+val2 - (h1_x1 +z1_x1))) : 0.0;
+            float hw1_x2 = h1 > h1_x2? max(0.0f,min(h1,h1+val2 - (h1_x2 +z1_x2))) : 0.0;
+            float hw1_y1 = h1 > h1_y1? max(0.0f,min(h1,h1+val2 - (h1_y1 +z1_y1))) : 0.0;
+            float hw1_y2 = h1 > h1_y2? max(0.0f,min(h1,h1+val2 - (h1_y2 +z1_y2))) : 0.0;
+
+            val2 = courant *dx/( min(100.0f,max(sqrt(9.81f * fcabs(hw1_y2)),max(sqrt(9.81f * fcabs(hw1_y1)),max(sqrt(9.81f * fcabs(hw1_x2)),max(sqrt(9.81f * fcabs(hw1_x1)),max(0.01f,(sqrt(vx1*vx1 + vy1 * vy1)))))))));
 
         }else
         {
@@ -117,7 +200,7 @@ __kernel void reduceflowdt2(int dim0, int dim1, float dx, __read_only image2d_t 
 
 
 
-__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reducemixflowdt1(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __read_only image2d_t HS,  __read_only image2d_t VSX, __read_only image2d_t VSY, __global float *B)
+__kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reducemixflowdt1(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __read_only image2d_t HS,  __read_only image2d_t VSX, __read_only image2d_t VSY, __global float *B, float courant)
 {
 
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
@@ -136,6 +219,16 @@ __kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reducemixflowdt1(
 
         int2 pixelcoord1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
         int2 pixelcoord2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+
+        int2 pixelcoord1_x1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)-1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord2_x1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1)-1)), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        int2 pixelcoord1_x2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)+1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord2_x2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1)+1)), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1))));
+        int2 pixelcoord1_y1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)-1)));
+        int2 pixelcoord2_y1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1)-1)));
+        int2 pixelcoord1_y2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)+1)));
+        int2 pixelcoord2_y2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i+dim) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i+dim)/dim1)+1)));
+
         float valt1 = read_imagef(DEM, sampler, pixelcoord1).x;
         float valt2 = read_imagef(DEM, sampler, pixelcoord2).x;
 
@@ -153,8 +246,45 @@ __kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reducemixflowdt1(
             float vsy1 = read_imagef(VSY, sampler, pixelcoord1).x;
             float vsy2 = read_imagef(VSY, sampler, pixelcoord2).x;
 
-            valt1 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(vsx1 * vsx1 + vsy1*vsy1),sqrt(vx1*vx1 + vy1 * vy1))))));
-            valt2 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(vsx2 * vsx2 + vsy2*vsy2),sqrt(vx2*vx2 + vy2 * vy2))))));
+            float h1_x1 = read_imagef(H, sampler, pixelcoord1_x1).x;
+            float h2_x1 = read_imagef(H, sampler, pixelcoord2_x1).x;
+            float h1_x2 = read_imagef(H, sampler, pixelcoord1_x2).x;
+            float h2_x2 = read_imagef(H, sampler, pixelcoord2_x2).x;
+            float h1_y1 = read_imagef(H, sampler, pixelcoord1_y1).x;
+            float h2_y1 = read_imagef(H, sampler, pixelcoord2_y1).x;
+            float h1_y2 = read_imagef(H, sampler, pixelcoord1_y2).x;
+            float h2_y2 = read_imagef(H, sampler, pixelcoord2_y2).x;
+
+            float z1_x1 = read_imagef(DEM,sampler, pixelcoord1_x1).x;
+            float z2_x1 = read_imagef(DEM,sampler, pixelcoord2_x1).x;
+            float z1_x2 = read_imagef(DEM,sampler, pixelcoord1_x2).x;
+            float z2_x2 = read_imagef(DEM,sampler, pixelcoord2_x2).x;
+            float z1_y1 = read_imagef(DEM,sampler, pixelcoord1_y1).x;
+            float z2_y1 = read_imagef(DEM,sampler, pixelcoord2_y1).x;
+            float z1_y2 = read_imagef(DEM,sampler, pixelcoord1_y2).x;
+            float z2_y2 = read_imagef(DEM,sampler, pixelcoord2_y2).x;
+
+            z1_x1 = isnormal(z1_x1)? z1_x1:valt1;
+            z2_x1 = isnormal(z2_x1)? z2_x1:valt2;
+            z1_x2 = isnormal(z1_x2)? z1_x2:valt1;
+            z2_x2 = isnormal(z2_x2)? z2_x2:valt2;
+            z1_y1 = isnormal(z1_y1)? z1_y1:valt1;
+            z2_y1 = isnormal(z2_y1)? z2_y1:valt2;
+            z1_y2 = isnormal(z1_y2)? z1_y2:valt1;
+            z2_y2 = isnormal(z2_y2)? z2_y2:valt2;
+
+            float hw1_x1 = h1 > h1_x1? max(0.0f,min(h1,h1+valt1 - (h1_x1 +z1_x1))) : 0.0;
+            float hw1_x2 = h1 > h1_x2? max(0.0f,min(h1,h1+valt1 - (h1_x2 +z1_x2))) : 0.0;
+            float hw1_y1 = h1 > h1_y1? max(0.0f,min(h1,h1+valt1 - (h1_y1 +z1_y1))) : 0.0;
+            float hw1_y2 = h1 > h1_y2? max(0.0f,min(h1,h1+valt1 - (h1_y2 +z1_y2))) : 0.0;
+            float hw2_x1 = h2 > h2_x1? max(0.0f,min(h2,h2+valt2 - (h2_x1 +z2_x1))) : 0.0;
+            float hw2_x2 = h2 > h2_x2? max(0.0f,min(h2,h2+valt2 - (h2_x2 +z2_x2))) : 0.0;
+            float hw2_y1 = h2 > h2_y1? max(0.0f,min(h2,h2+valt2 - (h2_y1 +z2_y1))) : 0.0;
+            float hw2_y2 = h2 > h2_y2? max(0.0f,min(h2,h2+valt2 - (h2_y2 +z2_y2))) : 0.0;
+
+
+            valt1 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(9.81f * fcabs(hw1_y2)),max(sqrt(9.81f * fcabs(hw1_y1)),max(sqrt(9.81f * fcabs(hw1_x2)),max(sqrt(9.81f * fcabs(hw1_x1)),max(sqrt(vsx1 * vsx1 + vsy1*vsy1),sqrt(vx1*vx1 + vy1 * vy1))))))))));
+            valt2 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(9.81f * fcabs(hw2_y2)),max(sqrt(9.81f * fcabs(hw2_y1)),max(sqrt(9.81f * fcabs(hw2_x2)),max(sqrt(9.81f * fcabs(hw2_x1)),max(sqrt(vsx2 * vsx2 + vsy2*vsy2),sqrt(vx2*vx2 + vy2 * vy2))))))))));
         }else{
 
             valt1 = 1e31f;
@@ -194,7 +324,7 @@ __kernel __attribute__((reqd_work_group_size(256, 1, 1))) void reducemixflowdt1(
 };
 
 
-__kernel void reducemixflowdt2(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __read_only image2d_t HS,  __read_only image2d_t VSX, __read_only image2d_t VSY,__global float *output, const int inputSize, const int inOffset,const int outputOffset)
+__kernel void reducemixflowdt2(int dim0, int dim1, float dx, __read_only image2d_t DEM, __read_only image2d_t H,  __read_only image2d_t VX, __read_only image2d_t VY, __read_only image2d_t HS,  __read_only image2d_t VSX, __read_only image2d_t VSY,__global float *output, const int inputSize, const int inOffset,const int outputOffset, float courant)
 {
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
     const int globalID = get_global_id(0);
@@ -206,6 +336,11 @@ __kernel void reducemixflowdt2(int dim0, int dim1, float dx, __read_only image2d
     for(int i = inOffset; i < inputSize; i++) {
 
         int2 pixelcoord = (int2) (min(dim0-(int)(1),max((int)(0),(int)(i % dim1))), min(dim1-(int)(1),max((int)(0),(int)(i/dim1))));
+        int2 pixelcoord1_x1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)-1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord1_x2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1)+1)), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1))));
+        int2 pixelcoord1_y1 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)-1)));
+        int2 pixelcoord1_y2 = (int2) (min(dim0-(int)(1),max((int)(0),(int)((i) % dim1))), min(dim1-(int)(1),max((int)(0),(int)((i)/dim1)+1)));
+
         float val2 = read_imagef(DEM, sampler, pixelcoord).x;
 
         if(isnormal(val2))
@@ -216,7 +351,28 @@ __kernel void reducemixflowdt2(int dim0, int dim1, float dx, __read_only image2d
             float vsx1 = read_imagef(VSX, sampler, pixelcoord).x;
             float vsy1 = read_imagef(VSY, sampler, pixelcoord).x;
 
-            val2 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(vsx1*vsx1 + vsy1 * vsy1),sqrt(vx1*vx1 + vy1 * vy1))))));
+            float h1_x1 = read_imagef(H, sampler, pixelcoord1_x1).x;
+            float h1_x2 = read_imagef(H, sampler, pixelcoord1_x2).x;
+            float h1_y1 = read_imagef(H, sampler, pixelcoord1_y1).x;
+            float h1_y2 = read_imagef(H, sampler, pixelcoord1_y2).x;
+
+            float z1_x1 = read_imagef(DEM,sampler, pixelcoord1_x1).x;
+            float z1_x2 = read_imagef(DEM,sampler, pixelcoord1_x2).x;
+            float z1_y1 = read_imagef(DEM,sampler, pixelcoord1_y1).x;
+            float z1_y2 = read_imagef(DEM,sampler, pixelcoord1_y2).x;
+
+            z1_x1 = isnormal(z1_x1)? z1_x1:val2;
+            z1_x2 = isnormal(z1_x2)? z1_x2:val2;
+            z1_y1 = isnormal(z1_y1)? z1_y1:val2;
+            z1_y2 = isnormal(z1_y2)? z1_y2:val2;
+
+            float hw1_x1 = h1 > h1_x1? max(0.0f,min(h1,h1+val2 - (h1_x1 +z1_x1))) : 0.0;
+            float hw1_x2 = h1 > h1_x2? max(0.0f,min(h1,h1+val2 - (h1_x2 +z1_x2))) : 0.0;
+            float hw1_y1 = h1 > h1_y1? max(0.0f,min(h1,h1+val2 - (h1_y1 +z1_y1))) : 0.0;
+            float hw1_y2 = h1 > h1_y2? max(0.0f,min(h1,h1+val2 - (h1_y2 +z1_y2))) : 0.0;
+
+
+            val2 = 0.25f *dx/( min(100.0f,max(0.01f,(max(sqrt(9.81f * fcabs(hw1_y2)),max(sqrt(9.81f * fcabs(hw1_y1)),max(sqrt(9.81f * fcabs(hw1_x2)),max(sqrt(9.81f * fcabs(hw1_x1)),max(sqrt(vsx1*vsx1 + vsy1 * vsy1),sqrt(vx1*vx1 + vy1 * vy1))))))))));
         }else
         {
             val2 = 1e31f;
@@ -253,17 +409,6 @@ nonkernel float maxmod(float x, float y)
     }else
     {
         return max(x,y);
-    }
-}
-
-nonkernel float fcabs(float f)
-{
-    if(f > 0.0)
-    {
-        return f;
-    }else
-    {
-        return -f;
     }
 }
 

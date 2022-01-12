@@ -40,11 +40,16 @@ static LSMVector3 ASF_HLL2FS(float h_L,float ho_L,float u_L,float v_L,float h_R,
 
         ff_tot = std::max(0.0f,std::min(1.0f, (ff_tot -0.2f) * 10.0f));
 
+
+        //float ffac_L = (1.0f- ff_tot) * max(0.0f,min(1.0f,exp(-dc_L)));
+        //float ffac_R = (1.0f- ff_tot) * max(0.0f,min(1.0f,exp(-dc_R)));
+
+
         //and pressure-momentum based on the solid content
         float grav_h_L = GRAV*h_L;//*  pow(std::min(1.0f,std::max(0.0f,(1.0f-1.25f*sf_dev_L))),4.0f);
         float grav_h_R = GRAV*h_R;//*  pow(std::min(1.0f,std::max(0.0f,(1.0f-1.25f*sf_dev_R))),4.0f) ;
-        float sqrt_grav_h_L = sqrt((float)(grav_h_L)) * ff_tot;// * fac_dc_L;  // wave velocity
-        float sqrt_grav_h_R = sqrt((float)(grav_h_R)) * ff_tot;// * fac_dc_R ;
+        float sqrt_grav_h_L = sqrt((float)(grav_h_L));// * fac_dc_L;  // wave velocity
+        float sqrt_grav_h_R = sqrt((float)(grav_h_R));// * fac_dc_R ;
         q_R = u_R*h_R;
         q_L = u_L*h_L;
 
@@ -63,9 +68,10 @@ static LSMVector3 ASF_HLL2FS(float h_L,float ho_L,float u_L,float v_L,float h_R,
         ret.y = t1*(q_R*u_R + grav_h_R*h_R*0.5f) + t2*(q_L*u_L + grav_h_L*h_L*0.5f) - t3*(q_R - q_L);
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
 
-        //ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
-        //ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
-        //ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
+        ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
+        ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
+        ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
+
                 return ret;
 }
 
@@ -132,12 +138,12 @@ static inline LSMVector3 ASF_HLL2SF(float h_L,float ho_L,float u_L,float v_L,flo
         ret.z = t1*q_R*v_R + t2*q_L*v_L - t3*(h_R*v_R - h_L*v_L);
 
 
-        //ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
-        //ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
-        //ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
+        ret.x = ret.x * (1.0f- ff_tot) + ff_tot*retnw.x;
+        ret.y = ret.y * (1.0f- ff_tot) + ff_tot*retnw.y;
+        ret.z = ret.z * (1.0f- ff_tot) + ff_tot*retnw.z;
 
         //switch betweeen non-shock capturing gudanov and shock-capturing hll solver based on solid content
-        return ret;
+        return retnw;
 }
 
 
@@ -932,25 +938,35 @@ static inline void flow_pudasaini(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTM
 
 
 
-static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY,cTMap * HS,cTMap * VXS,cTMap * VYS, cTMap * IFA, cTMap * RS, cTMap * D, cTMap * HN,cTMap * VXN,cTMap * VYN, cTMap * HSN,cTMap * VXSN,cTMap * VYSN, cTMap * IFAN, cTMap * RSN, cTMap * DN,cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float dragmult = 1.0)
+static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY,cTMap * HS,cTMap * VXS,cTMap * VYS, cTMap * IFA, cTMap * RS, cTMap * D, cTMap * HN,cTMap * VXN,cTMap * VYN, cTMap * HSN,cTMap * VXSN,cTMap * VYSN, cTMap * IFAN, cTMap * RSN, cTMap * DN,cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float dragmult = 1.0, float courant = 0.1)
 {
 
     int dim0 = DEM->nrCols();
     int dim1 = DEM->nrRows();
     float dx = DEM->cellSize();
 
+
+    double dt = 1e6;
     float dt_min = 1e6;
     float dt_store = _dt;
     bool stop = false;
 
     #pragma omp parallel shared(stop)
     {
+
         double t = 0;
         double t_end = _dt;
 
         int iter = 0;
         while(true)
         {
+            #pragma omp single
+            {
+                dt_min = 1e6;
+                dt = 1e6;
+            }
+
+
 
             if(!(t < t_end))
             {
@@ -963,8 +979,7 @@ static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMa
             }
 
             double dt_min_this = 1e6;
-            double dt;
-            #pragma omp for collapse(2)
+            #pragma omp for collapse(2) reduction(min:dt_min,dt)
             //get dt
             for(int r = 0; r < DEM->nrRows(); r++)
             {
@@ -980,14 +995,70 @@ static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMa
 
                         float vmax = 100.0;
 
-                        float vx = std::min(vmax,std::max(-vmax,VX->data[gy][gx]));
-                        float vy = std::min(vmax,std::max(-vmax,VY->data[gy][gx]));
+                        const int gx_x1 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx - 1 )));
+                        const int gy_x1 = gy;
+                        const int gx_x2 = std::min(dim0-(int)(1),std::max((int)(0),(int)(gx + 1)));
+                        const int gy_x2 = gy;
+                        const int gx_y1 = gx;
+                        const int gy_y1 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy - 1)));
+                        const int gx_y2 = gx;
+                        const int gy_y2 = std::min(dim1-(int)(1),std::max((int)(0),(int)(gy + 1)));
+
+
+                        float z = DEM->data[gy][gx];
+
+                        float z_x1 = DEM->data[gy][gx_x1];
+                        float z_x2 = DEM->data[gy][gx_x2];
+                        float z_y1 = DEM->data[gy_y1][gx];
+                        float z_y2 = DEM->data[gy_y2][gx];
+
+
+                        if(gx + 1 > dim0-1)
+                        {
+                            z_x2 = -99999;
+                        }
+                        if(gx - 1 < 0)
+                        {
+                            z_x1 = -99999;
+                        }
+                        if(gy + 1 > dim1-1)
+                        {
+                            z_y2 = -99999;
+                        }
+                        if(gy - 1 < 0)
+                        {
+                            z_y1 = -99999;
+                        }
+                        float zc_x1 = z_x1 < -99995? z : z_x1;
+                        float zc_x2 = z_x2 < -99995? z : z_x2;
+                        float zc_y1 = z_y1 < -99995? z : z_y1;
+                        float zc_y2 = z_y2 < -99995? z : z_y2;
+
+                        float h = std::max(0.0f,H->data[gy][gx]);
+                        float h_x1 = std::max(0.0f,H->data[gy][gx_x1]);
+                        float h_x2 = std::max(0.0f,H->data[gy][gx_x2]);
+                        float h_y1 = std::max(0.0f,H->data[gy_y1][gx]);
+                        float h_y2 = std::max(0.0f,H->data[gy_y2][gx]);
+
+                        float hw_x1 = h > h_x1? std::max(0.0f,std::min(h,h+z - (h_x1 +z_x1))) : 0.0;
+                        float hw_x2 = h > h_x2? std::max(0.0f,std::min(h,h+z - (h_x2 +z_x2))) : 0.0;
+                        float hw_y1 = h > h_y1? std::max(0.0f,std::min(h,h+z - (h_y1 +z_y1))) : 0.0;
+                        float hw_y2 = h > h_y2? std::max(0.0f,std::min(h,h+z - (h_y2 +z_y2))) : 0.0;
+
+
+                        float vx = std::max(std::sqrt(9.81f * std::fabs(hw_x2)),std::max(std::sqrt(9.81f * std::fabs(hw_x1)),std::min(vmax,std::max(-vmax,VX->data[gy][gx]))));
+                        float vy = std::max(std::sqrt(9.81f * std::fabs(hw_y2)),std::max(std::sqrt(9.81f * std::fabs(hw_y1)),std::min(vmax,std::max(-vmax,VY->data[gy][gx]))));
+
+
                         float vxs = std::min(vmax,std::max(-vmax,VXS->data[gy][gx]));
                         float vys = std::min(vmax,std::max(-vmax,VYS->data[gy][gx]));
 
-                        float dt_req = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
-                        float dt_reqs = 0.25f *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vxs*vxs + vys * vys)))));
-                        dt_min_this = std::min((float)dt_min_this,std::min(dt_reqs,dt_req));
+
+                        double dt_req = courant *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
+                        double dt_reqs = courant *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vxs*vxs + vys * vys)))));
+
+                        dt_min = std::min((double)dt_min,std::min(dt_reqs,dt_req));
+                        dt = std::min((double)dt_min,dt);
                     }
 
                 }
@@ -995,11 +1066,11 @@ static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMa
 
             #pragma omp critical
             {
-                dt_min = std::min(dt_min,(float)dt_min_this);
-                dt_store = std::min(t_end - t,std::max((double)dt_min,1e-6));
+                //dt_min = std::min(dt_min,(float)dt_min_this);
+                //dt_store = std::min(t_end - t,std::max((double)dt_min,1e-6));
 
                 //reset already for next time
-                dt_min = 1e6;
+                //dt_min = 1e6;
             }
 
 
@@ -1009,7 +1080,7 @@ static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMa
             //reduce for minimum dt
             //#pragma omp single
             {
-                dt = dt_store;
+                //dt = dt_store;
             }
 
 
@@ -1363,7 +1434,7 @@ inline std::vector<cTMap*> AS_DebrisWave(cTMap * DEM,cTMap * N,cTMap * H, cTMap 
     double t = 0;
     double t_end = _dt;
 
-    flow_pudasainidtandflow(_dt,DEM,N,H,VX,VY,HS,VXS,VYS,IFA,RS,D,HN,VXN,VYN,HSN,VXSN,VYSN,IFAN,RSN,DN,nullptr,nullptr,nullptr,nullptr,dragmult);
+    flow_pudasainidtandflow(_dt,DEM,N,H,VX,VY,HS,VXS,VYS,IFA,RS,D,HN,VXN,VYN,HSN,VXSN,VYSN,IFAN,RSN,DN,nullptr,nullptr,nullptr,nullptr,dragmult,courant);
 
 
 

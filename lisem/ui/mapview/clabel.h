@@ -16,9 +16,9 @@ public:
         m_Label = new QLabel(name);
         m_LineEdit = new QLineEdit(name);
 
-        addWidget(m_Label);
         addWidget(m_LineEdit);
-        setCurrentWidget(m_Label);
+        addWidget(m_Label);
+        setCurrentWidget(m_LineEdit);
 
     }
 
