@@ -339,6 +339,29 @@ inline static double MapMaximum(cTMap * map)
     return max;
 }
 
+inline static double MapMinimum(cTMap * map)
+{
+    float max = 1e31;
+    bool set = false;
+    for(int r = 0; r < map->nrRows(); r++)
+    {
+        for(int c = 0; c < map->nrCols();c++)
+        {
+            if(!pcr::isMV(map->data[r][c]))
+            {
+                if(set == false)
+                {
+                    set= true;
+                    max = map->data[r][c];
+                }else {
+                    max = std::min(max,map->data[r][c]);
+                }
+            }
+        }
+    }
+    return max;
+}
+
 inline float GetMapValue_3x3Av(cTMap * map, int r, int c)
 {
 

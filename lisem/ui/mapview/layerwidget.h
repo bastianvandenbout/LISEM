@@ -54,7 +54,7 @@ class LayerWidget : public QWidget
         Q_OBJECT
         QHBoxLayout * m_Layout;
         QCheckBox * m_CheckBoxDraw;
-        CLabel * m_Name;
+        CEditLabel * m_Name;
         CLabel * m_File;
         QImage * m_Gradient;
         GradientComboBox * m_labelGradient;
@@ -113,7 +113,7 @@ public:
             m_window = w;
             setLayout(m_Layout);
 
-            m_Name = new CLabel("Name");
+            m_Name = new CEditLabel("Name");
             m_Name->setMinimumSize(75,20);
             m_CheckBoxDraw = new QCheckBox("");
             m_File = new CLabel("File");
@@ -241,6 +241,15 @@ public:
             cEditAct = new QAction("Edit",this);
             cStopEditAct = new QAction("Stop Edit",this);
 
+            connect(m_Name,&CEditLabel::OnTextChanged,[this](QString s)
+            {
+
+                m_layerMutex.lock();
+
+                m_maplayer->SetName(s);
+
+                m_layerMutex.unlock();
+            });
             connect(cInfoAct,SIGNAL(triggered()),this,SLOT(OnLayerInfo()));
             connect(cRemoveAct,SIGNAL(triggered()),this,SLOT(OnLayerRemove()));
             connect(cSaveAct ,SIGNAL(triggered()),this,SLOT(OnLayerSave()));
@@ -793,21 +802,34 @@ public slots:
             m_layerMutex.lock();
             if(!m_maplayer->IsBeingEdited())
             {
+                std::cout << "on layer edit start "<< std::endl;
                 editor = m_maplayer->GetEditor();
 
+                std::cout << "got editor 1" << std::endl;
                 m_EditorWidget = new EditorWidget(editor);
+
+                std::cout << "got editor 2" << std::endl;
+
                 m_ParentTabWidget->addTab(m_EditorWidget,"Layer Editor");
                 m_ParentTabWidget->setCurrentWidget(m_EditorWidget);
 
+                std::cout << "got editor 3" << std::endl;
+
                 connect(m_EditorWidget,&EditorWidget::stopped,this,&LayerWidget::OnStopLayerEdit);
 
+                std::cout << "got editor 4" << std::endl;
                 m_maplayer->SetBeingEdited(true);
+                std::cout << "got editor 5" << std::endl;
                 m_window->SetEditor(editor);
-                m_Name->setText(m_maplayer->GetName() + " (Editing)");
+                std::cout << "got editor 6" << std::endl;
+                //m_Name->setText(m_maplayer->GetName() + " (Editing)");
+                m_File->setText("(Editing) "+ m_File->text());
+                std::cout << "got editor 5" << std::endl;
 
             }
 
             m_layerMutex.unlock();
+            std::cout << "got editor done" << std::endl;
         }
 
         inline void OnStopLayerEdit()
@@ -825,7 +847,9 @@ public slots:
 
                 m_maplayer->SetBeingEdited(false);
 
-                m_Name->setText(m_maplayer->GetName());
+                m_File->setText(m_maplayer->GetFilePath());
+
+                //m_Name->setText(m_maplayer->GetName());
             }
 
             m_layerMutex.unlock();

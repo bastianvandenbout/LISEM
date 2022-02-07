@@ -115,6 +115,28 @@ inline bool OverWriteFileFromStringList(QString path, QStringList l)
 
 }
 
+inline QString AS_GetFileStringAbsPath(QString path)
+{
+    QString res;
+
+    QFile fin(path);
+    if (!fin.open(QFile::ReadOnly | QFile::Text)) {
+        return  res;
+    }
+
+    while (!fin.atEnd())
+    {
+        QString S = fin.readLine().trimmed();
+        res.append(S);
+    }
+
+    return res;
+}
+inline QString AS_GetFileString(QString path)
+{
+    return AS_GetFileStringAbsPath(AS_DIR+path);
+}
+
 inline QString GetFileString(QString path)
 {
     QString res;
@@ -133,6 +155,19 @@ inline QString GetFileString(QString path)
     return res;
 }
 
+inline bool AS_FileExists(QString path)
+{
+    QFile f(AS_DIR + path);
+    if(f.exists())
+    {
+        return true;
+    }else
+    {
+        return false;
+    }
+}
+
+
 inline bool FileExists(QString path)
 {
     QFile f(path);
@@ -143,6 +178,354 @@ inline bool FileExists(QString path)
     {
         return false;
     }
+}
+inline void AS_AddToFileAbsPath(QString path, QString text)
+{
+    QFile f(path);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+
+        f.write(text.toUtf8());
+    }else
+    {
+        LISEMS_ERROR("Could not append to file " + path);
+        throw 1;
+
+    }
+
+}
+
+inline void AS_WriteStringToFileAbsPath(QString path, QString text)
+{
+
+    QFile fin(path);
+
+    if (fin.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+    {
+        QTextStream out(&fin);
+
+            out << text;
+
+        out << "";
+
+        fin.close();
+
+    }else
+    {
+        LISEMS_ERROR("Could not open file " + path);
+        throw 1;
+    }
+}
+
+inline void AS_WriteStringListToFileAbsPath(QString path, std::vector<QString> text)
+{
+    QFile fin(path);
+
+    if (fin.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+    {
+        QTextStream out(&fin);
+        for(int i = 0; i < text.size(); i++)
+        {
+            out << text.at(i) << "\n";
+        }
+        out << "";
+
+        fin.close();
+    }else
+    {
+        LISEMS_ERROR("Could not open file " + path);
+        throw 1;
+    }
+
+
+}
+
+inline void AS_WriteStringToFile(QString path, QString text)
+{
+
+    AS_WriteStringToFileAbsPath(AS_DIR + path, text);
+}
+
+inline void AS_WriteStringListToFile(QString path, std::vector<QString> text)
+{
+
+    AS_WriteStringListToFileAbsPath(AS_DIR + path, text);
+}
+inline int AS_GetFileSize(QString path)
+{
+
+    QFile f(AS_DIR + path);
+    if(!f.exists())
+    {
+        LISEMS_ERROR("Could not check file " + path);
+        throw 1;
+    }
+
+    return f.size();
+}
+
+
+
+inline int AS_GetFileSizeAbsPath(QString path)
+{
+
+    QFile f(path);
+    if(!f.exists())
+    {
+        LISEMS_ERROR("Could not check file " + path);
+        throw 1;
+    }
+
+    return f.size();
+}
+
+
+inline void AS_AddToFile(QString path, QString text)
+{
+    AS_AddToFile(AS_DIR + path,text);
+}
+
+inline void AS_AddLineToFileAbsPath(QString path, QString text)
+{
+    QFile f(path);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+
+        f.write(("/n"+ text).toUtf8());
+    }else
+    {
+        LISEMS_ERROR("Could not append to file " + path);
+        throw 1;
+
+    }
+
+}
+
+
+inline void AS_AddLineToFile(QString path, QString text)
+{
+    AS_AddLineToFile(AS_DIR + path,"/n"+ text);
+}
+
+
+inline void AS_DeleteDir(QString path)
+{
+    if(path.isEmpty())
+    {
+        LISEMS_ERROR("Could not delete directory with no name");
+        throw 1;
+    }
+    QDir d(AS_DIR+ path);
+    if(!d.exists())
+    {
+        LISEMS_ERROR("Could not delete directory " + path);
+        throw 1;
+    }
+
+    if(!d.removeRecursively())
+    {
+        LISEMS_ERROR("Could not delete directory" + path);
+        throw 1;
+    }
+}
+
+
+inline void AS_DeleteDirAbsPath(QString path)
+{
+    if(path.isEmpty())
+    {
+        LISEMS_ERROR("Could not delete directory with no name");
+        throw 1;
+    }
+
+    QDir d(path);
+    if(!d.exists())
+    {
+        LISEMS_ERROR("Could not delete directory " + path);
+        throw 1;
+    }
+
+    if(!d.removeRecursively())
+    {
+        LISEMS_ERROR("Could not delete directory " + path);
+        throw 1;
+    }
+}
+
+
+inline void AS_CreateDir(QString dir, QString name)
+{
+    QDir d(AS_DIR + dir);
+    d.mkdir(name);
+    if(!d.mkdir(name))
+    {
+        LISEMS_ERROR("Could not create directory " + name);
+        throw 1;
+    }
+}
+
+
+inline void AS_CreateDirAbsPath(QString dir, QString name)
+{
+    QDir d(dir);
+    d.mkdir(name);
+    if(!d.mkdir(name))
+   {
+       LISEMS_ERROR("Could not create directory " + name);
+       throw 1;
+   }
+}
+
+inline void AS_DeleteFile(QString path)
+{
+    QFile f(AS_DIR + path);
+    if(!f.exists())
+    {
+        LISEMS_ERROR("Could not delete file " + path);
+        throw 1;
+    }
+
+    if(!f.remove())
+    {
+        LISEMS_ERROR("Could not delete file " + path);
+        throw 1;
+    }
+}
+
+
+inline void AS_DeleteFileAbsPath(QString path)
+{
+    QFile f(path);
+    if(!f.exists())
+    {
+        LISEMS_ERROR("Could not delete file " + path);
+        throw 1;
+    }
+
+    if(!f.remove())
+    {
+        LISEMS_ERROR("Could not delete file " + path);
+        throw 1;
+    }
+}
+
+inline void AS_RenameDir(QString path, QString newname)
+{
+    QDir d(AS_DIR + path);
+    QString name = d.dirName();
+    if(!d.exists())
+    {
+        LISEMS_ERROR("Could not remane dir " + AS_DIR +path);
+        throw 1;
+
+    }
+    if(d.cdUp())
+    {
+        if(!d.rename(name,newname))
+        {
+            LISEMS_ERROR("Could not rename dir  " + path);
+
+        }
+    }else
+    {
+        {
+            LISEMS_ERROR("Could not rename dir  " + path);
+
+        }
+    }
+
+}
+
+inline void AS_RenameDirAbsPath(QString path, QString newname)
+{
+    QDir d(path);
+    QString name = d.dirName();
+    if(!d.exists())
+    {
+        LISEMS_ERROR("Could not remane dir " + path);
+        throw 1;
+
+    }
+
+    if(d.cdUp())
+    {
+        if(!d.rename(name,newname))
+        {
+            LISEMS_ERROR("Could not rename dir  " + path);
+
+        }
+    }else
+    {
+        {
+            LISEMS_ERROR("Could not rename dir  " + path);
+
+        }
+    }
+
+}
+
+
+inline void AS_RenameFile(QString path, QString newname)
+{
+    QFile f(AS_DIR + path);
+    if(!f.exists())
+    {
+        LISEMS_ERROR("Could not remane file " + AS_DIR +path);
+        throw 1;
+
+    }
+
+    if(!f.rename(newname))
+    {
+        LISEMS_ERROR("Could not rename file " +AS_DIR + path);
+
+    }
+}
+
+inline void AS_RenameFileAbsPath(QString path, QString newname)
+{
+    QFile f(path);
+    if(!f.exists())
+    {
+        LISEMS_ERROR("Could not remane file " + path);
+        throw 1;
+
+    }
+
+    if(!f.rename(newname))
+    {
+        LISEMS_ERROR("Could not rename file " + path);
+
+    }
+}
+
+inline std::vector<QString> AS_ReadFileAsTextListAbsPath(QString path)
+{
+    std::vector<QString> sl;
+
+    QFile fin(path);
+    if (!fin.open(QFile::ReadOnly | QFile::Text)) {
+
+       LISEMS_ERROR("Could not open file " + path);
+       throw 1;
+        return sl;
+    }
+
+    while (!fin.atEnd())
+    {
+        QString S;
+        S = fin.readLine();
+
+
+        sl.push_back(S);
+    }
+
+    return sl;
+
+}
+
+inline std::vector<QString> AS_ReadFileAsTextList(QString path)
+{
+    return AS_ReadFileAsTextList(AS_DIR+path);
+
 }
 
 inline QStringList ReadFileAsText(QString path, bool trim = true, int * error = nullptr)

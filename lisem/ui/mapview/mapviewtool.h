@@ -1090,6 +1090,33 @@ public:
         return lay;
     }
 
+
+    inline ASUILayer AddVelLayerFromScript(cTMap * m, cTMap * m2,QString name, bool can_remove)
+    {
+        ASUILayer lay;
+
+        if(m != nullptr && m2 != nullptr)
+        {
+
+            QList<QList<cTMap *>> lm;
+            QList<cTMap*> lm1;
+            lm1.append(m->GetCopy());
+            lm1.append(m2->GetCopy());
+            lm.append(lm1);
+
+            QList<QList<OpenGLCLTexture *>> lt;
+            UIStreamRasterLayer * ret = new UIStreamRasterLayer(new RasterDataProvider(lm,true,true),name,m->AS_FileName.size() == 0? false : true,m->AS_FileName,false);
+            ret->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_DUORASTER_VEL));
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret) );
+
+        }
+
+        return lay;
+    }
+
     inline ASUILayer AddLayerFromScript(ShapeFile * m, QString name, bool can_remove)
     {
         ASUILayer lay;
@@ -1145,6 +1172,8 @@ public:
 
         return lay;
     }
+
+
 
     inline void RemoveLayerFromScript(ASUILayer id)
     {
@@ -1473,6 +1502,9 @@ public:
 
 
         //add layer
+
+        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayerVelocity(Map &in mapx, Map &in mapy, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddVelLayerFromScript,(cTMap *,cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
+
         sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
         r = sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Shapes &in shapes, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(ShapeFile *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
         sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Field &in map, string name, bool removeable =  true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );

@@ -38,6 +38,9 @@
 #include "raster/rastermixtureflow.h"
 #include "raster/rasterchannel.h"
 #include "raster/rasterfiberbundle.h"
+#include "raster/rasterdiffuse.h"
+#include "raster/rasterdither.h"
+#include "raster/rasterfastflow.h"
 
 #include "omp.h"
 
@@ -54,12 +57,8 @@ inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
         {
             m->Assign(list.at(0));
         }else {
-
-
             LISEMS_ERROR("Can not assign list of maps (length " + QString::number(list.length()) + ") to a single map");
             throw 1;
-
-
         }
     }
 
@@ -580,12 +579,29 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("Map @ SimilaritySpread(const Map&in val1, const Map&in val2, const Map&in prop, int iter_max = 100, float weightpower = 1.0, float wself = 4.0, float coeff = 0.5, bool w_original = true, bool only_larger = false)",GetFuncConvert(AS_SimilaritySpread));
     r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false, float prec_scale = 1.0, bool do_forced = false )", GetFuncConvert( AS_AccuFluxDiffusive));
     r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D2(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false, float prec_scale = 1.0, bool do_forced = false )", GetFuncConvert( AS_AccuFluxDiffusive2));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D3(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, const Map&in coeff_initial, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float do_next = 0.0)", GetFuncConvert( AS_AccuFluxDiffusive3));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @SSAccumulate(const Map &in DEM, const Map &in UX, const Map &in UY, const Map &in Source,  int iter = 2500)", GetFuncConvert( AS_AccumulateFlowAcc));
+
     r = engine->RegisterGlobalFunction("Map @SteadyStateSoil(const Map &in DEM, const Map &in Source, const Map &in QS, int iter = 100)", asFUNCTIONPR(    AS_SteadyStateSoil,(cTMap *,cTMap *,cTMap*,int),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalFunction("Map @AccufluxSoil(const Map &in DEM, const Map &in Accuflux, const Map &in QS, float k, float power = 1.0, int iter = 500, float courant = 0.2)", asFUNCTIONPR(    AS_AccufluxSoil,(cTMap *,cTMap *,cTMap*,float,float,  int,float),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalFunction("Map @FlowTransient(const Map &in DEM, const Map &in HSoil, const Map &in KSAT, const Map &in Porosity, const Map &in gwh, float dt, bool inflowlimit = true)", asFUNCTIONPR(    AS_TransientFlow,(cTMap *,cTMap *,cTMap*,cTMap *, cTMap*,float,bool),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowIncompressible(const Map &in M, const Map &in U, const Map &in U, const Map &in P, const Map &in LS, const Map &in Block,const Map &in BlockU,const Map &in BlockV, float dt, float visc,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(AS_IncompressibleWave));
     r = engine->RegisterGlobalFunction("Map @MVMap(const Map &in M)", asFUNCTIONPR(    AS_MVMap,(cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @SteadyStateCorrection(const Map &in b, const Map &in Trel)", asFUNCTIONPR(  AS_SteadyStateCorrection,(cTMap *, cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+
+    r = engine->RegisterGlobalSTDFunction("Map @ConductiveDiffuse(const Map &in data, const Map &in conductivitydata, const Map &in sigma, int iter = 100, float dt = 0.1, float feedback_self_weight = 0.0)", GetFuncConvert( AS_ConductiveDiffuse));
+    r = engine->RegisterGlobalSTDFunction("Map @ConductiveFeedbackDiffuse(const Map &in data, const Map &in conductivitydata, const Map &in sigma, const Map &in fbweight, int iter = 100, float dt = 0.1)", GetFuncConvert( AS_ConductiveFeedbackDiffuse));
+    r = engine->RegisterGlobalSTDFunction("Map @Quantize(const Map &in data, int i)", GetFuncConvert( AS_Quantize));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @SpreadProperty(const Map &in H, const Map&in Prop, const Map&in DEM, const Map&in slopeAdd, float merge = 0.0, int iter = 100)", GetFuncConvert( AS_FlowPropertySpread));
+    r = engine->RegisterGlobalSTDFunction("Map @Accumulate2D(const Map &in QX1, const Map&in QX2, const Map&in QY1, const Map&in QY2, const Map &in Source, int iter = 1000)", GetFuncConvert( AS_Accumulate2D));
+
+    r = engine->RegisterGlobalSTDFunction("float GetSSRainfalMaxVol(array<float> &in time, array<float> &in rain)", GetFuncConvert( AS_GetSSRainfallMaxVol));
+    r = engine->RegisterGlobalSTDFunction("float GetTotalRain(array<float> &in time, array<float> &in rain)", GetFuncConvert( AS_GetTotalRainfall));
+    r = engine->RegisterGlobalSTDFunction("float GetSSDurationRain(array<float> &in time, array<float> &in rain, float rain)", GetFuncConvert( AS_GetSSDurationFromRainfall));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @FloodFill(const Map &in DEM, const Map &in HInit, const Map &in N, int iter_max = 1000)", GetFuncConvert( AS_FloodFill));
+
+    r = engine->RegisterGlobalSTDFunction("array<Map> @FlowFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, float scale_initial = 1.0)", GetFuncConvert( AS_FastFlood));
+
 
     r = engine->RegisterGlobalSTDFunction("array<Field> @FlowIncompressible3D(array<Field> &in state, Field &in Block,Field &in BlockU,Field &in BlockV,Field &in BlockW, float dt, float visc = 1.0,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(  AS_IncompressibleFlow3D));
 

@@ -381,7 +381,7 @@ inline void init_pylisem_algorithm(py::module &m)
     m.def("OptimizeCustom",py::overload_cast<std::vector<double>,std::vector<bool>,std::function<double(std::vector<double>)>,double,double,int>(&OptimizeCustom2),py::arg("Initial"),py::arg("positive"),py::arg("Function"),py::arg("step"),py::arg("gradientstep"),py::arg("maxiterations"));
 
     m.def("SteadyStateSoil",&AS_SteadyStateSoil,py::arg("DEM"),py::arg("Source"),py::arg("QS"), py::arg("iter"));
-    m.def("Accuflux2D",&AS_AccuFluxDiffusive,py::arg("DEM"),py::arg("Source"),py::arg("FlowSource"),py::arg("Iterations"),py::arg("Courant"),py::arg("Scale"));
+    //m.def("Accuflux2D",&AS_AccuFluxDiffusive,py::arg("DEM"),py::arg("Source"),py::arg("FlowSource"),py::arg("Iterations"),py::arg("Courant"),py::arg("Scale"));
 
 
     /*sm->RegisterGlobalFunction("Table @IDFCurves(array<double> & in precipitation, double timestep, bool is_intensities, int n_durations, array<double> & in return_periods)",asFUNCTIONPR(CreateIDF,(CScriptArray*, double , bool, int, CScriptArray* ),MatrixTable*),asCALL_CDECL);  assert( r >= 0 );

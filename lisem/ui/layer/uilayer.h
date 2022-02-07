@@ -170,6 +170,11 @@ public:
 
     }
 
+    inline void SetName(QString s)
+    {
+        m_Name = s;
+    }
+
     inline int GetChannel()
     {
         return m_Channel;

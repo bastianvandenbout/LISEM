@@ -57,6 +57,9 @@ class EditorWidget : public QWidget
 public:
     inline EditorWidget( UILayerEditor * l, QWidget *parent = 0): QWidget( parent)
     {
+        std::cout << "start creating editor widget" <<std::endl;
+
+
         m_Editor = l;
 
         m_Dir = GetSite();
@@ -69,6 +72,7 @@ public:
         CreateWidgetFromLayerEditor(l);
 
 
+        std::cout << "done creating editor widget" <<std::endl;
 
 
 

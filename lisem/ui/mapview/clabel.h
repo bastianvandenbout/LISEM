@@ -6,6 +6,7 @@
 
 class CEditLabel : public QStackedWidget
 {
+        Q_OBJECT
 public:
     QLabel * m_Label;
     QLineEdit * m_LineEdit;
@@ -20,9 +21,33 @@ public:
         addWidget(m_Label);
         setCurrentWidget(m_LineEdit);
 
+        connect(m_LineEdit,SIGNAL(textChanged(QString)),this,SLOT(int_OnTextHasChanged(QString)));
+
     }
 
+    inline QString text()
+    {
+        return m_LineEdit->text();
 
+    }
+
+    inline void setText(QString s)
+    {
+        m_LineEdit->setText(s);
+
+    }
+signals:
+
+    inline void OnTextChanged(QString x);
+
+public slots:
+
+
+    inline void int_OnTextHasChanged(QString s)
+    {
+        m_Label->setText(s);
+        emit OnTextChanged(s);
+    }
 
 
 };

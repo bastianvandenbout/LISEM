@@ -196,6 +196,8 @@ public:
         delete Map;
         Map = nullptr;
         GLTexture->Destroy();
+        delete GLTexture;
+        GLTexture = nullptr;
      }
 };
 
@@ -673,6 +675,8 @@ public:
 
     RasterStreamBuffer *  Fill_RasterStreamBuffers(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm, QList<RasterStreamBuffer*> &Buffers, int band, bool &reused, bool check_ref,RasterStreamBuffer* rsb_ref = nullptr)
     {
+
+        std::cout << "raster fill stream buffer" << std::endl;
         WorldGLTransform * gltransform = tm->Get(state.projection,this->GetProjection());
 
         BoundingBox b;
@@ -689,8 +693,8 @@ public:
             b = GetBoundingBox();
         }
 
-        //std::cout << "search box " << b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
-
+        std::cout << "search box " << b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
+        std::cout << "search through "  << Buffers.length() <<  "     " << GetBoundingBox().Overlaps(b) << std::endl;
         for(int i = 0; i < Buffers.length(); i++)
         {
             RasterStreamBuffer * rsb = Buffers.at(i);
@@ -744,7 +748,7 @@ public:
             float ratioy = (b.GetSizeY()/pixy)/(std::fabs(m_RDP->GetCellSizeY(band)));
 
 
-            //std::cout << b.GetSizeX() << " " << b.GetSizeY() << " " << pixx << " "<< pixy << " " << m_RDP->GetCellSizeX(band) << " " << m_RDP->GetCellSizeY(band) <<std::endl;
+            std::cout << b.GetSizeX() << " " << b.GetSizeY() << " " << pixx << " "<< pixy << " " << m_RDP->GetCellSizeX(band) << " " << m_RDP->GetCellSizeY(band) <<std::endl;
 
             if(ratiox < 0.25 || ratioy < 0.25)
             {
@@ -760,8 +764,8 @@ public:
                 }
             }
 
-            //std::cout << pixx << " " << pixy << " " << ratiox << " " << ratioy << std::endl;
-            //std::cout << "search box " << b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
+            std::cout << pixx << " " << pixy << " " << ratiox << " " << ratioy << std::endl;
+            std::cout << "search box " << b.GetMinX() << " " << b.GetMaxX() << " " << b.GetMinY() << " " << b.GetMaxY() << std::endl;
 
 
             //limit box of view for the map to the map extent
@@ -779,12 +783,12 @@ public:
             }
 
 
-            //std::cout << "search box " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
+            std::cout << "search box " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
 
             //check if the stream buffer is available for this geowindowstate
             RasterStreamBuffer * rsb = nullptr;
 
-            //std::cout << "data has changed ?" << m_DataHasChanged << " " << Buffers.length() << std::endl;
+            std::cout << "data has changed ?" << m_DataHasChanged << " " << Buffers.length() << std::endl;
 
             bool unloaded_exists = false;
             if(!m_DataHasChanged)
@@ -796,7 +800,7 @@ public:
 
                     //check if this buffer is good in terms of pixels
 
-                    //std::cout << "check " << i << " " << rsb_i->bufferused << " " << rsb_i->rRead_Started << " " << band << " " <<  rsb_i->band << std::endl;
+                    std::cout << "check " << i << " " << rsb_i->bufferused << " " << rsb_i->rRead_Started << " " << band << " " <<  rsb_i->band << std::endl;
 
                     rsb_i->m_SignMutex->lock();
 
@@ -806,16 +810,16 @@ public:
 
                     }else if(!rsb_i->bufferused && band == rsb_i->band)
                     {
-                        //std::cout << "check " << i << std::endl;
+                        std::cout << "check " << i << std::endl;
                         if(rsb_i->sizex >= std::max(10,(int)(0.95 * state.scr_pixwidth)) && rsb_i->sizey >= std::max(10,(int)(0.95 * state.scr_pixheight)) )
                         {
 
-                            //std::cout << "check2 " << i << std::endl;
+                            std::cout << "check2 " << i << std::endl;
 
                             if(rsb_i->sizex <= std::max(10,(int)(1.35 * state.scr_pixwidth)) && rsb_i->sizey <= std::max(10,(int)(1.35 * state.scr_pixheight)) )
                             {
 
-                                //std::cout << "check3 " << std::endl;
+                                std::cout << "check3 " << std::endl;
                                 BoundingBox b1 = bfinal;
                                 BoundingBox b2 = BoundingBox(rsb_i->tlx,rsb_i->brx, rsb_i->tly ,rsb_i->bry);
                                 BoundingBox b3 = b1;
@@ -824,7 +828,7 @@ public:
                                 std::cout  << std::setprecision(10) << rsb_i->tlx << " " << rsb_i->brx << " " << rsb_i->tly << " "  << rsb_i->bry << std::endl;
                                 std::cout  << std::setprecision(10) << b3.GetMinX() << " " << b3.GetMaxX() << " " << b3.GetMinY() << " "  << b3.GetMaxY() << std::endl;
 
-                                //std::cout << b1.GetArea() << " " << b3.GetArea() << " " << !(bfinal.GetMinX() < rsb_i->tlx) << " " << (b3.GetArea() / b1.GetArea())<< std::endl;
+                                std::cout << b1.GetArea() << " " << b3.GetArea() << " " << !(bfinal.GetMinX() < rsb_i->tlx) << " " << (b3.GetArea() / b1.GetArea())<< std::endl;
                                 //!(bfinal.GetMinX() < rsb_i->tlx) && !(bfinal.GetMinY() < rsb_i->tly) && !(bfinal.GetMaxX() > rsb_i->brx) && !(bfinal.GetMaxY() > rsb_i->bry)
 
                                 if(b1.GetArea() > 1e-12)
@@ -833,7 +837,7 @@ public:
                                     if((b3.GetArea() / b1.GetArea()) > 0.95)
                                     {
 
-                                        //std::cout << "check4 " <<  std::endl;
+                                        std::cout << "check4 " <<  std::endl;
 
                                         //does it cover at least 90 percent
                                         if(bfinal.GetSizeX() > 0.75*rsb_i->width && bfinal.GetSizeY() > 0.75*rsb_i->height)
@@ -865,7 +869,7 @@ public:
 
                                             }else
                                             {
-                                                //std::cout << "found " <<  std::endl;
+                                                std::cout << "found " <<  std::endl;
 
                                                 //std::cout << "found buffer" << std::endl;
                                                 rsb = rsb_i;
@@ -927,6 +931,7 @@ public:
             //not found
             if(rsb == nullptr)
             {
+                std::cout << "not found, check recycle " << Buffers.length() << std::endl;
 
                 //std::cout << "rsb is not found "<< std::endl;
                 if(!check_ref)
@@ -944,6 +949,7 @@ public:
 
                     //check if this buffer is good in terms of pixels
 
+                    std::cout << "recycle? " <<state.scr_pixwidth << " " <<  rsb_i->sizex << " " <<  state.scr_pixheight << " " << rsb_i->sizey << std::endl;
                     rsb_i->m_SignMutex->lock();
                     if(!rsb_i->bufferused && !rsb_i->rRead_Started)
                     {
@@ -967,7 +973,7 @@ public:
                 //make new one
                 if(rsb == nullptr)
                 {
-                    //std::cout << "create  buffer " << std::endl;
+                    std::cout << "create  buffer " << std::endl;
                     //create new buffer object
 
 
@@ -1117,8 +1123,11 @@ public:
             {
                 bool reused;
                 bool reused2;
+                std::cout << "Get duo buffer 1 " << std::endl;
                 rsb_r = Fill_RasterStreamBuffers(m,state,tm, m_Buffersr,0,reused,false,nullptr);
+                std::cout << "Get duo buffer 2 " << std::endl;
                 rsb_g = Fill_RasterStreamBuffers(m,state,tm, m_Buffersg,1,reused2,reused,rsb_r);
+                std::cout << "Get duo buffer done " << std::endl;
 
                 if(rsb_r == nullptr || rsb_g == nullptr  )
                 {
@@ -2178,6 +2187,9 @@ public:
 
             }else {
 
+
+                std::cout << "draw duo band " << std::endl;
+
                 //duo band visualization
 
                 int index1 = s.m_IndexB1;
@@ -3105,14 +3117,10 @@ public:
 
     inline void CheckDeleteFromBuffers(OpenGLCLManager * m,QList<RasterStreamBuffer *> &list)
     {
-        if(!m_HasDoneDraw)
-        {
-            //std::cout << "return from delete buffers " << std::endl;
-            return;
-        }else
-        {
-            m_HasDoneDraw = false;
-        }
+        std::cout << "check delete buffer "<< std::endl;
+
+
+        std::cout << "check buffer delete " << list.length()-1 << std::endl;
         //std::cout << "set all buffers as non-used " << std::endl;
         for(int i = list.length()-1; i >-1 ; i--)
         {
@@ -3130,7 +3138,7 @@ public:
                 if(rsb_i->write_done == true && !rsb_i->rRead_Started && !rsb_i->update_gpu)
                 {
 
-                    //std::cout << "delete rsb " << std::endl;
+                    std::cout << "delete rsb " << i << std::endl;
                     rsb_i->m_MapMutex->lock();
                     rsb_i->m_MapMutex->unlock();
                     rsb_i->Destroy(m);
@@ -3145,6 +3153,7 @@ public:
 
 
             }else {
+                std::cout << "set buffer used false " << i << std::endl;
                 rsb_i->bufferused = false;
 
             }
@@ -3192,6 +3201,7 @@ public:
 
     inline void OnDraw(OpenGLCLManager * m,GeoWindowState s) override
     {
+        std::cout << "raster on draw" << std::endl;
         UpdateGLData();
 
         m_DataHasChanged = false;
@@ -3210,9 +3220,21 @@ public:
             CreateGLTextures(m,s);
             m_DataHasChanged = true;
         }
-        CheckDeleteFromBuffers(m,m_Buffersr);
-        CheckDeleteFromBuffers(m,m_Buffersg);
-        CheckDeleteFromBuffers(m,m_Buffersb);
+        if(m_HasDoneDraw)
+        {
+
+            CheckDeleteFromBuffers(m,m_Buffersr);
+            CheckDeleteFromBuffers(m,m_Buffersg);
+            CheckDeleteFromBuffers(m,m_Buffersb);
+
+            m_HasDoneDraw = false;
+
+            //std::cout << "return from delete buffers " << std::endl;
+            //return;
+        }else
+        {
+
+        }
 
 
         m_HasDoneDraw = false;
@@ -3226,6 +3248,8 @@ public:
 
     inline void CreateGLTextures(OpenGLCLManager * m,GeoWindowState s)
     {
+
+        std::cout << "create gl textures" << std::endl;
 
         if(m_RDP->IsMemoryMap())
         {
@@ -3268,6 +3292,10 @@ public:
 
     inline void OnPrepare(OpenGLCLManager * m,GeoWindowState s) override
     {
+
+        std::cout << "raster prepare" << std::endl;
+
+        //TODO: get textures from resource manager only once per app
         CreateGLTextures(m,s);
 
         m_TextureI1= new OpenGLCLTexture();

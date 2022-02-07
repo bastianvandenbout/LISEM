@@ -72,6 +72,36 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
 
    sm->RegisterGlobalFunction("void ExtractFile(const string &in file, const string &in path = \"\")", asFUNCTION( ExtractFileTo),  asCALL_CDECL);
 
+   sm->RegisterGlobalSTDFunction("string GetFileAsString(const string &in file)",GetFuncConvert(AS_GetFileString));
+   sm->RegisterGlobalSTDFunction("array<string> @GetFileAsStringList(const string &in filename)",GetFuncConvert(AS_ReadFileAsTextListAbsPath));
+   sm->RegisterGlobalSTDFunction("string GetFileAsStringAbsPath(const string &in file)",GetFuncConvert(AS_GetFileStringAbsPath));
+   sm->RegisterGlobalSTDFunction("array<string> @GetFileAsStringListAbsPath(const string &in filename)",GetFuncConvert(AS_ReadFileAsTextList));
+
+   sm->RegisterGlobalSTDFunction("void WriteToFile(const string &in file, const string &in text)",GetFuncConvert(AS_WriteStringToFile));
+   sm->RegisterGlobalSTDFunction("void WriteToFile(const string &in file, const array<string> &in text)",GetFuncConvert(AS_WriteStringListToFile));
+   sm->RegisterGlobalSTDFunction("void WriteToFileAbsPath(const string &in file, const string &in text)",GetFuncConvert(AS_WriteStringToFileAbsPath));
+   sm->RegisterGlobalSTDFunction("void WriteToFileAbsPath(const string &in file, const array<string> &in text)",GetFuncConvert(AS_WriteStringListToFileAbsPath));
+
+   sm->RegisterGlobalSTDFunction("bool DoesFileExist(const string &in file)",GetFuncConvert( AS_FileExists));
+   sm->RegisterGlobalSTDFunction("void ChangeFileName(const string &in file, const string &in newname)",GetFuncConvert( AS_RenameFile));
+   sm->RegisterGlobalSTDFunction("void ChangeDirName(const string &in file)",GetFuncConvert( AS_RenameDir));
+   sm->RegisterGlobalSTDFunction("void DeleteFile(const string &in file)",GetFuncConvert( AS_DeleteFile));
+   sm->RegisterGlobalSTDFunction("void MakeDirectory(const string &in dir, const string &in name)",GetFuncConvert( AS_CreateDir));
+   sm->RegisterGlobalSTDFunction("void DeleteDirectory(const string &in dir,const string &in name)",GetFuncConvert( AS_DeleteDir));
+   sm->RegisterGlobalSTDFunction("void AddToFile(const string &in dir)",GetFuncConvert( AS_AddToFile));
+   sm->RegisterGlobalSTDFunction("void AddLineToFile(const string &in dir)",GetFuncConvert( AS_AddLineToFile));
+   sm->RegisterGlobalSTDFunction("int GetFileSize(const string &in file)",GetFuncConvert( AS_GetFileSize));
+
+   sm->RegisterGlobalSTDFunction("bool DoesFileExistAbsPath(const string &in file)",GetFuncConvert(FileExists));
+   sm->RegisterGlobalSTDFunction("void ChangeFileNameAbsPath(const string &in file)",GetFuncConvert( AS_RenameFileAbsPath));
+   sm->RegisterGlobalSTDFunction("void ChangeDirNameAbsPath(const string &in file)",GetFuncConvert( AS_RenameDirAbsPath));
+   sm->RegisterGlobalSTDFunction("void DeleteFileAbsPath(const string &in file)",GetFuncConvert( AS_DeleteFileAbsPath));
+   sm->RegisterGlobalSTDFunction("void MakeDirectoryAbsPath(const string &in dir, const string &in name)",GetFuncConvert( AS_CreateDirAbsPath));
+   sm->RegisterGlobalSTDFunction("void DeleteDirectoryAbsPath(const string &in dir, const string &in name)",GetFuncConvert( AS_DeleteDirAbsPath));
+   sm->RegisterGlobalSTDFunction("void AddToFileAbsPath(const string &in dir)",GetFuncConvert( AS_AddToFileAbsPath));
+   sm->RegisterGlobalSTDFunction("void AddLineToFileAbsPath(const string &in dir)",GetFuncConvert( AS_AddLineToFileAbsPath));
+   sm->RegisterGlobalSTDFunction("int GetFileSizeAbsPath(const string &in file)",GetFuncConvert( AS_GetFileSizeAbsPath));
+
 }
 
 
