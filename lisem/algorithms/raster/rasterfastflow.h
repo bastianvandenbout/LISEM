@@ -2611,6 +2611,7 @@ inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource,
 
             float progress = ((float)(i))/std::max(1.0f,((float)(iter_max)));
 
+            float courant_here = courant * (1.0-progress) + progress * (1.0/8.0)*courant;
 
             #pragma omp for collapse(2)
             for(int r = 0; r < DEM->data.nr_rows();r++)
@@ -2693,7 +2694,7 @@ inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource,
 
                         q = q ;
 
-                        q = courant *h;//std::min(progress * q + (1.0f-progress) * (courant * h),courant * h);
+                        q = courant_here *h;//std::min(progress * q + (1.0f-progress) * (courant * h),courant * h);
 
                         float qx1 =0.0;
                         float qx2 =0.0;
@@ -2704,7 +2705,7 @@ inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource,
                         //float pressureforce_fac = courant * _dx /();
 
                         //the actual pressure force factor is there to compensate for what the heights should be when not using artificial velocities
-                        float pressureforce_fac = std::max(0.0001,std::min(1.0,pow(_dx*courant,0.6) * pow(h*N/std::sqrt(std::max(0.0001f,S->data[r][c])),3.0f/5.0f)/std::max(0.000001f,h)));
+                        float pressureforce_fac = std::max(0.0001,std::min(1.0,pow(_dx*courant_here,0.6) * pow(h*N/std::sqrt(std::max(0.0001f,S->data[r][c])),3.0f/5.0f)/std::max(0.000001f,h)));
 
                         float wx1 = GetVelocity(9.81,h,hx1,dem,demx1,_dx,N);
                         float wx2 = GetVelocity(9.81,h,hx2,dem,demx2,_dx,N);
@@ -2797,7 +2798,7 @@ inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource,
 
                                 dem = dem + pit;
 
-                                if(do_stabilize)
+                                if(i + 15 >= iter_max)
                                 {
                                     float h = hscale * H->data[r][c];
 
@@ -2883,7 +2884,7 @@ inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource,
                                 //solve for height, so that new discharge is incoming discharge
                                 //float sol = std::max(0.0f,(demhmin -DEM->data[r][c] ))+ std::pow( _dx * QIN*  N /(sqrt(S->Drc + 0.001f)),6.0f/5.0f);
 
-                                float sol = QIN / courant;
+                                float sol = QIN / courant_here;
 
                                 float hnew = std::max(std::max(0.0f,demhmin- dem)/hscale,sol);
 
@@ -3196,7 +3197,7 @@ inline std::vector<cTMap *> AS_AccumulateFlowAcc(cTMap * DEM, cTMap * UX, cTMap 
 
 }
 
-inline cTMap * AS_Accumulate2DT(cTMap * QTX1, cTMap * QTX2, cTMap * QTY1, cTMap * QTY2, cTMap * H, int iter_max)
+inline std::vector<cTMap *> AS_Accumulate2DT(cTMap * QTX1, cTMap * QTX2, cTMap * QTY1, cTMap * QTY2, cTMap * H, int iter_max)
 {
     if(!(H->data.nr_rows() ==  QTX1->data.nr_rows() && H->data.nr_cols() ==  QTX1->data.nr_cols()))
     {
@@ -3380,7 +3381,7 @@ cTMap * QAY2 = H->GetCopy0();
             {
                 if(!pcr::isMV(S->data[r][c]))
                 {
-                    S->data[r][c] = SI->data[r][c]/std::max(1e-10f,S->data[r][c]);
+                    SI->data[r][c] = SI->data[r][c]/std::max(1e-10f,S->data[r][c]);
                 }
             }
         }
@@ -3390,8 +3391,7 @@ cTMap * QAY2 = H->GetCopy0();
     delete QAY1;
     delete QAY2;
     delete HA;
-    delete SI;
-    return S;
+    return {S,SI};
 }
 
 inline cTMap * AS_Accumulate2DM(cTMap * QTX1, cTMap * QTX2, cTMap * QTY1, cTMap * QTY2, cTMap * H, int iter_max)
@@ -4574,15 +4574,130 @@ inline static cTMap * SteadyStateCorrection(cTMap * b, cTMap * Trel)
             Log[2] - Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])))*/
 
 }
+
+#include <math.h>
+
+#define STOP 1.0e-8
+#define TINY 1.0e-30
+
+inline double incbeta(double a, double b, double x) {
+    if (x < 0.0 || x > 1.0)
+    {
+        return 1.0/0.0;
+    }
+
+    /*The continued fraction converges nicely for x < (a+1)/(a+b+2)*/
+    if (x > (a+1.0)/(a+b+2.0)) {
+        return (1.0-incbeta(b,a,1.0-x)); /*Use the fact that beta is symmetrical.*/
+    }
+
+    /*Find the first part before the continued fraction.*/
+    const double lbeta_ab = lgamma(a)+lgamma(b)-lgamma(a+b);
+    const double front = exp(log(x)*a+log(1.0-x)*b-lbeta_ab) / a;
+
+    /*Use Lentz's algorithm to evaluate the continued fraction.*/
+    double f = 1.0, c = 1.0, d = 0.0;
+
+    int i, m;
+    for (i = 0; i <= 200; ++i) {
+        m = i/2;
+
+        double numerator;
+        if (i == 0) {
+            numerator = 1.0; /*First numerator is 1.0.*/
+        } else if (i % 2 == 0) {
+            numerator = (m*(b-m)*x)/((a+2.0*m-1.0)*(a+2.0*m)); /*Even term.*/
+        } else {
+            numerator = -((a+m)*(a+b+m)*x)/((a+2.0*m)*(a+2.0*m+1)); /*Odd term.*/
+        }
+
+        /*Do an iteration of Lentz's algorithm.*/
+        d = 1.0 + numerator * d;
+        if (fabs(d) < TINY) d = TINY;
+        d = 1.0 / d;
+
+        c = 1.0 + numerator / c;
+        if (fabs(c) < TINY) c = TINY;
+
+        const double cd = c*d;
+        f *= cd;
+
+        /*Check for stop.*/
+        if (fabs(1.0-cd) < STOP) {
+            return front * (f-1.0);
+        }
+    }
+
+    return 1.0/0.0; /*Needed more loops, did not converge.*/
+}
+
+inline double student_t_cdf(double t, double v) {
+    /*The cumulative distribution function (CDF) for Student's t distribution*/
+    double x = (t + sqrt(t * t + v)) / (2.0 * sqrt(t * t + v));
+    double prob = incbeta(v/2.0, v/2.0, x);
+    return prob;
+}
+
+inline static cTMap * SteadyStateCorrection2(cTMap * b, cTMap * Trel)
+{
+
+    if(!(b->nrRows() == Trel->nrRows() && b->nrCols() == Trel->nrCols()))
+    {
+        LISEMS_ERROR("Steay state correction called with maps of different numbers of rows and columns");
+        throw 1;
+    }
+
+    cTMap * ret =b->GetCopy();
+
+    for(int r = 0; r < ret->nrRows(); r++)
+    {
+        for(int c = 0; c < ret->nrCols();c++)
+        {
+            if(!pcr::isMV(b->data[r][c]) && !pcr::isMV(Trel->data[r][c]))
+            {
+                double tf = std::min(1.0f,Trel->data[r][c]);
+                double bh = b->data[r][c];
+
+                double g = tgamma(1.0+1.0*bh);
+                double g2 = tgamma(2.0+2.0*bh);
+                double final =((std::pow(1.0-tf,1.0+bh)*std::pow(tf,bh) + (1.0+bh)*incbeta(1.0+bh,1.0+bh,tf))*g2)/(g*g);
+
+
+
+                if(std::isfinite(final))
+                {
+                    ret->data[r][c] = std::min(1.0,std::max(0.0,final));
+                }else
+                {
+                    //okey, so if we dont get the convergence with the gamma functions and hypergeometric 2F1 functions, this is generally because we are on the very far right of the distribution.
+                    //simply set the value to 1.0 seems to work well enough
+                    ret->data[r][c] = 1.0;
+                }
+
+
+            }else
+            {
+                pcr::setMV(ret->data[r][c]);
+            }
+        }
+    }
+
+    return ret;
+
+}
+
+
 #include "rasterdiffuse.h"
 
 
 //returns height, vel, discharge, accuflux, arrival time, flood effort, QX1, QX2, QY1, QY2
-inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain, float duration, float scale_initial = 1.0)
+inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain, float duration, float scale_initial = 1.0, float iter_scale = 1.0)
 {
 
 
-    int iter = std::max(1,(int)std::max(DEMin->data.nr_rows(),DEMin->data.nr_cols()));
+    int iter = std::max(1,(int)std::max(DEMin->data.nr_rows(),DEMin->data.nr_cols())) * iter_scale;
+
+    std::cout << "iter " << iter << std::endl;
 
     //get plain old preconditioning
 
@@ -4595,12 +4710,18 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
     cTMap * One = DEM->GetCopy0();
     cTMap * HmN = DEM->GetCopy0();
     cTMap * Vel = DEM->GetCopy();
-    cTMap * TT = DEM->GetCopy();
-    cTMap * Q = DEM->GetCopy();
+    //cTMap * TT = DEM->GetCopy();
+    //cTMap * Q = DEM->GetCopy();
     cTMap * S = DEM->GetCopy();
     cTMap * H2 = DEM->GetCopy0();
     cTMap * S2 = DEM->GetCopy();
     cTMap * B = DEM->GetCopy();
+
+    //get ratio
+    cTMap * temp2 = H2->GetCopy(); // h3 * ratio
+    cTMap * temp1 = H2->GetCopy(); // h3
+    cTMap * temp3 = H2->GetCopy(); // ratio_sigma
+    cTMap * temp4 = H2->GetCopy(); // ratio_feedback
 
     float totalpix= DEM->data.nr_rows() * DEM->data.nr_cols();
     float maxv = -1e31;
@@ -4744,9 +4865,9 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
     //run non-limited accuflux-2d
     std::vector<cTMap * > flow1 = AccuFluxDiffusive(DEM,Rain,HInitial,Zero,iter,0.15,1.0,false,false,false,0.0);
 
-    std::cout << "do flow 2 "<< std::endl;
+    //std::cout << "do flow 2 "<< std::endl;
 
-    std::vector<cTMap * > flow2 = AccuFluxDiffusive(DEM,Rain,flow1[0],Zero,200,0.05,1.0,false,false,true,0.0);
+    //std::vector<cTMap * > flow2 = AccuFluxDiffusive(DEM,Rain,flow1[0],Zero,200,0.05,1.0,false,false,true,0.0);
 
     std::cout << "prepare accumulation " << std::endl;
     //run limited accuflux-2d
@@ -4759,16 +4880,16 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
             {
 
                 float dem = DEM->Drc;
-                float h = flow2[0]->Drc;
+                float h = flow1[0]->Drc;
                 float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
                 float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
                 float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
                 float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
 
-                float hx1 = !OUTORMV(DEM,r,c-1)? flow2[0]->data[r][c-1] : h;
-                float hx2 = !OUTORMV(DEM,r,c+1)? flow2[0]->data[r][c+1] : h;
-                float hy1 = !OUTORMV(DEM,r-1,c)? flow2[0]->data[r-1][c] : h;
-                float hy2 = !OUTORMV(DEM,r+1,c)? flow2[0]->data[r+1][c] : h;
+                float hx1 = !OUTORMV(DEM,r,c-1)? flow1[0]->data[r][c-1] : h;
+                float hx2 = !OUTORMV(DEM,r,c+1)? flow1[0]->data[r][c+1] : h;
+                float hy1 = !OUTORMV(DEM,r-1,c)? flow1[0]->data[r-1][c] : h;
+                float hy2 = !OUTORMV(DEM,r+1,c)? flow1[0]->data[r+1][c] : h;
 
                 demx1 = demx1 + hx1;
                 demx2 = demx2 + hx2;
@@ -4803,22 +4924,22 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
                 float slope = (std::fabs(sx) + std::fabs(sy) + 1e-8f);
 
                 S2->data[r][c] = slope;
-                HmN->data[r][c] = flow2[0]->data[r][c] * N->data[r][c];
+                HmN->data[r][c] = flow1[0]->data[r][c] * N->data[r][c];
                 Vel->data[r][c] = std::pow(h,3.0f/2.0f)*std::sqrt(slope)/N->data[r][c];
-                Q->data[r][c] = h * Vel->data[r][c]/cellsize;
-                TT->data[r][c] = h * cellsize / std::max(1e-6f,Vel->data[r][c]);
+
             }
         }
     }
 
     std::cout << "do accumulate " <<std::endl;
 
-    cTMap * at_af = AS_Accumulate2DT(flow2[1],flow2[2],flow2[3],flow2[4],Rain,iter); //will be arrival time later
-    cTMap * q_af = AS_Accumulate2D(flow2[1],flow2[2],flow2[3],flow2[4],Rain,iter); //will be accuflux
-    cTMap * hn_af = AS_Accumulate2D(flow2[1],flow2[2],flow2[3],flow2[4],HmN,iter); //will be n_af later
-    cTMap * h_af = AS_Accumulate2D(flow2[1],flow2[2],flow2[3],flow2[4],flow2[0],iter);
-    cTMap * one_af = AS_Accumulate2D(flow2[1],flow2[2],flow2[3],flow2[4],One,iter);
-    cTMap * dt_af = AS_Accumulate2D(flow2[1],flow2[2],flow2[3],flow2[4],TT,iter);
+   std::vector<cTMap *> att_aft =AS_Accumulate2DT(flow1[1],flow1[2],flow1[3],flow1[4],Rain,iter);
+    cTMap * at_af = att_aft[1]; //will be arrival time later
+    cTMap * q_af = att_aft[0]; //will be accuflux
+    cTMap * hn_af = AS_Accumulate2D(flow1[1],flow1[2],flow1[3],flow1[4],HmN,iter); //will be n_af later
+    cTMap * h_af = AS_Accumulate2D(flow1[1],flow1[2],flow1[3],flow1[4],flow1[0],iter);
+    //cTMap * one_af = AS_Accumulate2D(flow1[1],flow1[2],flow1[3],flow1[4],One,iter);
+    //cTMap * dt_af = AS_Accumulate2D(flow1[1],flow1[2],flow1[3],flow1[4],TT,iter);
 
 
     double tot1 = 0.0;
@@ -4831,17 +4952,15 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
         {
             if(!pcr::isMV(DEM->data[r][c]))
             {
-                tot1 += flow2[0]->data[r][c] * 10.0/std::max(0.1f,Vel->data[r][c]);
-                tot2 += flow2[0]->data[r][c];
+                tot1 += cellsize/std::max(0.1f,Vel->data[r][c]);
+                tot2 += 1;
             }
         }
     }
 
     double corr_av = tot1/std::max(1e-6,tot2);
-    double duration_norm = std::min(0.99,duration*3600.0/(iter * corr_av));
+    double duration_norm = std::min(1.0,duration*3600.0/(iter * corr_av));
 
-
-    cTMap * H3 = DEM->GetCopy();
     std::cout << "invert accumulation " << std::endl;
     #pragma omp parallel for collapse(2)
     for(int r = 0; r < DEM->data.nr_rows();r++)
@@ -4850,7 +4969,6 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
         {
             if(!pcr::isMV(DEM->data[r][c]))
             {
-                dt_af->data[r][c] = at_af->data[r][c] * iter * dt_af->data[r][c]/std::max(1e-6f,h_af->data[r][c]);
                 HmN->data[r][c] = hn_af->data[r][c]/std::max(1e-6f,h_af->data[r][c]);
                 double at = at_af->data[r][c];
                 B->data[r][c] = - at /(at-1.0);
@@ -4869,7 +4987,6 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
 
                 //need to apply steady-state compensation later
                 H2->data[r][c] = std::pow(cellsize*q_af->data[r][c] * N->data[r][c]/std::sqrt(slopeav),5.0f/6.0f);
-                H3->data[r][c] = H2->data[r][c];
             }
         }
     }
@@ -4890,41 +5007,11 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
     }
 
     std::cout << "get steady-state correction " << std::endl;
-    cTMap * SS = SteadyStateCorrection(B,DN);
+    cTMap * SS = SteadyStateCorrection2(B,DN);
+    cTMap * H3 = DEM->GetCopy0();
 
-    //get steady-state compensation
-    /*N_fe.map = res.tif[0] * ((res.tif[2]/res.tif[1])/iter)/(res.tif[3]/(rain));
-      */
-
-
-
-    //invert accuflux
-    /*h2.map = sscorrect.map * pow( cellsize * accuflux2.map * N /WindowAverage(max(0.001,sqrt(max(0.001,Slope(dem  + res.tif[0])))),30),accuflux2.map * 0.0 + (5.0/6.0));
-
-        ratio_facs.map = min(1.0,0.1/max(0.001,max(h.map,h2.map)));
-        ratio.map =min(5.0,Cover(h2.map/max(0.000001,h.map),1.0));
-        ratio_sigma.map =(1.0/max(0.0001,Slope(dem + res.tif[0]))) * max(h2.map,h.map);
-        ratio_feedback.map = min(0.9,3.0 * max(0.0,h2.map-0.25));
-        ratio_spread.map = ConductiveFeedbackDiffuse(ratio.map,dem,ratio_sigma.map,ratio_feedback.map,500,0.25);
-
-        Map w = pow(max(MapIf(h_af.map >> 0.0001,0.01,0.000000000001),h2.map),h2.map * 0.0 + 3.0);
-        ratio_sigma.map =(pow((100.0/cellsize) * h_af.map,h_af.map * 3.0)/max(0.0001,Slope(dem + res.tif[0]))) * max(h2.map,h.map);
-
-                ratio_spreadh2.map = ConductiveFeedbackDiffuse( w * ratio.map,dem,ratio_sigma.map,ratio_feedback.map,2000,0.25);
-        ratio_spreadh.map= ConductiveFeedbackDiffuse(w ,dem,ratio_sigma.map,ratio_feedback.map,2000,0.25);
-        test.map = ratio_spreadh2.map/ratio_spreadh.map;*/
-
-
-
-    //get ratio
-    cTMap * temp2 = flow1[2]; // h3 * ratio
-    cTMap * temp1 = flow1[1]; // h3
-    cTMap * temp3 = flow1[3]; // ratio_sigma
-    cTMap * temp4 = flow1[4]; // ratio_feedback
 
     cTMap * ratio = DEM->GetCopy();
-    cTMap * hav = DEM->GetCopy();
-    cTMap * test= DEM->GetCopy0();
     #pragma omp parallel for collapse(2)
     for(int r = 0; r < DEM->data.nr_rows();r++)
     {
@@ -4937,42 +5024,38 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
                     SS->data[r][c] = 1.0;
                 }
 
+                H3->data[r][c] = H2->data[r][c];
+
                 H2->data[r][c] = H2->data[r][c] * SS->data[r][c];
 
-                float h_afv = h_af->data[r][c]/std::max(1e-6f,one_af->data[r][c]);
-                hav->data[r][c] = h_afv;
-                ratio->data[r][c] =std::min(5.0f,H2->data[r][c] / std::max(1e-6f,flow2[0]->data[r][c]));
+                //float h_afv = h_af->data[r][c]/std::max(1e-6f,one_af->data[r][c]);
 
-                float h3 = std::max(std::min(0.01f,std::max(std::pow(std::min(0.5f,std::max(0.01f,0.01f/h_afv)),10.0f),0.000000000000001f)),H2->data[r][c] * H2->data[r][c] * H2->data[r][c]);
+                ratio->data[r][c] =std::min(5.0f,H2->data[r][c] / std::max(1e-6f,flow1[0]->data[r][c]));
 
-                test->data[r][c] = h3;
+                float h3 = std::max(std::min(0.01f,std::max(std::pow(std::min(0.5f,std::max(0.01f,0.01f/std::max(0.00000000001f,H2->data[r][c]))),10.0f),0.000000000000001f)),H2->data[r][c] * H2->data[r][c] * H2->data[r][c]);
 
-                float h = flow2[0]->data[r][c];
+
+                float h = flow1[0]->data[r][c];
                 if(!pcr::isMV(h))
                 {
-                    temp1->data[r][c] = h3 * std::min(5.0f,H2->data[r][c] / std::max(1e-6f,flow2[0]->data[r][c]));
+                    temp1->data[r][c] = h3 * std::min(5.0f,H2->data[r][c] / std::max(1e-6f,flow1[0]->data[r][c]));
                 }else
                 {
                     temp1->data[r][c] = h3 * 1.0;
                 }
                 temp2->data[r][c] = h3;
-                temp3->data[r][c] = (1.0f/std::max(0.0001f,S2->data[r][c])) * std::max(H2->data[r][c],flow2[0]->data[r][c]);
-                temp4->data[r][c] = std::min(0.9f,3.0f * std::max(0.0f,H2->data[r][c]-0.5f * h_afv));
+                temp3->data[r][c] = (0.01f/std::max(0.0001f,S2->data[r][c])) * std::max(H2->data[r][c],flow1[0]->data[r][c]);
+                temp4->data[r][c] = 0.99 * (1.0 - std::exp(-std::max(0.0,H2->data[r][c] - 0.25 * cellsize)));//std::min(0.9f,3.0f * std::max(0.0f,H2->data[r][c]-0.5f * h_afv));
             }
         }
     }
 
-    //Map w = pow(max(MapIf(h_af.map >> 0.0001,0.01,0.000000000001),h2.map),h2.map * 0.0 + 3.0);
-    //ratio_sigma.map =(pow((100.0/cellsize) * h_af.map,h_af.map * 3.0)/max(0.0001,Slope(dem + res.tif[0]))) * max(h2.map,h.map);
-
-    //do anistotropic diffusion
-    //ConductiveFeedbackDiffuse( w * ratio.map,dem,ratio_sigma.map,ratio_feedback.map,2000,0.25);
-   // ConductiveFeedbackDiffuse(w ,dem,ratio_sigma.map,ratio_feedback.map,2000,0.25);
-
     std::cout << "conductive diffusive spread " << std::endl;
 
-    cTMap * spread = AS_ConductiveFeedbackDiffuse(temp1,DEM,temp3,temp4,iter,0.25);
-    cTMap * spreadh = AS_ConductiveFeedbackDiffuse(temp2,DEM,temp3,temp4,iter,0.25);
+    std::vector<cTMap *> duo = ConductiveFeedbackDiffuseDuo(temp1,temp2,DEM,temp3,temp4,iter,0.25);
+    cTMap * spread = duo[0];
+    cTMap * spreadh = duo[1];
+
     //re-scale original height
 
     #pragma omp paralell for collapse(2)
@@ -4984,7 +5067,7 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
             {
                 float ratio_final = spread->data[r][c]/std::max(1e-6f,spreadh->data[r][c]);
                 spread->data[r][c] = ratio_final;
-                H2->data[r][c] = flow2[0]->data[r][c] * ratio_final;
+                H2->data[r][c] = flow1[0]->data[r][c] * ratio_final;
 
                 //get velocity based on new heights
             }
@@ -5001,16 +5084,16 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
             if(!pcr::isMV(DEM->data[r][c]))
             {
                 float dem = DEM->Drc;
-                float h = flow2[0]->Drc;
+                float h = flow1[0]->Drc;
                 float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
                 float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
                 float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
                 float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
 
-                float hx1 = !OUTORMV(DEM,r,c-1)? flow2[0]->data[r][c-1] : h;
-                float hx2 = !OUTORMV(DEM,r,c+1)? flow2[0]->data[r][c+1] : h;
-                float hy1 = !OUTORMV(DEM,r-1,c)? flow2[0]->data[r-1][c] : h;
-                float hy2 = !OUTORMV(DEM,r+1,c)? flow2[0]->data[r+1][c] : h;
+                float hx1 = !OUTORMV(DEM,r,c-1)? flow1[0]->data[r][c-1] : h;
+                float hx2 = !OUTORMV(DEM,r,c+1)? flow1[0]->data[r][c+1] : h;
+                float hy1 = !OUTORMV(DEM,r-1,c)? flow1[0]->data[r-1][c] : h;
+                float hy2 = !OUTORMV(DEM,r+1,c)? flow1[0]->data[r+1][c] : h;
 
                 demx1 = demx1 + hx1;
                 demx2 = demx2 + hx2;
@@ -5044,7 +5127,6 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
                 float slope = (std::fabs(sx) + std::fabs(sy) + 1e-8f);
 
                 Vel->data[r][c] = std::pow(h,3.0f/2.0f)*std::sqrt(slope)/N->data[r][c];
-                Q->data[r][c] = h * Vel->data[r][c]/cellsize;
             }
         }
     }
@@ -5052,24 +5134,24 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
     delete Zero;
     delete One;
     delete S;
-    delete flow1[0];
-    delete flow1[1];
-    delete flow1[2];
-    delete flow1[3];
-    delete flow1[4];
+    delete temp1;
+    delete temp2;
+    delete temp3;
+    delete temp4;
+    //delete flow1[0];
+
     delete S2;
     //delete H2;
     delete DN;
-    delete TT;
+    //delete TT;
     //delete spread;
     delete spreadh;
     delete hn_af;
     delete h_af;
 
-    return{H2       ,Vel        ,Q          ,SS         ,B,
-           q_af     ,at_af      ,dt_af      ,one_af     ,spread,
-           flow2[0] ,H3         ,ratio      ,hav        ,flow2[1],
-           flow2[2] ,flow2[3]   ,flow2[4]   ,test       };
+    return{H2       ,Vel       ,SS         ,B,     q_af
+         ,at_af        , spread, flow1[0],  H3, HInitial, HmN, flow1[1],  flow1[2]
+         ,flow1[3]  ,flow1[4]        };
 }
 
 //returns height, vel, discharge, accuflux, arrival time, flood effort, QX1, QX2, QY1, QY2

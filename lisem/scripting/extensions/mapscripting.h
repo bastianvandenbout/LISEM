@@ -600,7 +600,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("float GetSSDurationRain(array<float> &in time, array<float> &in rain, float rain)", GetFuncConvert( AS_GetSSDurationFromRainfall));
     r = engine->RegisterGlobalSTDFunction("array<Map> @FloodFill(const Map &in DEM, const Map &in HInit, const Map &in N, int iter_max = 1000)", GetFuncConvert( AS_FloodFill));
 
-    r = engine->RegisterGlobalSTDFunction("array<Map> @FlowFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, float scale_initial = 1.0)", GetFuncConvert( AS_FastFlood));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @FlowFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, float scale_initial = 1.0, float iter_scale = 1.0)", GetFuncConvert( AS_FastFlood));
 
 
     r = engine->RegisterGlobalSTDFunction("array<Field> @FlowIncompressible3D(array<Field> &in state, Field &in Block,Field &in BlockU,Field &in BlockV,Field &in BlockW, float dt, float visc = 1.0,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(  AS_IncompressibleFlow3D));
