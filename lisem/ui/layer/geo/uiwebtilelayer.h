@@ -1537,12 +1537,18 @@ public:
                             //cleanup of ti
                             if(ti.is_done)
                             {
+                                std::cout << "1 " << std::endl;
                                 delete[] ti.red;
                                 delete[] ti.green;
                                 delete[] ti.blue;
+                                std::cout << "2 " << std::endl;
+
                                 ti.red = nullptr;
                                 ti.green = nullptr;
                                 ti.blue = nullptr;
+
+                                std::cout << "3 " << std::endl;
+
                                 if(this->m_TileServerInfo.m_IsTiff)
                                 {
                                     delete ti.TifMap;
@@ -1552,11 +1558,15 @@ public:
                                     delete ti.PixMap;
                                     ti.PixMap = nullptr;
                                 }
+                                std::cout << "4 " << std::endl;
+
                                 if(ti.Image != nullptr)
                                 {
                                     delete ti.Image;
                                     ti.Image = nullptr;
                                 }
+                                std::cout << "5 " << std::endl;
+
                                 if(ti.is_gl_created)
                                 {
                                     m_TextureCache.append(ti.T_R);
@@ -1566,22 +1576,48 @@ public:
                                     ti.T_G = nullptr;
                                     ti.T_B = nullptr;
                                 }
+                                std::cout << "6 " << std::endl;
+
                                 if(ti.download != nullptr)
                                 {
                                     if(ti.download->Download != nullptr)
                                     {
+                                        std::cout << "7 " << std::endl;
+
                                         ti.download->Download->deleteLater();
                                         ti.download = nullptr;
+                                        std::cout << "8 " << std::endl;
+
                                     }
                                 }
                             }else {
+                                std::cout << "stop download " << std::endl;
                                 if(ti.download->Download != nullptr)
                                 {
-                                    m_DownloadManager->StopDownload(ti.download);
+                                    std::cout << "stop download1 "  << std::endl;
+
+                                    //ti.download->Download is not accaseble anymore
+
+                                            //if(ti.download->Download->isRunning())
+                                            {
+
+                                                std::cout << "stop download2a " << std::endl;
+                                                //t->Download->abort();
+                                                std::cout << "stop download2b " << std::endl;
+                                            }
+
+                                    std::cout << "stop download2 " << std::endl;
+
                                     delete ti.download;
+                                    std::cout << "stop download3 " << std::endl;
+
                                     ti.download = nullptr;
+                                    std::cout << "stop download4 " << std::endl;
+
                                 }
                             }
+
+                            std::cout << "tile clean done "<< std::endl;
 
                             m_RequiredTiles.removeAt(i);
                             m_RequiresTileRedraw = true;

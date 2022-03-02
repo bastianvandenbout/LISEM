@@ -284,7 +284,7 @@ void QTInterfaceWindow::ImportRunfile(QString name)
     if(name.length() == 0)
     {
         QString openDir;
-        QString currentDir = GetSite()+"/";
+        QString currentDir = GetFIODir(LISEM_DIR_FIO_GENERAL);
 
         if (m_DropDown->count() > 0)
         {
@@ -309,6 +309,8 @@ void QTInterfaceWindow::ImportRunfile(QString name)
 
         return;
     }
+    SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
 
     int ret = m_ParameterManager->LoadFromRunFile(path);
 
@@ -370,14 +372,14 @@ void QTInterfaceWindow::ExportRunfile(bool saveas)
         QString selectedFilter;
         fileName = QFileDialog::getSaveFileName(this,
                                                         QString("Give a new runfile name"),
-                                                        QString("sph.run"),
+                                                        GetFIODir(LISEM_DIR_FIO_GENERAL),
                                                         QString("Text Files (*.run);;All Files (*)"),
                                                         &selectedFilter);
     }
 
     if (!fileName.isEmpty())
     {
-
+        SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(fileName).dir().absolutePath());
         UpdateParameters();
         int res =m_ParameterManager->SaveToRunFile(fileName);
 

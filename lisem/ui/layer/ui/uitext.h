@@ -22,7 +22,7 @@ private:
 
     bool m_DrawOnTop = false;
     bool m_PositionIsScreenSpace = false;
-    LSMVector3 Position;
+    LSMVector3 m_Position;
 
 public:
     inline UITextLayer()
@@ -36,9 +36,15 @@ public:
     }
     inline void Initialize(QString text, QString font, LSMVector3 Position, GeoProjection Projection, float size, bool bold, bool italic, bool underline)
     {
-        UIGeoLayer::Initialize( Projection,shapes->GetAndCalcBoundingBox(),name,file,filepath,false);
+        UIGeoLayer::Initialize( Projection,BoundingBox(Position),name,file,filepath,false);
+
+        m_Text= text;
+        m_FontName = font;
+        m_Position = Position;
 
     }
+
+
     /*inline void SaveLayer(QJsonObject * obj) override
     {
         if(!m_IsNative && m_IsFile)
@@ -98,6 +104,59 @@ public:
             m_Exists = false;
         }
     }*/
+
+
+    inline virtual void OnPostDraw3DUI(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
+    {
+
+        if(s.GL_FrameBuffer->GetWidth() == 0 ||  s.GL_FrameBuffer->GetHeight() == 0)
+        {
+            return;
+        }
+
+        bool draw_ui = s.draw_ui;
+        if(s.is_3d && !do_if_3d)
+        {
+
+            draw_ui = false;
+        }else
+        {
+            if(s.is_3d)
+            {
+                if(s.ScreenPosX == nullptr || s.ScreenPosY == nullptr || s.ScreenPosZ == nullptr )
+                {
+                    return;
+
+                }
+            }
+        }
+
+
+
+        double unitsm = s.projection.GetUnitMultiplier();
+        bool projected = s.projection.IsProjected();
+        QString units = s.projection.GetUnitName();
+
+        float width = s.scr_pixwidth;
+        float height = s.scr_pixheight;
+
+        float framewidth = s.ui_framewidth;//0.65*s.ui_scalem *std::max(25.0f,((float)std::max(0.0f,(width + height)/2.0f)) * 0.05f);
+        float ui_ticktextscale = s.ui_textscale;//s.ui_scalem * std::max(0.3f,0.65f * framewidth/25.0f);
+
+        if(!s.is_3d)
+        {
+
+        }
+        if(draw_ui)
+        {
+
+            //m->m_TextPainter->DrawString(QString::number(xtick),NULL,xpix -20.0f,ybottom-tickdist-ticklength-1-1.15f*12 * ui_ticktextscale,LSMVector4(0.0,0.0,0.0,1.0),12 * ui_ticktextscale);
+
+
+
+        }
+    }
+
 
     inline QString layertypeName()
     {

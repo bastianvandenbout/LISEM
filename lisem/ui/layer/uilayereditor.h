@@ -46,6 +46,9 @@ protected:
 
     bool m_IsChangedSinceSave;
 
+    QMutex m_ScriptMutex;
+    bool m_IsScript = false;
+    bool m_HasChangedSinceLastScriptCheck = false;
 
 
     GeoCoordTransformer * m_Transformer = nullptr;
@@ -74,6 +77,20 @@ public:
     inline bool IsPrepared()
     {
        return m_IsPrepared;
+    }
+
+    inline bool IsChangedSinceLastScriptCheck()
+    {
+        bool value;
+        m_ScriptMutex.lock();
+        value = m_HasChangedSinceLastScriptCheck;
+        m_HasChangedSinceLastScriptCheck = false;
+        m_ScriptMutex.unlock();
+        return value;
+    }
+
+    inline virtual void FillMapWithCurrentEdit(cTMap * m)
+    {
     }
 
 

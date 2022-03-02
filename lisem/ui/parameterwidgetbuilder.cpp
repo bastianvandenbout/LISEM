@@ -568,7 +568,7 @@ void QTInterfaceWindow::SignalFunction_Map(int index)
 
     if(dir.isEmpty())
     {
-        QString currentDir = GetSite()+"/";
+        QString currentDir =GetFIODir(LISEM_DIR_FIO_GENERAL);
 
         if (m_DropDown->count() > 0)
         {
@@ -586,6 +586,9 @@ void QTInterfaceWindow::SignalFunction_Map(int index)
 
     if (!path.isEmpty())// && QFileInfo(path).exists())
     {
+        SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
+
        if(!rasterCanBeOpenedForReading(path)) {
           QMessageBox::critical(this, "SPHazard",
              QString("File \"%1\" is not a supported raster map.")

@@ -108,7 +108,7 @@ void ModelTool::ImportRunfile(QString name)
     if(name.length() == 0)
     {
         QString openDir;
-        QString currentDir = GetSite()+"/";
+        QString currentDir = GetFIODir(LISEM_DIR_FIO_GENERAL);
 
         if (m_DropDown->count() > 0)
         {
@@ -132,6 +132,10 @@ void ModelTool::ImportRunfile(QString name)
     {
 
         return;
+    }else
+    {
+        SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
     }
 
     int ret = m_ParameterManager->LoadFromRunFile(path);
@@ -196,7 +200,7 @@ void ModelTool::ExportRunfile(bool saveas)
         QString selectedFilter;
         fileName = QFileDialog::getSaveFileName(this,
                                                         QString("Give a new runfile name"),
-                                                        QString("sph.run"),
+                                                        GetFIODir(LISEM_DIR_FIO_GENERAL),
                                                         QString("Text Files (*.run);;All Files (*)"),
                                                         &selectedFilter);
     }
@@ -204,6 +208,7 @@ void ModelTool::ExportRunfile(bool saveas)
     if (!fileName.isEmpty())
     {
 
+        SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(fileName).dir().absolutePath());
         UpdateParameters();
         int res =m_ParameterManager->SaveToRunFile(fileName);
 
@@ -995,7 +1000,7 @@ void ModelTool::SignalFunction_Map(int index)
     std::cout << "current map dir "<< dir.toStdString() << " | " << p.m_Value.toStdString() <<  std::endl;
     if(dir.isEmpty())
     {
-        QString currentDir = GetSite()+"/";
+        QString currentDir = GetFIODir(LISEM_DIR_FIO_GENERAL);
 
         if (m_DropDown->count() > 0)
         {
@@ -1013,6 +1018,8 @@ void ModelTool::SignalFunction_Map(int index)
 
     if (!path.isEmpty())// && QFileInfo(path).exists())
     {
+        SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
        if(!rasterCanBeOpenedForReading(path)) {
           QMessageBox::critical(this, "SPHazard",
              QString("File \"%1\" is not a supported raster map.")
@@ -1086,7 +1093,7 @@ void ModelTool::SignalFunction_File(int index)
 
 
     QString dir;
-    QString currentDir = GetSite()+"/";
+    QString currentDir = GetFIODir(LISEM_DIR_FIO_GENERAL);
 
     if (m_DropDown->count() > 0)
     {
@@ -1104,6 +1111,8 @@ void ModelTool::SignalFunction_File(int index)
 
     if (!path.isEmpty())// && QFileInfo(path).exists())
     {
+        SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
        QString f = QFileInfo(path).fileName();
        QString p = QFileInfo(path).dir().path();
 

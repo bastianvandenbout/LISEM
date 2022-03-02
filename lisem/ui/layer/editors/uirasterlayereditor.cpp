@@ -49,6 +49,8 @@ UIRasterLayerEditor::UIRasterLayerEditor(UILayer * rl) : UILayerEditor(rl)
 void UIRasterLayerEditor::OnDraw(OpenGLCLManager * m,GeoWindowState state)
 {
 
+    m_ScriptMutex.lock();
+
     QString edit_shapetype_string = GetParameterValue("Shape");
 
 
@@ -551,6 +553,8 @@ void UIRasterLayerEditor::OnDraw(OpenGLCLManager * m,GeoWindowState state)
     if(edited || undid)
     {
         m_IsChanged = true;
+        m_HasChangedSinceLastScriptCheck = true;
+
     }
 
 
@@ -562,6 +566,7 @@ void UIRasterLayerEditor::OnDraw(OpenGLCLManager * m,GeoWindowState state)
     m_HasDoneMouseDoubleClick = false;
 
     delete transformer;
+    m_ScriptMutex.unlock();
 
 }
 
@@ -864,6 +869,7 @@ void UIRasterLayerEditor::OnDrawGeo(OpenGLCLManager * m, GeoWindowState state, W
 
 inline void UIRasterLayerEditor::OnClose()
 {
+    m_ScriptMutex.lock();
     for(int r = 0; r < m_Map.at(0)->nrRows(); r++)
     {
         for(int c = 0; c < m_Map.at(0)->nrCols(); c++)
@@ -876,4 +882,5 @@ inline void UIRasterLayerEditor::OnClose()
     }
     m_RasterLayer->NotifyDataChange(BoundingBox(0,m_Map.at(0)->nrRows()-1,0,m_Map.at(0)->nrCols()-1));
 
+    m_ScriptMutex.unlock();
 }

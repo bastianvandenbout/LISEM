@@ -57,6 +57,29 @@ public:
 
     }
 
+    inline void FillMapWithCurrentEdit(cTMap * m)
+    {
+        m_ScriptMutex.lock();
+
+        for(int r = 0; r < m->nrRows(); r++)
+        {
+            for(int c = 0; c < m->nrCols(); c++)
+            {
+                //if(!pcr::isMV(m_Map->data[r][c]))
+                {
+                    m->data[r][c] = m_Map.at(0)->data[r][c];
+                }
+
+            }
+        }
+
+
+        m_ScriptMutex.unlock();
+    }
+
+
+
+
     inline void OnParameterChanged(QString name, QString value,std::function<void(QString,QString)> fset, std::function<void(QString,QString)> foptions) override
     {
         m_Dragging = false;

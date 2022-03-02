@@ -176,7 +176,7 @@ private:
         {
             m_IsDuo = true;
         }
-        if(Maps.length() > 0)
+        if(Maps.length() > 1)
         {
             m_HasTime = true;
         }
@@ -651,6 +651,7 @@ public:
 
     inline bool IsEditable()
     {
+        std::cout << m_IsDuo << " " << m_HasTime << " " << m_IsMemoryMap << std::endl;
         if(!m_IsDuo && !m_HasTime && m_IsMemoryMap)
         {
             return true;

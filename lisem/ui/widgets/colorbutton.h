@@ -14,6 +14,12 @@ class ColorButton : public QLabel {
 
     LSMVector4 m_Color;
 public:
+
+    inline explicit ColorButton(QString text,QWidget* parent = Q_NULLPTR) : QLabel(text, parent)
+    {
+        this->setMinimumSize(20,20);
+    }
+
     inline explicit ColorButton(QWidget* parent = Q_NULLPTR) : QLabel(" ", parent)
     {
         this->setMinimumSize(20,20);

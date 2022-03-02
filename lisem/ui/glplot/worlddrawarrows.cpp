@@ -46,9 +46,9 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
 
                     LSMVector3 DrawCenter = FLoc  - LSMVector3(camerapos.x,0.0,camerapos.z);
 
-                    LSMVector3 NormalX = LSMVector3(1.0,0.0,0.0) * 0.3 * DrawCenter.length();
-                    LSMVector3 NormalY = LSMVector3(0.0,1.0,0.0) * 0.3 * DrawCenter.length();
-                    LSMVector3 NormalZ = LSMVector3(0.0,0.0,1.0) * 0.3 * DrawCenter.length();
+                    LSMVector3 NormalX = LSMVector3(1.0,0.0,0.0) * 0.15 * DrawCenter.length();
+                    LSMVector3 NormalY = LSMVector3(0.0,1.0,0.0) * 0.15 * DrawCenter.length();
+                    LSMVector3 NormalZ = LSMVector3(0.0,0.0,1.0) * 0.15 * DrawCenter.length();
 
 
 
@@ -350,14 +350,14 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
 
 
                     //translation arrows
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalX,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),lx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),ly.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.5,1.0) : LSMVector4(0.0,1.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),lz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,1.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalX,LSMVector3(0.0,camerapos.y,0.0),0.01* 0.5 * DrawCenter.length(),lx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(1.0,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalY,LSMVector3(0.0,camerapos.y,0.0),0.01* 0.5 * DrawCenter.length(),ly.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.5,1.0) : LSMVector4(0.0,1.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter,DrawCenter + NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.01* 0.5 * DrawCenter.length(),lz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,1.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
 
                     //scale cubes
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalX,DrawCenter + 0.60*NormalX,LSMVector3(0.0,camerapos.y,0.0),0.06* 0.5 * DrawCenter.length(),sx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(0.8,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalY,DrawCenter + 0.60*NormalY,LSMVector3(0.0,camerapos.y,0.0),0.06* 0.5 * DrawCenter.length(),sy.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.0,1.0) : LSMVector4(0.0,0.8,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
-                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalZ,DrawCenter + 0.60*NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.06* 0.5 * DrawCenter.length(),sz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,0.8,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalX,DrawCenter + 0.60*NormalX,LSMVector3(0.0,camerapos.y,0.0),0.04* 0.5 * DrawCenter.length(),sx.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(1.0,0.5,0.5,1.0) : LSMVector4(0.8,0.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalY,DrawCenter + 0.60*NormalY,LSMVector3(0.0,camerapos.y,0.0),0.04* 0.5 * DrawCenter.length(),sy.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.0,1.0) : LSMVector4(0.0,0.8,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + 0.40 * NormalZ,DrawCenter + 0.60*NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.04* 0.5 * DrawCenter.length(),sz.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,0.5,1.0,1.0) : LSMVector4(0.0,0.0,0.8,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
 
                     //translate planes
                     m_OpenGLCLManager->m_ShapePainter->DrawSquare3D(DrawCenter + 0.67 * NormalX + 0.67 *NormalZ,DrawCenter + 0.33 * NormalX + 0.67 *NormalZ,DrawCenter + 0.33 * NormalX + 0.33 *NormalZ,DrawCenter + 0.67 * NormalX + 0.33 *NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),px.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y) ? LSMVector4(0.5,1.0,0.5,1.0) : LSMVector4(0.0,1.0,.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
@@ -394,21 +394,21 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                         LSMVector3 normal = (sin(radians) * NormalX + cos(radians) * NormalY).Normalize();
                         if((DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY - LSMVector3(0.0,camerapos.y,0.0)).dot(normal) <0.0)
                         {
-                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY,DrawCenter+ sin(radiansn) * NormalX + cos(radiansn) * NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),color_rx,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalX + cos(radians) * NormalY,DrawCenter+ sin(radiansn) * NormalX + cos(radiansn) * NormalY,LSMVector3(0.0,camerapos.y,0.0),0.01* 0.5 * DrawCenter.length(),color_rx,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
                         }
 
                         //only draw this segment of the great circle if it is visible to camera
                         LSMVector3 normal2 = (sin(radians) * NormalX + cos(radians) * NormalY).Normalize();
                         if((DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ - LSMVector3(0.0,camerapos.y,0.0)).dot(normal2) <0.0)
                         {
-                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ,DrawCenter+ sin(radiansn) * NormalX + cos(radiansn) * NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),color_ry,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalX + cos(radians) * NormalZ,DrawCenter+ sin(radiansn) * NormalX + cos(radiansn) * NormalZ,LSMVector3(0.0,camerapos.y,0.0),0.01* 0.5 * DrawCenter.length(),color_ry,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
                         }
 
                         //only draw this segment of the great circle if it is visible to camera
                         LSMVector3 normal3 = (sin(radians) * NormalZ + cos(radians) * NormalY).Normalize();
                         if((DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY - LSMVector3(0.0,camerapos.y,0.0)).dot(normal3) <0.0)
                         {
-                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY,DrawCenter+ sin(radiansn) * NormalZ + cos(radiansn) * NormalY,LSMVector3(0.0,camerapos.y,0.0),0.02* 0.5 * DrawCenter.length(),color_rz,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
+                            m_OpenGLCLManager->m_ShapePainter->DrawLine3D(DrawCenter + sin(radians) * NormalZ + cos(radians) * NormalY,DrawCenter+ sin(radiansn) * NormalZ + cos(radiansn) * NormalY,LSMVector3(0.0,camerapos.y,0.0),0.01* 0.5 * DrawCenter.length(),color_rz,s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false,false);
                         }
                     }
 

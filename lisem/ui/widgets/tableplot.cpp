@@ -760,10 +760,13 @@ void TablePlotter::OnActionTriggered(QAction * a)
 
     if(name.compare("Export to Table") == 0)
     {
-        QString name = QFileDialog::getSaveFileName(this,"Save graph to Table","","*.tbl;*.csv;;*.*");
+        QString name = QFileDialog::getSaveFileName(this,"Save graph to Table",GetFIODir(LISEM_DIR_FIO_GENERAL),"*.tbl;*.csv;;*.*");
 
         if(!name.isEmpty())
         {
+            SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(name).dir().absolutePath());
+
+
             MatrixTable * t = m_Data.at(textedits->currentIndex());
             t->SaveAsAutoFormat(name);
         }
@@ -771,9 +774,11 @@ void TablePlotter::OnActionTriggered(QAction * a)
 
     if(name.compare("Export to Image") == 0)
     {
-        QString name = QFileDialog::getSaveFileName(this,"Save graph to image","","*.jpg;*.png;;*.*");
+        QString name = QFileDialog::getSaveFileName(this,"Save graph to image",GetFIODir(LISEM_DIR_FIO_GENERAL),"*.jpg;*.png;;*.*");
         if(!name.isEmpty())
         {
+            SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(name).dir().absolutePath());
+
             m_CustomPlot->grab().save(name);
         }
 

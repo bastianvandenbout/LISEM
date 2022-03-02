@@ -34,7 +34,8 @@
 #include "geo/raster/map.h"
 #include "raster/rasterconstructors.h"
 #include "raster/rasteralgorithms.h"
-#include "extensions/gpuscripting.h"
+#include "raster/rastergpucode.h"
+//#include "extensions/gpuscripting.h"
 #include "extensions/vectorscripting.h"
 
 #include "linear/lsm_vector2.h"

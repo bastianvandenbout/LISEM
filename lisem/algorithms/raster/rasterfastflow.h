@@ -2406,7 +2406,919 @@ inline std::vector<cTMap *> AS_AccuFluxDiffusive3(cTMap * DEMIn, cTMap * source,
     return {H,S,QT,QM,HA,QAX,QAY,QTX1,QTX2,QTY1,QTY2,QX1,QX2,QY1,QY2, QTR};
 }
 
-inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource, cTMap * HInitial, cTMap * HForced,  int iter_max, float courant, float hscale = 1.0,  bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float add_next = 0.0)
+//more efficient with real pressure term
+//more efficient with real pressure term
+inline std::vector<cTMap *> AS_AccuFluxDiffusive32(cTMap * DEMIn, cTMap * source, cTMap * FlowSource, cTMap * HInitial, cTMap * HForced, cTMap * coeff_initial, cTMap * scale_pressure, int iter_max, float courant, float hscale = 1.0, int iter_accu = -1, bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float add_next = 0.0)
+{
+
+    if(iter_accu < 0)
+    {
+        iter_accu = iter_max;
+    }
+
+    if(iter_max < 1)
+    {
+        LISEMS_ERROR("Can not run steady state flow without iterations");
+        throw 1;
+    }
+    if(courant < 1e-12 || courant  > 1.0)
+    {
+        LISEM_ERROR("Courant value must be between 1e-12 and 1");
+        throw 1;
+    }
+    if(hscale < 1e-10)
+    {
+        LISEM_ERROR("Height scale value must be larger then 1e-12");
+        throw 1;
+    }
+
+    cTMap * DEM= DEMIn->GetCopy();
+
+    MaskedRaster<float> raster_data(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *H = new cTMap(std::move(raster_data),DEM->projection(),"");
+
+    //create temporary maps
+
+
+
+    MaskedRaster<float> raster_data2(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *HN = new cTMap(std::move(raster_data2),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data3(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QX1 = new cTMap(std::move(raster_data3),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data4(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QX2 = new cTMap(std::move(raster_data4),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data5(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QY1 = new cTMap(std::move(raster_data5),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data6(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QY2 = new cTMap(std::move(raster_data6),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data7(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SX = new cTMap(std::move(raster_data7),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data8(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SY = new cTMap(std::move(raster_data8),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data9(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *S = new cTMap(std::move(raster_data9),DEM->projection(),"");
+
+    cTMap * QAX = QX1->GetCopy();
+    cTMap * QAY = QX1->GetCopy();
+    cTMap * SXO = QX1->GetCopy0();
+    cTMap * SYO = QX1->GetCopy0();
+
+    cTMap * QAX1 = QX1->GetCopy0();
+    cTMap * QAY1 = QX1->GetCopy0();
+    cTMap * QAX2 = QX1->GetCopy0();
+    cTMap * QAY2 = QX1->GetCopy0();
+
+    cTMap * QC = QX1->GetCopy0();
+    cTMap * QTX1 = QX1->GetCopy0();
+    cTMap * QTX2 = QX1->GetCopy0();
+    cTMap * QTY1 = QX1->GetCopy0();
+    cTMap * QTY2 = QX1->GetCopy0();
+    cTMap * HA = QX1->GetCopy();
+    cTMap * QTR = QX1->GetCopy0();
+    cTMap * QT = QX1->GetCopy();
+    cTMap * QM = QX1->GetCopy0();
+    cTMap * QR = QX1->GetCopy0();
+    cTMap * HS = QX1->GetCopy0();
+
+    bool stop = false;
+    bool stop2 = false;
+
+    double ifac = 0.0;
+
+    //preconditioning
+
+    float dt_req_min = 0.1;
+
+    float totalpix= DEM->data.nr_rows() * DEM->data.nr_cols();
+    float maxv = -1e31;
+    float minv = 1e31;
+
+    {
+        bool found = false;
+
+        #pragma omp parallel for collapse(2) shared(found) reduction(max:maxv)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(pcr::isMV(DEM->data[r][c]))
+                {
+                }else
+                {
+                    maxv = std::max(maxv,DEM->data[r][c]);
+                    found = true;
+
+                }
+            }
+        }
+
+        if(!found)
+        {
+            maxv = 1.0;
+        }
+    }
+
+    {
+        bool found = false;
+
+        #pragma omp parallel for collapse(2) shared(found) reduction(min:minv)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(pcr::isMV(DEM->data[r][c]))
+                {
+                }else
+                {
+                    minv = std::min(minv,DEM->data[r][c]);
+                    found = true;
+
+                }
+            }
+        }
+
+        if(!found)
+        {
+            minv = 0.0;
+        }
+    }
+    if(maxv - minv < 1e-6 && precondition)
+    {
+        LISEMS_ERROR("Can not run the preconditioning without elevation differences, turning it off");
+        precondition = false;
+    }
+
+    std::cout << "precondition " << precondition << " " << maxv << " " << minv << std::endl;
+
+    double hchangetotal = 0.0;
+    double schangetotal = 0.0;
+    double hweighttotal = 0.0;
+
+    int i = 0;
+    int i2 = 0;
+    #pragma omp parallel private(stop,stop2) shared(i,ifac)
+    {
+
+
+        float N = 0.05;
+        double _dx = std::fabs(DEM->cellSizeX());
+        float dt = 1.0;
+
+        #pragma omp for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    float dem = DEM->Drc;
+                    float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                    float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                    float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                    float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                    float Sx1 = (demx1 - (dem))/(_dx);
+                    float Sx2 = ((dem)- (demx2))/(_dx);
+                    float Sy1 = (demy1 - (dem))/(_dx);
+                    float Sy2 = ((dem)- (demy2))/(_dx);
+
+                    float sx = 0.0;
+                    float sy = 0.0;
+                    if(demx1 < demx2)
+                    {
+                        sx = Sx1;
+                    }else
+                    {
+                        sx = Sx2;
+                    }
+
+                    if(demy1 < demy2)
+                    {
+                        sy = Sy1;
+                    }else
+                    {
+                        sy = Sy2;
+                    }
+
+                    S->data[r][c] = (std::fabs(sx) + std::fabs(sy) + 1e-8f);
+
+                    float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                    DEM->data[r][c] = DEM->data[r][c] + pit;
+                }
+
+            }
+        }
+
+
+
+        #pragma omp barrier
+
+
+
+        //if(precondition)
+        {
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        if(precondition)
+                        {
+
+                            float dem = DEM->Drc;
+                            //already checked the maxv and minv values earlier
+                            float inv_normz = 1.0 - (dem - minv)/(maxv-minv);
+                            float inv_norms = exp(-S->data[r][c]);
+
+                            H->data[r][c] = coeff_initial->data[r][c] * inv_normz * inv_norms;
+                        }else
+                        {
+                            H->data[r][c] = HInitial->data[r][c];
+                        }
+
+                        if(do_forced)
+                        {
+                            if(!(HForced->data[r][c] < 0.0f))
+                            {
+                                H->data[r][c] =HForced->data[r][c];
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        #pragma omp critical
+        {
+            i = 0;
+
+        }
+
+
+        while( true)
+        {
+            #pragma omp single
+            {
+
+                schangetotal = 0.0;
+                hchangetotal = 0.0;
+                hweighttotal = 0.0;
+
+                stop = false;
+                i = i+1;
+            }
+
+            #pragma omp barrier
+
+            bool do_stop = false;
+
+            #pragma omp critical
+            {
+                i2 = i;
+                if(i2>= iter_max)
+                {
+                    stop = true;
+                    do_stop = true;
+                }
+                //dt_req_min = 1e6;
+
+            }
+
+            #pragma omp barrier
+
+            if(do_stop)
+            {
+                break;
+            }
+
+
+            float progress = ((float)(i))/std::max(1.0f,((float)(iter_max)));
+
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+
+                        float dem = DEM->Drc;
+                        float demh =DEM->data[r][c]+hscale *H->data[r][c];
+                        bool outlet = false;
+                        if(OUTORMV(DEM,r,c-1) || OUTORMV(DEM,r,c+1) || OUTORMV(DEM,r-1,c) || OUTORMV(DEM,r+1,c))
+                        {
+                            outlet = 1.0;
+                        }
+
+                        float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                        float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                        float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                        float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                        float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                        dem = dem + pit;
+                        demh = demh + pit;
+
+                        float hx1 = !OUTORMV(DEM,r,c-1)? hscale*H->data[r][c-1] : 0.0f;
+                        float hx2 = !OUTORMV(DEM,r,c+1)? hscale*H->data[r][c+1] : 0.0f;
+                        float hy1 = !OUTORMV(DEM,r-1,c)? hscale*H->data[r-1][c] : 0.0f;
+                        float hy2 = !OUTORMV(DEM,r+1,c)? hscale*H->data[r+1][c] : 0.0f;
+
+
+                        float demhx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1]+hscale*H->data[r][c-1] : dem;
+                        float demhx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1]+hscale*H->data[r][c+1] : dem;
+                        float demhy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c]+hscale*H->data[r-1][c] : dem;
+                        float demhy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c]+hscale*H->data[r+1][c] : dem;
+
+                        float demhmin = std::min(std::min(std::min(demhx1,demhx2),demhy1),demhy2);
+                        float h = std::max(0.0f,H->data[r][c]);
+
+
+                        float Shx1 = (demhx1 - (demh))/(_dx);
+                        float Shx2 = ((demh)- (demhx2))/(_dx);
+                        float Shy1 = (demhy1 - (demh))/(_dx);
+                        float Shy2 = ((demh)- (demhy2))/(_dx);
+
+                        float Sx1 = (demx1 - (dem))/(_dx);
+                        float Sx2 = ((dem)- (demx2))/(_dx);
+                        float Sy1 = (demy1 - (dem))/(_dx);
+                        float Sy2 = ((dem)- (demy2))/(_dx);
+
+                        if(demhx1 < demhx2)
+                        {
+                            SX->Drc = Shx1;
+                        }else
+                        {
+                            SX->Drc = Shx2;
+                        }
+
+                        if(demhy1 < demhy2)
+                        {
+                            SY->Drc = Shy1;
+                        }else
+                        {
+                            SY->Drc = Shy2;
+                        }
+
+                        float flowwidth = _dx;
+
+                        S->Drc = (std::fabs(SX->Drc) + std::fabs(SY->Drc) + 1e-8);
+
+                        float HL = h;//std::min(h,std::max(0.0,hscale*H->data[r][c] - std::max(0.0,(demhmin -(DEM->data[r][c])))));
+                        //float Hm = std::min(hscale*h,std::max(0.0f,hscale*H->data[r][c] - std::max(0.0f,(demhmin -(DEM->data[r][c])))))/hscale;
+                        HA->data[r][c] = HL - h;
+
+                        float q = _dx * flowwidth * HL * std::sqrt(std::fabs(S->Drc + 0.001))*(1.0f/N) *std::pow((HL),2.0f/3.0f)/(_dx*_dx);
+                        //float qm = 1.0 *flowwidth * Hm * std::sqrt(std::fabs(S->Drc + 0.001))*(1.0f/N) *std::pow((Hm),2.0f/3.0f);
+
+                        //float dt_req = courant * h/std::max(1e-6f,q);
+
+                        q = q ;
+
+                        QR->data[r][c] = q/std::max(0.0001f,h);
+                        QC->data[r][c] = q;
+                        q = courant *h;//std::min(progress * q + (1.0f-progress) * (courant * h),courant * h);
+
+                        float qx1 =0.0;
+                        float qx2 =0.0;
+                        float qy1 =0.0;
+                        float qy2 =0.0;
+
+                        //ratio of artificial velocity over actual velocity
+                        //float pressureforce_fac = courant * _dx /();
+
+                        //the actual pressure force factor is there to compensate for what the heights should be when not using artificial velocities
+                        float pressureforce_fac =  std::max(0.0001,std::min(1.0,pow(_dx*courant,0.6) * pow(h*N/std::sqrt(std::max(0.0001f,S->data[r][c])),3.0f/5.0f)/std::max(0.000001f,h)));
+
+                        float hratio_x1 = !OUTORMV(DEM,r,c-1)? scale_pressure->data[r][c-1]  : 1.0f;
+                        float hratio_x2 = !OUTORMV(DEM,r,c+1)? scale_pressure->data[r][c+1]  : 1.0f;
+                        float hratio_y1 = !OUTORMV(DEM,r-1,c)? scale_pressure->data[r-1][c]  : 1.0f;
+                        float hratio_y2 = !OUTORMV(DEM,r+1,c)? scale_pressure->data[r+1][c]  : 1.0f;
+
+
+                        float scale_pressure_x1= 0.5 * (scale_pressure->data[r][c] + hratio_x1);
+                        float scale_pressure_x2= 0.5 * (scale_pressure->data[r][c] + hratio_x2);
+                        float scale_pressure_y1= 0.5 * (scale_pressure->data[r][c] + hratio_y1);
+                        float scale_pressure_y2= 0.5 * (scale_pressure->data[r][c] + hratio_y2);
+
+                        hx1 = hx1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x1);
+                        hx2 = hx2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x2);
+                        hy1 = hy1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y1);
+                        hy2 = hy2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y2);
+
+                        float wx1 = GetVelocity(9.81,h,hx1,scale_pressure_x1 *dem,scale_pressure_x1 *demx1,_dx,N);
+                        float wx2 = GetVelocity(9.81,h,hx2,scale_pressure_x2 *dem,scale_pressure_x2 *demx2,_dx,N);
+                        float wy1 = GetVelocity(9.81,h,hy1,scale_pressure_y1 *dem,scale_pressure_y1 *demy1,_dx,N);
+                        float wy2 = GetVelocity(9.81,h,hy2,scale_pressure_y2 *dem,scale_pressure_y2 *demy2,_dx,N);
+
+                        float pfac_x1 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hx1*hx1)/(std::fabs(h*h -hx1*hx1) + scale_pressure_x1 *std::fabs(dem - demx1))));
+                        float pfac_x2 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hx2*hx2)/(std::fabs(h*h -hx2*hx2) + scale_pressure_x2 *std::fabs(dem - demx2))));
+                        float pfac_y1 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hy1*hy1)/(std::fabs(h*h -hy1*hy1) + scale_pressure_y1 * std::fabs(dem - demy1))));
+                        float pfac_y2 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hy2*hy2)/(std::fabs(h*h -hy2*hy2) + scale_pressure_y2 * std::fabs(dem - demy2))));
+
+                        wx1 = wx1 * (pressureforce_fac * pfac_x1 + (1.0-pfac_x1)* 1.0);
+                        wx2 = wx2 * (pressureforce_fac * pfac_x2 + (1.0-pfac_x2)* 1.0);
+                        wy1 = wy1 * (pressureforce_fac * pfac_y1 + (1.0-pfac_y1)* 1.0);
+                        wy2 = wy2 * (pressureforce_fac * pfac_y2 + (1.0-pfac_y2)* 1.0);
+
+                        //dt_req_min = std::min(std::max(1.0f/*progress * 1e-5f + (1.0f-progress) * 0.1f*/,dt_req),dt_req_min);
+
+                        //float V = h > 0? std::sqrt(HL) * std::sqrt(std::fabs(S->data[r][c] + 0.001f))*(1.0f/N) *std::pow((HL*_dx)/(2.0f * HL + _dx),2.0f/3.0f) : 0.0f;
+
+                        float ws_total =std::max(1e-6f,((wx1 > 0.0)? std::fabs(wx1): 0.0f) +
+                                                 ((wx2 > 0.0)? std::fabs(wx2): 0.0f) +
+                                                 ((wy1 > 0.0)? std::fabs(wy1): 0.0f) +
+                                                 ((wy2 > 0.0)? std::fabs(wy2): 0.0f));
+
+                        qx1 = (wx1 > 0.0)? std::fabs((wx1)/ws_total) * q : 0.0;
+                        if(demhx1 == demh)
+                        {
+                            qx1 = 0.0;
+                        }
+                        qx2 = (wx2 > 0.0)? std::fabs((wx2)/ws_total) * q : 0.0;
+                        if(demhx2 == demh)
+                        {
+                            qx2 = 0.0;
+                        }
+                        qy1 = (wy1 > 0.0)?  std::fabs((wy1)/ws_total) * q : 0.0;
+                        if(demhy1 == demh)
+                        {
+                            qy1 = 0.0;
+                        }
+                        qy2 = (wy2 > 0.0)? std::fabs((wy2)/ws_total) * q : 0.0;
+                        if(demhy2 == demh)
+                        {
+                            qy2 = 0.0;
+                        }
+                        qx1 = std::isnormal(qx1)?qx1:0.0;
+                        qx2 = std::isnormal(qx2)?qx2:0.0;
+                        qy1 = std::isnormal(qy1)?qy1:0.0;
+                        qy2 = std::isnormal(qy2)?qy2:0.0;
+
+
+
+                        QX1->Drc = qx1;// < 0.0f? qx :0.0f;
+                        QX2->Drc = qx2;// > 0.0f? qx :0.0f;
+                        QY1->Drc = qy1;// < 0.0f? qy :0.0f;
+                        QY2->Drc = qy2;// > 0.0f? qy :0.0f;
+
+                        /*if(do_stabilize)
+                        {
+                            QX1->Drc = std::max(0.0f,std::min(0.25f *(demh - demhx1),QX1->Drc));// < 0.0f? qx :0.0f;
+                            QX2->Drc = std::max(0.0f,std::min(0.25f *(demh - demhx2),QX2->Drc));// > 0.0f? qx :0.0f;
+                            QY1->Drc = std::max(0.0f,std::min(0.25f *(demh - demhy1),QY1->Drc));// < 0.0f? qy :0.0f;
+                            QY2->Drc = std::max(0.0f,std::min(0.25f *(demh - demhy2),QY2->Drc));// > 0.0f? qy :0.0f;
+                        }*/
+                    }
+                }
+            }
+
+            #pragma omp barrier
+
+            //
+            {
+
+                //limit flow to height equilibra, to oppose oscillating behavior
+                #pragma omp for collapse(2)
+                for(int r = 0; r < DEM->data.nr_rows();r++)
+                {
+                    for(int c = 0; c < DEM->data.nr_cols();c++)
+                    {
+                        if(!pcr::isMV(DEM->data[r][c]))
+                        {
+                                float dem = DEM->Drc;
+
+                                float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                                float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                                float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                                float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                                float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                                dem = dem + pit;
+
+                                if(do_stabilize)
+                                {
+                                    float h = hscale * H->data[r][c];
+
+                                    float hratio_x1 = !OUTORMV(DEM,r,c-1)? scale_pressure->data[r][c-1]  : 1.0f;
+                                    float hratio_x2 = !OUTORMV(DEM,r,c+1)? scale_pressure->data[r][c+1]  : 1.0f;
+                                    float hratio_y1 = !OUTORMV(DEM,r-1,c)? scale_pressure->data[r-1][c]  : 1.0f;
+                                    float hratio_y2 = !OUTORMV(DEM,r+1,c)? scale_pressure->data[r+1][c]  : 1.0f;
+
+                                    float hx1 = !OUTORMV(DEM,r,c-1)? hscale*H->data[r][c-1] : 0.0f;
+                                    float hx2 = !OUTORMV(DEM,r,c+1)? hscale*H->data[r][c+1] : 0.0f;
+                                    float hy1 = !OUTORMV(DEM,r-1,c)? hscale*H->data[r-1][c] : 0.0f;
+                                    float hy2 = !OUTORMV(DEM,r+1,c)? hscale*H->data[r+1][c] : 0.0f;
+
+
+                                    float scale_pressure_x1= 0.5 * (scale_pressure->data[r][c] + hratio_x1);
+                                    float scale_pressure_x2= 0.5 * (scale_pressure->data[r][c] + hratio_x2);
+                                    float scale_pressure_y1= 0.5 * (scale_pressure->data[r][c] + hratio_y1);
+                                    float scale_pressure_y2= 0.5 * (scale_pressure->data[r][c] + hratio_y2);
+
+                                    hx1 = hx1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x1);
+                                    hx2 = hx2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x2);
+                                    hy1 = hy1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y1);
+                                    hy2 = hy2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y2);
+
+
+                                    float demh = dem + h;
+                                    float demx1 = (!OUTORMV(DEM,r,c-1))? DEM->data[r][c-1]: dem;
+                                    float demx2 = (!OUTORMV(DEM,r,c+1))? DEM->data[r][c+1] : dem;
+                                    float demy1 = (!OUTORMV(DEM,r-1,c))? DEM->data[r-1][c] : dem;
+                                    float demy2 = (!OUTORMV(DEM,r+1,c))? DEM->data[r+1][c] : dem;
+
+                                    float qx2_x2 = std::max(0.0f,((!OUTORMV(DEM,r,c+1))? ((QX2->data[r][c+1])) : 0.0f));
+                                    float qx1_x1 = std::max(0.0f,((!OUTORMV(DEM,r,c-1))? ((QX1->data[r][c-1])) : 0.0f));
+                                    float qy2_y2 = std::max(0.0f,((!OUTORMV(DEM,r+1,c))? ((QY2->data[r+1][c])) : 0.0f));
+                                    float qy1_y1 = std::max(0.0f,((!OUTORMV(DEM,r-1,c))? ((QY1->data[r-1][c])) : 0.0f));
+
+                                    QX1->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_x1 * dem + h - scale_pressure_x1 *demx1 -hx1) + add_next*std::fabs(qx1_x1),QX1->Drc));// < 0.0f? qx :0.0f;
+                                    QX2->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_x2 * dem + h - scale_pressure_x2 *demx2 -hx2) + add_next*std::fabs(qx2_x2),QX2->Drc));// > 0.0f? qx :0.0f;
+                                    QY1->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_y1 * dem + h - scale_pressure_y1 *demy1 -hy1) + add_next*std::fabs(qy1_y1),QY1->Drc));// < 0.0f? qy :0.0f;
+                                    QY2->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_y2 * dem + h - scale_pressure_y2 *demy2 -hy2) + add_next*std::fabs(qy2_y2),QY2->Drc));// > 0.0f? qy :0.0f;
+                            }
+
+
+                                QTR->data[r][c] += std::fabs(QX1->data[r][c]) + std::fabs(QX2->data[r][c]) + std::fabs(QY1->data[r][c]) + std::fabs(QY2->data[r][c]);
+                        }
+
+                    }
+                }
+
+
+
+            }
+
+            float in_total = 0.0;
+            float out_total = 0.0;
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        float dem = DEM->Drc;
+
+                                float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                                float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                                float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                                float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                                float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                                dem = dem + pit;
+
+                                float demh = dem + hscale*H->data[r][c];
+                                float demhx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1]+hscale*H->data[r][c-1] : dem;
+                                float demhx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1]+hscale*H->data[r][c+1] : dem;
+                                float demhy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c]+hscale*H->data[r-1][c] : dem;
+                                float demhy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c]+hscale*H->data[r+1][c] : dem;
+
+                                float demhx11 = !OUTORMV(DEM,r-1,c-1)? DEM->data[r-1][c-1]+hscale*H->data[r-1][c-1] : dem;
+                                float demhx22 = !OUTORMV(DEM,r+1,c+1)? DEM->data[r+1][c+1]+hscale*H->data[r+1][c+1] : dem;
+                                float demhy11 = !OUTORMV(DEM,r-1,c-1)? DEM->data[r-1][c+1]+hscale*H->data[r-1][c+1] : dem;
+                                float demhy22 = !OUTORMV(DEM,r+1,c+1)? DEM->data[r+1][c-1]+hscale*H->data[r+1][c-1] : dem;
+
+                                float demhmin = std::min(std::min(std::min(demhx1,demhx2),demhy1),demhy2);
+                                demhmin =std::min(demhmin, std::min(std::min(std::min(demhx11,demhx22),demhy11),demhy22));
+
+                                float qx1 = std::max(0.0f,((!OUTORMV(DEM,r,c-1))? ((QX2->data[r][c-1])) : 0.0f));
+                                float qx2 = std::max(0.0f,((!OUTORMV(DEM,r,c+1))? ((QX1->data[r][c+1])) : 0.0f));
+                                float qy1 = std::max(0.0f,((!OUTORMV(DEM,r-1,c))? ((QY2->data[r-1][c])) : 0.0f));
+                                float qy2 = std::max(0.0f,((!OUTORMV(DEM,r+1,c))? ((QY1->data[r+1][c])) : 0.0f));
+
+                                float qoutx1 = std::max(0.0f,((QX1->data[r][c])));
+                                float qoutx2 = std::max(0.0f,((QX2->data[r][c])));
+                                float qouty1 = std::max(0.0f,((QY1->data[r][c])));
+                                float qouty2 = std::max(0.0f,((QY2->data[r][c])));
+
+                                //total net incoming discharge
+                                float Q = std::max(0.0f, (qoutx1 + qoutx2 + qouty1 + qouty2));// - qoutx1 - qoutx2 - qouty1 - qouty2
+
+                                float QIN = std::max(0.0f,(qx1 + qx2 + qy1 + qy2) + FlowSource->data[r][c]);// - qoutx1 - qoutx2 - qouty1 - qouty2
+
+                                in_total += std::max(0.0f, (qoutx1 + qoutx2 + qouty1 + qouty2));
+                                out_total += std::max(0.0f,(qx1 + qx2 + qy1 + qy2));
+
+                                //solve for height, so that new discharge is incoming discharge
+                                //float sol = std::max(0.0f,(demhmin -DEM->data[r][c] ))+ std::pow( _dx * QIN*  N /(sqrt(S->Drc + 0.001f)),6.0f/5.0f);
+
+                                float sol = QIN / courant;
+                                HS->data[r][c] = sol;
+
+                                float hnew = std::max(std::max(0.0f,demhmin- dem)/hscale,sol);
+
+
+                                HN->data[r][c] = std::max(0.0f,H->Drc  + QIN* dt - Q* dt );//(H->Drc > 1 || hnew > 1)? std::min(H->Drc * 2.0,std::max(H->Drc*1.0,hnew)) : hnew;
+
+                                QTX1->Drc += qoutx1-qx1;
+                                QTX2->Drc += qoutx2-qx2;
+                                QTY1->Drc += qouty1-qy1;
+                                QTY2->Drc += qouty2-qy2;
+                     }
+                 }
+               }
+
+            #pragma omp barrier
+
+        #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        H->data[r][c] = HN->data[r][c];
+
+                        if(do_forced)
+                        {
+                            if(!(HForced->data[r][c] < 0.0f))
+                            {
+                                H->data[r][c] =HForced->data[r][c];
+                            }
+                        }
+                    }
+                }
+            }
+
+
+           /* #pragma omp for collapse(2) reduction(+:hchangetotal,schangetotal)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        hweighttotal += HN->data[r][c];
+                        hchangetotal += HN->data[r][c] * std::fabs(HN->data[r][c] - H->data[r][c])/std::max(0.00000001f,H->data[r][c]);
+                        H->data[r][c] = HN->data[r][c];
+                        if(do_forced)
+                        {
+                            if(!(HForced->data[r][c] < 0.0f))
+                            {
+                                H->data[r][c] =HForced->data[r][c];
+                            }
+                        }
+
+                        //not actually normalized as it should be with sqrt(x2+y2)
+                        float sxor = SXO->data[r][c]/std::max(0.001f,std::sqrt(SXO->data[r][c]* SXO->data[r][c])+ std::fabs(SYO->data[r][c]*SYO->data[r][c]));
+                        float syor = SYO->data[r][c]/std::max(0.001f,std::sqrt(SXO->data[r][c]* SXO->data[r][c])+ std::fabs(SYO->data[r][c]*SYO->data[r][c]));
+
+                        float sxr = SX->data[r][c]/std::max(0.001f,std::sqrt(SX->data[r][c]* SX->data[r][c])+ std::fabs(SY->data[r][c]*SY->data[r][c]));
+                        float syr = SY->data[r][c]/std::max(0.001f,std::sqrt(SY->data[r][c]* SX->data[r][c])+ std::fabs(SY->data[r][c]*SY->data[r][c]));
+
+                        schangetotal +=HN->data[r][c] *(-0.5 * (-1.0 + (sxor*sxr + syor * syr)));
+
+                        SXO->data[r][c] = SX->data[r][c];
+                        SYO->data[r][c] = SY->data[r][c];
+
+                    }
+                }
+            }*/
+
+
+            #pragma omp barrier
+
+        }
+
+        #pragma omp barrier
+
+        #pragma omp for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+
+                    HA->data[r][c] = source->data[r][c];
+
+                    //if we are at the edge of a forced section of the domain, we must compensate the initial flow accumulation source to include the flux required to maintain the forced steady-state height at that position
+                    if(do_forced)
+                    {
+                        float forced = HForced->data[r][c];
+                        float forcedx1 = !OUTORMV(DEM,r,c-1)? HForced->data[r][c-1] : forced;
+                        float forcedx2 = !OUTORMV(DEM,r,c+1)? HForced->data[r][c+1] : forced;
+                        float forcedy1 = !OUTORMV(DEM,r-1,c)? HForced->data[r-1][c] : forced;
+                        float forcedy2 = !OUTORMV(DEM,r+1,c)? HForced->data[r+1][c] : forced;
+
+                        if(!(forced  < 0.0))
+                        {
+                            if((forcedx1 < 0.0)||(forcedx2 < 0.0)||(forcedy1 < 0.0)||(forcedy2 < 0.0))
+                            {
+
+                                float flowwidth = _dx;
+                                float Nhere = 0.1;
+                                float q = std::pow(HForced->data[r][c],5.0/3.0)* std::sqrt(std::fabs(S->Drc + 0.001))  /(0.1 * _dx*_dx);
+
+                                HA->data[r][c] = q;
+                            }
+                        }
+
+                    }
+
+
+                    S->data[r][c] = 0.0;
+                    QTX1->data[r][c] = (QTX1->data[r][c]);
+                    QTX2->data[r][c] = (QTX2->data[r][c]);
+                    QTY1->data[r][c] = (QTY1->data[r][c]);
+                    QTY2->data[r][c] = (QTY2->data[r][c]);
+
+                    QT->data[r][c] = 0.0;
+
+                }
+            }
+        }
+
+
+
+        #pragma omp critical
+        {
+             i = 0;
+        }
+        while( true)
+        {
+            #pragma omp single
+            {
+                i = i+1;
+                ifac = ifac + (float)i;
+                stop2 = false;
+                std::cout << "i = " << i << std::endl;
+            }
+
+            #pragma omp barrier
+
+            bool do_stop = false;
+            #pragma omp critical
+            {
+                i2 = i;
+
+                if(i2>= iter_accu)
+                {
+                    std::cout << "should break " << std::endl;
+                    stop2 = true;
+                    do_stop = true;
+                }
+            }
+
+            #pragma omp barrier
+
+            if(do_stop)
+            {
+                std::cout << "do break " << std::endl;
+                break;
+            }
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    //Get Q Total
+
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+
+                        float qxa1 = (QTX1->data[r][c]);
+                        float qya1 = (QTY1->data[r][c]);
+
+                        float qxa2 = (QTX2->data[r][c]);
+                        float qya2 = (QTY2->data[r][c]);
+
+                        float q_total = std::max(1e-12f,std::max(0.0f,qxa1) +std::max(0.0f,qxa2)+std::max(0.0f,qya1)+std::max(0.0f,qya2));
+
+                        QAX1->data[r][c] = HA->data[r][c] * std::max(0.0f,qxa1)/q_total;
+                        QAX2->data[r][c] = HA->data[r][c] * std::max(0.0f,qxa2)/q_total;
+                        QAY1->data[r][c] = HA->data[r][c] * std::max(0.0f,qya1)/q_total;
+                        QAY2->data[r][c] = HA->data[r][c] * std::max(0.0f,qya2)/q_total;
+
+
+                    }
+                }
+            }
+
+
+            #pragma omp barrier
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        float QTt = 0.0;
+                        if(!OUTORMV(DEM,r,c+1))
+                        {
+                            if(QAX1->data[r][c+1] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAX1->data[r][c+1]);
+                            }
+                        }
+                        if(!OUTORMV(DEM,r,c-1))
+                        {
+                            if(QAX2->data[r][c-1] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAX2->data[r][c-1]);
+                            }
+                        }
+                        if(!OUTORMV(DEM,r+1,c))
+                        {
+                            if(QAY1->data[r+1][c] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAY1->data[r+1][c]);
+                            }
+                        }
+                        if(!OUTORMV(DEM,r-1,c))
+                        {
+                            if(QAY2->data[r-1][c] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAY2->data[r-1][c]);
+                            }
+                        }
+
+                        S->data[r][c] += QTt;
+                        QT->data[r][c] += QTt * (float(i));
+                        QM->data[r][c] = std::max(QTt,QM->data[r][c]);
+                        HA->data[r][c] = QTt;
+                    }
+                }
+            }
+        }
+
+        //final normalized velocity directional field
+
+        #pragma omp for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                //Get Q Total
+
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+
+                        float qxa = (QTX2->data[r][c]-QTX1->data[r][c]);
+                        float qya = (QTY2->data[r][c]-QTY1->data[r][c]);
+
+                        float QT2 = std::fabs(qxa) + std::fabs(qya);
+
+                        if(QT2 > 0.0)
+                        {
+                            //Distribute outflow
+                            QAX->data[r][c] =(qxa/QT2);
+                            QAY->data[r][c] =(qya/QT2);
+                        }else {
+                            QAX->data[r][c] = 0.0;
+                            QAY->data[r][c] = 0.0;
+                        }
+
+
+                }
+            }
+        }
+
+    }
+
+    //delete temporary map
+
+    delete HN;
+    //delete QX1;
+    //delete QX2;
+    //delete QY1;
+    //delete QY2;
+    delete SXO;
+    delete SYO;
+
+    delete SX;
+    delete SY;
+    //delete QTX1;
+    //delete QTX2;
+    //delete QTY1;
+    //delete QTY2;
+
+    return {H,S,QT,QM,HA,QAX,QAY,QTX1,QTX2,QTY1,QTY2,QX1,QX2,QY1,QY2, QTR};
+}
+
+inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource, cTMap * HInitial, cTMap * HForced, cTMap * Terrain_Scale, int iter_max, float courant, float hscale = 1.0,  bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float add_next = 0.0)
 {
 
     if(iter_max < 1)
@@ -2927,6 +3839,568 @@ inline std::vector<cTMap *> AccuFluxDiffusive(cTMap * DEMIn, cTMap * FlowSource,
 
 }
 
+inline std::vector<cTMap *> AccuFluxDiffusiveCP(cTMap * DEMIn, cTMap * FlowSource, cTMap * HInitial, cTMap * HForced, cTMap * scale_pressure, int iter_max, float courant, float hscale = 1.0,  bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float add_next = 0.0)
+{
+
+    if(iter_max < 1)
+    {
+        LISEMS_ERROR("Can not run steady state flow without iterations");
+        throw 1;
+    }
+    if(courant < 1e-12 || courant  > 1.0)
+    {
+        LISEM_ERROR("Courant value must be between 1e-12 and 1");
+        throw 1;
+    }
+    if(hscale < 1e-10)
+    {
+        LISEM_ERROR("Height scale value must be larger then 1e-12");
+        throw 1;
+    }
+
+    cTMap * DEM= DEMIn->GetCopy();
+
+    MaskedRaster<float> raster_data(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *H = new cTMap(std::move(raster_data),DEM->projection(),"");
+
+    //create temporary maps
+
+
+
+    MaskedRaster<float> raster_data2(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *HN = new cTMap(std::move(raster_data2),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data3(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QX1 = new cTMap(std::move(raster_data3),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data4(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QX2 = new cTMap(std::move(raster_data4),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data5(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QY1 = new cTMap(std::move(raster_data5),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data6(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *QY2 = new cTMap(std::move(raster_data6),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data7(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SX = new cTMap(std::move(raster_data7),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data8(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *SY = new cTMap(std::move(raster_data8),DEM->projection(),"");
+
+    MaskedRaster<float> raster_data9(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(), DEM->data.cell_sizeY());
+    cTMap *S = new cTMap(std::move(raster_data9),DEM->projection(),"");
+
+
+
+    bool stop = false;
+    bool stop2 = false;
+
+    double ifac = 0.0;
+
+    //preconditioning
+
+    float dt_req_min = 0.1;
+
+    float totalpix= DEM->data.nr_rows() * DEM->data.nr_cols();
+
+    double hchangetotal = 0.0;
+    double schangetotal = 0.0;
+    double hweighttotal = 0.0;
+
+    int i = 0;
+    int i2 = 0;
+    #pragma omp parallel private(stop,stop2) shared(i,ifac)
+    {
+
+
+        float N = 0.05;
+        double _dx = std::fabs(DEM->cellSizeX());
+        float dt = 1.0;
+
+        #pragma omp for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    float dem = DEM->Drc;
+                    float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                    float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                    float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                    float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                    float Sx1 = (demx1 - (dem))/(_dx);
+                    float Sx2 = ((dem)- (demx2))/(_dx);
+                    float Sy1 = (demy1 - (dem))/(_dx);
+                    float Sy2 = ((dem)- (demy2))/(_dx);
+
+                    float sx = 0.0;
+                    float sy = 0.0;
+                    if(demx1 < demx2)
+                    {
+                        sx = Sx1;
+                    }else
+                    {
+                        sx = Sx2;
+                    }
+
+                    if(demy1 < demy2)
+                    {
+                        sy = Sy1;
+                    }else
+                    {
+                        sy = Sy2;
+                    }
+
+                    S->data[r][c] = (std::fabs(sx) + std::fabs(sy) + 1e-8f);
+
+                    float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                    DEM->data[r][c] = DEM->data[r][c] + pit;
+                }
+
+            }
+        }
+
+
+
+        #pragma omp barrier
+
+
+
+        //if(precondition)
+        {
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+
+                        {
+                            H->data[r][c] = HInitial->data[r][c];
+                        }
+
+                        if(do_forced)
+                        {
+                            if(!(HForced->data[r][c] < 0.0f))
+                            {
+                                H->data[r][c] =HForced->data[r][c];
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        #pragma omp critical
+        {
+            i = 0;
+
+        }
+
+
+        while( true)
+        {
+            #pragma omp single
+            {
+
+                schangetotal = 0.0;
+                hchangetotal = 0.0;
+                hweighttotal = 0.0;
+
+                stop = false;
+                i = i+1;
+            }
+
+            #pragma omp barrier
+
+            bool do_stop = false;
+
+            #pragma omp critical
+            {
+                i2 = i;
+                if(i2>= iter_max)
+                {
+                    stop = true;
+                    do_stop = true;
+                }
+                //dt_req_min = 1e6;
+
+            }
+
+            #pragma omp barrier
+
+            if(do_stop)
+            {
+                break;
+            }
+
+
+            float progress = ((float)(i))/std::max(1.0f,((float)(iter_max)));
+
+            float courant_here = courant * (1.0-progress) + progress * (1.0/8.0)*courant;
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+
+                        float dem = DEM->Drc;
+                        float demh =DEM->data[r][c]+hscale *H->data[r][c];
+                        bool outlet = false;
+                        if(OUTORMV(DEM,r,c-1) || OUTORMV(DEM,r,c+1) || OUTORMV(DEM,r-1,c) || OUTORMV(DEM,r+1,c))
+                        {
+                            outlet = 1.0;
+                        }
+
+                        float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                        float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                        float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                        float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                        float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                        dem = dem + pit;
+                        demh = demh + pit;
+
+                        float hx1 = !OUTORMV(DEM,r,c-1)? hscale*H->data[r][c-1] : 0.0f;
+                        float hx2 = !OUTORMV(DEM,r,c+1)? hscale*H->data[r][c+1] : 0.0f;
+                        float hy1 = !OUTORMV(DEM,r-1,c)? hscale*H->data[r-1][c] : 0.0f;
+                        float hy2 = !OUTORMV(DEM,r+1,c)? hscale*H->data[r+1][c] : 0.0f;
+
+
+                        float demhx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1]+hscale*H->data[r][c-1] : dem;
+                        float demhx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1]+hscale*H->data[r][c+1] : dem;
+                        float demhy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c]+hscale*H->data[r-1][c] : dem;
+                        float demhy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c]+hscale*H->data[r+1][c] : dem;
+
+                        float demhmin = std::min(std::min(std::min(demhx1,demhx2),demhy1),demhy2);
+                        float h = std::max(0.0f,H->data[r][c]);
+
+
+                        float Shx1 = (demhx1 - (demh))/(_dx);
+                        float Shx2 = ((demh)- (demhx2))/(_dx);
+                        float Shy1 = (demhy1 - (demh))/(_dx);
+                        float Shy2 = ((demh)- (demhy2))/(_dx);
+
+                        float Sx1 = (demx1 - (dem))/(_dx);
+                        float Sx2 = ((dem)- (demx2))/(_dx);
+                        float Sy1 = (demy1 - (dem))/(_dx);
+                        float Sy2 = ((dem)- (demy2))/(_dx);
+
+                        if(demhx1 < demhx2)
+                        {
+                            SX->Drc = Shx1;
+                        }else
+                        {
+                            SX->Drc = Shx2;
+                        }
+
+                        if(demhy1 < demhy2)
+                        {
+                            SY->Drc = Shy1;
+                        }else
+                        {
+                            SY->Drc = Shy2;
+                        }
+
+                        float flowwidth = _dx;
+
+                        S->Drc = (std::fabs(SX->Drc) + std::fabs(SY->Drc) + 1e-8);
+
+                        float HL = h;//std::min(h,std::max(0.0,hscale*H->data[r][c] - std::max(0.0,(demhmin -(DEM->data[r][c])))));
+                        //float Hm = std::min(hscale*h,std::max(0.0f,hscale*H->data[r][c] - std::max(0.0f,(demhmin -(DEM->data[r][c])))))/hscale;
+
+                        float q = _dx * flowwidth * HL * std::sqrt(std::fabs(S->Drc + 0.001))*(1.0f/N) *std::pow((HL),2.0f/3.0f)/(_dx*_dx);
+                        //float qm = 1.0 *flowwidth * Hm * std::sqrt(std::fabs(S->Drc + 0.001))*(1.0f/N) *std::pow((Hm),2.0f/3.0f);
+
+                        //float dt_req = courant * h/std::max(1e-6f,q);
+
+                        q = q ;
+
+                        q = courant_here *h;//std::min(progress * q + (1.0f-progress) * (courant * h),courant * h);
+
+                        float qx1 =0.0;
+                        float qx2 =0.0;
+                        float qy1 =0.0;
+                        float qy2 =0.0;
+
+                        //ratio of artificial velocity over actual velocity
+                        //float pressureforce_fac = courant * _dx /();
+
+                        //the actual pressure force factor is there to compensate for what the heights should be when not using artificial velocities
+                        float pressureforce_fac = std::max(0.0001,std::min(1.0,pow(_dx*courant_here,0.6) * pow(h*N/std::sqrt(std::max(0.0001f,S->data[r][c])),3.0f/5.0f)/std::max(0.000001f,h)));
+
+
+                        float hratio_x1 = !OUTORMV(DEM,r,c-1)? scale_pressure->data[r][c-1]  : 1.0f;
+                        float hratio_x2 = !OUTORMV(DEM,r,c+1)? scale_pressure->data[r][c+1]  : 1.0f;
+                        float hratio_y1 = !OUTORMV(DEM,r-1,c)? scale_pressure->data[r-1][c]  : 1.0f;
+                        float hratio_y2 = !OUTORMV(DEM,r+1,c)? scale_pressure->data[r+1][c]  : 1.0f;
+
+
+                        float scale_pressure_x1= 0.5 * (scale_pressure->data[r][c] + hratio_x1);
+                        float scale_pressure_x2= 0.5 * (scale_pressure->data[r][c] + hratio_x2);
+                        float scale_pressure_y1= 0.5 * (scale_pressure->data[r][c] + hratio_y1);
+                        float scale_pressure_y2= 0.5 * (scale_pressure->data[r][c] + hratio_y2);
+
+                        hx1 = hx1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x1);
+                        hx2 = hx2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x2);
+                        hy1 = hy1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y1);
+                        hy2 = hy2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y2);
+
+                        float wx1 = GetVelocity(9.81,h,hx1,scale_pressure_x1 *dem,scale_pressure_x1 *demx1,_dx,N);
+                        float wx2 = GetVelocity(9.81,h,hx2,scale_pressure_x2 *dem,scale_pressure_x2 *demx2,_dx,N);
+                        float wy1 = GetVelocity(9.81,h,hy1,scale_pressure_y1 *dem,scale_pressure_y1 *demy1,_dx,N);
+                        float wy2 = GetVelocity(9.81,h,hy2,scale_pressure_y2 *dem,scale_pressure_y2 *demy2,_dx,N);
+
+                        float pfac_x1 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hx1*hx1)/(std::fabs(h*h -hx1*hx1) + scale_pressure_x1 *std::fabs(dem - demx1))));
+                        float pfac_x2 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hx2*hx2)/(std::fabs(h*h -hx2*hx2) + scale_pressure_x2 *std::fabs(dem - demx2))));
+                        float pfac_y1 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hy1*hy1)/(std::fabs(h*h -hy1*hy1) + scale_pressure_y1 * std::fabs(dem - demy1))));
+                        float pfac_y2 = std::min(1.0f,std::max(0.0f,std::fabs(h*h -hy2*hy2)/(std::fabs(h*h -hy2*hy2) + scale_pressure_y2 * std::fabs(dem - demy2))));
+
+                        wx1 = wx1 * (pressureforce_fac * pfac_x1 + (1.0-pfac_x1)* 1.0);
+                        wx2 = wx2 * (pressureforce_fac * pfac_x2 + (1.0-pfac_x2)* 1.0);
+                        wy1 = wy1 * (pressureforce_fac * pfac_y1 + (1.0-pfac_y1)* 1.0);
+                        wy2 = wy2 * (pressureforce_fac * pfac_y2 + (1.0-pfac_y2)* 1.0);
+
+                        //dt_req_min = std::min(std::max(1.0f/*progress * 1e-5f + (1.0f-progress) * 0.1f*/,dt_req),dt_req_min);
+
+                        //float V = h > 0? std::sqrt(HL) * std::sqrt(std::fabs(S->data[r][c] + 0.001f))*(1.0f/N) *std::pow((HL*_dx)/(2.0f * HL + _dx),2.0f/3.0f) : 0.0f;
+
+                        float ws_total =std::max(1e-6f,((wx1 > 0.0)? std::fabs(wx1): 0.0f) +
+                                                 ((wx2 > 0.0)? std::fabs(wx2): 0.0f) +
+                                                 ((wy1 > 0.0)? std::fabs(wy1): 0.0f) +
+                                                 ((wy2 > 0.0)? std::fabs(wy2): 0.0f));
+
+                        qx1 = (wx1 > 0.0)? std::fabs((wx1)/ws_total) * q : 0.0;
+                        if(demhx1 == demh)
+                        {
+                            qx1 = 0.0;
+                        }
+                        qx2 = (wx2 > 0.0)? std::fabs((wx2)/ws_total) * q : 0.0;
+                        if(demhx2 == demh)
+                        {
+                            qx2 = 0.0;
+                        }
+                        qy1 = (wy1 > 0.0)?  std::fabs((wy1)/ws_total) * q : 0.0;
+                        if(demhy1 == demh)
+                        {
+                            qy1 = 0.0;
+                        }
+                        qy2 = (wy2 > 0.0)? std::fabs((wy2)/ws_total) * q : 0.0;
+                        if(demhy2 == demh)
+                        {
+                            qy2 = 0.0;
+                        }
+                        qx1 = std::isnormal(qx1)?qx1:0.0;
+                        qx2 = std::isnormal(qx2)?qx2:0.0;
+                        qy1 = std::isnormal(qy1)?qy1:0.0;
+                        qy2 = std::isnormal(qy2)?qy2:0.0;
+
+
+                        QX1->Drc = qx1;// < 0.0f? qx :0.0f;
+                        QX2->Drc = qx2;// > 0.0f? qx :0.0f;
+                        QY1->Drc = qy1;// < 0.0f? qy :0.0f;
+                        QY2->Drc = qy2;// > 0.0f? qy :0.0f;
+
+                        /*if(do_stabilize)
+                        {
+                            QX1->Drc = std::max(0.0f,std::min(0.25f *(demh - demhx1),QX1->Drc));// < 0.0f? qx :0.0f;
+                            QX2->Drc = std::max(0.0f,std::min(0.25f *(demh - demhx2),QX2->Drc));// > 0.0f? qx :0.0f;
+                            QY1->Drc = std::max(0.0f,std::min(0.25f *(demh - demhy1),QY1->Drc));// < 0.0f? qy :0.0f;
+                            QY2->Drc = std::max(0.0f,std::min(0.25f *(demh - demhy2),QY2->Drc));// > 0.0f? qy :0.0f;
+                        }*/
+                    }
+                }
+            }
+
+            #pragma omp barrier
+
+            //
+            {
+
+                //limit flow to height equilibra, to oppose oscillating behavior
+                #pragma omp for collapse(2)
+                for(int r = 0; r < DEM->data.nr_rows();r++)
+                {
+                    for(int c = 0; c < DEM->data.nr_cols();c++)
+                    {
+                        if(!pcr::isMV(DEM->data[r][c]))
+                        {
+                                float dem = DEM->Drc;
+
+                                float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                                float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                                float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                                float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                                float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                                dem = dem + pit;
+
+                                if(i + 15 >= iter_max && (!(i == iter_max-1)))
+                                {
+                                    float h = hscale * H->data[r][c];
+
+                                    float hratio_x1 = !OUTORMV(DEM,r,c-1)? scale_pressure->data[r][c-1]  : 1.0f;
+                                    float hratio_x2 = !OUTORMV(DEM,r,c+1)? scale_pressure->data[r][c+1]  : 1.0f;
+                                    float hratio_y1 = !OUTORMV(DEM,r-1,c)? scale_pressure->data[r-1][c]  : 1.0f;
+                                    float hratio_y2 = !OUTORMV(DEM,r+1,c)? scale_pressure->data[r+1][c]  : 1.0f;
+
+                                    float hx1 = !OUTORMV(DEM,r,c-1)? hscale*H->data[r][c-1] : 0.0f;
+                                    float hx2 = !OUTORMV(DEM,r,c+1)? hscale*H->data[r][c+1] : 0.0f;
+                                    float hy1 = !OUTORMV(DEM,r-1,c)? hscale*H->data[r-1][c] : 0.0f;
+                                    float hy2 = !OUTORMV(DEM,r+1,c)? hscale*H->data[r+1][c] : 0.0f;
+
+
+                                    float scale_pressure_x1= 0.5 * (scale_pressure->data[r][c] + hratio_x1);
+                                    float scale_pressure_x2= 0.5 * (scale_pressure->data[r][c] + hratio_x2);
+                                    float scale_pressure_y1= 0.5 * (scale_pressure->data[r][c] + hratio_y1);
+                                    float scale_pressure_y2= 0.5 * (scale_pressure->data[r][c] + hratio_y2);
+
+                                    hx1 = hx1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x1);
+                                    hx2 = hx2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_x2);
+                                    hy1 = hy1 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y1);
+                                    hy2 = hy2 *scale_pressure->data[r][c]/std::max(0.001f,hratio_y2);
+
+
+                                    float demh = dem + h;
+                                    float demx1 = (!OUTORMV(DEM,r,c-1))? DEM->data[r][c-1]: dem;
+                                    float demx2 = (!OUTORMV(DEM,r,c+1))? DEM->data[r][c+1] : dem;
+                                    float demy1 = (!OUTORMV(DEM,r-1,c))? DEM->data[r-1][c] : dem;
+                                    float demy2 = (!OUTORMV(DEM,r+1,c))? DEM->data[r+1][c] : dem;
+
+                                    float qx2_x2 = std::max(0.0f,((!OUTORMV(DEM,r,c+1))? ((QX2->data[r][c+1])) : 0.0f));
+                                    float qx1_x1 = std::max(0.0f,((!OUTORMV(DEM,r,c-1))? ((QX1->data[r][c-1])) : 0.0f));
+                                    float qy2_y2 = std::max(0.0f,((!OUTORMV(DEM,r+1,c))? ((QY2->data[r+1][c])) : 0.0f));
+                                    float qy1_y1 = std::max(0.0f,((!OUTORMV(DEM,r-1,c))? ((QY1->data[r-1][c])) : 0.0f));
+
+                                    QX1->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_x1 * dem + h - scale_pressure_x1 *demx1 -hx1) + add_next*std::fabs(qx1_x1),QX1->Drc));// < 0.0f? qx :0.0f;
+                                    QX2->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_x2 * dem + h - scale_pressure_x2 *demx2 -hx2) + add_next*std::fabs(qx2_x2),QX2->Drc));// > 0.0f? qx :0.0f;
+                                    QY1->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_y1 * dem + h - scale_pressure_y1 *demy1 -hy1) + add_next*std::fabs(qy1_y1),QY1->Drc));// < 0.0f? qy :0.0f;
+                                    QY2->Drc = std::max(0.0f,std::min(0.25f *(scale_pressure_y2 * dem + h - scale_pressure_y2 *demy2 -hy2) + add_next*std::fabs(qy2_y2),QY2->Drc));// > 0.0f? qy :0.0f;
+
+                            }
+
+     }
+
+                    }
+                }
+
+
+
+            }
+
+            float in_total = 0.0;
+            float out_total = 0.0;
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        if((!(i == iter_max-1)))
+                        {
+                            float dem = DEM->Drc;
+
+                                float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                                float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                                float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                                float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                                float pit = std::min(std::max(0.0f,demx1 - dem),std::min(std::max(0.0f,demx2 - dem),std::min(std::max(0.0f,demy1 - dem),std::max(0.0f,demy2 - dem))));
+
+                                dem = dem + pit;
+
+                                float demh = dem + hscale*H->data[r][c];
+                                float demhx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1]+hscale*H->data[r][c-1] : dem;
+                                float demhx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1]+hscale*H->data[r][c+1] : dem;
+                                float demhy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c]+hscale*H->data[r-1][c] : dem;
+                                float demhy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c]+hscale*H->data[r+1][c] : dem;
+
+                                float demhx11 = !OUTORMV(DEM,r-1,c-1)? DEM->data[r-1][c-1]+hscale*H->data[r-1][c-1] : dem;
+                                float demhx22 = !OUTORMV(DEM,r+1,c+1)? DEM->data[r+1][c+1]+hscale*H->data[r+1][c+1] : dem;
+                                float demhy11 = !OUTORMV(DEM,r-1,c-1)? DEM->data[r-1][c+1]+hscale*H->data[r-1][c+1] : dem;
+                                float demhy22 = !OUTORMV(DEM,r+1,c+1)? DEM->data[r+1][c-1]+hscale*H->data[r+1][c-1] : dem;
+
+                                float demhmin = std::min(std::min(std::min(demhx1,demhx2),demhy1),demhy2);
+                                demhmin =std::min(demhmin, std::min(std::min(std::min(demhx11,demhx22),demhy11),demhy22));
+
+                                float qx1 = std::max(0.0f,((!OUTORMV(DEM,r,c-1))? ((QX2->data[r][c-1])) : 0.0f));
+                                float qx2 = std::max(0.0f,((!OUTORMV(DEM,r,c+1))? ((QX1->data[r][c+1])) : 0.0f));
+                                float qy1 = std::max(0.0f,((!OUTORMV(DEM,r-1,c))? ((QY2->data[r-1][c])) : 0.0f));
+                                float qy2 = std::max(0.0f,((!OUTORMV(DEM,r+1,c))? ((QY1->data[r+1][c])) : 0.0f));
+
+                                float qoutx1 = std::max(0.0f,((QX1->data[r][c])));
+                                float qoutx2 = std::max(0.0f,((QX2->data[r][c])));
+                                float qouty1 = std::max(0.0f,((QY1->data[r][c])));
+                                float qouty2 = std::max(0.0f,((QY2->data[r][c])));
+
+                                //total net incoming discharge
+                                float Q = std::max(0.0f, (qoutx1 + qoutx2 + qouty1 + qouty2));// - qoutx1 - qoutx2 - qouty1 - qouty2
+
+                                float QIN = std::max(0.0f,(qx1 + qx2 + qy1 + qy2) + FlowSource->data[r][c]);// - qoutx1 - qoutx2 - qouty1 - qouty2
+
+                                in_total += std::max(0.0f, (qoutx1 + qoutx2 + qouty1 + qouty2));
+                                out_total += std::max(0.0f,(qx1 + qx2 + qy1 + qy2));
+
+                                //solve for height, so that new discharge is incoming discharge
+                                //float sol = std::max(0.0f,(demhmin -DEM->data[r][c] ))+ std::pow( _dx * QIN*  N /(sqrt(S->Drc + 0.001f)),6.0f/5.0f);
+
+                                float sol = QIN / courant_here;
+
+                                float hnew = std::max(std::max(0.0f,demhmin- dem)/hscale,sol);
+
+
+                                HN->data[r][c] = std::max(0.0f,H->Drc  + QIN* dt - Q* dt );//(H->Drc > 1 || hnew > 1)? std::min(H->Drc * 2.0,std::max(H->Drc*1.0,hnew)) : hnew;
+                        }
+                     }
+                 }
+               }
+
+            #pragma omp barrier
+
+        #pragma omp for collapse(2)
+            for(int r = 0; r < DEM->data.nr_rows();r++)
+            {
+                for(int c = 0; c < DEM->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        H->data[r][c] = HN->data[r][c];
+
+                        if(do_forced)
+                        {
+                            if(!(HForced->data[r][c] < 0.0f))
+                            {
+                                H->data[r][c] =HForced->data[r][c];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    delete SX;
+    delete SY;
+
+    return {H,QX1,QX2,QY1,QY2};
+
+}
+
 //mass-preserving backtracing semi-langrangian advection flow accumulation over velocity-field
 inline std::vector<cTMap *> AS_AccumulateFlowAcc(cTMap * DEM, cTMap * UX, cTMap * UY, cTMap * source, int iter_max = 2500)
 {
@@ -3195,6 +4669,196 @@ inline std::vector<cTMap *> AS_AccumulateFlowAcc(cTMap * DEM, cTMap * UX, cTMap 
 
     return {ST,WT,S};
 
+}
+
+inline cTMap * AS_Accumulate2DTReach(cTMap * QTX1, cTMap * QTX2, cTMap * QTY1, cTMap * QTY2, cTMap * H, cTMap * Reach, int iter_max)
+{
+    if(!(H->data.nr_rows() ==  QTX1->data.nr_rows() && H->data.nr_cols() ==  QTX1->data.nr_cols()))
+    {
+        LISEMS_ERROR("Numbers of rows and column do not match for Accumulate2D");
+        throw -1;
+    }
+    if(!(H->data.nr_rows() ==  QTX2->data.nr_rows() && H->data.nr_cols() ==  QTX2->data.nr_cols()))
+    {
+        LISEMS_ERROR("Numbers of rows and column do not match for Accumulate2D");
+        throw -1;
+    }
+    if(!(H->data.nr_rows() ==  QTY1->data.nr_rows() && H->data.nr_cols() ==  QTY1->data.nr_cols()))
+    {
+        LISEMS_ERROR("Numbers of rows and column do not match for Accumulate2D");
+        throw -1;
+    }
+    if(!(H->data.nr_rows() ==  QTY2->data.nr_rows() && H->data.nr_cols() ==  QTY2->data.nr_cols()))
+    {
+        LISEMS_ERROR("Numbers of rows and column do not match for Accumulate2D");
+        throw -1;
+    }
+    if(iter_max < 1)
+    {
+        LISEMS_ERROR("Can not run property spread with fewer than 1 iterations");
+        throw -1;
+    }
+
+    cTMap * HA = H->GetCopy();
+    cTMap * S = H->GetCopy0();
+    cTMap * SI = H->GetCopy0();
+cTMap * QAX1 = H->GetCopy0();
+cTMap * QAX2 = H->GetCopy0();
+cTMap * QAY1 = H->GetCopy0();
+cTMap * QAY2 = H->GetCopy0();
+
+    //initialize the map with friction values
+
+    bool stop = false;
+
+    int i = 0;
+    int i2 = 0;
+
+    #pragma omp parallel private(stop) shared(i)
+    {
+        double _dx = std::fabs(H->cellSizeX());
+
+
+
+
+        #pragma omp critical
+        {
+            i = 0;
+
+        }
+
+
+        while( true)
+        {
+            #pragma omp single
+            {
+
+                stop = false;
+                i = i+1;
+                std::cout << "I is " << i << std::endl;
+            }
+
+            #pragma omp barrier
+
+            bool do_stop = false;
+
+            #pragma omp critical
+            {
+                i2 = i;
+                if(i2>= iter_max)
+                {
+                    stop = true;
+                    do_stop = true;
+                }
+            }
+
+            #pragma omp barrier
+
+            if(do_stop)
+            {
+                break;
+            }
+
+
+            float progress = ((float)(i))/std::max(1.0f,((float)(iter_max)));
+
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < H->data.nr_rows();r++)
+            {
+                for(int c = 0; c < H->data.nr_cols();c++)
+                {
+                    //Get Q Total
+
+                    if(!pcr::isMV(H->data[r][c]))
+                    {
+
+                        float qxa1 = (QTX1->data[r][c]);
+                        float qya1 = (QTY1->data[r][c]);
+
+                        float qxa2 = (QTX2->data[r][c]);
+                        float qya2 = (QTY2->data[r][c]);
+
+                        float q_total = std::max(1e-12f,std::max(0.0f,qxa1) +std::max(0.0f,qxa2)+std::max(0.0f,qya1)+std::max(0.0f,qya2));
+
+                        QAX1->data[r][c] = HA->data[r][c] * std::max(0.0f,qxa1)/q_total;
+                        QAX2->data[r][c] = HA->data[r][c] * std::max(0.0f,qxa2)/q_total;
+                        QAY1->data[r][c] = HA->data[r][c] * std::max(0.0f,qya1)/q_total;
+                        QAY2->data[r][c] = HA->data[r][c] * std::max(0.0f,qya2)/q_total;
+
+
+                    }
+                }
+            }
+
+
+            #pragma omp barrier
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < H->data.nr_rows();r++)
+            {
+                for(int c = 0; c < H->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(H->data[r][c]))
+                    {
+                        float QTt = 0.0;
+                        if(!OUTORMV(H,r,c+1))
+                        {
+                            if(QAX1->data[r][c+1] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAX1->data[r][c+1]);
+                            }
+                        }
+                        if(!OUTORMV(H,r,c-1))
+                        {
+                            if(QAX2->data[r][c-1] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAX2->data[r][c-1]);
+                            }
+                        }
+                        if(!OUTORMV(H,r+1,c))
+                        {
+                            if(QAY1->data[r+1][c] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAY1->data[r+1][c]);
+                            }
+                        }
+                        if(!OUTORMV(H,r-1,c))
+                        {
+                            if(QAY2->data[r-1][c] > 0.0f)
+                            {
+                                QTt += std::max(0.0f,QAY2->data[r-1][c]);
+                            }
+                        }
+
+                        if(S->data[r][c] < Reach->data[r][c] && ((S->data[r][c] + QTt) >= Reach->data[r][c]))
+                        {
+                            SI->data[r][c] += i;
+                        }
+                        S->data[r][c] += QTt;
+                        HA->data[r][c] = QTt;
+                    }
+                }
+            }
+
+
+            #pragma omp barrier
+
+        }
+
+        #pragma omp barrier
+
+    }
+
+
+
+    delete QAX1;
+    delete QAX2;
+    delete QAY1;
+    delete QAY2;
+    delete HA;
+    delete S;
+    return SI;
 }
 
 inline std::vector<cTMap *> AS_Accumulate2DT(cTMap * QTX1, cTMap * QTX2, cTMap * QTY1, cTMap * QTY2, cTMap * H, int iter_max)
@@ -4198,8 +5862,150 @@ inline float AS_GetSSRainfallMaxVol(std::vector<float> time, std::vector<float> 
     return 0.5 * (rain_current + rain_previous);
 }
 
+inline cTMap* AS_FloodFill(cTMap * DEM, cTMap * HBoundary, int iter_max, bool subtract_slope)
+{
+    cTMap * H = HBoundary->GetCopy();
+    cTMap * HN = HBoundary->GetCopy();
 
-inline std::vector<cTMap *> AS_FloodFill(cTMap * DEM, cTMap * HBoundary, cTMap * Manning, int iter_max, bool subtract_slope)
+    float _dx = std::fabs(H->cellSizeX());
+
+    //initialize the map with friction values
+
+    bool stop = false;
+
+    int i = 0;
+    int i2 = 0;
+
+    #pragma omp parallel private(stop) shared(i)
+    {
+
+        #pragma omp critical
+        {
+            i = 0;
+
+        }
+
+
+        while( true)
+        {
+            #pragma omp single
+            {
+
+                stop = false;
+                i = i+1;
+            }
+
+            #pragma omp barrier
+
+            bool do_stop = false;
+
+            #pragma omp critical
+            {
+                i2 = i;
+                if(i2>= iter_max)
+                {
+                    stop = true;
+                    do_stop = true;
+                }
+            }
+
+            #pragma omp barrier
+
+            if(do_stop)
+            {
+                break;
+            }
+
+
+            float progress = ((float)(i))/std::max(1.0f,((float)(iter_max)));
+
+            #pragma omp for collapse(2)
+            for(int c = 0; c < H->data.nr_cols();c++)
+            {
+                for(int r = 0; r < H->data.nr_rows();r++)
+                {
+                    if(!pcr::isMV(H->data[r][c]))
+                    {
+
+                        //get the new height we would get from a neighbor, check if its bigger than current height, replace if so
+
+                        float hnew_x1 = H->data[r][c];
+                        float hnew_x2 = H->data[r][c];
+                        float hnew_y1 = H->data[r][c];
+                        float hnew_y2 = H->data[r][c];
+
+                        if(!subtract_slope)
+                        {
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_x1 = std::max(0.0f,(H->data[r][c-1] + DEM->data[r][c-1]) -  DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_x2 = std::max(0.0f,(H->data[r][c+1] + DEM->data[r][c+1]) -  DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_y1 = std::max(0.0f,(H->data[r-1][c] + DEM->data[r-1][c]) -  DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_y2 = std::max(0.0f,(H->data[r+1][c] + DEM->data[r+1][c]) -  DEM->data[r][c]);
+                            }
+                        }else
+                        {
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_x1 = std::max(0.0f,(H->data[r][c-1] + DEM->data[r][c-1]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r][c-1] - DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_x2 = std::max(0.0f,(H->data[r][c+1] + DEM->data[r][c+1]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r][c+1] - DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_y1 = std::max(0.0f,(H->data[r-1][c] + DEM->data[r-1][c]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r-1][c] - DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_y2 = std::max(0.0f,(H->data[r+1][c] + DEM->data[r+1][c]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r+1][c] - DEM->data[r][c]);
+                            }
+                        }
+
+                        float hnew = std::max(hnew_x1,std::max(hnew_x2,std::max(hnew_y1,hnew_y2)));
+                        HN->data[r][c] = std::max(H->data[r][c],hnew);
+                    }
+                }
+            }
+
+
+            #pragma omp barrier
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < H->data.nr_rows();r++)
+            {
+                for(int c = 0; c < H->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(H->data[r][c]))
+                    {
+                        H->data[r][c] = HN->data[r][c];
+                    }
+                }
+            }
+        }
+
+        #pragma omp barrier
+
+    }
+
+    delete HN;
+
+    return H;
+
+
+}
+
+/*inline std::vector<cTMap *> AS_FloodFill(cTMap * DEM, cTMap * HBoundary, cTMap * Manning, int iter_max, bool subtract_slope)
 {
     cTMap * H = HBoundary->GetCopy();
     cTMap * HN = HBoundary->GetCopy();
@@ -4375,205 +6181,7 @@ inline std::vector<cTMap *> AS_FloodFill(cTMap * DEM, cTMap * HBoundary, cTMap *
     delete TravelN;
 
     return {H,Travel};
-}
-
-#include "rastercommon.h"
-// Note convergence restrictions: abs(x) < 1 and c not a negative integer or zero
-#include "gsl/gsl_errno.h"
-#include "gsl/gsl_sf_hyperg.h"
-inline static double hypergeometric2( double a, double b, double c, double x )
-{
-
-
-    //does not converge well
-    /*if(std::fabs(x) >= 1.0001f || c < 1.0e-12)
-   {
-        return 1.0;
-   }
-   const double TOLERANCE = 1.0e-10;
-   double term = a * b * x / c;
-   double value = 1.0 + term;
-   int n = 1;
-
-   while ( abs( term ) > TOLERANCE )
-   {
-      a++, b++, c++, n++;
-      term *= a * b * x / c / n;
-      value += term;
-      if(n > 50)
-      {
-          break;
-      }
-   }
-
-   return value;*/
-
-    gsl_set_error_handler_off();
-
-
-    if(std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(x))
-    {
-        double ret = gsl_sf_hyperg_2F1(a,b,c,x);
-        if(std::isfinite(ret))
-        {
-            return ret;
-        }else
-        {
-            if(n_warnhypergeom < 5)
-            {
-                LISEMS_ERROR("Could not run hyper-geometric function with values " + QString::number(a) + " " + QString::number(b)+ " " + QString::number(c) + " " + QString::number(x));
-
-                 n_warnhypergeom += 1;
-                if(n_warnhypergeom == 5)
-                {
-                    LISEMS_ERROR("Stopping ouput for this error");
-
-                }
-            }
-            return 1.0;
-        }
-    }else
-    {
-        if(n_warnhypergeom < 5)
-        {
-            LISEMS_ERROR("Could not run hyper-geometric function with infinite values " + QString::number(a) + " " + QString::number(b)+ " " + QString::number(c) + " " + QString::number(x));
-
-            n_warnhypergeom += 1;
-            if(n_warnhypergeom == 5)
-            {
-                LISEMS_ERROR("Stopping ouput for this error");
-
-            }
-        }
-        return 1.0;
-    }
-
-}
-
-#include "gsl/gsl_sf_gamma.h"
-
-
-inline static cTMap * SteadyStateCorrection(cTMap * b, cTMap * Trel)
-{
-
-    if(!(b->nrRows() == Trel->nrRows() && b->nrCols() == Trel->nrCols()))
-    {
-        LISEMS_ERROR("Steay state correction called with maps of different numbers of rows and columns");
-        throw 1;
-    }
-
-    cTMap * ret =b->GetCopy();
-
-    for(int r = 0; r < ret->nrRows(); r++)
-    {
-        for(int c = 0; c < ret->nrCols();c++)
-        {
-            if(!pcr::isMV(b->data[r][c]) && !pcr::isMV(Trel->data[r][c]))
-            {
-                if(!(b->data[r][c] > 0.0 && Trel->data[r][c] >= 0.0 && Trel->data[r][c] <= 1.0))
-                {
-
-                    pcr::setMV(ret->data[r][c]);
-                    continue;
-                }
-                double There = Trel->data[r][c];
-                double bhere = b->data[r][c];
-
-
-                double log2 =0.69314718055994530943;
-                double bsolve =  log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere));
-                double hg2 = hypergeometric2(1.0/(1.0+bhere),log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)),1.0+1.0/(1.0+bhere),std::pow(There,(1.0+bhere)));
-                double p1 =(1.0/log2)*(log2 - std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)));
-
-                double final = p1 *
-                        (
-                            ((bhere+1) * log2 * std::pow(There,bhere+1) * hg2 / std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)))
-                                    - ((log2 * std::pow(1.0 - std::pow(There,bhere+1.0),1.0 - bsolve)))/(log2 - std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)))
-                         - (((bhere + 1) * log2 * std::pow(There,bhere) * gsl_sf_gamma(1.0 + 1.0/(bhere+1.0)) * gsl_sf_gamma(1 - log2/(std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)))))/(std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)) * gsl_sf_gamma(-log2/(std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere))) + 1.0/(bhere  +1.0) + 1.0)))
-                         + (log2/(log2 - std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere))))
-
-                            );
-
-
-                //hypergeometric is unstable due to singularities at high values of b, and x-value of 1
-
-                /*
-                //solve for median balance with distribution
-
-
-                    double dev2 = std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere));
-
-                double hg1 = hypergeometric(1.0/(1.0+bhere),log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)),1.0+1.0/(1.0+bhere),0.9999);
-                    double hg2 = hypergeometric(1.0/(1.0+bhere),log2/std::log(1.0 - std::pow(1.0 - std::pow(2.0,-(1.0/2.0)/bhere),1.0 + bhere)),1.0+1.0/(1.0+bhere),std::pow(There,(1.0+bhere)));
-
-                    //total probabilistic normalized integral of discharges?
-                    double p1 = (((std::pow(1.0,1.0-bsolve)*log2)/dev1)
-                                             - ((std::pow((1.0 - std::pow(There,1+bhere)),1.0-bsolve)*log2)/dev1));
-
-                    double p2 = (((std::pow(1.0,1.0-bsolve)*log2)/dev1)) ;
-
-
-                    double final = (p1 - ((1.0+bhere)*std::pow(There,bhere) * hg1 * log2)/dev2 + ((1.0+bhere)*std::pow(There,bhere) * There * hg2 * log2)/dev2)/p2;
-
-                    std::cout << r << " " << c << " " << bsolve << " " << dev1 << " " << dev2 << " " << p1 << " " << p2 << " "  << hg1 << " " << hg2 << " " <<  bhere << " " << There << " " << final << std::endl;
-                    */
-
-
-
-
-                if(std::isfinite(final))
-                {
-                    ret->data[r][c] = std::min(1.0,std::max(0.0,final));
-                }else
-                {
-                    //okey, so if we dont get the convergence with the gamma functions and hypergeometric 2F1 functions, this is generally because we are on the very far right of the distribution.
-                    //simply set the value to 1.0 seems to work well enough
-                    ret->data[r][c] = 1.0;
-                }
-
-
-            }else
-            {
-                pcr::setMV(ret->data[r][c]);
-            }
-        }
-    }
-
-    return ret;
-
-
-    //solved using Mathematica
-    //represents the fractional loss of discharge with power law paramter bhere and relative event duration There
-    //
-    /*(((((1 - 0^(1 + bhere))^(
-               1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])
-                Log[2])/(
-              Log[2] -
-               Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) - ((1 - There^(
-                 1 + bhere))^(
-               1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])
-                Log[2])/(
-              Log[2] -
-               Log[1 - (1 - 2^(-(1/2)/bhere))^(
-                 1 + bhere)])) + ((-(((1 + bhere) There^
-                 bhere 1 Hypergeometric2F1[1/(1 + bhere), Log[2]/
-                  Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)],
-                  1 + 1/(1 + bhere), 1^(1 + bhere)] Log[2])/
-                Log[1 - (1 - 2^(-(1/2)/bhere))^(
-                  1 + bhere)])) - (-(((1 + bhere) There^
-                 bhere There Hypergeometric2F1[1/(1 + bhere), Log[2]/
-                  Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)],
-                  1 + 1/(1 + bhere), There^(1 + bhere)] Log[2])/
-                Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]))))/(((1 - 0^(
-               1 + bhere))^(
-             1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) Log[2])/(
-            Log[2] -
-             Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) - ((1 - 1^(
-               1 + bhere))^(
-             1 - Log[2]/Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)]) Log[2])/(
-            Log[2] - Log[1 - (1 - 2^(-(1/2)/bhere))^(1 + bhere)])))*/
-
-}
+}*/
 
 #include <math.h>
 
@@ -4851,7 +6459,7 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
                     {
                         initial_guess_size = 1.0;
                     }
-                    float initial_guess_rain = (rain->data[r][c] *(1.0/3600000.0)/0.00001);
+                    float initial_guess_rain = 0.35 *(rain->data[r][c] *(1.0/3600000.0)/0.00001);
 
                     HInitial->data[r][c] = initial_guess_size * initial_guess_rain*scale_initial * inv_normz * inv_norms;
                     Rain->data[r][c] = rain->data[r][c] * 1.0/3600000.0;
@@ -4863,10 +6471,161 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
 
     std::cout << "do flow " << std::endl;
     //run non-limited accuflux-2d
-    std::vector<cTMap * > flow1 = AccuFluxDiffusive(DEM,Rain,HInitial,Zero,iter,0.15,1.0,false,false,false,0.0);
+    std::vector<cTMap * > flow1 = AccuFluxDiffusive(DEM,Rain,HInitial,Zero,One,iter,0.15,1.0,false,false,false,0.0);
 
     //std::cout << "do flow 2 "<< std::endl;
 
+    {
+        std::vector<cTMap *> att_aft =AS_Accumulate2DT(flow1[1],flow1[2],flow1[3],flow1[4],Rain,iter);
+        cTMap * at_af = att_aft[1]; //will be arrival time later
+        cTMap * q_af = att_aft[0]; //will be accuflux
+
+        #pragma omp for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    double at = at_af->data[r][c];
+                    B->data[r][c] = - at /(at-1.0);
+
+                    float dem = DEM->Drc;
+                    float h = flow1[0]->Drc;
+                    float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                    float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                    float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                    float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+                    float hx1 = !OUTORMV(DEM,r,c-1)? flow1[0]->data[r][c-1] : h;
+                    float hx2 = !OUTORMV(DEM,r,c+1)? flow1[0]->data[r][c+1] : h;
+                    float hy1 = !OUTORMV(DEM,r-1,c)? flow1[0]->data[r-1][c] : h;
+                    float hy2 = !OUTORMV(DEM,r+1,c)? flow1[0]->data[r+1][c] : h;
+
+                    demx1 = demx1 + hx1;
+                    demx2 = demx2 + hx2;
+                    demy1 = demy1 + hy1;
+                    demy2 = demy2 + hy2;
+
+
+                    float Sx1 = (demx1 - (dem+h))/(_dx);
+                    float Sx2 = ((dem+h)- (demx2))/(_dx);
+                    float Sy1 = (demy1 - (dem+h))/(_dx);
+                    float Sy2 = ((dem+h)- (demy2))/(_dx);
+
+
+                    float sx = 0.0;
+                    float sy = 0.0;
+                    if(demx1 < demx2)
+                    {
+                        sx = Sx1;
+                    }else
+                    {
+                        sx = Sx2;
+                    }
+
+                    if(demy1 < demy2)
+                    {
+                        sy = Sy1;
+                    }else
+                    {
+                        sy = Sy2;
+                    }
+
+
+                    float slope = (std::fabs(sx) + std::fabs(sy) + 1e-8f);
+
+                    Vel->data[r][c] = std::pow(h,3.0f/2.0f)*std::sqrt(slope)/N->data[r][c];
+
+                }
+            }
+        }
+        double tot1 = 0.0;
+        double tot2 = 0.0;
+
+        #pragma omp parallel for collapse(2) reduction(+:tot1,tot2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    tot1 += cellsize/std::max(0.1f,Vel->data[r][c]);
+                    tot2 += 1;
+                }
+            }
+        }
+
+        double corr_av = tot1/std::max(1e-6,tot2);
+        double duration_norm = std::min(1.0,duration*3600.0/(iter * corr_av));
+
+        std::cout << "normalized duration " << duration_norm << " " << corr_av << std::endl;
+
+        cTMap * DN = DEM->GetCopy();
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    DN->data[r][c] = duration_norm;
+                }
+            }
+        }
+
+        std::cout << "get steady-state correction " << std::endl;
+        cTMap * SS = SteadyStateCorrection2(B,DN);
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    if(std::isnormal(SS->data[r][c]))
+                    {
+                        SS->data[r][c] = 1.0/std::max(0.001f,SS->data[r][c]);
+                    }else
+                    {
+                        SS->data[r][c] = 1.0;
+                    }
+                }
+            }
+        }
+
+        std::vector<cTMap * > flow2 = AccuFluxDiffusiveCP(DEM,Rain,flow1[0],Zero,SS,100,0.1,1.0,false,false,false,0.0);
+
+        #pragma omp parallel for collapse(2)
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                   flow2[0]->data[r][c] = flow2[0]->data[r][c]/std::max(0.001f,SS->data[r][c]);
+                }
+            }
+        }
+
+
+        delete at_af; //will be arrival time later
+        delete q_af; //will be accuflux
+
+        delete SS;
+        delete DN;
+        delete flow1[0];
+        delete flow1[1];
+        delete flow1[2];
+        delete flow1[3];
+        delete flow1[4];
+        flow1[0] = flow2[0];
+        flow1[1] = flow2[1];
+        flow1[2] = flow2[2];
+        flow1[3] = flow2[3];
+        flow1[4] = flow2[4];
+    }
     //std::vector<cTMap * > flow2 = AccuFluxDiffusive(DEM,Rain,flow1[0],Zero,200,0.05,1.0,false,false,true,0.0);
 
     std::cout << "prepare accumulation " << std::endl;
@@ -4933,7 +6692,7 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
 
     std::cout << "do accumulate " <<std::endl;
 
-   std::vector<cTMap *> att_aft =AS_Accumulate2DT(flow1[1],flow1[2],flow1[3],flow1[4],Rain,iter);
+    std::vector<cTMap *> att_aft =AS_Accumulate2DT(flow1[1],flow1[2],flow1[3],flow1[4],Rain,iter);
     cTMap * at_af = att_aft[1]; //will be arrival time later
     cTMap * q_af = att_aft[0]; //will be accuflux
     cTMap * hn_af = AS_Accumulate2D(flow1[1],flow1[2],flow1[3],flow1[4],HmN,iter); //will be n_af later
@@ -5084,7 +6843,7 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
             if(!pcr::isMV(DEM->data[r][c]))
             {
                 float dem = DEM->Drc;
-                float h = flow1[0]->Drc;
+                float h = H2->Drc;
                 float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
                 float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
                 float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
@@ -5150,8 +6909,8 @@ inline std::vector<cTMap * > AS_FastFlood(cTMap * DEMin, cTMap * N, cTMap * rain
     delete h_af;
 
     return{H2       ,Vel       ,SS         ,B,     q_af
-         ,at_af        , spread, flow1[0],  H3, HInitial, HmN, flow1[1],  flow1[2]
-         ,flow1[3]  ,flow1[4]        };
+         ,at_af        , spread, flow1[0],  H3, HInitial,
+          HmN, flow1[1],  flow1[2]  ,flow1[3]  ,flow1[4]        };
 }
 
 //returns height, vel, discharge, accuflux, arrival time, flood effort, QX1, QX2, QY1, QY2

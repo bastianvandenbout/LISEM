@@ -680,6 +680,7 @@ public:
                      m_BrowseTree->setCurrentIndex(index);
                      SetRootFolder(S);
                      m_Path_Work = S;
+                     SetSiteFileLoad(m_Path_Work);
 
                      m_DirLabel->setText(S);
                      m_FileEditor->SetHomeDir(S);
@@ -907,6 +908,8 @@ public slots:
     {
         m_Path_Work =model->filePath(m_BrowseTree->currentIndex());
         m_DirLabel->setText(m_Path_Work);
+
+        SetSiteFileLoad(m_Path_Work);
 
         ExportOpenLoc();
 

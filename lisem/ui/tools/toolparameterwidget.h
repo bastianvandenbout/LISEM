@@ -858,7 +858,7 @@ public:
     bool m_IsConstant = false;
     bool m_IsLayer = false;
 
-    QString dir = "";
+    QString dir = GetFIODir(LISEM_DIR_FIO_GENERAL);
 
     QLineEdit * m_LineEdit;
 

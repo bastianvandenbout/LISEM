@@ -218,7 +218,7 @@ public:
         QString openDir;
         if(startdir.length() == 0)
         {
-           openDir = GetSite();
+           openDir = GetFIODir(LISEM_DIR_FIO_GENERAL);
 
         }
 
@@ -228,6 +228,10 @@ public:
                                             QString("*") + ".script" + QString(";*.*"));
 
 
+        if(!path.isEmpty())
+        {
+            SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+        }
         QFileInfo fileInfo(path);
         QString filename(fileInfo.fileName());
         QString filedir(fileInfo.dir().path());
@@ -278,8 +282,8 @@ public:
             QString selectedFilter;
             fileName = QFileDialog::getSaveFileName(this,
                                                             QString("Give a new script file name"),
-                                                            QString("sph"),
-                                                            QString("SPH Script Files (*") + ".script" + QString(");;All Files (*)"),
+                                                            GetFIODir(LISEM_DIR_FIO_CODE),
+                                                            QString("LISEM Script Files (*") + ".script" + QString(");;All Files (*)"),
                                                             &selectedFilter);
 
 
@@ -290,6 +294,7 @@ public:
                 return;
             }else
             {
+                SetFIODir(LISEM_DIR_FIO_CODE,QFileInfo(m_File).dir().absolutePath());
                 m_File = fileName;
                 this->m_FileName = QFileInfo(m_File).fileName();
             }

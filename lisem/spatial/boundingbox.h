@@ -233,6 +233,14 @@ public:
 
     }
 
+    inline BoundingBox(LSMVector3 p)
+    {
+        m_Minx = p.x;
+        m_Maxx = p.x;
+        m_Miny = p.y;
+        m_Maxy = p.y;
+    }
+
     inline void Set(double xmin,double xmax, double ymin, double ymax)
     {
         m_MinX = xmin < xmax? xmin : xmax;

@@ -19,9 +19,10 @@ void WorldWindow::DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager 
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, FB);
     glad_glViewport(0,0,S.scr_pixwidth,S.scr_pixheight);
+    glad_glClearColor(m_BackGroundColor.x,m_BackGroundColor.y,m_BackGroundColor.z,m_BackGroundColor.w);
+
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glad_glDisable(GL_DEPTH_TEST);
-    glad_glClearColor(0.961,0.963,0.966,1.0);
 
     DrawGeoLayers2DColor(S,glt);
     DrawUILayers(S,glt);

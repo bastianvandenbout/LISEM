@@ -26,7 +26,7 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_FrameBuffer->GetFrameBuffer());
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glad_glClearColor(0.5,0.5,1.0,1.0);
+    glad_glClearColor(m_BackGroundColor.x,m_BackGroundColor.y,m_BackGroundColor.z,m_BackGroundColor.w);
 
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_3DFrameBuffer->GetFrameBuffer());
@@ -34,10 +34,12 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     glad_glDisable(GL_DEPTH_TEST);
     if(external)
     {
-        glad_glClearColor(1.0,0.5,0.5,1.0);
+        glad_glClearColor(m_BackGroundColor.x,m_BackGroundColor.y,m_BackGroundColor.z,m_BackGroundColor.w);
+
     }else
     {
-        glad_glClearColor(0.5,0.5,0.5,1.0);
+        glad_glClearColor(m_BackGroundColor.x,m_BackGroundColor.y,m_BackGroundColor.z,m_BackGroundColor.w);
+
     }
     glad_glViewport(0,0,s.scr_pixwidth,s.scr_pixheight);
 
@@ -195,7 +197,8 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     s.GL_FrameBuffer->SetAsTarget();
     if(external)
     {
-        glad_glClearColor(1.0,0.5,0.5,1.0);
+        glad_glClearColor(m_BackGroundColor.x,m_BackGroundColor.y,m_BackGroundColor.z,m_BackGroundColor.w);
+
     }
 
     glad_glViewport(0,0,s.GL_FrameBuffer->GetWidth(),s.GL_FrameBuffer->GetHeight());//m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->GL_GLOBAL.Height);

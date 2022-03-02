@@ -580,6 +580,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false, float prec_scale = 1.0, bool do_forced = false )", GetFuncConvert( AS_AccuFluxDiffusive));
     r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D2(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false, float prec_scale = 1.0, bool do_forced = false )", GetFuncConvert( AS_AccuFluxDiffusive2));
     r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D3(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, const Map&in coeff_initial, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float do_next = 0.0)", GetFuncConvert( AS_AccuFluxDiffusive3));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @Accuflux2D32(const Map &in DEM, const Map &in Source, const Map &in FlowSource, const Map &in initial,  const Map&in forced, const Map&in coeff_initial,  const Map &in pressure_fac, int iter = 100, float courant = 0.2,float hscale =1.0, int iter_accu = -1, bool precondition = false,  bool do_forced = false, bool do_stabilize = false, float do_next = 0.0)", GetFuncConvert( AS_AccuFluxDiffusive32));
     r = engine->RegisterGlobalSTDFunction("array<Map> @SSAccumulate(const Map &in DEM, const Map &in UX, const Map &in UY, const Map &in Source,  int iter = 2500)", GetFuncConvert( AS_AccumulateFlowAcc));
 
     r = engine->RegisterGlobalFunction("Map @SteadyStateSoil(const Map &in DEM, const Map &in Source, const Map &in QS, int iter = 100)", asFUNCTIONPR(    AS_SteadyStateSoil,(cTMap *,cTMap *,cTMap*,int),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
@@ -594,11 +595,13 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("Map @Quantize(const Map &in data, int i)", GetFuncConvert( AS_Quantize));
     r = engine->RegisterGlobalSTDFunction("array<Map> @SpreadProperty(const Map &in H, const Map&in Prop, const Map&in DEM, const Map&in slopeAdd, float merge = 0.0, int iter = 100)", GetFuncConvert( AS_FlowPropertySpread));
     r = engine->RegisterGlobalSTDFunction("Map @Accumulate2D(const Map &in QX1, const Map&in QX2, const Map&in QY1, const Map&in QY2, const Map &in Source, int iter = 1000)", GetFuncConvert( AS_Accumulate2D));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @Accumulate2DT(const Map &in QX1, const Map&in QX2, const Map&in QY1, const Map&in QY2, const Map &in Source, int iter = 1000)", GetFuncConvert( AS_Accumulate2DT));
+    r = engine->RegisterGlobalSTDFunction("Map @Accumulate2DTReach(const Map &in QX1, const Map&in QX2, const Map&in QY1, const Map&in QY2, const Map &in Source, const Map&in Reach, int iter = 1000)", GetFuncConvert( AS_Accumulate2DTReach));
 
     r = engine->RegisterGlobalSTDFunction("float GetSSRainfalMaxVol(array<float> &in time, array<float> &in rain)", GetFuncConvert( AS_GetSSRainfallMaxVol));
     r = engine->RegisterGlobalSTDFunction("float GetTotalRain(array<float> &in time, array<float> &in rain)", GetFuncConvert( AS_GetTotalRainfall));
     r = engine->RegisterGlobalSTDFunction("float GetSSDurationRain(array<float> &in time, array<float> &in rain, float rain)", GetFuncConvert( AS_GetSSDurationFromRainfall));
-    r = engine->RegisterGlobalSTDFunction("array<Map> @FloodFill(const Map &in DEM, const Map &in HInit, const Map &in N, int iter_max = 1000)", GetFuncConvert( AS_FloodFill));
+    r = engine->RegisterGlobalSTDFunction("Map @FloodFill(const Map &in DEM, const Map &in HInit, int iter_max = 1000, bool subtract_slope= false)", GetFuncConvert( AS_FloodFill));
 
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, float scale_initial = 1.0, float iter_scale = 1.0)", GetFuncConvert( AS_FastFlood));
 

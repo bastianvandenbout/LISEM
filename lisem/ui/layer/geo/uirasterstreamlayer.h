@@ -293,6 +293,7 @@ public:
 
         m_IsInMemory = map->IsMemoryMap();
 
+        std::cout << "rasterstreamlayer is editable ? " << map->IsEditable() << std::endl;
         if(map->IsEditable())
         {
             m_Editable = true;
@@ -3201,7 +3202,7 @@ public:
 
     inline void OnDraw(OpenGLCLManager * m,GeoWindowState s) override
     {
-        std::cout << "raster on draw" << std::endl;
+        //std::cout << "raster on draw" << std::endl;
         UpdateGLData();
 
         m_DataHasChanged = false;

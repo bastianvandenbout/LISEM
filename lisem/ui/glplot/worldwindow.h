@@ -273,7 +273,7 @@ typedef struct DragElement
 
                     double LineDista =LineDist(x,y,xc[i],yc[i],xc[i+1],yc[i+1]);
 
-                    std::cout << "check collision line " << LineDista << " " <<  x << " " << y << " " << xc[i] << " " << yc[i] << " " << xc[i+1] << " " << yc[i+1]  << " " << std::endl;
+                    //std::cout << "check collision line " << LineDista << " " <<  x << " " << y << " " << xc[i] << " " << yc[i] << " " << xc[i+1] << " " << yc[i+1]  << " " << std::endl;
 
                     if(LineDista < 10)
                     {
@@ -364,6 +364,7 @@ private:
     ModelGeometry* m_ArrowModel;
     gl3dObject * m_ArrowActor;
 
+    LSMVector4 m_BackGroundColor = LSMVector4(0.961,0.963,0.966,1.0);
     LSMVector3 m_SunDir = LSMVector3(0.0,0.4,1.0);//default solar position
     bool m_SunDrag = false;
     GL3DCamera * m_Camera3D;
@@ -469,6 +470,21 @@ public:
 
         connect(this,&WorldWindow::int_emit_fildropcallback,this,&WorldWindow::int_emit_filedropcallbackslot,Qt::ConnectionType::QueuedConnection);
 
+    }
+
+    inline void SetBackGroundColor(LSMVector4 color)
+    {
+        m_BackGroundColor = color;
+    }
+
+    inline LSMVector4 GetBackGroundColor()
+    {
+        return m_BackGroundColor;
+    }
+
+    inline UILayerEditor * GetLayerEditor()
+    {
+        return m_LayerEditor;
     }
 
     void SetRedrawNeeded();

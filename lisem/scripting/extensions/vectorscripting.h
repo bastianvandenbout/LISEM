@@ -7,7 +7,7 @@
 #include "geo/shapeoffset.h"
 #include "geometry/feature.h"
 #include "geometry/shape.h"
-#include "extensions/scriptarray.h"
+//#include "extensions/scriptarray.h"
 
 class AS_LSMShape
 {

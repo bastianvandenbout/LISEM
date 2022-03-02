@@ -131,6 +131,7 @@ public:
 
             QIcon *icon_delete = new QIcon();
             QString m_Dir = GetSite();
+            std::cout << "load delete icon " << QString((m_Dir + LISEM_FOLDER_ASSETS + "deletereport4.png")).toStdString() << std::endl;
             icon_delete->addFile((m_Dir + LISEM_FOLDER_ASSETS + "deletereport4.png"), QSize(), QIcon::Normal, QIcon::Off);
 
             QIcon *icon_re = new QIcon();

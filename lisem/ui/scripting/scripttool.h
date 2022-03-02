@@ -721,7 +721,7 @@ public slots:
                 {
                     type = "Info: ";
                 }
-                LISEMS_ERROR(QString(type) + QString(msg->section) + " (" + QString::number(msg->row) + ", " + QString::number(msg->col) + ") " + " : " + QString(msg->message));
+                LISEMS_ERROR(QString(type) + " Line: (" + QString::number(msg->row) + " (" + QString::number(msg->col) + ") " + " : " + QString(msg->message));
                 ;
 
                 ced->SetHighlightErrorLocation(msg->row, msg->col);

@@ -574,7 +574,7 @@ public slots:
             QString selectedFilter;
             QString path = QFileDialog::getSaveFileName(this,
                                                             QString("Give a table file name"),
-                                                            QString("sph"),
+                                                            GetFIODir(LISEM_DIR_FIO_GENERAL),
                                                             QString("SPH Table Files (*.tbl);;All Files (*)"),
                                                             &selectedFilter);
 
@@ -583,6 +583,8 @@ public slots:
                 return;
             }else
             {
+                SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
                 savename = path;
             }
         }
@@ -609,7 +611,7 @@ public slots:
         QString selectedFilter;
         QString path = QFileDialog::getSaveFileName(this,
                                                         QString("Give a table file name"),
-                                                        QString("sph"),
+                                                        GetFIODir(LISEM_DIR_FIO_GENERAL),
                                                         QString("SPH Table Files (*.tbl);;All Files (*)"),
                                                         &selectedFilter);
 
@@ -618,6 +620,8 @@ public slots:
             return;
         }else
         {
+            SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
+
             savename = path;
         }
 

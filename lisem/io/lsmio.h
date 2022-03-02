@@ -25,6 +25,7 @@
 #include "archive_entry.h"
 #include "extensionprovider.h"
 #include "geo/raster/field.h"
+#include "site.h"
 
 #define LISEM_IO_ERROR_CANNOT_OPEN -1
 #define LISEM_IO_SUCCESS 1
@@ -41,6 +42,7 @@
 
 LISEM_API extern QString AS_DIR_Org;
 LISEM_API extern QString AS_DIR;
+
 inline void SetASDefaultPath(QString path, bool org = true)
 {
     AS_DIR = path;

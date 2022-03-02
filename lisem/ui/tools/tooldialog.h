@@ -463,12 +463,14 @@ public slots:
         }
 
         QString path = QFileDialog::getSaveFileName(this,	QString("Select the map:"),
-                                                    m_SaveDir,QString());
+                                                    GetFIODir(LISEM_DIR_FIO_GENERAL),QString());
         // open file dialog
 
 
         if (!path.isEmpty())// && QFileInfo(path).exists())
         {
+
+           SetFIODir(LISEM_DIR_FIO_GENERAL,QFileInfo(path).dir().absolutePath());
 
 
            QString f = QFileInfo(path).fileName();

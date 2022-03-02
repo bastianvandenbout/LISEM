@@ -10,6 +10,7 @@
 #include "stat/logisticregression.h"
 #include "functional"
 #include "vector"
+#include "scriptarray.h"
 
 inline static CScriptArray * OptimizeGumbel(CScriptArray * data_x, CScriptArray * data_y, double initial_c1, double initial_c2)
 {
