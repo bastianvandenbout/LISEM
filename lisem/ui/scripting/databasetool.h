@@ -1188,17 +1188,16 @@ public slots:
 
         s->SetCallBackCompilerError(std::function<void(DatabaseTool *,SPHScript*,const asSMessageInfo *msg)>([](DatabaseTool *,SPHScript*,const asSMessageInfo *msg) ->
                                                                     void{
-            LISEMS_ERROR("Error in script execution");
-            const char *type = "ERR ";
+            const char *type = "Error: ";
             if( msg->type == asMSGTYPE_WARNING )
             {
-                type = "WARN";
+                type = "Warning: ";
             }
             else if( msg->type == asMSGTYPE_INFORMATION )
             {
-                type = "INFO";
+                type = "Info: ";
             }
-            LISEMS_ERROR(QString(msg->section) + " (" + QString(msg->row) + ", " + QString(msg->col) + ") : " + QString(type) + " : " + QString(msg->message));
+            LISEMS_ERROR(QString(type) + " Line: (" + QString::number(msg->row) + " (" + QString::number(msg->col) + ") " + " : " + QString(msg->message));
             ;
                                                                     }),this,s,std::placeholders::_1);
 

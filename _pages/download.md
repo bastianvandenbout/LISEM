@@ -20,6 +20,12 @@ LISEM Classis provides a focus on detailed modelling of hydrology, flow and eros
 The new LISEM software, a geo-spatial modelling and analysis tool focusing on multi-hazards, is now public in alpha-relase. 
 WARNING: Contains various bugs!! 
 
+Version 0.2.2
+
+| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.2.zip/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.2-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.2-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
+
 Version 0.2.1
 
 | [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.1.zip/download) | ![LISEM](/assets/img/logonav.png) |

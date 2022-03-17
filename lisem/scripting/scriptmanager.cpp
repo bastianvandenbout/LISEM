@@ -226,16 +226,19 @@ void ScriptManager::run()
                     }
                 }catch(std::exception e)
                 {
-
+                     LISEMS_ERROR("Fatal Exception");
+                     cj.program->m_CallBackDone(false);
 
 
                 }catch(cv::Exception e)
                 {
                     LISEMS_ERROR("opencv exception" + QString(e.msg.c_str()));
+                     cj.program->m_CallBackDone(false);
 
                 }catch(...)
                 {
                     LISEM_ERROR("Exception thrown during script run");
+                     cj.program->m_CallBackDone(false);
 
                 }
 

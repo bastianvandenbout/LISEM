@@ -53,6 +53,9 @@
 #include "layer/geo/uifieldlayer.h"
 #include "layer/geo/uirigidworldlayer.h"
 #include <functional>
+#include "layer/ui/uitext.h"
+#include "layer/ui/uiimage.h"
+#include "layer/ui/uiarrow.h"
 
 class MapViewTool;
 
@@ -2280,8 +2283,7 @@ public slots:
     {
         LSMVector3 Position = LSMVector3(m_WorldWindow->GetLook().GetCenterX(),0.0,m_WorldWindow->GetLook().GetCenterY());
         GeoProjection p= m_WorldWindow->GetCurrentProjection();
-        UITextLayer * layer = new UITextLayer("Text","",Position,proj,12,false,false,false);
-
+        UITextLayer * layer = new UITextLayer("Text","",Position,p,12,false,false,false);
         m_WorldWindow->AddUILayer(layer,true,false);
     }
 

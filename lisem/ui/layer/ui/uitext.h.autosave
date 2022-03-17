@@ -38,7 +38,7 @@ public:
     {
         UIGeoLayer::Initialize( Projection,BoundingBox(Position),text,false,"",false);
 
-        m_Text= text;
+        m_Text= text; 
         m_FontName = font;
         m_Position = Position;
 

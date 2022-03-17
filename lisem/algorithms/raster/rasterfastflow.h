@@ -6005,6 +6005,144 @@ inline cTMap* AS_FloodFill(cTMap * DEM, cTMap * HBoundary, int iter_max, bool su
 
 }
 
+//fill in pressure-based indundation areas based on a height estimate from inverted flow accumulation
+inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, cTMap * DX, cTMap * DY, int iter_max)
+{
+
+    //assumption: flow is in direction of water surface gradient (and proportional to)
+
+    //we have a water surface slope map from the steady-state solution (Slope(DEM + HSS))
+    //the slopes of the inverted accuflux solution are non-conform due to lack of pressure-driven flow directionality
+    //here we can reconstruct a pressure-conform flow height field by using the surface slopes from the steady state map to expand the new height field
+
+    //
+    //
+    //
+    //
+
+    cTMap * H = Hinv->GetCopy();
+    cTMap * HN = Hinv->GetCopy();
+
+    float _dx = std::fabs(H->cellSizeX());
+
+    //initialize the map with friction values
+
+    bool stop = false;
+
+    int i = 0;
+    int i2 = 0;
+
+    #pragma omp parallel private(stop) shared(i)
+    {
+
+        #pragma omp critical
+        {
+            i = 0;
+
+        }
+
+
+        while( true)
+        {
+            #pragma omp single
+            {
+
+                stop = false;
+                i = i+1;
+            }
+
+            #pragma omp barrier
+
+            bool do_stop = false;
+
+            #pragma omp critical
+            {
+                i2 = i;
+                if(i2>= iter_max)
+                {
+                    stop = true;
+                    do_stop = true;
+                }
+            }
+
+            #pragma omp barrier
+
+            if(do_stop)
+            {
+                break;
+            }
+
+
+            float progress = ((float)(i))/std::max(1.0f,((float)(iter_max)));
+
+            #pragma omp for collapse(2)
+            for(int c = 0; c < H->data.nr_cols();c++)
+            {
+                for(int r = 0; r < H->data.nr_rows();r++)
+                {
+                    if(!pcr::isMV(H->data[r][c]))
+                    {
+
+                        //get the new height we would get from a neighbor, check if its bigger than current height, replace if so
+
+                        float hnew_x1 = H->data[r][c];
+                        float hnew_x2 = H->data[r][c];
+                        float hnew_y1 = H->data[r][c];
+                        float hnew_y2 = H->data[r][c];
+
+                        {
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_x1 = std::max(0.0f,(H->data[r][c-1] + DEM->data[r][c-1]) -  DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_x2 = std::max(0.0f,(H->data[r][c+1] + DEM->data[r][c+1]) -  DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_y1 = std::max(0.0f,(H->data[r-1][c] + DEM->data[r-1][c]) -  DEM->data[r][c]);
+                            }
+                            if(!OUTORMV(H,r,c-1))
+                            {
+                                hnew_y2 = std::max(0.0f,(H->data[r+1][c] + DEM->data[r+1][c]) -  DEM->data[r][c]);
+                            }
+                        }
+
+                        float hnew = std::max(hnew_x1,std::max(hnew_x2,std::max(hnew_y1,hnew_y2)));
+                        HN->data[r][c] = std::max(H->data[r][c],hnew);
+                    }
+                }
+            }
+
+
+            #pragma omp barrier
+
+            #pragma omp for collapse(2)
+            for(int r = 0; r < H->data.nr_rows();r++)
+            {
+                for(int c = 0; c < H->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(H->data[r][c]))
+                    {
+                        H->data[r][c] = HN->data[r][c];
+                    }
+                }
+            }
+        }
+
+        #pragma omp barrier
+
+    }
+
+    delete HN;
+
+    return H;
+
+
+
+}
+
 /*inline std::vector<cTMap *> AS_FloodFill(cTMap * DEM, cTMap * HBoundary, cTMap * Manning, int iter_max, bool subtract_slope)
 {
     cTMap * H = HBoundary->GetCopy();
