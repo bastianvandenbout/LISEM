@@ -12,8 +12,11 @@ Dont know which one you want? See the [documentation](/docs/home)!
 
 #### LISEM Classic
 LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.
+See the [github page](https://github.com/vjetten/openlisem) and [classic downloads](https://github.com/vjetten/openlisem/releases/tag/openLisem) for more details.
 
-| [Windows-64x Portable executable](https://sourceforge.net/projects/lisem/files/openLISEM6.62beta.zip/download) | ![LISEM](/assets/img/openLisem.png) |
+Version 6.845
+
+| [Windows-64x Portable executable](https://github.com/vjetten/openlisem/releases/download/openLisem/lisem-v6.845_220308.zip) | ![LISEM](/assets/img/openLisem.png) |
 
 
 #### LISEM

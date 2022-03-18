@@ -5940,15 +5940,15 @@ inline cTMap* AS_FloodFill(cTMap * DEM, cTMap * HBoundary, int iter_max, bool su
                             {
                                 hnew_x1 = std::max(0.0f,(H->data[r][c-1] + DEM->data[r][c-1]) -  DEM->data[r][c]);
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r,c+1))
                             {
                                 hnew_x2 = std::max(0.0f,(H->data[r][c+1] + DEM->data[r][c+1]) -  DEM->data[r][c]);
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r-1,c))
                             {
                                 hnew_y1 = std::max(0.0f,(H->data[r-1][c] + DEM->data[r-1][c]) -  DEM->data[r][c]);
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r+1,c))
                             {
                                 hnew_y2 = std::max(0.0f,(H->data[r+1][c] + DEM->data[r+1][c]) -  DEM->data[r][c]);
                             }
@@ -5958,15 +5958,15 @@ inline cTMap* AS_FloodFill(cTMap * DEM, cTMap * HBoundary, int iter_max, bool su
                             {
                                 hnew_x1 = std::max(0.0f,(H->data[r][c-1] + DEM->data[r][c-1]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r][c-1] - DEM->data[r][c]);
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r,c+1))
                             {
                                 hnew_x2 = std::max(0.0f,(H->data[r][c+1] + DEM->data[r][c+1]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r][c+1] - DEM->data[r][c]);
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r-1,c))
                             {
                                 hnew_y1 = std::max(0.0f,(H->data[r-1][c] + DEM->data[r-1][c]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r-1][c] - DEM->data[r][c]);
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r+1,c))
                             {
                                 hnew_y2 = std::max(0.0f,(H->data[r+1][c] + DEM->data[r+1][c]) -  DEM->data[r][c]) - std::max(0.0f, DEM->data[r+1][c] - DEM->data[r][c]);
                             }
@@ -6006,7 +6006,7 @@ inline cTMap* AS_FloodFill(cTMap * DEM, cTMap * HBoundary, int iter_max, bool su
 }
 
 //fill in pressure-based indundation areas based on a height estimate from inverted flow accumulation
-inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, cTMap * DX, cTMap * DY, int iter_max)
+inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, int iter_max)
 {
 
     //assumption: flow is in direction of water surface gradient (and proportional to)
@@ -6090,27 +6090,43 @@ inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, cTMap 
                         float hnew_y1 = H->data[r][c];
                         float hnew_y2 = H->data[r][c];
 
+
+                        //get the desired slope in each direction
+
+                        float h = H->data[r][c];
+                        float demh = h + DEM->data[r][c];
+                        float wt = 0.0;
+
+
                         {
                             if(!OUTORMV(H,r,c-1))
                             {
-                                hnew_x1 = std::max(0.0f,(H->data[r][c-1] + DEM->data[r][c-1]) -  DEM->data[r][c]);
+                                float sx_1 = (HSS->data[r][c-1] + DEM->data[r][c-1]) -  (HSS->data[r][c] + DEM->data[r][c]);
+                                hnew_x1 = H->data[r][c-1] * std::max(h,(HSS->data[r][c-1] + DEM->data[r][c-1]) - sx_1);
+                                wt += H->data[r][c-1];
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r,c+1))
                             {
-                                hnew_x2 = std::max(0.0f,(H->data[r][c+1] + DEM->data[r][c+1]) -  DEM->data[r][c]);
+                                float sx_1 = (HSS->data[r][c+1] + DEM->data[r][c+1]) -  (HSS->data[r][c] + DEM->data[r][c]);
+                                hnew_x1 = H->data[r][c+1] * std::max(h,(HSS->data[r][c+1] + DEM->data[r][c+1]) - sx_1);
+                                wt += H->data[r][c+1];
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r-1,c))
                             {
-                                hnew_y1 = std::max(0.0f,(H->data[r-1][c] + DEM->data[r-1][c]) -  DEM->data[r][c]);
+                                float sx_1 = (HSS->data[r-1][c] + DEM->data[r-1][c]) -  (HSS->data[r][c] + DEM->data[r][c]);
+                                hnew_x1 = H->data[r-1][c] * std::max(h,(HSS->data[r-1][c] + DEM->data[r-1][c]) - sx_1);
+                                wt += H->data[r-1][c];
                             }
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(H,r+1,c))
                             {
-                                hnew_y2 = std::max(0.0f,(H->data[r+1][c] + DEM->data[r+1][c]) -  DEM->data[r][c]);
+                                float sx_1 = (HSS->data[r+1][c] + DEM->data[r+1][c]) -  (HSS->data[r][c] + DEM->data[r][c]);
+                                hnew_x1 = H->data[r+1][c] * std::max(h,(HSS->data[r+1][c] + DEM->data[r+1][c]) - sx_1);
+                                wt += H->data[r+1][c];
                             }
                         }
 
-                        float hnew = std::max(hnew_x1,std::max(hnew_x2,std::max(hnew_y1,hnew_y2)));
-                        HN->data[r][c] = std::max(H->data[r][c],hnew);
+                        float hnew = (hnew_x1 + hnew_x2 + hnew_y1 + hnew_y2)/std::max(1e-6f,wt);
+                        HN->data[r][c] = std::max(Hinv->data[r][c],hnew);
                     }
                 }
             }
