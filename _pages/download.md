@@ -16,7 +16,7 @@ See the [github page](https://github.com/vjetten/openlisem) and [classic downloa
 
 Version 6.845
 
-| [Windows-64x Portable executable](https://github.com/vjetten/openlisem/releases/download/openLisem/lisem-v6.845_220308.zip) | ![LISEM](/assets/img/openLisem.png) |
+| [Windows-64x Portable executable](https://github.com/vjetten/openlisem/releases/download/openLisem/lisem-v6.846-220321.zip) | ![LISEM](/assets/img/openLisem.png) |
 
 
 #### LISEM

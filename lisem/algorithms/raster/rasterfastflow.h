@@ -6015,7 +6015,7 @@ inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, int it
     //the slopes of the inverted accuflux solution are non-conform due to lack of pressure-driven flow directionality
     //here we can reconstruct a pressure-conform flow height field by using the surface slopes from the steady state map to expand the new height field
 
-    //
+    //the idea implemented below is so simple, would this really work?
     //
     //
     //
@@ -6085,10 +6085,10 @@ inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, int it
 
                         //get the new height we would get from a neighbor, check if its bigger than current height, replace if so
 
-                        float hnew_x1 = H->data[r][c];
-                        float hnew_x2 = H->data[r][c];
-                        float hnew_y1 = H->data[r][c];
-                        float hnew_y2 = H->data[r][c];
+                        float hnew_x1 = 0.0;//H->data[r][c];
+                        float hnew_x2 = 0.0;//H->data[r][c];
+                        float hnew_y1 = 0.0;//H->data[r][c];
+                        float hnew_y2 = 0.0;//H->data[r][c];
 
 
                         //get the desired slope in each direction
@@ -6096,37 +6096,102 @@ inline cTMap * AS_FlowReconstruct(cTMap * DEM, cTMap * HSS, cTMap  *Hinv, int it
                         float h = H->data[r][c];
                         float demh = h + DEM->data[r][c];
                         float wt = 0.0;
+                        float horg = Hinv->data[r][c];
 
+
+                        //float fac_p = ((H->data[r][c-1] - H->data[r][c])*(H->data[r][c-1] - H->data[r][c]))/std::max(0.0001f,((H->data[r][c-1] - H->data[r][c])*(H->data[r][c-1] - H->data[r][c]) + std::fabs(DEM->data[r][c-1] - DEM->data[r][c])));
 
                         {
-                            if(!OUTORMV(H,r,c-1))
+                            if(!OUTORMV(DEM,r,c-1))
                             {
-                                float sx_1 = (HSS->data[r][c-1] + DEM->data[r][c-1]) -  (HSS->data[r][c] + DEM->data[r][c]);
-                                hnew_x1 = H->data[r][c-1] * std::max(h,(HSS->data[r][c-1] + DEM->data[r][c-1]) - sx_1);
-                                wt += H->data[r][c-1];
+                                if(H->data[r][c-1] >H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r][c-1]) -  (HSS->data[r][c] );
+                                    float demdifinv =std::max(0.0f,  DEM->data[r][c-1] - DEM->data[r][c]);
+                                    float demdif = std::max(0.0f, DEM->data[r][c]- DEM->data[r][c-1] );
+                                    hnew_x1 = std::min(H->data[r][c-1] + demdifinv - demdif,(H->data[r][c-1]  + demdifinv - demdif ) - sx_1) ;
+                                    wt += 1.0;
+                                }
                             }
-                            if(!OUTORMV(H,r,c+1))
+                            if(!OUTORMV(DEM,r,c+1))
                             {
-                                float sx_1 = (HSS->data[r][c+1] + DEM->data[r][c+1]) -  (HSS->data[r][c] + DEM->data[r][c]);
-                                hnew_x1 = H->data[r][c+1] * std::max(h,(HSS->data[r][c+1] + DEM->data[r][c+1]) - sx_1);
-                                wt += H->data[r][c+1];
+                                if(H->data[r][c+1]>H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r][c+1] ) -  (HSS->data[r][c]);
+                                    float demdifinv =std::max(0.0f,  DEM->data[r][c+1] - DEM->data[r][c]);
+                                    float demdif = std::max(0.0f,DEM->data[r][c] -  DEM->data[r][c+1]);
+                                    hnew_x2 = std::min(H->data[r][c+1] + demdifinv - demdif,(H->data[r][c+1]  + demdifinv - demdif  ) - sx_1);
+                                    wt +=  1.0;
+                                }
                             }
-                            if(!OUTORMV(H,r-1,c))
+                            if(!OUTORMV(DEM,r-1,c))
                             {
-                                float sx_1 = (HSS->data[r-1][c] + DEM->data[r-1][c]) -  (HSS->data[r][c] + DEM->data[r][c]);
-                                hnew_x1 = H->data[r-1][c] * std::max(h,(HSS->data[r-1][c] + DEM->data[r-1][c]) - sx_1);
-                                wt += H->data[r-1][c];
+                                if(H->data[r-1][c]>H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r-1][c]) -  (HSS->data[r][c]);
+                                    float demdifinv =std::max(0.0f,  DEM->data[r-1][c] - DEM->data[r][c]);
+                                    float demdif = std::max(0.0f,  DEM->data[r][c] - DEM->data[r-1][c]);
+                                    hnew_y1 = std::min(H->data[r-1][c] + demdifinv - demdif,(H->data[r-1][c]  + demdifinv - demdif ) - sx_1);
+                                    wt +=  1.0;
+                                }
                             }
-                            if(!OUTORMV(H,r+1,c))
+                            if(!OUTORMV(DEM,r+1,c))
                             {
-                                float sx_1 = (HSS->data[r+1][c] + DEM->data[r+1][c]) -  (HSS->data[r][c] + DEM->data[r][c]);
-                                hnew_x1 = H->data[r+1][c] * std::max(h,(HSS->data[r+1][c] + DEM->data[r+1][c]) - sx_1);
-                                wt += H->data[r+1][c];
+                                if(H->data[r+1][c]>H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r+1][c]) -  (HSS->data[r][c] );
+                                    float demdifinv =std::max(0.0f,  DEM->data[r+1][c] - DEM->data[r][c]);
+                                    float demdif = std::max(0.0f,  DEM->data[r][c]-DEM->data[r+1][c]);
+                                    hnew_y2 = std::min(H->data[r+1][c]+ demdifinv - demdif,(H->data[r+1][c]  + demdifinv - demdif ) - sx_1);
+                                    wt +=  1.0;
+                                }
                             }
+
+                            /*if(!OUTORMV(DEM,r,c-1))
+                            {
+                                if(H->data[r][c-1] >H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r][c-1]) -  (HSS->data[r][c] );
+                                    float demdif = std::max(0.0f, DEM->data[r][c]- DEM->data[r][c-1] );
+                                    hnew_x1 = std::min(H->data[r][c-1] - demdif,(H->data[r][c-1] - demdif ) - sx_1) ;
+                                    wt += 1.0;
+                                }
+                            }
+                            if(!OUTORMV(DEM,r,c+1))
+                            {
+                                if(H->data[r][c+1]>H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r][c+1] ) -  (HSS->data[r][c]);
+                                    float demdif = std::max(0.0f,DEM->data[r][c] -  DEM->data[r][c+1]);
+                                    hnew_x2 = std::min(H->data[r][c+1] -demdif,(H->data[r][c+1] - demdif  ) - sx_1);
+                                    wt +=  1.0;
+                                }
+                            }
+                            if(!OUTORMV(DEM,r-1,c))
+                            {
+                                if(H->data[r-1][c]>H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r-1][c]) -  (HSS->data[r][c]);
+                                    float demdif = std::max(0.0f,  DEM->data[r][c] - DEM->data[r-1][c]);
+                                    hnew_y1 = std::min(H->data[r-1][c] -demdif,(H->data[r-1][c] - demdif ) - sx_1);
+                                    wt +=  1.0;
+                                }
+                            }
+                            if(!OUTORMV(DEM,r+1,c))
+                            {
+                                if(H->data[r+1][c]>H->data[r][c] )
+                                {
+                                    float sx_1 = (HSS->data[r+1][c]) -  (HSS->data[r][c] );
+                                    float demdif = std::max(0.0f,  DEM->data[r][c]-DEM->data[r+1][c]);
+                                    hnew_y2 = std::min(H->data[r+1][c]-demdif,(H->data[r+1][c] - demdif ) - sx_1);
+                                    wt +=  1.0;
+                                }
+                            }*/
+
                         }
 
                         float hnew = (hnew_x1 + hnew_x2 + hnew_y1 + hnew_y2)/std::max(1e-6f,wt);
-                        HN->data[r][c] = std::max(Hinv->data[r][c],hnew);
+                        HN->data[r][c] = std::max(h,hnew);
                     }
                 }
             }

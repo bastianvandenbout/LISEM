@@ -1435,7 +1435,6 @@ inline cTMap * AS_DynamicWaveSuspendedTransport(cTMap * SI, cTMap * DEM,cTMap * 
             }
         }
 
-
         t = t+dt;
         iter ++;
 
