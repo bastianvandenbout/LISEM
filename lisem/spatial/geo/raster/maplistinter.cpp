@@ -90,6 +90,7 @@ cTMap * cTMap::GetBand(int i)
             ret->AS_readbandfunc = AS_readbandfunc;
             ret->AS_readbandabsfunc = AS_readbandabsfunc;
             ret->AS_IsBandLoadable = AS_IsBandLoadable;
+            ret->AS_refcount = 1;
 
             ret->AS_writefunc = std::bind(ret->AS_writebandfunc,std::placeholders::_1,std::placeholders::_2,i);
             ret->AS_readfunc = std::bind(ret->AS_readbandfunc,std::placeholders::_1,i);
@@ -120,6 +121,8 @@ cTMap * cTMap::GetBand(int i)
                 ret->AS_readbandfunc = AS_readbandfunc;
                 ret->AS_readbandabsfunc = AS_readbandabsfunc;
                 ret->AS_IsBandLoadable = AS_IsBandLoadable;
+                ret->AS_refcount = 1;
+
 
                 ret->AS_writefunc = std::bind(ret->AS_writebandfunc,std::placeholders::_1,std::placeholders::_2,i);
                 ret->AS_readfunc = std::bind(ret->AS_readbandfunc,std::placeholders::_1,i);
@@ -152,6 +155,8 @@ cTMap * cTMap::GetBand(int i)
                 ret->AS_readbandfunc = AS_readbandfunc;
                 ret->AS_readbandabsfunc = AS_readbandabsfunc;
                 ret->AS_IsBandLoadable = AS_IsBandLoadable;
+                ret->AS_refcount = 1;
+
 
                 ret->AS_writefunc = std::bind(ret->AS_writebandfunc,std::placeholders::_1,std::placeholders::_2,i);
                 ret->AS_readfunc = std::bind(ret->AS_readbandfunc,std::placeholders::_1,i);

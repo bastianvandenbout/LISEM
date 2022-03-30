@@ -426,20 +426,19 @@ static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,c
                         float vy = std::max(std::sqrt(9.81f * std::fabs(hw_y2)),std::max(std::sqrt(9.81f * std::fabs(hw_y1)),std::min(vmax,std::max(-vmax,VY->data[gy][gx]))));
 
                         double dt_req = courant *dx/( std::min(1000.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
-                        dt_min = std::min((double)dt_min,dt_req);
-                        dt = std::min((double)dt_min,dt);
+                        dt_min = std::min(_dt-t,std::min((double)dt_min,dt_req));
+                        dt = std::min(_dt-t,std::min((double)dt_min,dt));
                     }
 
                 }
             }
 
-            //#pragma omp critical
+            #pragma omp critical
             {
                 //dt = dt_min;
                 //dt_min = std::min(dt_min,(float)dt_min_this);
                 //dt_store = std::min(t_end - t,std::max((double)dt_min,1e-6));
 
-                  //std::cout << "thread  " <<omp_get_thread_num() << " " <<  dt << " " << dt_min << " " << dt_min_this << " " << dt_store << std::endl;
 
                 //reset already for next time
                 //dt_min = 1e6;
@@ -1304,6 +1303,224 @@ inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * HI, cTMa
     return {HN,VXN,VYN};
 }
 
+inline float GetSV2(double d, float density = 2650.0)
+{
+    d = d*1000000.0;
+    //Stokes range settling velocity
+    if(d < 100)
+    {
+        return 2.0*(2650.0-1000.0)*9.80*std::pow(d/2000000.0, 2.0)/(9.0*0.001);
+
+    //Settling velocity by Zanke (1977)
+    }else
+    {
+        float dm = d/1000.0;
+        return 10.0 *(std::sqrt(1.0 + 0.01 *((2650.0-1000.0)/1000.0)* 9.81 *dm*dm*dm )-1.0)/(dm);
+    }
+}
+
+inline float GetTC2(float hf, float v, float d50, float d90, float slope)
+{
+
+
+    float TC = 0.0;
+    //if(hf < 0.25f)
+    {
+
+        d50 = d50 * 1000000.0;
+        d90 = d90 * 1000000.0;
+
+        float cg = pow((d50+5.0f)/0.32f, -0.6f);
+        float dg = pow((d50+5.0f)/300.0f, 0.25f);
+
+        //Calc transport capacity
+        float omega = 100.0f* v*sin(atan(std::max(0.001f,slope)));
+
+        // V in cm/s in this formula assuming grad is SINE
+        float omegacrit = 0.4f;
+
+        // critical unit streampower in cm/s
+        TC = std::max(0.0f,std::min(865.0f, 2650.0f * cg * std::pow(std::max(0.0f, omega - omegacrit), dg)));
+        TC = std::isnormal(TC)?TC:0.0;
+        return TC;
+        // not more than 2650*0.32 = 848 kg/m3
+
+
+    }//else
+    {
+        //van rijn simple suspended load
+        float ucr;
+        float d50m = d50;
+        float d90m = d90;
+        float ps = 2400.0;
+        float pw = 1000.0;
+        float mu = 1.0;
+        if( d50m < 0.0005)
+        {
+           ucr  = 0.19f * pow(d50m, 0.1f) * log10(4.0f* hf/d90m);
+        }else
+        {
+           ucr  = 8.5f * pow(d50m, 0.6f) * log10(4.0f* hf/d90m);
+        }
+        float me = std::max((v - ucr)/sqrt(9.81f * d50m * (ps/pw - 1.0f)),0.0f);
+        float ds = d50m * 9.81f * ((ps/pw)-1.0f)/(mu*mu);
+        float qs = hf * 0.008f * ps*v * d50m * pow(me, 2.4f) * pow(ds, -0.6f);
+
+        float tc =  qs/ (v * hf);
+        tc = std::isnormal(tc)?tc:0.0;
+        return std::max(std::min(tc,865.0f),0.0f);
+     }
+}
+
+inline cTMap * AS_SplashErosion(cTMap * Sed, cTMap * H, cTMap * Coh, cTMap * vegcoverm, cTMap * vegheight, cTMap * rainintensity, float dt)
+{
+    cTMap * res = Sed->GetCopy0();
+
+    for(int r = 0; r < Sed->nrRows(); r++)
+    {
+        for (int c = 0; c < Sed->nrCols(); c++)
+        {
+            if(!pcr::isMV(Sed->data[r][c]))
+            {
+
+                //splash erosion
+
+                //flow erosion
+                float b= 0.0f;
+                float strength=0.0f;
+                float DetDT1 = 0.0f;
+                float DetDT2 = 0.0f;
+                float DetLD1 = 0.0f;
+                float DetLD2 = 0.0f;
+                float g_to_kg = 0.001f;
+                float hf = H->data[r][c];
+
+                float SplashDelivery = 0.1f;
+
+                float KEParamater_a = 8.950f;
+                float KEParamater_b = 0.520f;
+                float KEParamater_c = 0.042f;
+
+                float rain_m = rainintensity->data[r][c] *  dt;
+
+                float Int = rainintensity->data[r][c] * 3600.0f * 1000.0f;
+                // intensity in mm/h, Rain is in m
+
+                float KE_DT = KEParamater_a*(1.0f-(KEParamater_b*exp(-KEParamater_c*Int)));
+                // kin energy in J/m2/mm
+
+               //case KE_EXPFUNCTION: KE_DT = KEParamater_a1*(1-(KEParamater_b1*exp(-KEParamater_c1*Int))); break;
+               //case KE_LOGFUNCTION: KE_DT = (Int > 1 ? KEParamater_a2 + KEParamater_b2*log10(Int) : 0); break;
+               //case KE_POWERFUNCTION: KE_DT = KEParamater_a3*pow(Int, KEParamater_b3); break;
+
+                float vegh = vegheight->data[r][c];
+                float vegcover = vegcoverm->data[r][c];
+
+
+                float directrain = (1.0f -vegcover)*rain_m * 1000.0f;
+                // rainfall between plants in mm
+
+                float KE_LD = std::max(15.3f*sqrt(vegh)-5.87f, 0.0f);
+                // kin energy in J/m2/mm
+                float throughfall = vegcover * rain_m * 1000.0f;
+
+                float WH0 = exp(-1.48f*hf*1000.0f);
+                // water buffer effect on surface, WH in mm in this empirical equation from Torri ?
+
+                strength = 0.1033f/std::max(0.001f,Coh->data[r][c]);
+                b = 3.58f;
+                // empirical analysis based on Limburg data, dating 1989 (Victor Jetten)
+
+
+                // Between plants, directrain is already with 1-cover
+                DetDT1 = g_to_kg *(strength*KE_DT+b)*WH0 * directrain;
+                //ponded areas, kg/m2/mm * mm = kg/m2
+                DetDT2 = g_to_kg *(strength*KE_DT+b) * directrain * SplashDelivery;
+                //dry areas, kg/m2/mm * mm = kg/m2
+
+                // Under plants, throughfall is already with cover
+                DetLD1 = g_to_kg * (strength*KE_LD+b)*WH0 * throughfall;
+                //ponded areas, kg/m2/mm * mm = kg/m2
+                DetLD2 = g_to_kg *(strength*KE_LD+b) * throughfall * SplashDelivery;
+                //dry areas, kg/m2/mm * mm = kg/m2
+
+                float DETSplash = DetLD1 + DetLD2 + DetDT1 + DetDT2;
+                // Total splash kg/m2
+
+                // Deal with all exceptions:
+
+                DETSplash = std::max(0.0f,DETSplash);
+                DETSplash = std::isnan(DETSplash)? 0.0f:DETSplash;
+
+                res->data[r][c] = -DETSplash;
+
+            }
+        }
+    }
+
+    return res;
+
+}
+inline cTMap * AS_ErosionDeposition(cTMap * Sed, cTMap * H, cTMap * Ux, cTMap * Uy, cTMap * Coh, cTMap * d50, cTMap * Slope, float dt)
+{
+
+    cTMap * res = Sed->GetCopy0();
+
+    float MAXCONC = 865.0;
+    float dx = std::fabs(Sed->cellSize());
+
+    for(int r = 0; r < Sed->nrRows(); r++)
+    {
+        for (int c = 0; c < Sed->nrCols(); c++)
+        {
+            if(!pcr::isMV(Sed->data[r][c]))
+            {
+
+                float hf = H->data[r][c];
+                float vel = std::sqrt(Ux->data[r][c] * Ux->data[r][c] + Uy->data[r][c] * Uy->data[r][c] );
+
+                float watervol = dx*dx * hf;
+
+                float sed = Sed->data[r][c];
+                    float sed_max = hf *dx*dx * MAXCONC;
+                    float dep_force = std::max(0.0f,sed - sed_max);
+                    if(sed > sed_max)
+                    {
+                        sed = sed_max;
+                    }
+                    float conc = sed /(watervol);
+
+                    float ErosiveEfficiency = std::min(1.0f, 0.79f*exp(-0.85f*Coh->data[r][c]));
+                    //Y->Drc = std::min(1.0, 1.0/(0.89+0.56*CohesionSoil->Drc));
+                    //Y->Drc = std::min(1.0, 0.79*exp(-0.85*CohesionSoil->Drc));
+                    //Y->Drc = std::min(1.0, 1.0/(2.0*CohesionSoil->Drc));
+
+                    float sv = GetSV2(d50->data[r][c]);
+                    float TC = GetTC2(hf, vel, d50->data[r][c],d50->data[r][c] * 5.0/2.0,Slope->data[r][c]);
+
+                    float maxTC = std::max(TC - conc,0.0f) ;
+                    // positive difference: TC deficit becomes detachment (ppositive)
+                    float minTC = std::min(TC - conc,0.0f) ;
+
+                    //deposition based on settling velocity
+                    float TransportFactor = (1.0f-exp(-dt*sv/std::max(0.0001f,hf))) * watervol;
+                    float deposition = TransportFactor * minTC;
+                    deposition = std::min(deposition <0.0f? -deposition:deposition,-(minTC * watervol));
+
+                    TransportFactor = dt*sv * dx * dx;
+                    //correct detachment for grass strips, hard surfaces and houses
+                    float detachment = ErosiveEfficiency* maxTC * TransportFactor;
+                    detachment = std::max(0.0f,std::min(detachment,watervol * maxTC));
+
+                    res->data[r][c] =-detachment + deposition + dep_force;
+            }
+        }
+    }
+
+    return res;
+
+
+}
 
 inline cTMap * AS_DynamicWaveSuspendedTransport(cTMap * SI, cTMap * DEM,cTMap * N,cTMap * HI, cTMap * VXI, cTMap * VYI, float _dt, float courant)
 {
@@ -1601,6 +1818,9 @@ inline std::vector<cTMap*> AS_BoussinesqWave(cTMap * DEM,cTMap * N,cTMap * H, cT
     }
 
 
+    delete HO;
+    delete VXO;
+    delete VYO;
 
     return {HN,VXN,VYN};
 }

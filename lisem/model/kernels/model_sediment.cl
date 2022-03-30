@@ -455,7 +455,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
             //deposition based on settling velocity
             float TransportFactor = (1.0f-exp(-dt*sv/max(0.0001f,hf))) * watervol;
             deposition = TransportFactor * minTC;
-            deposition = min(deposition <0.0f? -deposition:deposition,((minTC * watervol)<0.0f?-1.0f:1.0f)*(minTC * watervol));
+            deposition = min(deposition <0.0f? -deposition:deposition,-(minTC * watervol));
 
             TransportFactor = dt*sv * dx * dx;
             //correct detachment for grass strips, hard surfaces and houses

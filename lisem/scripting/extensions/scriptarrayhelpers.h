@@ -525,7 +525,7 @@ public:
         array->Resize(x.size());
         for(int i = 0; i < x.size(); i++)
         {
-            array->SetValue(i,x.at(i),false);
+            array->SetValueNoRefAdd(i,x.at(i));
         }
 
         return array;

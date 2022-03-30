@@ -166,7 +166,7 @@ inline void RegisterMapToScriptEngine(LSMScriptEngine *engine)
 
     //special operators
 
-    r = engine->RegisterObjectMethod("Map", "Map &opIndex(int)", asMETHOD(cTMap,GetBand), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Map", "Map @opIndex(int)", asMETHOD(cTMap,GetBand), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Map", "Map &opAssign(array<Map> &in maps)", asFUNCTIONPR(AS_AssignArray,(cTMap*,CScriptArray*),cTMap *), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectMethod("Map", "array<Map> @AllBands()", asFUNCTIONPR(AS_GetAll,(cTMap*),CScriptArray*), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
@@ -590,6 +590,10 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @MVMap(const Map &in M)", asFUNCTIONPR(    AS_MVMap,(cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @SteadyStateCorrection(const Map &in b, const Map &in Trel)", asFUNCTIONPR(  AS_SteadyStateCorrection,(cTMap *, cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
+    r = engine->RegisterGlobalFunction("Map @FlowErosionDeposition(const Map &in Sed, const Map &in H, const Map &in Ux, const Map&in Uy, const Map&in Coh, const Map& in d50, const Map&in Slope, float dt)", asFUNCTIONPR( AS_ErosionDeposition,(cTMap *, cTMap *,cTMap*,cTMap*,cTMap *,cTMap *,cTMap *,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SplashErosion(const Map &in Sed, const Map &in H, const Map &in Coh, const Map&in VegCover, const Map&in VegHeight, const Map& in Rain,float dt)", asFUNCTIONPR( AS_SplashErosion,(cTMap *, cTMap *,cTMap*,cTMap *,cTMap *,cTMap *,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+
+
     r = engine->RegisterGlobalSTDFunction("Map @ConductiveDiffuse(const Map &in data, const Map &in conductivitydata, const Map &in sigma, int iter = 100, float dt = 0.1, float feedback_self_weight = 0.0)", GetFuncConvert( AS_ConductiveDiffuse));
     r = engine->RegisterGlobalSTDFunction("Map @ConductiveFeedbackDiffuse(const Map &in data, const Map &in conductivitydata, const Map &in sigma, const Map &in fbweight, int iter = 100, float dt = 0.1)", GetFuncConvert( AS_ConductiveFeedbackDiffuse));
     r = engine->RegisterGlobalSTDFunction("Map @Quantize(const Map &in data, int i)", GetFuncConvert( AS_Quantize));
@@ -602,9 +606,9 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("float GetTotalRain(array<float> &in time, array<float> &in rain)", GetFuncConvert( AS_GetTotalRainfall));
     r = engine->RegisterGlobalSTDFunction("float GetSSDurationRain(array<float> &in time, array<float> &in rain, float rain)", GetFuncConvert( AS_GetSSDurationFromRainfall));
     r = engine->RegisterGlobalSTDFunction("Map @FloodFill(const Map &in DEM, const Map &in HInit, int iter_max = 1000, bool subtract_slope= false)", GetFuncConvert( AS_FloodFill));
-    r = engine->RegisterGlobalSTDFunction("Map @FloodReconstruct(const Map &in DEM, const Map &in HSS, const Map &in Hinv, int iter_max = 1000)", GetFuncConvert( AS_FlowReconstruct));
+    r = engine->RegisterGlobalSTDFunction("Map @FloodReconstruct(const Map &in DEM, const Map &in HSS, const Map &in Hinv, int iter_max, float c, float d, float e, float f)", GetFuncConvert( AS_FlowReconstruct));
 
-    r = engine->RegisterGlobalSTDFunction("array<Map> @FlowFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, float scale_initial = 1.0, float iter_scale = 1.0)", GetFuncConvert( AS_FastFlood));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @FlowFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, float scale_initial = 1.0, float iter_scale = 1.0, int reconstruct = 0)", GetFuncConvert( AS_FastFlood));
 
 
     r = engine->RegisterGlobalSTDFunction("array<Field> @FlowIncompressible3D(array<Field> &in state, Field &in Block,Field &in BlockU,Field &in BlockV,Field &in BlockW, float dt, float visc = 1.0,float courant = 0.2, float beta0 = 1.7)", GetFuncConvert(  AS_IncompressibleFlow3D));
@@ -636,6 +640,9 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     //Comparative correlation coefficients
     r = engine->RegisterGlobalFunction("double MapCohensKappa(const Map &in Observed, const Map &in Model)", asFUNCTIONPR( AS_RasterCohensKappa,(cTMap*,cTMap*),double),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("double MapContinuousCohensKappa(const Map &in Observed, const Map &in Model, double threshold)", asFUNCTIONPR( AS_RasterContinuousCohensKappa,(cTMap*,cTMap*, double),double),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double MapAccuracy(const Map &in Observed, const Map &in Model)", asFUNCTIONPR( AS_RasterAccuracy,(cTMap*,cTMap*),double),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double MapPrecisionRecall(const Map &in Observed, const Map &in Model)", asFUNCTIONPR( AS_RasterPrecisionRecall,(cTMap*,cTMap*),double),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double MapContinuousPrecisionRecall(const Map &in Observed, const Map &in Model, double threshold)", asFUNCTIONPR( AS_RasterContinuousPrecisionRecall,(cTMap*,cTMap*, double),double),  asCALL_CDECL); assert( r >= 0 );
 
     engine->RegisterGlobalFunction("float Random(float min = 0.0,float max = 1.0)",asFUNCTIONPR(RandomFloat,(float,float),float),asCALL_CDECL);
     engine->RegisterGlobalFunction("float RandomNormal(float mean = 0.0,float sigma = 1.0)",asFUNCTIONPR(RandomNormalFloat,(float,float),float),asCALL_CDECL);

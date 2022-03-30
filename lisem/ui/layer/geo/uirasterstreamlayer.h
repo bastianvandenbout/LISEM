@@ -1170,6 +1170,7 @@ public:
                     float hmin = m_RDP->GetBandStats(rsb_r->band).min;
                     float hmax = m_RDP->GetBandStats(rsb_r->band).max;
 
+                    std::cout << "get stats " << hmin << " " << hmax <<std::endl;
 
                     if(!(s.m_Intervalb1.GetMax()  == 0.0f && s.m_Intervalb1.GetMin()  == 0.0f) && s.m_Intervalb1.GetMax()  > s.m_Intervalb1.GetMin() )
                     {

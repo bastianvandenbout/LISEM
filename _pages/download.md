@@ -23,6 +23,12 @@ Version 6.845
 The new LISEM software, a geo-spatial modelling and analysis tool focusing on multi-hazards, is now public in alpha-relase. 
 WARNING: Contains various bugs!! 
 
+Version 0.2.3
+
+| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.3.zip/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.3-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
+| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.3-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
+
 Version 0.2.2
 
 | [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.2.zip/download) | ![LISEM](/assets/img/logonav.png) |
@@ -40,13 +46,6 @@ Version 0.1.1
 | [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.1.1.zip/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.1.1-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.1.1-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
-
-Version 0.1.0
-
-| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem.zip/download) | ![LISEM](/assets/img/logonav.png) |
-| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.1.0-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
-| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.1.0-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
-
 
 #### OpenLISEM Hazard
 The OpenLISEM Hazard model does not receive active support. It has become pretty stable, and is available here:
