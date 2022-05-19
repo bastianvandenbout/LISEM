@@ -404,6 +404,29 @@ public:
 
     }
 
+    std::function<void(QString, int)> m_StartCallBack;
+    bool m_StartCallBackSet = false;
+
+    template<typename _Callable, typename... _Args>
+    inline void SetCallBackStart(_Callable&& __f, _Args&&... __args)
+    {
+        //now we store this function pointer and call it later when a file is openened
+        m_StartCallBack = std::bind(std::forward<_Callable>(__f),std::forward<_Args>(__args)...,std::placeholders::_1,std::placeholders::_2);
+        m_StartCallBackSet = true;
+    }
+
+
+    std::function<void(QString, int)> m_StopCallBack;
+    bool m_StopCallBackSet = false;
+
+    template<typename _Callable, typename... _Args>
+    inline void SetCallBackStop(_Callable&& __f, _Args&&... __args)
+    {
+        //now we store this function pointer and call it later when a file is openened
+        m_StopCallBack = std::bind(std::forward<_Callable>(__f),std::forward<_Args>(__args)...,std::placeholders::_1,std::placeholders::_2);
+        m_StopCallBackSet = true;
+    }
+
 
     QString m_HomeDir;
 
@@ -519,6 +542,11 @@ public slots:
 
     inline void int_buttons_onpause()
     {
+        if(m_StopCallBackSet)
+        {
+            m_StopCallBack("",0);
+        }
+
         StartButton->setEnabled(true);
         PauseButton->setEnabled(false);
         StopButton->setEnabled(true);
@@ -526,6 +554,11 @@ public slots:
     }
     inline void int_buttons_onstop()
     {
+        if(m_StopCallBackSet)
+        {
+            m_StopCallBack("",0);
+        }
+
         StartButton->setEnabled(true);
         PauseButton->setEnabled(false);
         StopButton->setEnabled(false);
@@ -533,6 +566,11 @@ public slots:
     }
     inline void int_buttons_onstart()
     {
+        if(m_StartCallBackSet)
+        {
+            m_StartCallBack("",0);
+        }
+
         StartButton->setEnabled(false);
         PauseButton->setEnabled(true);
         StopButton->setEnabled(true);

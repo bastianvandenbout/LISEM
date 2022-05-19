@@ -194,6 +194,150 @@ inline cTMap * AS_SetMV(cTMap * Other,cTMap * Other2)
 
 }
 
+inline cTMap * AS_EdgeRight(cTMap * Other)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if( c == Other->nrCols() - 1)
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r][c+1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeLeft(cTMap * Other)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(c == 0 )
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r][c-1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeTop(cTMap * Other)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(r == 0 )
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                     if(pcr::isMV(Other->data[r-1][c]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeBottom(cTMap * Other)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(r == Other->nrRows() - 1)
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r+1][c]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
 inline cTMap * AS_Edge(cTMap * Other)
 {
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());

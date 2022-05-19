@@ -22,7 +22,8 @@
 extern QMutex *MessageMutex_ALL;
 extern QList<QString> *Messages_ALL;
 extern QList<int> *Levels_ALL;
-
+extern bool MessageUseCommandLine;
+extern bool MessageUseCommandLineS;
 extern QMutex *MessageMutex;
 extern QList<QString> *Messages;
 extern QList<int> *Levels;
@@ -33,7 +34,7 @@ typedef struct LeveledMessage
     int Level;
 } LeveledMessage;
 
-LISEM_API void InitMessages();
+LISEM_API void InitMessages(bool use_commandline);
 LISEM_API void AddMessage(QString message, int level);
 LISEM_API QList<LeveledMessage> GetMessages();
 LISEM_API QList<LeveledMessage> GetMessages_ALL();
@@ -62,7 +63,7 @@ extern QMutex *MessageMutexSTD; //STD means Script Tool Dialog
 extern QList<QString> *MessagesSTD;
 extern QList<int> *LevelsSTD;
 
-LISEM_API void InitMessagesS();
+LISEM_API void InitMessagesS(bool use_commandline);
 LISEM_API void AddMessageS(QString message, int level);
 LISEM_API QList<LeveledMessage> GetMessagesS();
 LISEM_API QList<LeveledMessage> GetMessagesSTD();

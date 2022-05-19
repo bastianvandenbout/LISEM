@@ -342,9 +342,67 @@ public:
 
     }
 
+    bool has_callback_commandline = false;
+    std::function<void(void)> m_CallBack_CommandLine;
+
+    template<typename _Callable, typename... _Args>
+    inline void  SetCommandLineCallBack(_Callable&& __f, _Args&&... __args)
+    {
+        m_CallBack_CommandLine = std::bind(std::forward<_Callable>(__f),std::forward<_Args>(__args)...);
+        has_callback_commandline = true;
+    }
+
+    inline bool SetCommandLineRun(QString file, bool has_dir, QString dir, bool quit)
+    {
+        //m_DatabaseWidget->m_
+
+        return false;
+
+    }
+    inline bool SetCommandLineCompile(QString file, bool has_dir, QString dir, bool quit)
+    {
+        return false;
+    }
+
+    inline bool SetCommandLineRunModel(QString file, bool has_dir, QString dir, bool quit)
+    {
+        return false;
+    }
+
+    inline bool SetCommandLineRunCalc(QString calc, bool has_dir, QString dir, bool quit)
+    {
+
+        return false;
+    }
+
+    inline bool SetCommandLineOpenFiles(QList<QString> calc, bool has_dir, QString dir, bool quit)
+    {
+
+
+        return false;
+    }
+
     bool OnFileOpenRequest(QString path, int type);
 
+    bool first_onshow = true;
 public slots:
+
+    inline void showEvent(QShowEvent* event) override
+    {
+        if(first_onshow)
+        {
+            first_onshow = false;
+            if(has_callback_commandline)
+            {
+                m_CallBack_CommandLine();
+            }
+
+        }
+        QWidget::showEvent(event);
+
+        //check command line task and potentially execute it
+
+    }
 
 
     void UpdateInterfaceFromModelData();

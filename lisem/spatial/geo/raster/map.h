@@ -620,7 +620,6 @@ inline void cTMap::AS_AddRef()
 {
     AS_refcount = AS_refcount + 1;
 
-    std::cout << "add ref " << AS_refcount << " " << this << std::endl;
 }
 
 inline void cTMap::AS_ReleaseRef()
@@ -628,12 +627,8 @@ inline void cTMap::AS_ReleaseRef()
 
     AS_refcount = AS_refcount - 1;
 
-    std::cout << "release ref " << AS_refcount << " " << this <<  std::endl;
-
     if(AS_refcount == 0)
     {
-
-        std::cout << "delete " << this << std::endl;
         delete this;
     }
 

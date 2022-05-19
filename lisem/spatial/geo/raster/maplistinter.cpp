@@ -6,7 +6,6 @@
 cTMap * cTMap::Assign(cTMap * other)
 {
 
-    std::cout << "assign " << this << " " << other << std::endl;
     if(AS_writeonassign)
     {
         AS_writefunc(other,AS_FileName);

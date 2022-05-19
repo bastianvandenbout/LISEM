@@ -130,7 +130,6 @@ inline cTMap * AS_WindowAverage(cTMap * Other,cTMap * WindowSize)
     MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(),Other->data.cell_sizeY());
     cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
 
-    std::cout << "create map " << map << std::endl;
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
         for(int c = 0; c < Other->data.nr_cols();c++)
@@ -755,7 +754,6 @@ inline cTMap * AS_WindowMinimum(cTMap * Other,cTMap * WindowSize)
 
     for(int r = 0; r < Other->data.nr_rows();r++)
     {
-        std::cout << "window min " << r<< std::endl;
         for(int c = 0; c < Other->data.nr_cols();c++)
         {
             if(pcr::isMV(Other->data[r][c]) || ( !WindowSize->AS_IsSingleValue? pcr::isMV(WindowSize->data[r][c]) : false))

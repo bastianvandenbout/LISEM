@@ -4,6 +4,7 @@
 QMutex *MessageMutex_ALL = NULL;
 QList<QString> *Messages_ALL = NULL;
 QList<int> *Levels_ALL = NULL;
+bool MessageUseCommandLine = false;
 
 QMutex *MessageMutex = NULL;
 QList<QString> *Messages = NULL;
@@ -12,13 +13,15 @@ QList<int> *Levels = NULL;
 QMutex *MessageMutexS = NULL;
 QList<QString> *MessagesS = NULL;
 QList<int> *LevelsS = nullptr;
+bool MessageUseCommandLineS = false;
 
 QMutex *MessageMutexSTD = NULL;
 QList<QString> *MessagesSTD = NULL;
 QList<int> *LevelsSTD = NULL;
 
-void InitMessages()
+void InitMessages(bool use_commandline)
 {
+    MessageUseCommandLine = use_commandline;
     Messages = new QList<QString>();
     Levels = new QList<int>();
     MessageMutex = new QMutex();
@@ -31,7 +34,10 @@ void InitMessages()
 
 void AddMessage(QString message, int level)
 {
-
+    if(MessageUseCommandLine)
+    {
+        std::cout << level << " " <<  message.toStdString() << std::endl;
+    }
     PrintQStringStdOut("LISEM " + QString::number(level) + message);
 
     if(MessageMutex != NULL)
@@ -59,6 +65,7 @@ void SetPrintUseStdOut(bool x)
 }
 void PrintQStringStdOut(const QString &s)
 {
+
     if(LISEM_use_cout)
     {
         std::cout << s.toStdString() << std::endl;
@@ -126,8 +133,9 @@ QList<LeveledMessage> GetMessages_ALL()
     return ret;
 }
 
-void InitMessagesS()
+void InitMessagesS(bool use_commandline)
 {
+    MessageUseCommandLineS = use_commandline;
     MessagesS = new QList<QString>();
     LevelsS = new QList<int>();
     MessageMutexS = new QMutex();
@@ -140,6 +148,11 @@ void InitMessagesS()
 
 void AddMessageS(QString message, int level)
 {
+
+    if(MessageUseCommandLineS)
+    {
+        std::cout << level << " " << message.toStdString() << std::endl;
+    }
     PrintQStringStdOut("LISEM_S2 " + QString::number(level) + message);
     if(MessageMutexS != NULL)
     {

@@ -244,6 +244,7 @@ inline void AS_WriteStringListToFileAbsPath(QString path, std::vector<QString> t
 inline void AS_WriteStringToFile(QString path, QString text)
 {
 
+    std::cout << "write to file " << path.toStdString() << " " << text.toStdString() << std::endl;
     AS_WriteStringToFileAbsPath(AS_DIR + path, text);
 }
 

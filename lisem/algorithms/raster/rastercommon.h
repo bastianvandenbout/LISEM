@@ -494,4 +494,49 @@ inline float GetMapValue_AvRepl(cTMap * map, int r, int c)
 }
 
 
+
+inline bool CheckMapsSameSizeError(QString functionname,std::vector<QString> argnames, std::vector<cTMap *> maps)
+{
+    if(maps.size() == 0)
+    {
+        return true;
+    }
+    int sizex = maps.at(0)->nrCols();
+    int sizey = maps.at(0)->nrRows();
+
+    for(int i = 0; i < maps.size(); i++)
+    {
+
+        if(maps.at(i)->nrCols() != sizex || maps.at(i)->nrRows() != sizey)
+        {
+            LISEMS_ERROR("Could not do function " + functionname+ " with inputs maps of different size : " + argnames.at(i));
+            throw 1;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+inline bool CheckMapsSameSize(std::vector<cTMap *> maps)
+{
+    if(maps.size() == 0)
+    {
+        return true;
+    }
+    int sizex = maps.at(0)->nrCols();
+    int sizey = maps.at(0)->nrRows();
+
+    for(int i = 0; i < maps.size(); i++)
+    {
+
+        if(maps.at(i)->nrCols() != sizex || maps.at(i)->nrRows() != sizey)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 #endif // RASTERCOMMON_H

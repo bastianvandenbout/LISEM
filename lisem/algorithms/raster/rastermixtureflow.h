@@ -1057,8 +1057,8 @@ static inline void flow_pudasainidtandflow(double _dt,cTMap * DEM,cTMap * N,cTMa
                         double dt_req = courant *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
                         double dt_reqs = courant *dx/( std::min(100.0f,std::max(0.01f,(sqrt(vxs*vxs + vys * vys)))));
 
-                        dt_min = std::min((double)dt_min,std::min(dt_reqs,dt_req));
-                        dt = std::min((double)dt_min,dt);
+                        dt_min = std::min(_dt-t,std::min((double)dt_min,std::min(dt_reqs,dt_req)));
+                        dt = std::min(_dt-t,std::min((double)dt_min,dt));
                     }
 
                 }

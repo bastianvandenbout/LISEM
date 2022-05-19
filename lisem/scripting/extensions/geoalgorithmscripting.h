@@ -231,6 +231,12 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("Map @SaxtonB(const Map&in Sand, const Map&in Clay, const Map&in Organic, const Map&in Gravel, float densityfactor =1.0)", asFUNCTION( AS_SaxtonB),  asCALL_CDECL); assert( r >= 0 );
     engine->RegisterGlobalFunction("Map @MedianGrainSize(const Map&in Sand, const Map&in Clay)", asFUNCTION(AS_MedianGrainSize),asCALL_CDECL);
     engine->RegisterGlobalFunction("Map @TextureClass(const Map&in Sand, const Map&in Clay)", asFUNCTION(AS_TextureClass),asCALL_CDECL);
+
+    engine->RegisterGlobalSTDFunction("Map @EvapotranspirationRef(const Map&in DEM, const Map &in temp, const Map &in wind, const Map &in vapr, const Map &in rad, const Map &in ndvi)", GetFuncConvert(AS_ReferenceEvapotranspiration)); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("Map @Evapotranspiration(const Map&in WFH, const Map &in Theta, const Map &in GWH, const Map &in SD, const Map &in ThetaS, const Map &in ET,const Map&in Kc, float dt)", GetFuncConvert(AS_Evapotranspiration)); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("Map @GreenAndAmptPercolation(const Map&in WFH, const Map &in Theta, const Map &in GWH, const Map &in SD, const Map &in Ksat, const Map&in Ksatb, const Map &in A, const Map &in B, const Map&in thetas, float dt)", GetFuncConvert(AS_GreenAndAmptPercolation)); assert( r >= 0 );
+
+
     //wave
     engine->RegisterGlobalSTDFunction("array<Map> @WaveEquation(const Map&in U, const Map&in UP, const Map&in c, float dt)", GetFuncConvert(AS_WaveEquation)); assert( r >= 0 );
     engine->RegisterGlobalFunction("Map @GaussianBump(const Map&in m, vec2 point, vec2 size, float intensity, float stdev = 1.0, float time = 0.0)", asFUNCTION( AS_GaussianBump),  asCALL_CDECL); assert( r >= 0 );

@@ -39,14 +39,10 @@ inline void DoChrono()
             m_system.SetSolver(m_Solver);
             m_system.SetMaxPenetrationRecoverySpeed(1.0);
             //m_system.SetTimestepperType(ChTimestepper::Type::RUNGEKUTTA45);
-            std::cout << " a"  << std::endl;
         }
-        std::cout <<" b" << std::endl;
     }
-    std::cout << " c" << std::endl;
 
     for(int i= 0; i < 10; i++){
-        std::cout << "qssl "  << QSslSocket::sslLibraryBuildVersionString().toStdString() << std::endl;
 
         //SPHazard sphazard;
 
@@ -57,8 +53,6 @@ inline void DoChrono()
 
     }
 
-    std::cout << "done" << std::endl;
-
 }
 
 #include "lisem.h"
@@ -68,7 +62,6 @@ int main(int argc, char *argv[])
 
 
     DoChrono();
-    std::cout << "qssl "  << QSslSocket::sslLibraryBuildVersionString().toStdString() << std::endl;
 
     SPHazard sphazard;
 

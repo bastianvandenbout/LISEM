@@ -333,6 +333,9 @@ void main()
                             }
 
                             fragColor = vec4(1.0,1.0,1.0,0.75 * alphaf);
+                        }else
+                        {
+                            fragColor = vec4(1.0,1.0,1.0,0.0);
                         }
                     }else if(edit_shapetype == 1)
                     {
@@ -351,6 +354,9 @@ void main()
                             }
 
                             fragColor = vec4(1.0,1.0,1.0,0.75 * alphaf);
+                        }else
+                        {
+                            fragColor = vec4(1.0,1.0,1.0,0.0);
                         }
                     }
                 }

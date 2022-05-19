@@ -41,6 +41,9 @@
 #include "raster/rasterdiffuse.h"
 #include "raster/rasterdither.h"
 #include "raster/rasterfastflow.h"
+#include "raster/rasterlaplace.h"
+#include "raster/rasterpotentialflow.h"
+#include "raster/rasterfastwave.h"
 
 #include "omp.h"
 
@@ -332,6 +335,10 @@ inline void RegisterMapMathToScriptEngine(asIScriptEngine *engine)
     r = engine->RegisterGlobalFunction("float IsValMV(float s)", asFUNCTION( AS_IsValMV),  asCALL_CDECL); assert( r >= 0 );
 
     r = engine->RegisterGlobalFunction("Map @MapEdge(const Map &in m)", asFUNCTION(AS_Edge), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeLeft(const Map &in m)", asFUNCTION(AS_EdgeLeft), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeRight(const Map &in m)", asFUNCTION(AS_EdgeRight), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeTop(const Map &in m)", asFUNCTION(AS_EdgeTop), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeBottom(const Map &in m)", asFUNCTION(AS_EdgeBottom), asCALL_CDECL);
 
 
     //register map averages (normal and reductive->meaning not a map but single float is returned)
@@ -566,6 +573,11 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowDebris(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, const Map &in HS, const Map &in VXS, const Map&in VYS, const Map &in IFA, const Map &in RS, const Map&in D, float dragmult, float dt, float courant = 0.1)",GetFuncConvert(AS_DebrisWave));
 
 
+    r = engine->RegisterGlobalSTDFunction("Map @EikonalSolve(const Map &in Mask, const Map &in C, int iter_max = -1)",GetFuncConvert(AS_EikonalSolve));
+
+    r = engine->RegisterGlobalSTDFunction("Map @EnergySpread(const Map&in Source, const Map&in ux1, const Map&in ux2, const Map&in uy1, const Map&in uy2,int iter_max)",GetFuncConvert(AS_WaveEnergySpread));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @WaveEnergySteadyState(const Map &in E_Source, int iter_max, float fac_lat_intert = 0.25)",GetFuncConvert(AS_WaveEnergySteadyState));
+
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowBoussinesq(const Map &in DEM, const Map &in N, const Map &in H, const Map &in VX, const Map &in VY, float dt, float courant = 0.1)", GetFuncConvert(AS_BoussinesqWave));
     r = engine->RegisterGlobalFunction("Map @FlowSteady(const Map &in DEM, const Map &in N, const Map &in Source, const Map &in Sink, int iter = 100, float courant = 0.1)", asFUNCTIONPR(    AS_SteadyStateWave,(cTMap *,cTMap *,cTMap *,cTMap *,int,float),cTMap *),  asCALL_CDECL); assert( r >= 0 );;
     r = engine->RegisterGlobalSTDFunction("array<Map> @FlowTsunami(const Map &in DEM, const Map &in H, const Map &in U, const Map &in V, const Map & in N, float timestep = 0.1)", GetFuncConvert(AS_TsunamiFlow));
@@ -616,6 +628,11 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     engine->RegisterGlobalFunction("double HyperGeometric(double a, double b, double c, double x)", asFUNCTION(hypergeometric),  asCALL_CDECL);
     engine->RegisterGlobalFunction("Map @Diffusion(const Map&in Value, float coeff, float dt, int iter = 1)", asFUNCTION(AS_Diffusion),  asCALL_CDECL); assert( r >= 0 );
 
+    r = engine->RegisterGlobalSTDFunction("Map @SolveLaplace(const Map &in Initial, const Map&in Forced, int iterations)", GetFuncConvert( AS_SolveLaplace));
+    r = engine->RegisterGlobalSTDFunction("Map @SolvePoisson(const Map &in Initial, const Map&in Forced, const Map &in f, int iterations)", GetFuncConvert( AS_SolvePoisson));
+    r = engine->RegisterGlobalSTDFunction("Map @SolvePoissonWeighted(const Map &in Initial, const Map&in Forced, const Map &in f, float wx1,float wx2, float wy1, float wy2,int iterations)", GetFuncConvert( AS_SolvePoissonW));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @SolvePoissonWeightedC(const Map &in Initial, const Map&in Forced, const Map &in f, float wx1,float wx2, float wy1, float wy2,int iterations)", GetFuncConvert( AS_SolvePoissonWC));
+    r = engine->RegisterGlobalSTDFunction("array<Map> @SolvePoissonAbsTotal(const Map &in Initial, const Map&in Forced, const Map &in f, int iterations)", GetFuncConvert( AS_SolvePoissonAbsTotal));
 
 
     r = engine->RegisterGlobalFunction("Map @SuperResolutionSISR(const Map &in s1,float upscale = 2.0, int iterations  =1, int tilesize = 512, int patchSize = 4, int PatchOverlap = 3, double lambda = 1e-12, int neighborhoodSize = 200, double neighborhoodWeight = 1.0, bool wavelet = false)", asFUNCTIONPR( AS_SuperResolutionSISR,(cTMap*, float,int,int,int,int,double,int,double,bool),cTMap*),  asCALL_CDECL); assert( r >= 0 );

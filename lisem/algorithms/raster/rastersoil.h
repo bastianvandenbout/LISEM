@@ -2,10 +2,222 @@
 #define RASTERSOIL_H
 
 
-
-
-
+#include "rastercommon.h"
 #include "geo/raster/map.h"
+
+//run evapotranspiration
+
+/* float yterm = 0.000665f * 101.3f*pow((293.0f-0.0065f*z)/293.0f,5.26f);
+        float T = temp;
+        float u = wind;
+        float ea = vapr;
+        float height_u = 2.0f;
+        float uh = 4.87f/(log(67.8f * height_u - 5.42f));
+        float lighthours = 8.0f;
+        float Rn = rad * (1.0f-0.23f) *(0.75f + (2.0e-5f)*z)/1000.0f;
+        float Rl = max(0.0f,(4.903f*10e-9f) * pow(T+237.0f,4.0f)*(0.34f - (0.14f)*sqrt(ea))*(1.34f*(rad/1000.0f)/Rn - 0.35f))/1000.0f;
+        //float LAI = ndvi * 4.0;
+        float G = Rn *(0.4f * lighthours/24.0f + 1.8f *(1.0f -lighthours/24.0f))*exp(-0.5f*ndvi * 6.0f);
+        float es = 0.6108f*exp(17.27f*T/(T+237.3f));
+
+        float delta = 4098.0f *(0.6108f*exp((17.27f*T)/(T+237.3f)))/((T+237.3f)*(T+237.3f));
+
+        float ET0 = (0.408f*delta *((Rn-Rl) - G) + (yterm *(900.0f)/(T+273.3f))*uh*(es-ea))/(delta + yterm*(1.0f + uh*34.0f));
+
+        //to meters per second
+        float etref = max(0.0f, ET0)/1000.0f;
+
+        float GWTheta = max((float)(ThetaR), min((float)(ThetaS),(float)(GWUH/max((float)(0.01),(float)((SD - WFH/ThetaS - GWH/ThetaS))))));
+
+
+        float et_act = min(GWH+GWUH,cropf * etref * GWTheta);
+
+        float et_act_left = max(0.0f,et_act-GWUH);
+        float et_act_left2 =  max(0.0f,et_act-GWH);*/
+
+inline static cTMap * AS_ReferenceEvapotranspiration(cTMap * DEM, cTMap * temp, cTMap * wind, cTMap * vapr, cTMap * rad, cTMap * ndvi)
+{
+    cTMap * res = DEM->GetCopy0();
+
+    CheckMapsSameSizeError("ReferenceEvapoTranspiration",{"DEM","temp","wind","vapr","rad","ndvi"},{DEM,temp,wind,vapr,rad,ndvi});
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < DEM->data.nr_rows();r++)
+    {
+        for(int c = 0; c < DEM->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(DEM->data[r][c]))
+            {
+                float z = DEM->data[r][c];
+                float yterm = 0.000665f * 101.3f*std::pow((293.0f-0.0065f*z)/293.0f,5.26f);
+                    float T = temp->data[r][c];
+                    float u = wind->data[r][c];
+                    float ea = vapr->data[r][c];
+                    float height_u = 2.0f;
+                    float uh = 4.87f/(log(67.8f * height_u - 5.42f));
+                    float lighthours = 8.0f;
+                    float Rn = rad->data[r][c] * (1.0f-0.23f) *(0.75f + (2.0e-5f)*z)/1000.0f;
+                    float Rl = std::max(0.0f,(4.903f*10e-9f) * std::pow(T+237.0f,4.0f)*(0.34f - (0.14f)*std::sqrt(ea))*(1.34f*(rad->data[r][c]/1000.0f)/Rn - 0.35f))/1000.0f;
+                    //float LAI = ndvi * 4.0;
+                    float G = Rn *(0.4f * lighthours/24.0f + 1.8f *(1.0f -lighthours/24.0f))*std::exp(-0.5f*ndvi->data[r][c] * 6.0f);
+                    float es = 0.6108f*std::exp(17.27f*T/(T+237.3f));
+
+                    float delta = 4098.0f *(0.6108f*std::exp((17.27f*T)/(T+237.3f)))/((T+237.3f)*(T+237.3f));
+
+                    float ET0 = (0.408f*delta *((Rn-Rl) - G) + (yterm *(900.0f)/(T+273.3f))*uh*(es-ea))/(delta + yterm*(1.0f + uh*34.0f));
+
+                    //to meters per second
+                    float etref = std::max(0.0f, ET0)/1000.0f;
+                    res->data[r][c] = etref;
+            }
+        }
+        }
+
+
+    return res;
+}
+
+
+inline static std::vector<cTMap *>  AS_Evapotranspiration(cTMap * WFH, cTMap * Theta, cTMap * GWH, cTMap * SD, cTMap * ThetaS, cTMap * ReferenceET, cTMap * Kc, float dt)
+{
+
+    CheckMapsSameSizeError("ReferenceEvapoTranspiration",{"DEM","Theta","GWH","SD","ThetaS","ReferenceET","Kc"},{WFH,  Theta,  GWH,  SD, ThetaS, ReferenceET,  Kc});
+
+    cTMap * WFHN = WFH->GetCopy0();
+    cTMap * ThetaN = WFH->GetCopy0();
+    cTMap * GWHN = WFH->GetCopy0();
+    cTMap * ETReal = WFH->GetCopy0();
+
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < WFH->data.nr_rows();r++)
+    {
+        for(int c = 0; c < WFH->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(WFH->data[r][c]))
+            {
+
+                float sd = SD->data[r][c];
+                float thetas = std::max(0.01f,ThetaS->data[r][c]);
+                float w_wf = WFH->data[r][c];
+                float w_us = std::min(thetas,Theta->data[r][c]) *std::max(0.0f,SD->data[r][c] - WFH->data[r][c]/thetas - GWH->data[r][c]/thetas);
+                float w_s = GWH->data[r][c];
+
+                float theta_rel = std::min(thetas,Theta->data[r][c])/thetas;
+
+                //use crop factor to get actual evapotranspiration
+
+                float et_real = ReferenceET->data[r][c] * Kc->data[r][c] * dt;
+
+                //now get what we can from wetting front
+
+                float et_wf = std::min(w_wf,et_real);
+
+                et_real = et_real - et_wf;
+
+                float et_us = std::min(w_us,et_real);
+
+                et_real = et_real - et_us;
+
+                float et_s = std::min(w_s,et_real * theta_rel);
+
+                et_real = et_real - et_s;
+
+                //then get what we can from unsaturated layer and saturated layer
+
+                //scaling the evaporation from ground water by saturation in unsaturated zone (trick from R. van Beek, 2002)
+
+                GWHN->data[r][c] = std::max(0.0f, std::min(sd * thetas,(w_s - et_s)));
+                WFHN->data[r][c] = std::max(0.0f,std::min(sd * thetas - GWHN->data[r][c],(w_wf - et_wf)));
+                ThetaN->data[r][c] =std::max(0.0f,std::min(thetas,std::min(sd * thetas - GWHN->data[r][c] - WFHN->data[r][c],(w_us - et_us))/(std::max(w_us,sd - GWHN->data[r][c]/thetas - WFHN->data[r][c]/thetas)));
+                ETReal->data[r][c] = et_wf + et_us + et_s;
+            }
+        }
+    }
+
+
+    return {wfhn, ThetaN, GWHN,ETReal};
+}
+
+//run green and ampt with percolation to ground water
+inline static std::vector<cTMap *> AS_GreenAndAmptPercolation(cTMap * WFH, cTMap * Theta, cTMap * GWH, cTMap * SD,cTMap * ksat,cTMap * ksatb, cTMap * A, cTMap * B,cTMap * ThetaS, float dt)
+{
+
+
+    //do infiltration
+    cTMap * wfhn = WFH->GetCopy();
+    cTMap * watern = water->GetCopy();
+    cTMap * ThetaN = Theta->GetCopy0();
+    cTMap * GWHN = GWN->GetCopy0();
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < WFH->data.nr_rows();r++)
+    {
+        for(int c = 0; c < WFH->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(WFH->data[r][c]))
+            {
+                float sd = SD->data[r][c];
+                float thetas = std::max(0.01f,ThetaS->data[r][c]);
+                float a = A->data[r][c];
+                float b = B->data[r][c];
+
+                float lambda = 1.0/std::max(1e-12f,b);
+
+                float w_wf = WFH->data[r][c];
+                float w_us = std::min(thetas,Theta->data[r][c]) *std::max(0.0f,SD->data[r][c] - WFH->data[r][c]/thetas - GWH->data[r][c]/thetas);
+                float w_s = GWH->data[r][c];
+                float theta = Theta->data[r][c];
+
+                float space_infil = std::max((float) (0.0),(float)(SD->data[r][c] - WFH->data[r][c]));
+                float GA_PSI = psi->data[r][c];
+                float KSattop = ksat->data[r][c];
+                float KSatb = ksatb->data[r][c];
+
+                float KSattop = ksat->data[r][c];
+                float KSatb = ksatb->data[r][c];
+
+                float KSattopus = ksat->data[r][c] * std::pow(std::max(0.0001f,std::min(1.0f,theta/thetas)),3.0+2.0/lambda);
+                float KSatbus = ksatb->data[r][c] * std::pow(std::max(0.0001f,std::min(1.0f,theta/thetas)),3.0+2.0/lambda);
+
+
+                float ksat_wfcomp = KSattop * (1.0f + (GA_PSI * std::max(0.00001f,(float)(ThetaS->data[r][c] - Theta->data[r][c])))/(std::max(0.01f,(float)(WFH->data[r][c]/std::max(0.00001f,(ThetaS->data[r][c] - Theta->data[r][c]))))));
+                float infil_pot = std::min((float)(water->data[r][c] * 0.5),std::min((float)(space_infil * 0.5),(float)(ksat_wfcomp * dt)));
+
+                //limit potential infiltration by available room
+                float room = std::max(0.0f,thetas * sd - w_wf - w_us - w_s);
+                infil_pot = std::min(room,infil_pot);
+
+                watern->data[r][c] = water->data[r][c] - infil_pot;
+                wfhn->data[r][c] =  WFH->data[r][c] + infil_pot;
+
+                float ush = std::min(sd,std::max(0.0f,sd  - (w_s/thetas + wfhn->data[r][c]/thetas)));
+
+                //darcy law
+                float flux_wf_us = (wfhn->data[r][c]/(wfhn->data[r][c]/thetas + 0.5 * ush)) * (0.5 * (KSattop + KSattopus)) * dt;
+                float flux_us_s  = ((theta * ush)/(0.5 * ush))* ((KSatbus)) * dt;
+
+                wfhn->data[r][c] -= flux_wf_us;
+                w_us += flux_wf_us - flux_us_s;
+                w_s += flux_us_s;
+
+                GWHN->data[r][c] = w_s;
+                ThetaN->data[r][c] =std::max(0.0f,std::min(thetas,std::min(sd * thetas - GWHN->data[r][c] - wfhn->data[r][c],(w_us))/(std::max(w_us,sd - GWHN->data[r][c]/thetas - wfhn->data[r][c]/thetas))));
+
+
+
+
+
+            }
+        }
+    }
+
+    return {wfhn, ThetaN, GWHN,watern};
+
+    //now percolate from bottom of wetting front to unsaturated zone, movement takes place to distribute the moving water over the entire unsaturated zone
+    //finally move some of the unsaterated zone layer towads the groundwater layer
+
+}
 
 inline static std::vector<cTMap *> AS_GreenAndAmpt(cTMap * WFH, cTMap * water, cTMap * SD, cTMap * ksat, cTMap * ThetaS, cTMap * Theta, cTMap * psi, float dt)
 {
@@ -45,7 +257,7 @@ inline static cTMap * AS_SaxtonKSat(cTMap * SAND, cTMap * CLAY, cTMap * ORGANIC,
         float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
         float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
         float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-        float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+        float Gravel = std::min(1000.0f,std::max(0.1f,1000.0f * GRAVEL->data[r][c]));
 
         float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
         float M1500adj =M1500+0.14*M1500-0.02;
@@ -96,7 +308,7 @@ inline static cTMap * AS_SaxtonPorosity(cTMap * SAND, cTMap * CLAY, cTMap * ORGA
         float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
         float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
         float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-        float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+        float Gravel = std::min(1000.0f,std::max(0.1f,1000.0f * GRAVEL->data[r][c]));
 
         float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
         float M1500adj =M1500+0.14*M1500-0.02;
@@ -146,7 +358,7 @@ inline static cTMap * AS_SaxtonSuction(cTMap * SAND, cTMap * CLAY, cTMap * ORGAN
         float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
         float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
         float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-        float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+        float Gravel = std::min(1000.0f,std::max(0.1f,1000.0f * GRAVEL->data[r][c]));
 
         float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
         float M1500adj =M1500+0.14*M1500-0.02;
@@ -197,7 +409,7 @@ inline static cTMap * AS_SaxtonFieldCapacity(cTMap * SAND, cTMap * CLAY, cTMap *
         float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
         float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
         float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-        float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+        float Gravel = std::min(1000.0f,std::max(0.1f,1000.0f * GRAVEL->data[r][c]));
 
         float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
         float M1500adj =M1500+0.14*M1500-0.02;
@@ -248,7 +460,7 @@ inline static cTMap * AS_SaxtonA(cTMap * SAND, cTMap * CLAY, cTMap * ORGANIC, cT
         float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
         float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
         float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-        float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+        float Gravel = std::min(1000.0f,std::max(0.1f,1000.0f * GRAVEL->data[r][c]));
 
         float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
         float M1500adj =M1500+0.14*M1500-0.02;
@@ -298,7 +510,7 @@ inline static cTMap * AS_SaxtonB(cTMap * SAND, cTMap * CLAY, cTMap * ORGANIC, cT
         float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
         float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
         float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-        float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+        float Gravel = std::min(1000.0f,std::max(0.1f,1000.0f * GRAVEL->data[r][c]));
 
         float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
         float M1500adj =M1500+0.14*M1500-0.02;

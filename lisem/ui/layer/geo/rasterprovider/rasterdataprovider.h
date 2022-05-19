@@ -855,16 +855,13 @@ public:
     {
         if(m_HasTime && all_time)
         {
-            std::cout << "get tband stats " << std::endl;
             return m_TBandStats.at(band);
         }
         if(band == 0)
         {
-            std::cout << "get main stats " << std::endl;
             return m_Stats;
         }else if(m_IsMemoryMap)
         {
-            std::cout << "get mem stats " << std::endl;
             return m_MBandStats.at(0).at(band);
 
         }else {

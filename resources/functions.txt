@@ -2722,5 +2722,212 @@ Work In Progress
 
 
 
+#SaxtonKSat
+Get the saturated conducivity of a soil as estimated from texture and contents. This uses emperical relationships by Saxton et al. (2006). Output units are meters per second.
+@return KSat
+The saturated conductivity map in meters per second.
+@param Sand fraction
+Fractional volumetric percentage of Sand (ranging from 0 to 1).
+@param Clay fraction
+Fractional volumetric percentage of Clay (ranging from 0 to 1).
+@param Organic Matter
+Organic matter content in grams per kilogram.
+@param Gravel content
+Fractional volumetric content of gravel (ranging from 0 to 1).
+@param Density factor
+Number indicating potential compaction (1.1), normal state (1.0) or loose soil (0.9).
+
+#SaxtonPorosity
+Get the porosity of a soil as estimated from texture and contents. This uses emperical relationships by Saxton et al. (2006). Output units are in cubic meters per cubic meters.
+@return Porosity
+The porosity in cubic meters per cubic meters.
+@param Sand fraction
+Fractional volumetric percentage of Sand (ranging from 0 to 1).
+@param Clay fraction
+Fractional volumetric percentage of Clay (ranging from 0 to 1).
+@param Organic Matter
+Organic matter content in grams per kilogram.
+@param Gravel content
+Fractional volumetric content of gravel (ranging from 0 to 1).
+@param Density factor
+Number indicating potential compaction (1.1), normal state (1.0) or loose soil (0.9).
 
 
+#SaxtonSuction
+Get the matric suction of a soil as estimated from texture and contents. This uses emperical relationships by Saxton et al. (2006). Output units are meters.
+@return Psi
+The matric suction for specified water content.
+@param Sand fraction
+Fractional volumetric percentage of Sand (ranging from 0 to 1).
+@param Clay fraction
+Fractional volumetric percentage of Clay (ranging from 0 to 1).
+@param Organic Matter
+Organic matter content in grams per kilogram.
+@param Gravel content
+Fractional volumetric content of gravel (ranging from 0 to 1).
+@param Saturation
+Fractional effective saturation (between residual and full capacity) (ranging from 0 to 1).
+@param Density factor
+Number indicating potential compaction (1.1), normal state (1.0) or loose soil (0.9).
+
+#SaxtonFieldCapacity
+Get the field capacity of a soil as estimated from texture and contents. This uses emperical relationships by Saxton et al. (2006). Output units are in cubic meters per cubic meters.
+@return KSat
+The field capacity in cubic meters per cubic meters.
+@param Sand fraction
+Fractional volumetric percentage of Sand (ranging from 0 to 1).
+@param Clay fraction
+Fractional volumetric percentage of Clay (ranging from 0 to 1).
+@param Organic Matter
+Organic matter content in grams per kilogram.
+@param Gravel content
+Fractional volumetric content of gravel (ranging from 0 to 1).
+@param Density factor
+Number indicating potential compaction (1.1), normal state (1.0) or loose soil (0.9).
+
+#SaxtonA
+Get the emperical A parameter in Saxtons pedotransfer functions. These parameters can be used to predict hydraulic conductivity as: Ks*(theta/thetas)^(3+2B). 
+@return A
+The A parameter.
+@param Sand fraction
+Fractional volumetric percentage of Sand (ranging from 0 to 1).
+@param Clay fraction
+Fractional volumetric percentage of Clay (ranging from 0 to 1).
+@param Organic Matter
+Organic matter content in grams per kilogram.
+@param Gravel content
+Fractional volumetric content of gravel (ranging from 0 to 1).
+@param Density factor
+Number indicating potential compaction (1.1), normal state (1.0) or loose soil (0.9).
+
+#SaxtonB
+Get the emperical B parameter in Saxtons pedotransfer functions.These parameters can be used to predict hydraulic conductivity as: Ks*(theta/thetas)^(3+2B). 
+@return B
+The B parameter.
+@param Sand fraction
+Fractional volumetric percentage of Sand (ranging from 0 to 1).
+@param Clay fraction
+Fractional volumetric percentage of Clay (ranging from 0 to 1).
+@param Organic Matter
+Organic matter content in grams per kilogram.
+@param Gravel content
+Fractional volumetric content of gravel (ranging from 0 to 1).
+@param Density factor
+Number indicating potential compaction (1.1), normal state (1.0) or loose soil (0.9).
+
+
+#RasterCut(Map,Region)
+Cut out a part of a map. The region to cut is defined by Region, and the cut-out has the same pixel-size.
+@return cut
+The portion of the map contained by Region.
+@param Map
+The map to cut from
+@param Region
+The geospatial region to cut out.
+
+#RasterCut(Map,int,int,int,int)
+Cut out a part of a map. The region to cut is defined by the intervals of rows and columns, and the cut-out has the same pixel-size.
+@return cut
+The portion of the map contained by Region.
+@param Map
+The map to cut from
+@param FirstRow
+The first row index that falls within the new map.
+@param FirstColumn
+The first column index that falls within the new map.
+@param NumberRows
+The last row index that falls within the new map.
+@param NumberColumns
+The last column index that falls within the new map.
+
+#RasterCut(array,Region)
+Cut out a part of a map. The region to cut is defined by Region, and the cut-out has the same pixel-size.
+@return cut
+The portion of the map contained by Region.
+@param Map
+The map to cut from
+@param Region
+The geospatial region to cut out.
+
+#RasterCut(array,int,int,int,int)
+Cut out a part of a map. The region to cut is defined by the intervals of rows and columns, and the cut-out has the same pixel-size.
+@return cut
+The portion of the map contained by Region.
+@param Map
+The map to cut from
+@param FirstRow
+The first row index that falls within the new map.
+@param FirstColumn
+The first column index that falls within the new map.
+@param NumberRows
+The last row index that falls within the new map.
+@param NumberColumns
+The last column index that falls within the new map.
+
+#RasterConfusionMatrix(Map,Map)
+Creates a confusion matrix from two classified maps. Both maps are (if needed) converted to integer. For each unique class in either map, the number of pixels classified as any other class is given in the table. The correctly classified pixels are in the diagonal of the table.
+@return ConfusionMatrix
+The confusion matrix, in numbers of pixels.
+@param Map1
+The first Map containing classes
+@param Map2
+The second Map containing classes
+
+
+#FlowKinematicSuspendedTransport
+#SimilaritySpread
+#Accuflux2D
+#SSAccumulate
+#AccufluxSoil
+#FlowIncompressible
+#FlowErosionDeposition
+#SplashErosion
+#ConductiveDiffuse
+#ConductiveFeedbackDiffuse
+#Quantize
+#SpreadProperty
+#Accumulate2D
+#Accumulate2DT
+#Accumulate2DTReach
+#FloodFill
+#FloodReconstruct
+#GetSSRainfallMaxVol
+#GetTotalRain
+#GetSSDurationRain
+#FlowIncompressible3D
+#Diffusion
+#MapAccuracy
+#MapPrecisionRecall
+#MapContinuousPrecisionRecall
+#GetClosestCells
+#GetClosestCoordinate
+#RasterMoveToCell
+#RasterCellSample
+#RasterCoordinateSample
+#uppergamma
+#lowergamma
+#gamma 
+#SaveThisMap
+#NCDFGetVarNames
+#NCDFGetDimNames
+#NCDFGetDimSizes
+#PrintHDF5
+#ReadHDF5Map
+#SlopeStabilityIS
+#SlopeStabilityIFM
+#SlopeStabilityISS
+#SlopeStabilityRES
+#SlopeStabilityRESAll
+#TerrainErode
+#GreenAndAmpt
+#MedianGrainSize
+#TextureClass
+#WaveEquation
+#GaussianBump
+#SHWaveEquation
+#PSVWaveEquation
+#OkadaDeform
+#TerrainProfileMap
+#MarchingCubes
+#SteadyStateCorrection
+#MVMap

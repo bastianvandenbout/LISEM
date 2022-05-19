@@ -454,6 +454,11 @@ public:
 
      m_FileEditor = new ScriptTool(sm);
 
+     m_FileEditor->SetCallBackStart(&DatabaseTool::OnScriptStarted,this);
+     m_FileEditor->SetCallBackStop(&DatabaseTool::OnScriptStopped,this);
+
+
+
 
      m_MenuWidget = new QWidget(this);
      m_MenuLayout = new QHBoxLayout(m_MenuWidget);
@@ -713,6 +718,22 @@ public:
     {
 
         delete m_ConsoleMutex;
+    }
+
+
+    inline void OnScriptStarted(QString script, int index)
+    {
+
+        model2->setOption(QFileSystemModel::DontWatchForChanges,true);
+
+    }
+
+    inline void OnScriptStopped(QString script, int index)
+    {
+
+        model2->setOption(QFileSystemModel::DontWatchForChanges,false);
+
+
     }
 
     std::function<bool(QString, int)> m_FileCallBack;

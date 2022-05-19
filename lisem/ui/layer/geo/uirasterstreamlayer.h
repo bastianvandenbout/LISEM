@@ -3119,10 +3119,6 @@ public:
 
     inline void CheckDeleteFromBuffers(OpenGLCLManager * m,QList<RasterStreamBuffer *> &list)
     {
-        std::cout << "check delete buffer "<< std::endl;
-
-
-        std::cout << "check buffer delete " << list.length()-1 << std::endl;
         //std::cout << "set all buffers as non-used " << std::endl;
         for(int i = list.length()-1; i >-1 ; i--)
         {

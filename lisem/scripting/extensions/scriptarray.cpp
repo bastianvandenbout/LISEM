@@ -1922,8 +1922,7 @@ void CScriptArray::CopyBuffer(SArrayBuffer *dst, SArrayBuffer *src)
 				asITypeInfo *subType = objType->GetSubType();
 				for( ; d < max; d++, s++ )
                 {
-                    std::cout << "script assign obj : " << *d << " " << *s << std::endl;
-					engine->AssignScriptObject(*d, *s, subType);
+                    engine->AssignScriptObject(*d, *s, subType);
                 }
 			}
 			else

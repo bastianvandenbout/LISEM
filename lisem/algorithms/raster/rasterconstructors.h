@@ -7,7 +7,6 @@ inline cTMap * MapFactory()
 {
     cTMap * m = new cTMap();
 
-    std::cout << "create map (const) " << m << std::endl;
 
     return m;
 }

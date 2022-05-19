@@ -88,8 +88,8 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
    sm->RegisterGlobalSTDFunction("void DeleteFile(const string &in file)",GetFuncConvert( AS_DeleteFile));
    sm->RegisterGlobalSTDFunction("void MakeDirectory(const string &in dir, const string &in name)",GetFuncConvert( AS_CreateDir));
    sm->RegisterGlobalSTDFunction("void DeleteDirectory(const string &in dir,const string &in name)",GetFuncConvert( AS_DeleteDir));
-   sm->RegisterGlobalSTDFunction("void AddToFile(const string &in dir)",GetFuncConvert( AS_AddToFile));
-   sm->RegisterGlobalSTDFunction("void AddLineToFile(const string &in dir)",GetFuncConvert( AS_AddLineToFile));
+   sm->RegisterGlobalSTDFunction("void AddToFile(const string &in file, const string &in text)",GetFuncConvert( AS_AddToFile));
+   sm->RegisterGlobalSTDFunction("void AddLineToFile(const string &in file, const string &in text)",GetFuncConvert( AS_AddLineToFile));
    sm->RegisterGlobalSTDFunction("int GetFileSize(const string &in file)",GetFuncConvert( AS_GetFileSize));
 
    sm->RegisterGlobalSTDFunction("bool DoesFileExistAbsPath(const string &in file)",GetFuncConvert(FileExists));
