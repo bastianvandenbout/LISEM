@@ -234,7 +234,7 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     engine->RegisterGlobalSTDFunction("Map @EvapotranspirationRef(const Map&in DEM, const Map &in temp, const Map &in wind, const Map &in vapr, const Map &in rad, const Map &in ndvi)", GetFuncConvert(AS_ReferenceEvapotranspiration)); assert( r >= 0 );
     engine->RegisterGlobalSTDFunction("Map @Evapotranspiration(const Map&in WFH, const Map &in Theta, const Map &in GWH, const Map &in SD, const Map &in ThetaS, const Map &in ET,const Map&in Kc, float dt)", GetFuncConvert(AS_Evapotranspiration)); assert( r >= 0 );
-    engine->RegisterGlobalSTDFunction("Map @GreenAndAmptPercolation(const Map&in WFH, const Map &in Theta, const Map &in GWH, const Map &in SD, const Map &in Ksat, const Map&in Ksatb, const Map &in A, const Map &in B, const Map&in thetas, float dt)", GetFuncConvert(AS_GreenAndAmptPercolation)); assert( r >= 0 );
+    engine->RegisterGlobalSTDFunction("Map @GreenAndAmptPercolation(const Map&in WFH, const Map &in Theta, const Map &in GWH, const Map &in water,const Map &in SD, const Map &in Ksat, const Map&in Ksatb, const Map &in A, const Map &in B, const Map&in thetas, float dt)", GetFuncConvert(AS_GreenAndAmptPercolation)); assert( r >= 0 );
 
 
     //wave

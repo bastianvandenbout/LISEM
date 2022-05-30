@@ -2874,6 +2874,18 @@ The first Map containing classes
 The second Map containing classes
 
 
+#SlopeStabilityIS
+Calculates slope stability and the depth of the predicted falilures over a landscape. This function uses the infinite slope assumption, where the gradient of the surface elevation is considered identical to the gradient of the failure plane. As a result, the forces are only an estimation of local forces, but the Factor of Safety represents the theoretically valid point of failure under the infinite slope assumption.
+@return failures
+A list of maps, with the first item containing the Factor of Safety (ratio between resisting and driving forces), and the second item the depth of the failures.
+@param map1
+map1
+
+#SlopeStabilityIFM
+#SlopeStabilityISS
+#SlopeStabilityRES
+#SlopeStabilityRESAll
+
 #FlowKinematicSuspendedTransport
 #SimilaritySpread
 #Accuflux2D
@@ -2913,11 +2925,6 @@ The second Map containing classes
 #NCDFGetDimSizes
 #PrintHDF5
 #ReadHDF5Map
-#SlopeStabilityIS
-#SlopeStabilityIFM
-#SlopeStabilityISS
-#SlopeStabilityRES
-#SlopeStabilityRESAll
 #TerrainErode
 #GreenAndAmpt
 #MedianGrainSize

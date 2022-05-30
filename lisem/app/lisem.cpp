@@ -144,6 +144,7 @@ int SPHazard::execute(int argc, char *argv[])
 
     if(cmdOptionExists(argv, argv+argc, "-h"))
     {
+        quit_direct = true;
         LISEM_STATUS("Help info for lisem_app.exe");
         LISEM_STATUS("-h Help information");
         LISEM_STATUS("-r file.script - run script file with ui, script is first found in working directory, then in executable path");
@@ -289,9 +290,20 @@ int SPHazard::execute(int argc, char *argv[])
 
     if(quit_direct)
     {
+        int initialized = false;
+        MPI_Initialized(&initialized);
+        if(initialized)
+        {
+            MPI_Finalize();
+        }
+
         return 0;
     }
 
+    if(!use_commandline)
+    {
+        do_interface = true;
+    }
 
 
 
@@ -307,10 +319,14 @@ int SPHazard::execute(int argc, char *argv[])
     //thus finally, we have to initiate QApplication twice
     m_App = new QApplication(argc, argv);
 
-    QPixmap pixmap(QCoreApplication::applicationDirPath() + LISEM_FOLDER_ASSETS + "splash.png");
-    QSplashScreen splash(pixmap);
-    splash.show();
+    QSplashScreen *splash;
 
+    if(do_interface)
+    {
+        QPixmap pixmap(QCoreApplication::applicationDirPath() + LISEM_FOLDER_ASSETS + "splash.png");
+        splash = new QSplashScreen(pixmap);
+        splash->show();
+    }
 
     //path of the executable
     Dir = QCoreApplication::applicationDirPath();
@@ -374,47 +390,57 @@ int SPHazard::execute(int argc, char *argv[])
 
             m_ScriptManager->Initialize();
             m_ParameterManager->InitParameters();
-            int suc = m_OpenGLCLManager->CreateGLWindow(iconp);
-            if(suc > 0)
+
+            if(do_interface)
             {
-                if(suc == 254)
+                int suc = m_OpenGLCLManager->CreateGLWindow(iconp);
+                if(suc > 0)
                 {
-                    QMessageBox::warning(
-                        nullptr,
-                        tr("LISEM"),
-                        tr("Could not create OpenGL Context with OpenGL 4.0 support!") );
+                    if(suc == 254)
+                    {
+                        QMessageBox::warning(
+                            nullptr,
+                            tr("LISEM"),
+                            tr("Could not create OpenGL Context with OpenGL 4.0 support!") );
+                    }
+                    throw 1;
                 }
-                throw 1;
+                suc = m_OpenGLCLManager->InitGLCL();
+
+                if(suc > 0)
+                {
+                    throw 1;
+                }
+
+                std::cout << "test1 " << std::endl;
+                InitUIShaders(m_OpenGLCLManager);
+
+                std::cout << "test2 " << std::endl;
+
+                m_OpenGLCLManager->SetCallBackFrame(&SPHazard::OnGLCLFrame,this);
             }
-            suc = m_OpenGLCLManager->InitGLCL();
 
-            if(suc > 0)
-            {
-                throw 1;
-            }
-
-            std::cout << "test1 " << std::endl;
-            InitUIShaders(m_OpenGLCLManager);
-
-            std::cout << "test2 " << std::endl;
-
-            m_OpenGLCLManager->SetCallBackFrame(&SPHazard::OnGLCLFrame,this);
             m_model->InitModel();
 
-            std::cout << "test3 " << std::endl;
+            if(do_interface)
+            {
+                std::cout << "test3 " << std::endl;
 
-            m_WorldPainter = new WorldWindow(m_OpenGLCLManager);
-            m_WorldPainter->SetModel(m_model);
-
-
-            std::cout << "test4 " << std::endl;
-
-            m_OpenGLCLManager->SetCallBackFrame(&WorldWindow::Draw,m_WorldPainter);
+                m_WorldPainter = new WorldWindow(m_OpenGLCLManager);
+                m_WorldPainter->SetModel(m_model);
 
 
-            std::cout << "test5 " << std::endl;
+                std::cout << "test4 " << std::endl;
 
-            glfwMakeContextCurrent(NULL);
+                m_OpenGLCLManager->SetCallBackFrame(&WorldWindow::Draw,m_WorldPainter);
+
+
+                std::cout << "test5 " << std::endl;
+
+                glfwMakeContextCurrent(NULL);
+
+            }
+
 
             init = true;
 
@@ -481,17 +507,183 @@ int SPHazard::execute(int argc, char *argv[])
         {
             if(use_commandline && !do_interface)
             {
-                if(run_file)
+
+
+                //these all share some code
+                if(run_file || compile_file || do_calc)
                 {
 
-                }else if(compile_file)
-                {
+                    //get script to do stuff with
+
+                    bool file_read = false;
+
+                    QString scripttext;
+                    if(run_file || compile_file)
+                    {
+
+                        file_read = true;
+
+                        QFile fin(file);
+                        if (!fin.open(QFile::ReadOnly | QFile::Text)) {
+
+                            file_read = false;
+                        }else
+                        {
+                            while (!fin.atEnd())
+                            {
+                                QString S;
+
+                                    S = fin.readLine();
+
+
+                                scripttext += "\n" + S;
+                            }
+                        }
+
+                    }else if(do_calc)
+                    {
+                        file_read = true;
+                        scripttext = file;
+                    }
+
+                    SPHScript *s = new SPHScript();
+                    s->SetCode(scripttext);
+                    if(do_calc)
+                    {
+                        s->SetSingleLine(true);
+                    }else
+                    {
+                        s->SetSingleLine(false);
+                    }
+                    s->SetPreProcess(true);
+                    s->SetHomeDir(dir);
+
+
+                    if(file_read)
+                    {
+
+                        //now set up a compile/run request
+                        s->SetCallBackPrint(std::function<void(SPHScript*,QString)>([](SPHScript*,QString) ->
+                                                                                    void{
+
+
+                            ;
+                                                                                    }),s,std::placeholders::_1);
+
+                        s->SetCallBackDone(std::function<void(bool x)>([]( bool finished) ->
+                                                                                    void{
+
+
+                            LISEMS_DEBUG("Done");
+                            ;
+                                                                                    }),std::placeholders::_1);
+
+                        s->SetCallBackCompilerError(std::function<void(SPHScript*,const asSMessageInfo *msg)>([](SPHScript*,const asSMessageInfo *msg) ->
+                                                                                    void{
+                            const char *type = "Error: ";
+                            if( msg->type == asMSGTYPE_WARNING )
+                            {
+                                type = "Warning: ";
+                            }
+                            else if( msg->type == asMSGTYPE_INFORMATION )
+                            {
+                                type = "Info: ";
+                            }
+                            LISEMS_ERROR(QString(type) + " Line: (" + QString::number(msg->row) + " (" + QString::number(msg->col) + ") " + " : " + QString(msg->message));
+                            ;
+
+
+
+                                                                                    }),s,std::placeholders::_1);
+
+                        s->SetCallBackException(std::function<void(SPHScript*,asIScriptContext *ctx)>([](SPHScript*,asIScriptContext *ctx) ->
+                                                                                    void{
+
+                            LISEMS_ERROR("Exception encountered when running script");
+
+                                                    try
+                                                      {
+                                                        // Retrow the original exception so we can catch it again
+                                                        throw;
+                                                      }
+                                                      catch( std::exception &e )
+                                                      {
+                                                        // Tell the VM the type of exception that occurred
+                                                       LISEMS_ERROR("std::exception " +QString(e.what()));
+                                                        //ctx->SetException(e.what());
+                                                      }catch(int e)
+                                                    {
+                                                       LISEMS_ERROR("int exception " +QString::number(e));
+                                                     }
+                                                      catch(...)
+                                                      {
+                                                        LISEMS_ERROR("Unknown exception");
+                                                        // The callback must not allow any exception to be thrown, but it is not necessary
+                                                        // to explicitly set an exception string if the default exception string is sufficient
+                                                      }
+
+
+
+                            ;
+                                                                                    }),s,std::placeholders::_1);
+
+                        s->SetCallBackLine(std::function<void(SPHScript*,asIScriptContext *ctx)>([](SPHScript*,asIScriptContext *ctx) ->
+                                           void{
+
+
+                            ;
+                                           }),s,std::placeholders::_1);
+
+                        //compile it
+
+                        m_ScriptManager->CompileScript_Generic(s);
+
+                        //output errors
+                        if(s->IsCompiled())
+                        {
+
+                        }else
+                        {
+
+
+                        }
+
+                        if(s->IsCompiled() && !compile_file)
+                        {
+                            //if requested, run it
+
+
+                            m_ScriptManager->RunScript(s);
+
+                            //done
+
+
+                        }
+                    }
+
 
                 }else if(run_model)
                 {
+                    //this is tricky, we need to make sure the model is not going to call the interface window, since it isnt set up yet,
+                    //but instead we want to report to the command prompt how our progress is
 
-                }else if(do_run)
-                {
+                    //
+                    LISEMModel * m = GetGLobalModel();
+                    if(m != nullptr)
+                    {
+                        m->FinishMutex.lock();
+                        m->m_ModelStateMutex.lock();
+                        //m->m_Options = QList<QString>(options);
+                        //m->m_RigidWorld = world;
+                        m->m_StartRequested = true;
+                        m->m_ModelStateMutex.unlock();
+
+                        m->FinishCondition.wait(&m->FinishMutex);
+                        m->FinishMutex.unlock();
+                        AS_MODELRESULT res = m->FinishResult;
+
+                    }
+
 
                 }
 
@@ -500,7 +692,7 @@ int SPHazard::execute(int argc, char *argv[])
                 std::thread t1 = std::thread((&OpenGLCLManager::GLCLLoop),m_OpenGLCLManager);
 
                 m_InterfaceWindow->Create(m_ParameterManager, m_model,m_ScriptManager,m_WorldPainter);
-                splash.finish(m_InterfaceWindow);
+                splash->finish(m_InterfaceWindow);
                 m_InterfaceWindow->show();
 
                 m_InterfaceWindow->SetScriptFunctions(m_ScriptManager);
@@ -510,7 +702,7 @@ int SPHazard::execute(int argc, char *argv[])
 
                 //set instructions from command line to interface window
 
-                m_InterfaceWindow->SetCommandLineCallBack(std::function<void(void)>([this,run_file,compile_file,model_run,calc_run,do_view,file,files,has_dir,dir,quit_post](){
+                m_InterfaceWindow->SetCommandLineCallBack(std::function<void(void)>([this,run_file,compile_file,run_model,do_calc,do_view,file,files,has_dir,dir,quit_post](){
 
                     std::cout << "command line callback" << std::endl;
                     if(run_file)
@@ -527,7 +719,7 @@ int SPHazard::execute(int argc, char *argv[])
                         m_InterfaceWindow->SetCommandLineRunCalc(file,has_dir,dir,quit_post);
                     }else if(do_view)
                     {
-                        m_InterfaceWindow->SetCommandLineRunOpenFiles(files,has_dir,dir,quit_post);
+                        m_InterfaceWindow->SetCommandLineOpenFiles(files,has_dir,dir,quit_post);
                     };
                 }));
 

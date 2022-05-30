@@ -356,6 +356,8 @@ public:
     QString m_Path_Current;
     QString m_Path_OpenFiles;
 
+    bool m_ShouldHaveFileWatch =true;
+
     inline DatabaseTool( ScriptManager * sm,QWidget *parent = 0, const char *name = 0 ): QWidget( parent)
     {
 
@@ -723,16 +725,21 @@ public:
 
     inline void OnScriptStarted(QString script, int index)
     {
-
+        std::cout << "disable file watch" <<std::endl;
         model2->setOption(QFileSystemModel::DontWatchForChanges,true);
 
+        m_ShouldHaveFileWatch = false;
     }
 
     inline void OnScriptStopped(QString script, int index)
     {
+        std::cout << "enable file watch" <<std::endl;
+        QString path = model2->rootPath();
 
-        model2->setOption(QFileSystemModel::DontWatchForChanges,false);
 
+        m_ShouldHaveFileWatch = true;
+
+        SetRootFolder(path);
 
     }
 
@@ -789,9 +796,24 @@ public slots:
 
     inline void SetRootFolder(QString rootPath2)
     {
+
+        std::cout << "set new file model" <<std::endl;
+
         delete model2;
         model2 = new SPHFileSystemModel();
         model2->setFilter(QDir::Files | QDir::NoDotAndDotDot);
+
+        //should we currently have a file watch
+        if(m_ShouldHaveFileWatch)
+        {
+            model2->setOption(QFileSystemModel::DontWatchForChanges,false);
+
+        }else
+        {
+            model2->setOption(QFileSystemModel::DontWatchForChanges,true);
+
+        }
+
         QFileIconProvider * iconp2 =  model->iconProvider();
 
         model2->setRootPath(rootPath2);
@@ -806,6 +828,9 @@ public slots:
 
         m_BrowseTree2->update();
         m_BrowseTree2->setColumnWidth(0,300);
+
+        std::cout << "set new file model done " <<std::endl;
+
 
     }
 
@@ -924,6 +949,18 @@ public slots:
     }
 
     void OnNewFolder();
+
+    inline void SetWorkingDir(QString dir)
+    {
+        m_Path_Work =dir;
+        m_DirLabel->setText(m_Path_Work);
+
+        SetSiteFileLoad(m_Path_Work);
+
+        m_FileEditor->SetHomeDir(model->filePath(m_BrowseTree->currentIndex()));
+        m_FileConsoleLineEdit->SetHomeDir(model->filePath(m_BrowseTree->currentIndex()));
+
+    }
 
     inline void OnDirOpen()
     {

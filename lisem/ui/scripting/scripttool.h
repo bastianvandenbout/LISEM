@@ -17,6 +17,9 @@
 #include "QMovie"
 #include "QSplitter"
 #include "widgets/labeledwidget.h"
+#include "resourcemanager.h"
+#include "QTextDocument"
+#include "QTextDocumentFragment"
 
 #include "stackdisplay.h"
 #include "atomic"
@@ -53,6 +56,13 @@ public:
     QIcon *icon_new;
     QIcon *icon_info;
     QIcon *icon_debug;
+
+    QIcon *icon_compile;
+    QIcon *icon_indent;
+    QIcon *icon_indentr;
+    QIcon *icon_style;
+    QIcon *icon_comment;
+    QIcon *icon_normal;
 
     QLabel *m_LabelFile;
 
@@ -96,6 +106,14 @@ public:
         icon_new = new QIcon();
         icon_info = new QIcon();
         icon_debug = new QIcon();
+
+        icon_compile =(GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_COMPILE),-1));
+        icon_indent =(GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_TEXTINDENT),-1));
+        icon_indentr =(GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_TEXTINDENTR),-1));
+        icon_style =(GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_TEXTSTYLE),-1));
+        icon_comment =(GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_TEXTCOMMENT),-1));
+        icon_normal =(GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_TEXTREGULAR),-1));
+
 
         icon_start->addFile((m_Dir + LISEM_FOLDER_ASSETS + "start1.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_pause->addFile((m_Dir + LISEM_FOLDER_ASSETS + "pause2.png"), QSize(), QIcon::Normal, QIcon::Off);
@@ -164,6 +182,55 @@ public:
         DebugButton->resize(22,22);
         DebugButton->setEnabled(true);
 
+        QToolButton *CompileButton = new QToolButton(this);
+        CompileButton->setIcon(*icon_compile);
+        CompileButton->setIconSize(QSize(22,22));
+        CompileButton->setMaximumSize(QSize(22,22));
+        CompileButton->resize(22,22);
+        CompileButton->setEnabled(true);
+
+
+        QToolButton *IndentButton = new QToolButton(this);
+        IndentButton->setIcon(*icon_indent);
+        IndentButton->setIconSize(QSize(22,22));
+        IndentButton->setMaximumSize(QSize(22,22));
+        IndentButton->resize(22,22);
+        IndentButton->setEnabled(true);
+
+
+        QToolButton *IndentRButton = new QToolButton(this);
+        IndentRButton->setIcon(*icon_indentr);
+        IndentRButton->setIconSize(QSize(22,22));
+        IndentRButton->setMaximumSize(QSize(22,22));
+        IndentRButton->resize(22,22);
+        IndentRButton->setEnabled(true);
+
+
+        QToolButton *StyleButton = new QToolButton(this);
+        StyleButton->setIcon(*icon_style);
+        StyleButton->setIconSize(QSize(22,22));
+        StyleButton->setMaximumSize(QSize(22,22));
+        StyleButton->resize(22,22);
+        StyleButton->setEnabled(true);
+
+
+        QToolButton *CommentButton = new QToolButton(this);
+        CommentButton->setIcon(*icon_comment);
+        CommentButton->setIconSize(QSize(22,22));
+        CommentButton->setMaximumSize(QSize(22,22));
+        CommentButton->resize(22,22);
+        CommentButton->setEnabled(true);
+
+
+        QToolButton *RegularButton = new QToolButton(this);
+        RegularButton->setIcon(*icon_normal);
+        RegularButton->setIconSize(QSize(22,22));
+        RegularButton->setMaximumSize(QSize(22,22));
+        RegularButton->resize(22,22);
+        RegularButton->setEnabled(true);
+
+
+
         m_LabelFile = new QLabel();
         QMovie *movie = new QMovie(m_Dir + LISEM_FOLDER_ASSETS + "loader_1.gif");
         m_LabelFile ->setMovie(movie);
@@ -174,10 +241,18 @@ public:
         m_MenuLayout->addWidget(OpenButton);
         m_MenuLayout->addWidget(SaveButton);
         m_MenuLayout->addWidget(SaveAsButton);
+
         m_MenuLayout->addWidget(StartButton);
         m_MenuLayout->addWidget(PauseButton);
         m_MenuLayout->addWidget(StopButton);
         m_MenuLayout->addWidget(DebugButton);
+
+        m_MenuLayout->addWidget(CompileButton);
+        m_MenuLayout->addWidget(IndentButton);
+        m_MenuLayout->addWidget(IndentRButton);
+        m_MenuLayout->addWidget(CommentButton);
+        m_MenuLayout->addWidget(RegularButton);
+        m_MenuLayout->addWidget(StyleButton);
 
         m_ScriptTabs = new QTabWidget();
 
@@ -236,6 +311,14 @@ public:
         connect(StopButton,SIGNAL(clicked()),this,SLOT(OnRequestStopCode()));
 
         connect(DebugButton,SIGNAL(clicked()),this,SLOT(OnDebugView()));
+
+        connect(CompileButton,SIGNAL(clicked()),this,SLOT(OnRequestCompileCode()));
+        connect(IndentButton,SIGNAL(clicked()),this,SLOT(OnRequestIndentCode()));
+        connect(IndentRButton,SIGNAL(clicked()),this,SLOT(OnRequestIndentRCode()));
+        connect(CommentButton,SIGNAL(clicked()),this,SLOT(OnRequestCommentCode()));
+        connect(RegularButton,SIGNAL(clicked()),this,SLOT(OnRequestRegularCode()));
+        connect(StyleButton,SIGNAL(clicked()),this,SLOT(OnRequestStyleCode()));
+
 
         connect(m_ScriptTabs,SIGNAL(tabCloseRequested(int)),this,SLOT(CloseFile(int)));
         connect(m_ScriptTabs,SIGNAL(currentChanged(int)),this,SLOT(OnIndexChanged(int)));
@@ -617,6 +700,21 @@ public slots:
         ce->SetEmpty();
 
     }
+
+    inline void OpenAndRunCode(QString path, std::function<void(void)> onfinish)
+    {
+        OpenCode(path);
+        OnRequestRunCode();
+    }
+
+    inline void OpenAndCompileCode(QString path, std::function<void(void)> onfinish)
+    {
+        OpenCode(path);
+        OnRequestRunCode();
+    }
+
+
+
     inline void OpenCode(QString path)
     {
         CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
@@ -732,7 +830,7 @@ public slots:
                 ;
                                                                         }),this,s,std::placeholders::_1);
 
-            s->SetCallBackDone(std::function<void(ScriptTool *,SPHScript*,bool x)>([ce](ScriptTool *st,SPHScript*, bool finished) ->
+            s->SetCallBackDone(std::function<void(ScriptTool *,SPHScript*,bool x)>([this,ce](ScriptTool *st,SPHScript*, bool finished) ->
                                                                         void{
 
                 st->m_CodeIsPaused.store(false);
@@ -745,10 +843,16 @@ public slots:
 
                 ce->SetHighlightCurrentRunLine(-1);
                 LISEMS_DEBUG("Done");
+
+                                   if(m_StopCallBackSet)
+                                   {
+                                       m_StopCallBack("",0);
+                                   }
+
                 ;
                                                                         }),this,s,std::placeholders::_1);
 
-            s->SetCallBackCompilerError(std::function<void(ScriptTool *,CodeEditor *,SPHScript*,const asSMessageInfo *msg)>([](ScriptTool *st,CodeEditor * ced,SPHScript*,const asSMessageInfo *msg) ->
+            s->SetCallBackCompilerError(std::function<void(ScriptTool *,CodeEditor *,SPHScript*,const asSMessageInfo *msg)>([this](ScriptTool *st,CodeEditor * ced,SPHScript*,const asSMessageInfo *msg) ->
                                                                         void{
                 const char *type = "Error: ";
                 if( msg->type == asMSGTYPE_WARNING )
@@ -764,10 +868,16 @@ public slots:
 
                 ced->SetHighlightErrorLocation(msg->row, msg->col);
 
+                                            if(m_StopCallBackSet)
+                                            {
+                                                m_StopCallBack("",0);
+                                            }
+
+
 
                                                                         }),this,ce,s,std::placeholders::_1);
 
-            s->SetCallBackException(std::function<void(ScriptTool *,SPHScript*,asIScriptContext *ctx)>([ce](ScriptTool *st,SPHScript*,asIScriptContext *ctx) ->
+            s->SetCallBackException(std::function<void(ScriptTool *,SPHScript*,asIScriptContext *ctx)>([this,ce](ScriptTool *st,SPHScript*,asIScriptContext *ctx) ->
                                                                         void{
 
                 LISEMS_ERROR("Exception encountered when running script");
@@ -792,6 +902,11 @@ public slots:
                                             // The callback must not allow any exception to be thrown, but it is not necessary
                                             // to explicitly set an exception string if the default exception string is sufficient
                                           }
+
+                                        if(m_StopCallBackSet)
+                                        {
+                                            m_StopCallBack("",0);
+                                        }
 
                 ce->SetHighlightErrorLocation( ctx->GetLineNumber(), -1);
                 std::cout << 1  << std::endl;
@@ -945,6 +1060,339 @@ public slots:
         }
 
     }
+
+
+    inline void OnRequestCompileCode()
+    {
+        std::cout <<  m_ScriptTabs->currentIndex() << std::endl;
+        if(m_ScriptTabs->currentIndex() < 0)
+        {
+            return;
+        }
+
+        {
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+            if(ce == nullptr)
+            {
+                return;
+            }
+            ce->SetHighlightErrorLocation(-1,-1);
+        }
+
+
+
+        //get wether a code is running
+
+        bool is_running = m_CodeIsRunning.load();
+
+        if(is_running)
+        {
+            m_PauseMutex.lock();
+            if(m_CodeIsPaused.load())
+            {
+                m_PauseMutex.unlock();
+                //re-start code
+                m_PauseWaitCondition.notify_all();
+            }else
+            {
+                m_PauseMutex.unlock();
+            }
+
+
+
+        }else
+        {
+
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+
+            ce->SetHighlightErrorLocation( -1, -1);
+
+            QString command = ce->document()->toPlainText();
+
+            SPHScript *s = new SPHScript();
+            s->SetCode(command);
+            s->SetSingleLine(false);
+            s->SetPreProcess(true);
+            s->SetHomeDir(m_HomeDir+"/");
+
+            //now set up a compile/run request
+            s->SetCallBackPrint(std::function<void(SPHScript*,QString)>([](SPHScript*,QString) ->
+                                                                        void{
+
+
+                ;
+                                                                        }),s,std::placeholders::_1);
+
+            s->SetCallBackDone(std::function<void(bool x)>([]( bool finished) ->
+                                                                        void{
+
+
+                LISEMS_DEBUG("Done");
+                ;
+                                                                        }),std::placeholders::_1);
+
+            s->SetCallBackCompilerError(std::function<void(SPHScript*,const asSMessageInfo *msg)>([](SPHScript*,const asSMessageInfo *msg) ->
+                                                                        void{
+                const char *type = "Error: ";
+                if( msg->type == asMSGTYPE_WARNING )
+                {
+                    type = "Warning: ";
+                }
+                else if( msg->type == asMSGTYPE_INFORMATION )
+                {
+                    type = "Info: ";
+                }
+                LISEMS_ERROR(QString(type) + " Line: (" + QString::number(msg->row) + " (" + QString::number(msg->col) + ") " + " : " + QString(msg->message));
+                ;
+
+
+
+                                                                        }),s,std::placeholders::_1);
+
+            s->SetCallBackException(std::function<void(SPHScript*,asIScriptContext *ctx)>([](SPHScript*,asIScriptContext *ctx) ->
+                                                                        void{
+
+                LISEMS_ERROR("Exception encountered when running script");
+
+                                        try
+                                          {
+                                            // Retrow the original exception so we can catch it again
+                                            throw;
+                                          }
+                                          catch( std::exception &e )
+                                          {
+                                            // Tell the VM the type of exception that occurred
+                                           LISEMS_ERROR("std::exception " +QString(e.what()));
+                                            //ctx->SetException(e.what());
+                                          }catch(int e)
+                                        {
+                                           LISEMS_ERROR("int exception " +QString::number(e));
+                                         }
+                                          catch(...)
+                                          {
+                                            LISEMS_ERROR("Unknown exception");
+                                            // The callback must not allow any exception to be thrown, but it is not necessary
+                                            // to explicitly set an exception string if the default exception string is sufficient
+                                          }
+
+
+
+                ;
+                                                                        }),s,std::placeholders::_1);
+
+            s->SetCallBackLine(std::function<void(SPHScript*,asIScriptContext *ctx)>([](SPHScript*,asIScriptContext *ctx) ->
+                               void{
+
+
+                ;
+                               }),s,std::placeholders::_1);
+
+            //compile it
+
+            m_ScriptManager->CompileScript_Generic(s);
+
+            //output errors
+            if(s->IsCompiled())
+            {
+                LISEMS_STATUS("Compiled without errors");
+            }else
+            {
+                LISEMS_STATUS("Errors during compilation");
+
+            }
+
+
+        }
+
+    }
+
+    inline void OnRequestIndentCode()
+    {
+        CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+        QString m_tabReplace;
+        m_tabReplace.clear();
+        m_tabReplace.fill(' ', 4);
+
+        int selectedLines = 0;
+        {
+            QTextCursor cursor = ce->textCursor();
+
+            if(!cursor.selection().isEmpty())
+            {
+                cursor.position();
+                QString str = cursor.selection().toPlainText();
+
+                selectedLines = str.count("\n")+1;
+                str.replace("\n","\n"+ m_tabReplace);
+                str.prepend(m_tabReplace);
+                cursor.insertText(str);
+                cursor.movePosition(QTextCursor::MoveOperation::Left, QTextCursor::MoveMode::KeepAnchor,str.length());
+                ce->setTextCursor(cursor);
+            }
+        }
+
+
+
+    }
+    inline void OnRequestIndentRCode()
+    {
+        CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+        QString m_tabReplace;
+        m_tabReplace.clear();
+        m_tabReplace.fill(' ', 4);
+
+        int selectedLines = 0;
+        {
+            QTextCursor cursor = ce->textCursor();
+
+            if(!cursor.selection().isEmpty())
+            {
+                cursor.position();
+                QString str = cursor.selection().toPlainText();
+
+                selectedLines = str.count("\n")+1;
+                str.replace("\n"+ m_tabReplace,"\n");
+                 str.replace("\n\t","\n");
+                str.prepend(m_tabReplace);
+                cursor.insertText(str);
+                cursor.movePosition(QTextCursor::MoveOperation::Left, QTextCursor::MoveMode::KeepAnchor,str.length());
+                ce->setTextCursor(cursor);
+            }
+        }
+    }
+    inline void OnRequestCommentCode()
+    {
+        CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+        QString m_tabReplace;
+        m_tabReplace.clear();
+        m_tabReplace.fill(' ', 4);
+
+        int selectedLines = 0;
+        {
+            QTextCursor cursor = ce->textCursor();
+
+            if(!cursor.selection().isEmpty())
+            {
+                cursor.position();
+                QString str = cursor.selection().toPlainText();
+
+                selectedLines = str.count("\n")+1;
+
+                //insert double forward slashes after all the white-spaces that come after a newline and before a character is encountered
+
+                QRegExp rews("\\s+");
+                bool newline_found = false;
+                for(int i = 0; i < str.length();i++)
+                {
+                    QString si = str.at(i);
+                    QString sin = "/";
+                    if(i < str.length()-1)
+                    {
+                        sin = str.at(i+1);
+                    }
+                    if(!(sin == "\n" || sin == "\r\n"))
+                    {
+                        if(si == "\n" || si == "\r\n")
+                        {
+                            newline_found = true;
+
+                        }else if(!rews.exactMatch(sin) && newline_found)
+                        {
+                            str.insert(i,"//");
+                            newline_found = false;
+                        }
+                    }
+                }
+
+
+                str.prepend(m_tabReplace);
+                cursor.insertText(str);
+                cursor.movePosition(QTextCursor::MoveOperation::Left, QTextCursor::MoveMode::KeepAnchor,str.length());
+                ce->setTextCursor(cursor);
+            }
+        }
+
+    }
+    inline void OnRequestRegularCode()
+    {
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+            QString m_tabReplace;
+            m_tabReplace.clear();
+            m_tabReplace.fill(' ', 4);
+
+            int selectedLines = 0;
+            {
+                QTextCursor cursor = ce->textCursor();
+
+                if(!cursor.selection().isEmpty())
+                {
+                    cursor.position();
+                    QString str = cursor.selection().toPlainText();
+
+                    selectedLines = str.count("\n")+1;
+
+                    //remove double forward slashes after all the white-spaces that come after a newline and before a character is encountered
+
+
+                    QRegExp rews("\\s+");
+                    bool newline_found = false;
+                    int i = 0;
+                    while(i < str.length())
+                    {
+                        QString si = str.at(i);
+                        QString sin = "-";
+                        if(i < str.length()-1)
+                        {
+                            sin = str.at(i+1);
+                        }
+                        if(!(sin == "\n" || sin == "\r\n"))
+                        {
+                            if(si == "\n" || si == "\r\n")
+                            {
+                                newline_found = true;
+
+                            }else if(!rews.exactMatch(sin) && newline_found && si =="/" && sin == "/")
+                            {
+                                str.remove(i,2);
+                                newline_found = false;
+                            }
+                        }
+                        i++;
+                    }
+
+
+                    str.prepend(m_tabReplace);
+                    cursor.insertText(str);
+                    cursor.movePosition(QTextCursor::MoveOperation::Left, QTextCursor::MoveMode::KeepAnchor,str.length());
+                    ce->setTextCursor(cursor);
+                }
+            }
+
+
+    }
+    inline void OnRequestStyleCode()
+    {
+
+        //ce->selectAll();
+
+        CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+
+        ce->SetHighlightErrorLocation( -1, -1);
+
+        QString command = ce->document()->toPlainText();
+
+        QString scriptn = BeautifyScript(command);
+        ce->document()->setPlainText(scriptn);
+
+    }
+
 
     inline void OnDebugView()
     {

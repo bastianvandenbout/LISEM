@@ -526,6 +526,17 @@ bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
     std::cout << "fopen request " << filepath.toStdString() << std::endl;
     bool use = false;
 
+    if(type == LISEM_FILE_TYPE_UNKNOWN)
+    {
+
+        //get extension
+        type = GetFileTypeFromExtension(filepath);
+        //check with known file types
+
+
+
+    }
+
     if(type == LISEM_FILE_TYPE_RUN)
     {
 

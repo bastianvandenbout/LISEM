@@ -129,18 +129,18 @@ inline static std::vector<cTMap *>  AS_Evapotranspiration(cTMap * WFH, cTMap * T
 
                 GWHN->data[r][c] = std::max(0.0f, std::min(sd * thetas,(w_s - et_s)));
                 WFHN->data[r][c] = std::max(0.0f,std::min(sd * thetas - GWHN->data[r][c],(w_wf - et_wf)));
-                ThetaN->data[r][c] =std::max(0.0f,std::min(thetas,std::min(sd * thetas - GWHN->data[r][c] - WFHN->data[r][c],(w_us - et_us))/(std::max(w_us,sd - GWHN->data[r][c]/thetas - WFHN->data[r][c]/thetas)));
+                ThetaN->data[r][c] =std::max(0.0f,std::min(thetas,std::min(sd * thetas - GWHN->data[r][c] - WFHN->data[r][c],(w_us - et_us))/(std::max(w_us,sd - GWHN->data[r][c]/thetas - WFHN->data[r][c]/thetas))));
                 ETReal->data[r][c] = et_wf + et_us + et_s;
             }
         }
     }
 
 
-    return {wfhn, ThetaN, GWHN,ETReal};
+    return {WFHN, ThetaN, GWHN,ETReal};
 }
 
 //run green and ampt with percolation to ground water
-inline static std::vector<cTMap *> AS_GreenAndAmptPercolation(cTMap * WFH, cTMap * Theta, cTMap * GWH, cTMap * SD,cTMap * ksat,cTMap * ksatb, cTMap * A, cTMap * B,cTMap * ThetaS, float dt)
+inline static std::vector<cTMap *> AS_GreenAndAmptPercolation(cTMap * WFH,  cTMap * Theta, cTMap * GWH, cTMap * water,cTMap * SD,cTMap * ksat,cTMap * ksatb, cTMap * A, cTMap * B,cTMap * ThetaS, float dt)
 {
 
 
@@ -148,7 +148,7 @@ inline static std::vector<cTMap *> AS_GreenAndAmptPercolation(cTMap * WFH, cTMap
     cTMap * wfhn = WFH->GetCopy();
     cTMap * watern = water->GetCopy();
     cTMap * ThetaN = Theta->GetCopy0();
-    cTMap * GWHN = GWN->GetCopy0();
+    cTMap * GWHN = GWH->GetCopy0();
 
     #pragma omp parallel for collapse(2)
     for(int r = 0; r < WFH->data.nr_rows();r++)
@@ -170,12 +170,10 @@ inline static std::vector<cTMap *> AS_GreenAndAmptPercolation(cTMap * WFH, cTMap
                 float theta = Theta->data[r][c];
 
                 float space_infil = std::max((float) (0.0),(float)(SD->data[r][c] - WFH->data[r][c]));
-                float GA_PSI = psi->data[r][c];
-                float KSattop = ksat->data[r][c];
-                float KSatb = ksatb->data[r][c];
+                float GA_PSI = a * std::pow(theta,-b);
 
                 float KSattop = ksat->data[r][c];
-                float KSatb = ksatb->data[r][c];
+                //float KSatb = ksatb->data[r][c];
 
                 float KSattopus = ksat->data[r][c] * std::pow(std::max(0.0001f,std::min(1.0f,theta/thetas)),3.0+2.0/lambda);
                 float KSatbus = ksatb->data[r][c] * std::pow(std::max(0.0001f,std::min(1.0f,theta/thetas)),3.0+2.0/lambda);

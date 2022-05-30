@@ -97,6 +97,46 @@ void ModelTool::saveas()
     ExportRunfile(true);
 }
 
+void ModelTool::InterfaceOpenRunFile(QString path)
+{
+    int ret = m_ParameterManager->LoadFromRunFile(path);
+
+
+    if(ret != 0)
+    {
+        return;
+    }
+
+    this->UpdateParameterActive();
+    UpdateInterface();
+
+    bool exst = false;
+    int nr = 0;
+    for (int i = 0; i < m_DropDown->count(); i++)
+    {
+        if (m_DropDown->itemText(i).compare(path) == 0)
+        {
+            exst = true;
+            nr = i;
+        }
+    }
+    m_DropDown->blockSignals(true);
+    if (!exst)
+    {
+        m_DropDown->insertItem(0,path);
+        m_DropDown->setCurrentIndex(0);
+    }else
+    {
+        m_DropDown->removeItem(nr);
+        m_DropDown->insertItem(0,path);
+        m_DropDown->setCurrentIndex(0);
+    }
+    m_DropDown->blockSignals(false);
+
+    ExportRunfileList();
+
+}
+
 void ModelTool::ImportRunfile(QString name)
 {
 

@@ -274,7 +274,7 @@ inline static std::vector<cTMap*> AS_SlopeStabilityISS(cTMap * DEM, cTMap * soil
 
 
 
-inline static std::vector<cTMap*> AS_SlopeStabilityIFM(cTMap * DEMORG, cTMap * soildepthorg, cTMap * coh, cTMap * ifa, cTMap * dens, cTMap * WH, float sfmax, int iter)
+inline static std::vector<cTMap*> AS_SlopeStabilityIFM(cTMap * DEMORG, cTMap * soildepthorg, cTMap * coh, cTMap * ifa, cTMap * dens, cTMap * WH, float sfmax,int iter)
 {
 
     cTMap * soildepth = soildepthorg->GetCopy();

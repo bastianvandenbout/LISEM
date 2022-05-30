@@ -630,6 +630,7 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 
     r = engine->RegisterGlobalSTDFunction("Map @SolveLaplace(const Map &in Initial, const Map&in Forced, int iterations)", GetFuncConvert( AS_SolveLaplace));
     r = engine->RegisterGlobalSTDFunction("Map @SolvePoisson(const Map &in Initial, const Map&in Forced, const Map &in f, int iterations)", GetFuncConvert( AS_SolvePoisson));
+    r = engine->RegisterGlobalSTDFunction("Map @SolvePoissonDifSpeed(const Map &in Initial, const Map&in Forced, const Map &in f, const Map &in vel, int iterations)", GetFuncConvert( AS_SolvePoissonDifSpeed));
     r = engine->RegisterGlobalSTDFunction("Map @SolvePoissonWeighted(const Map &in Initial, const Map&in Forced, const Map &in f, float wx1,float wx2, float wy1, float wy2,int iterations)", GetFuncConvert( AS_SolvePoissonW));
     r = engine->RegisterGlobalSTDFunction("array<Map> @SolvePoissonWeightedC(const Map &in Initial, const Map&in Forced, const Map &in f, float wx1,float wx2, float wy1, float wy2,int iterations)", GetFuncConvert( AS_SolvePoissonWC));
     r = engine->RegisterGlobalSTDFunction("array<Map> @SolvePoissonAbsTotal(const Map &in Initial, const Map&in Forced, const Map &in f, int iterations)", GetFuncConvert( AS_SolvePoissonAbsTotal));

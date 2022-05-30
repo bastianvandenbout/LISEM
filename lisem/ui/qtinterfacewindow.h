@@ -354,30 +354,56 @@ public:
 
     inline bool SetCommandLineRun(QString file, bool has_dir, QString dir, bool quit)
     {
-        //m_DatabaseWidget->m_
+
+        m_DatabaseWidget->SetWorkingDir(dir);
+
+        m_DatabaseWidget->m_FileEditor->OpenAndRunCode(file,std::function<void(void)>([this](){ if(has_callback_commandline)
+            {
+                m_CallBack_CommandLine();
+            };
+                ;}));
+
 
         return false;
 
     }
     inline bool SetCommandLineCompile(QString file, bool has_dir, QString dir, bool quit)
     {
+        m_DatabaseWidget->SetWorkingDir(dir);
+
+        m_DatabaseWidget->m_FileEditor->OpenAndCompileCode(file,std::function<void(void)>([this](){ if(has_callback_commandline)
+            {
+                m_CallBack_CommandLine();
+            };
+                ;}));
+
+
         return false;
     }
 
     inline bool SetCommandLineRunModel(QString file, bool has_dir, QString dir, bool quit)
     {
+        this->m_ModelTool->InterfaceOpenRunFile(dir + file);
+        this->m_ModelTool->start();
+
         return false;
     }
 
     inline bool SetCommandLineRunCalc(QString calc, bool has_dir, QString dir, bool quit)
     {
+        m_DatabaseWidget->SetWorkingDir(dir);
+
+        m_DatabaseWidget->OnConsoleCommand(calc);
 
         return false;
     }
 
-    inline bool SetCommandLineOpenFiles(QList<QString> calc, bool has_dir, QString dir, bool quit)
+    inline bool SetCommandLineOpenFiles(QList<QString> files, bool has_dir, QString dir, bool quit)
     {
-
+        for(int i = 0; i < files.length(); i++)
+        {
+            OnFileOpenRequest(dir + files.at(i),LISEM_FILE_TYPE_UNKNOWN);
+        }
 
         return false;
     }

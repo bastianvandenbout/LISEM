@@ -154,8 +154,8 @@ static struct Data {
 
 static void init_pylisem_global(py::module &m)
 {
-    InitMessages();
-    InitMessagesS();
+    InitMessages(false);
+    InitMessagesS(false);
 
     SetPrintUseStdOut(true);
 

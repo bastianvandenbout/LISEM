@@ -5,6 +5,16 @@
 #include "QString"
 
 
+#define LISEM_FILE_TYPE_UNKNOWN 0
+#define LISEM_FILE_TYPE_MAP 1
+#define LISEM_FILE_TYPE_RUN 2
+#define LISEM_FILE_TYPE_SCRIPT 3
+#define LISEM_FILE_TYPE_VECTOR 4
+#define LISEM_FILE_TYPE_TABLE 5
+#define LISEM_FILE_TYPE_POINTCLOUD 6
+#define LISEM_FILE_TYPE_FIELD 7
+#define LISEM_FILE_TYPE_MODEL 8
+
 
 
 inline static QList<QString> GetMapExtensions()
@@ -437,4 +447,54 @@ inline static QList<QString> GetAllExtensionsFilter()
     return ret;
 }
 
+
+inline int GetFileTypeFromExtension(QString filepath)
+{
+    if(IsPointCloudFile(filepath))
+    {
+        return LISEM_FILE_TYPE_POINTCLOUD;
+
+    }else if(IsMapFile(filepath))
+    {
+        return LISEM_FILE_TYPE_MAP;
+
+    }else if(IsShapeFile((filepath)))
+    {
+
+        return LISEM_FILE_TYPE_VECTOR;
+
+    }else if(IsModelFile((filepath)))
+    {
+        return LISEM_FILE_TYPE_MODEL;
+    }else if(IsFieldFile((filepath)))
+    {
+        return LISEM_FILE_TYPE_FIELD;
+    }else if(IsScriptFile((filepath)))
+    {
+        return LISEM_FILE_TYPE_SCRIPT;
+    }else if(IsTableFile((filepath)))
+    {
+        return LISEM_FILE_TYPE_TABLE;
+    }else if(filepath.endsWith(".run"))
+    {
+        return LISEM_FILE_TYPE_RUN;
+    }else
+    {
+        return LISEM_FILE_TYPE_UNKNOWN;
+    }
+
+/*
+#define LISEM_FILE_TYPE_UNKNOWN 0
+#define LISEM_FILE_TYPE_MAP 1
+#define LISEM_FILE_TYPE_RUN 2
+#define LISEM_FILE_TYPE_SCRIPT 3
+#define LISEM_FILE_TYPE_VECTOR 4
+#define LISEM_FILE_TYPE_TABLE 5
+#define LISEM_FILE_TYPE_POINTCLOUD 6
+#define LISEM_FILE_TYPE_FIELD 7
+#define LISEM_FILE_TYPE_MODEL 8
+*/
+
+
+}
 #endif // EXTENSIONPROVIDER_H

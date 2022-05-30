@@ -73,8 +73,13 @@
 #define LISEM_ICON_FIELD 63
 #define LISEM_ICON_ADDFIELD 64
 #define LISEM_ICON_CLEAR 65
-
-#define LISEM_ICON_COUNT 66
+#define LISEM_ICON_TEXTINDENT 66
+#define LISEM_ICON_TEXTINDENTR 67
+#define LISEM_ICON_TEXTSTYLE 68
+#define LISEM_ICON_TEXTCOMMENT 69
+#define LISEM_ICON_TEXTREGULAR 70
+#define LISEM_ICON_COMPILE 71
+#define LISEM_ICON_COUNT 72
 
 class SPHResourceManager
 {
@@ -181,6 +186,12 @@ public:
             case LISEM_ICON_FIELD: return "field.png";break;
             case LISEM_ICON_ADDFIELD: return "addfield.png";break;
             case LISEM_ICON_CLEAR: return "clear.png";break;
+            case LISEM_ICON_TEXTINDENT: return "script_indent.png";break;
+            case LISEM_ICON_TEXTINDENTR: return "script_indent_r.png";break;
+            case LISEM_ICON_TEXTSTYLE: return "script_style.png";break;
+            case LISEM_ICON_TEXTCOMMENT: return "script_comment.png";break;
+            case LISEM_ICON_TEXTREGULAR: return "script_normal.png";break;
+            case LISEM_ICON_COMPILE: return "compile.png";break;
         }
 
         return QString();

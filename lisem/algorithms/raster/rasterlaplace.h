@@ -905,7 +905,7 @@ inline cTMap * AS_SolvePoisson(cTMap * Initial, cTMap * Forced, cTMap * f, int i
 
 }
 
-inline cTMap * AS_SolvePoissonDifSpeed(cTMap * Initial, cTMap * Forced, cTMap * f, cTMap * c, int iter_max)
+inline cTMap * AS_SolvePoissonDifSpeed(cTMap * Initial, cTMap * Forced, cTMap * f, cTMap * cw, int iter_max)
 {
     cTMap * val = Initial->GetCopy();
     cTMap * valn = Initial->GetCopy();
@@ -971,6 +971,7 @@ inline cTMap * AS_SolvePoissonDifSpeed(cTMap * Initial, cTMap * Forced, cTMap * 
                     }else
                     {
                         float valh = val->data[r][c];
+                        float ch = cw->data[r][c];
 
                         //get values
                         float val_x1 = valh;
@@ -995,10 +996,37 @@ inline cTMap * AS_SolvePoissonDifSpeed(cTMap * Initial, cTMap * Forced, cTMap * 
                             val_y2 = val->data[r+1][c];
                         }
 
+                        //get values
+                        float c_x1 = ch;
+                        float c_x2 = ch;
+                        float c_y1 = ch;
+                        float c_y2 = ch;
+
+                        if(!OUTORMV(val,r,c-1))
+                        {
+                            c_x1 = cw->data[r][c-1];
+                        }
+                        if(!OUTORMV(val,r,c+1))
+                        {
+                            c_x2 = cw->data[r][c+1];
+                        }
+                        if(!OUTORMV(val,r-1,c))
+                        {
+                            c_y1 = cw->data[r-1][c];
+                        }
+                        if(!OUTORMV(val,r+1,c))
+                        {
+                            c_y2 = cw->data[r+1][c];
+                        }
+
                         //get flux ratios according to wave speed variation in space
 
+                        float ratio_x1 = c/std::max(1e-12f,c_x1);
+                        float ratio_x2 = c/std::max(1e-12f,c_x2);
+                        float ratio_y1 = c/std::max(1e-12f,c_y1);
+                        float ratio_y2 = c/std::max(1e-12f,c_y2);
 
-                        valh = f->data[r][c] + (val_x1 + val_x2 + val_y1 + val_y2)/4.0;
+                        valh = f->data[r][c] + (ratio_x1 * val_x1 + ratio_x2 * val_x2 + ratio_y1 *val_y1 + ratio_y2*val_y2)/std::max(1e-12f,(ratio_x1 + ratio_x2 + ratio_y1 + ratio_y2));
 
                         if(!pcr::isMV(Forced->data[r][c]))
                         {

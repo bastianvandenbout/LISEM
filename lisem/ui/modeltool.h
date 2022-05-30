@@ -377,6 +377,7 @@ public slots:
 
     }
 
+    void InterfaceOpenRunFile(QString file);
     void ExportRunfile(bool saveas = false);
     void ImportRunfile(QString name= QString(""));
     void ExportRunfileList();
