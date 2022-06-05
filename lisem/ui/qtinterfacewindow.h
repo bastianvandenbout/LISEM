@@ -46,6 +46,7 @@
 #include "tools/toolbrowser.h"
 #include "download/downloadtool.h"
 #include "visualscripting/visualscripting.h"
+#include "widgets/controlsdialog.h"
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
@@ -484,7 +485,7 @@ public slots:
     inline void Info()
     {
         QMessageBox msgBox;
-        msgBox.setText(QString("Thank you for using LISEM ") + LISEM_VERSION_STRING + "!");
+        msgBox.setText(QString("Thank you for using LISEM ") + LISEM_VERSION_STRING + "! \n For more information visit www.lisemmodel.com. \n This software is published under the GNU public licence version 3, see also the details below.");
         msgBox.setInformativeText("Info");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.setDefaultButton(QMessageBox::Ok);
@@ -492,6 +493,7 @@ public slots:
         QString message = "This software is an open-source project under the GNU public licence version 3. Copyright (C) 2020 B. van den Bout. This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program; if not, see http://www.gnu.org/licenses/gpl-3.0.en.html";
 
         message += "\n" ;
+        message += "For more information, see www.lisemmodel.com";
         message += "\n" ;
         message += "This project utilizes various other open-source libraries: \n";
         message += "QT \n";
@@ -518,13 +520,15 @@ public slots:
 
     inline void ControlScheme()
     {
-        QMessageBox msgBox;
+        ControlDialog *cd = new ControlDialog();
+        cd->show();
+        /*QMessageBox msgBox;
         msgBox.setText("Control scheme for OpenLISEM Hazard");
         msgBox.setInformativeText("Info");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.setDefaultButton(QMessageBox::Ok);
         msgBox.setDetailedText("Use the <shift> button to toggle between moving and selecting/dragging within the map viewer. \n When in 3D mode, use w/a/s/d to move the position of the camera, and drag the display to change view direction." );
-        int ret = msgBox.exec();
+        int ret = msgBox.exec();*/
 
     }
 

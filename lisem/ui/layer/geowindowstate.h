@@ -146,6 +146,8 @@ typedef struct GeoWindowState
     //are we drawing in 3d?
     bool is_3d = false;
     bool is_globe = false;
+    int draw_lighting = 0;
+    bool draw_shadows = false;
 
     LSMVector3 SunDir = LSMVector3(0.0,0.4,1.0);
     float m_time = 0.0;

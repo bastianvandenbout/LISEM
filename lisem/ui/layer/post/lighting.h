@@ -77,6 +77,9 @@ public:
         glad_glUniform2f(glad_glGetUniformLocation(m_Program->m_program,"iViewPortSize"),s.GL_PostProcessBuffer2->GetWidth(),s.GL_PostProcessBuffer2->GetHeight());
         glad_glUniform2f(glad_glGetUniformLocation(m_Program->m_program,"iResolution"),s.GL_PostProcessBuffer2->GetWidth(),s.GL_PostProcessBuffer2->GetHeight());
 
+        glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"DrawLights"),s.draw_lighting);
+        glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"DrawShadows"),s.draw_shadows?1:0);
+
         // bind texture
         glad_glActiveTexture(GL_TEXTURE0);
         glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"tex"),0);

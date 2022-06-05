@@ -44,6 +44,20 @@ public:
         return out;
     }
 
+    inline void Normalize()
+    {
+        double length = sqrt(x*x + y*y + z*z + w*w);
+
+        if(length > 0.0)
+        {
+            x = x/length;
+            y = y/length;
+            z = z/length;
+            w = w/length;
+        }
+
+    }
+
     inline LSMVector3 xyz()
     {
         LSMVector3 out;
@@ -52,6 +66,30 @@ public:
         out.z = z;
         return out;
     }
+    inline double length() const
+    {
+        return std::sqrt(x*x + y*y + z*z + w*w);
+    }
+
+
+    inline static float VDot(const LSMVector4 &v1, const LSMVector4 &v2)
+    {
+        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+    }
+    inline static LSMVector4 VNormalize(const LSMVector4 &v1)
+    {
+        LSMVector4 v2 = v1;
+        return v2.normalized();
+    }
+    inline static float VDistance(const LSMVector4 &v1, const LSMVector4 &v2)
+    {
+        return (v2-v1).length();
+    }
+    inline static float VLength(const LSMVector4 &v1)
+    {
+        return v1.length();
+    }
+
 
     static inline LSMVector4 QFromEulerAngles(double roll, double pitch, double yaw )
     {
@@ -96,6 +134,57 @@ public:
         return angles;
 
     }
+
+    LSMVector4 operator+(const LSMVector4 & in) const
+    {
+        LSMVector4 out;
+        out.x = x + in.x;
+        out.y = y + in.y;
+        out.z = z + in.z;
+        out.w = w + in.w;
+        return out;
+    }
+    LSMVector4 operator+(const double & in) const
+    {
+        LSMVector4 out;
+        out.x = x + in;
+        out.y = y + in;
+        out.z = z + in;
+        out.w = w + in;
+        return out;
+    }
+
+    LSMVector4 operator-(const LSMVector4 & in) const
+    {
+        LSMVector4 out;
+        out.x = x - in.x;
+        out.y = y - in.y;
+        out.z = z - in.z;
+        out.w = w - in.w;
+        return out;
+    }
+    LSMVector4 operator-(const double & in) const
+    {
+        LSMVector4 out;
+        out.x = x - in;
+        out.y = y - in;
+        out.z = z - in;
+        out.w = w - in;
+        return out;
+    }
+
+
+
+    LSMVector4 operator-() const
+    {
+        LSMVector4 out;
+        out.x = -x;
+        out.y = -y;
+        out.z = -z;
+        out.w = -w;
+        return out;
+    }
+
 
     LSMVector4 operator*(const double & in) const
     {

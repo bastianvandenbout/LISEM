@@ -150,6 +150,8 @@ bool WorldWindow::UpdateCurrentWindowState()
     m_CurrentWindowState.is_3d = m_Draw3D;
     m_CurrentWindowState.SunDir =  m_SunDir;
     m_CurrentWindowState.is_globe = m_Draw3DGlobe;
+    m_CurrentWindowState.draw_lighting = m_DrawLighting?1:0;
+    m_CurrentWindowState.draw_shadows = m_DrawShadows;
     m_CurrentWindowState.m_time = m_GLT;
 
     m_CurrentWindowState.m_2D3DRenderTargetScales = m_2D3DRenderTargetScales;
@@ -312,8 +314,10 @@ GeoWindowState WorldWindow::ExternalDrawGeoWindowState(int scr_w, int scr_h, Bou
 
     s.draw_lines = m_DrawLines;
     s.is_3d = m_Draw3D;
+    s.draw_shadows = m_DrawShadows;
     s.SunDir =  m_SunDir;
     s.is_globe = m_Draw3DGlobe;
+    s.draw_lighting = m_DrawLighting? 1:0;
     s.m_time = m_GLT;
 
     s.m_2D3DRenderTargetScales = m_2D3DRenderTargetScales;

@@ -73,7 +73,7 @@ inline static bool PreInitializeGDAL(QString exepath)
     qputenv("GDAL_MAX_BAND_COUNT", "1000000");
 
 
-    if(found == false)
+    //if(found == false)
     {
         QString temp = exepath;
         LISEM_DEBUG("No proj.db found, so setting environment variable PROJ_LIB");

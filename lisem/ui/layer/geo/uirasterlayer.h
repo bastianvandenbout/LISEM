@@ -102,23 +102,42 @@ public:
 
             minr = std::max(0,std::min(m_Map->nrRows()-1,minr));
             minc = std::max(0,std::min(m_Map->nrCols()-1,minc));
-            sizer = std::max(0,std::min(m_Map->nrRows()-minr,sizer));
-            sizec = std::max(0,std::min(m_Map->nrCols()-minc,sizec));
+            sizer = std::max(0,std::min(m_Map->nrRows()-minr-1,sizer));
+            sizec = std::max(0,std::min(m_Map->nrCols()-minc-1,sizec));
 
+            if(sizer == 0 || sizec == 0)
+            {
+                continue;
+            }
 
+            std::cout << 1 << std::endl;
             MaskedRaster<float> datareplace = MaskedRaster<float>(sizer,sizec,0.0,0.0,1.0);
 
             for(int r = minr; r < minr + sizer; r++)
             {
                 for(int c = minc; c < minc + sizec; c++)
                 {
-                    datareplace[r - minr][c - minc] = m_Map->data[r][c];
+                    if(r-minr > -1 && c- minc > -1 && r- minr < sizer && c - minc < sizec)
+                    {
+                        if(r > -1 && c > -1 && r < m_Map->nrRows() && c < m_Map->nrCols())
+                        {
+
+                            std::cout << 2 << std::endl;
+                            datareplace[r - minr][c - minc] = m_Map->data[r][c];
+                        }
+                    }
                 }
 
             }
+
+
+            std::cout << 3 << std::endl;
             glad_glBindTexture(GL_TEXTURE_2D,m_Texture->m_texgl);
             glad_glTexSubImage2D(GL_TEXTURE_2D,0,minc,minr,sizec,sizer,GL_RED,GL_FLOAT,datareplace.data());
             glad_glBindTexture(GL_TEXTURE_2D,0);
+
+
+            std::cout << 4 << std::endl;
         }
 
         m_DataEdits.clear();

@@ -66,6 +66,7 @@ inline static QString BeautifyScript(QString script)
 
     bool is_quote_0 = false;
     bool is_commentline = false;
+    bool is_commentlong0 = false;
     for(int i = 0; i < script.length();i++)
     {
         QString si;
@@ -83,19 +84,27 @@ inline static QString BeautifyScript(QString script)
         {
             is_quote_0 = !is_quote_0;
         }
-        if(rewnl.exactMatch(si) && !is_quote_0)
+        if((rewnl.exactMatch(si) || si == "\n" || si == "\r\n")&& !is_quote_0)
         {
-            if(is_commentline)
+            if(!is_commentline && !is_commentlong0)
             {
                 script.remove(i,1);
                 script.insert(i," ");
             }
-            is_commentline == false;
+            is_commentline = false;
 
         }
-        if(si == "/" || next == "/" && !is_quote_0)
+        if((si == "/" && next == "/") && !is_quote_0)
         {
             is_commentline = true;
+        }
+        if((si == "/"  && next == "*") && !is_quote_0)
+        {
+            is_commentlong0 = true;
+        }
+        if((si == "*" && next == "/") && is_commentlong0)
+        {
+            is_commentlong0 = false;
         }
     }
 
@@ -114,7 +123,7 @@ inline static QString BeautifyScript(QString script)
         {
             is_quote_1 = !is_quote_1;
         }
-        if(rews.exactMatch(si))
+        if(rews.exactMatch(si) && !(rewnl.exactMatch(si) || si == "\n" || si == "\r\n"))
         {
             this_space = true;
         }else
@@ -131,6 +140,8 @@ inline static QString BeautifyScript(QString script)
     bool is_quote = false;
     bool is_for = false;
     bool is_switch = false;
+    bool assign_bracket = false;
+    int brackets_since_assign = 0;
     bool is_comment = false;
     bool is_commentlong = true;
     int bracket_count = 0;
@@ -139,6 +150,8 @@ inline static QString BeautifyScript(QString script)
     QList<bool> scope_end_index_contains_expression;
     int length_change = 0;
 
+    std::cout << script.toStdString() << std::endl;
+    std::cout << std::endl;
     //first replace all non-standard versions of white-space and newline with standard ones
 
     int i = 0;
@@ -228,32 +241,11 @@ inline static QString BeautifyScript(QString script)
         }
         if(!is_quote)
         {
-            if(chari == '/' && next == '/')
+            if(chari == '/' && has_next && next == '/')
             {
                 script.insert(i-1,"\n");
                 length_prev_change += 1;
                 i = i +1;
-            }
-
-            if(chari == '(')
-            {
-                if(is_for && !is_comment)
-                {
-                    bracket_count += 1;
-                }
-
-            }
-            if(chari == ')')
-            {
-                if(is_for && !is_comment)
-                {
-                    bracket_count -= 1;
-                    if(bracket_count == 0)
-                    {
-                        is_for = false;
-                    }
-                    bracket_count = std::max(0,bracket_count);
-                }
             }
             if(chari == '/' && has_next && next == '/' && !is_comment)
             {
@@ -275,10 +267,73 @@ inline static QString BeautifyScript(QString script)
 
                 }
             }
+
+
+            if(token =="\n")
+            {
+                //do nothing for now
+                if(is_comment && !is_commentlong)
+                {
+                    is_comment = false;
+                }
+
+                if(has_next && (next == " " || next == "\t"))
+                {
+                    script.remove(i+1,1);
+                    length_change -= 1;
+                    if(i == script.length()-1)
+                    {
+                        has_next = false;
+                    }else
+                    {
+                        next = script.at(i+1);
+                    }
+
+                }
+
+
+                //add proper number of tabs
+                for(int k = 0; k < scope_count; k++)
+                {
+                    script.insert(i+token_length + length_next_change,'\t');
+                    length_next_change += 1;
+                }
+                length_change += scope_count;
+                jumplength += scope_count;
+
+
+            }
+
+            if(!is_comment)
+            {
+                if(chari == '(')
+                {
+                    if(is_for && !is_comment)
+                    {
+                        bracket_count += 1;
+                    }
+
+                }
+                if(chari == ')')
+                {
+                    if(is_for && !is_comment)
+                    {
+                        bracket_count -= 1;
+                        if(bracket_count == 0)
+                        {
+                            is_for = false;
+                        }
+                        bracket_count = std::max(0,bracket_count);
+                    }
+                }
+            }
+
+
             if(!is_comment)
             {
                 if(chari == '{')
                 {
+                    std::cout << "bracket " << has_prev << " " << prev.toLatin1() << std::endl;
                     //if the previous is a closing bracket ")", we have to add a newline and some tabs
 
                     if(has_prev && prev == " ")
@@ -296,20 +351,21 @@ inline static QString BeautifyScript(QString script)
 
                     }
                     //check if previous characters are newlines, otherwise add them
-                    if(has_prev && prev == "(")
+                    if(has_prev && prev == ")")
                     {
 
 
-                        script.insert(i-1,"\n");
+                        script.insert(i,"\n");
                         length_prev_change += 1;
+                        i = i +1;
 
                         for(int k = 0; k < scope_count; k++)
                         {
-                            script.insert(i-1,'\t');
+                            script.insert(i,'\t');
                             length_prev_change += 1;
+                            i = i+1;
                         }
                         length_change += 1 + scope_count;
-                        i = i + 1 + scope_count;
 
                     }
                     //add a scope level, and indent level
@@ -319,16 +375,27 @@ inline static QString BeautifyScript(QString script)
 
                     //add a newline with the proper number of tabs
 
-                    //add newline with propert number of tabs
-                    script.insert(i+token_length,"\n");
-                    length_next_change +=1;
-                    for(int k = 0; k < scope_count; k++)
+                    if(!(has_prev && prev == "="))
                     {
-                        script.insert(i+token_length + length_next_change,'\t');
-                        length_next_change += 1;
+                        if(assign_bracket)
+                        {
+                            brackets_since_assign += 1;
+                        }
+                        //add newline with propert number of tabs
+                        script.insert(i+token_length,"\n");
+                        length_next_change +=1;
+                        for(int k = 0; k < scope_count; k++)
+                        {
+                            script.insert(i+token_length + length_next_change,'\t');
+                            length_next_change += 1;
+                        }
+                        length_change += 1 + scope_count;
+                        jumplength += 1 + scope_count;
+                    }else
+                    {
+                        assign_bracket = true;
+                        brackets_since_assign = 0;
                     }
-                    length_change += 1 + scope_count;
-                    jumplength += 1 + scope_count;
 
                 }
                 if(token == "}")
@@ -336,21 +403,92 @@ inline static QString BeautifyScript(QString script)
                     //add a newline with the propert number of tabs
                     //and another newline with the proper number of tabs
 
-                    scope_count -= 1;
-
-                    //add newline with propert number of tabs
-                    script.insert(i+token_length,"\n");
-                    length_next_change +=1;
-                    for(int k = 0; k < scope_count-1; k++)
+                    bool dont_newline = false;
+                    if(assign_bracket)
                     {
-                        script.insert(i+token_length + length_next_change,'\t');
-                        length_next_change += 1;
+                        brackets_since_assign -= 1;
+                        if(brackets_since_assign == 0)
+                        {
+                             dont_newline = true;
+                             assign_bracket = false;
+                        }
+                        brackets_since_assign = std::max(0,brackets_since_assign);
                     }
-                    length_change += 1 + scope_count-1;
-                    jumplength += 1 + scope_count-1;
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
+                    if(has_next && next == " ")
+                    {
+                        script.remove(i+1,1);
+                        length_change -= 1;
+                        if(i == script.length()-1)
+                        {
+                            has_next = false;
+                        }else
+                        {
+                            next = script.at(i+1);
+                        }
+
+                    }
+
+
+
+                    if(!dont_newline)
+                     {
+                        script.insert(i,"\n");
+                        length_prev_change += 1;
+                        i = i +1;
+                        for(int k = 0; k < scope_count-1; k++)
+                        {
+                            script.insert(i,'\t');
+                            length_prev_change += 1;
+                            i = i+1;
+                        }
+
+                        scope_count -= 1;
+                        scope_count = std::max(0,scope_count);
+
+                        //add newline with propert number of tabs
+                        script.insert(i+token_length,"\n");
+                        length_next_change +=1;
+                        for(int k = 0; k < scope_count-1; k++)
+                        {
+                            script.insert(i+token_length + length_next_change,'\t');
+                            length_next_change += 1;
+                        }
+                        length_change += 1 + scope_count-1;
+                        jumplength += 1 + scope_count-1;
+                    }
                 }
-                if(token.startsWith("class") || token.startsWith("enum") || token.startsWith("namespace ") || token.startsWith("else") || token.startsWith("try") || token.startsWith("catch")|| token.startsWith("do"))
+                if(token== "class" || token== "enum" || token== "namespace " || token== "else" || token== "try" || token== "catch"|| token== "do")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
                     //remove any spaces and newlines
                     //add one newline
                     //check if next character is opening brace
@@ -368,6 +506,35 @@ inline static QString BeautifyScript(QString script)
                 }
                 if(token == ";")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
+                    if(has_next && next == " ")
+                    {
+                        script.remove(i+1,1);
+                        length_change -= 1;
+                        if(i == script.length()-1)
+                        {
+                            has_next = false;
+                        }else
+                        {
+                            next = script.at(i+1);
+                        }
+
+                    }
+
                     //add newline with propert number of tabs
                     if(!is_for)
                     {
@@ -387,8 +554,23 @@ inline static QString BeautifyScript(QString script)
                     }
                 }
 
-                if(token.startsWith("break"))
+                if(token == "break")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
                     //if next one is space, remove
                     if(has_next && next == ' ')
                     {
@@ -423,8 +605,23 @@ inline static QString BeautifyScript(QString script)
                     length_change += 1 + scope_count;
                     jumplength += 1 + scope_count;
                 }
-                if(token.startsWith("defeault"))
+                if(token== "defeault")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
                     //if next one is space, remove
                     if(has_next && next == ' ')
                     {
@@ -459,47 +656,110 @@ inline static QString BeautifyScript(QString script)
                     length_change += 1 + scope_count;
                     jumplength += 1 + scope_count;
                 }
-                if(token.startsWith("for"))
+                if(token == "for")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
                     //get starting parenthesis, and remove any spaces
                     is_for = true;
                 }
-                if(token.startsWith("while") || token.startsWith("if ") || token.startsWith("else if") || token.startsWith("switch"))
+                if(token== "while" || token== "if " || token == "else if" || token== "switch")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
 
                     //we go directly to the closing parenthesis, check if the next character is opening braces
                     //if so, remove
                     //add newline, proper tabs, opening brace, newline, proper tabs
                 }
-                if(token.startsWith("return"))
+                if(token== "return")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
 
                 }
-                if(token.startsWith("switch"))
+                if(token== "switch")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
+
                     //this one is more complex, get the full switch statement, then get the cases/defeaults within that, add spaces after
                     //then add a space before the ":", and finally a newline with proper tabs after that.
 
                 }
-                if(token.startsWith("case"))
+                if(token== "case")
                 {
+                    if(has_prev && prev == " ")
+                    {
+                        script.remove(i-1,1);
+                        i = i-1;
+                        length_change -= 1;
+                        if(i == 0)
+                        {
+                            has_prev = false;
+                        }else
+                        {
+                            prev = script.at(i-1);
+                        }
+
+                    }
 
                 }
             }
-            if(token =="\n")
-            {
-                //do nothing for now
-                if(is_comment && !is_commentlong)
-                {
-                    is_comment = false;
-                }
 
-
-            }
 
         }
 
-        std::cout << "jump token: " << jumplength << " " << token.toStdString() << std::endl;
+        std::cout << "jump token: " << is_quote << " " << is_comment << " " << is_for << " " <<  jumplength << " " << token_length << " " << token.toStdString() << std::endl;
         if(jumpword)
         {
            i = i + jumplength;

@@ -11,6 +11,9 @@ uniform highp float ZScale = 1.0;
 uniform sampler2D TextureC;
 uniform sampler2D TextureD;
 
+uniform int DrawLights = 0;
+uniform int DrawShadows = 0;
+
 layout (location = 0) out vec4 frag_colour;
 
 layout (location = 1) out vec4 frag_posx;

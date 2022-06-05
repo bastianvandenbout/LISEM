@@ -102,6 +102,20 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
    sm->RegisterGlobalSTDFunction("void AddLineToFileAbsPath(const string &in dir)",GetFuncConvert( AS_AddLineToFileAbsPath));
    sm->RegisterGlobalSTDFunction("int GetFileSizeAbsPath(const string &in file)",GetFuncConvert( AS_GetFileSizeAbsPath));
 
+
+
+   sm->RegisterGlobalSTDFunction("bool mkdir(const string &in dir)",GetFuncConvert( AS_mkdir));
+   sm->RegisterGlobalSTDFunction("bool rmdir(const string &in dir)",GetFuncConvert( AS_rmdir));
+   sm->RegisterGlobalSTDFunction("bool rm(const string &infile)",GetFuncConvert( AS_rm));
+   sm->RegisterGlobalSTDFunction("bool cd(const string &in dir)",GetFuncConvert( AS_cd));
+   sm->RegisterGlobalSTDFunction("bool pwd()",GetFuncConvert( AS_pwd));
+   sm->RegisterGlobalSTDFunction("bool cp(const string &in file, const string &in filen)",GetFuncConvert( AS_cp));
+   sm->RegisterGlobalSTDFunction("bool mv(const string &in file, const string &in filen)",GetFuncConvert( AS_mv));
+   sm->RegisterGlobalSTDFunction("bool filesize(const string &in file)",GetFuncConvert( AS_filesize));
+   sm->RegisterGlobalFunction("bool ls()", asFUNCTIONPR(AS_ls,(void),bool),  asCALL_CDECL);
+   sm->RegisterGlobalFunction("bool ls(const string &in dir)", asFUNCTIONPR(AS_ls,(QString),bool),  asCALL_CDECL);
+   sm->RegisterGlobalFunction("bool ls(const string &in dir,const string &in filter)", asFUNCTIONPR(AS_ls,(QString, QString),bool),  asCALL_CDECL);
+
 }
 
 

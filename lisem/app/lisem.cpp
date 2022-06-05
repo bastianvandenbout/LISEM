@@ -336,7 +336,6 @@ int SPHazard::execute(int argc, char *argv[])
     InitializeGeneralSettingsManager(Dir);
     InitializeResourceManager();
 
-
     PreInitializeGDAL(Dir);
     bool restart = true;
     bool first = true;

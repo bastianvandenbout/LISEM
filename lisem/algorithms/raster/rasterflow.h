@@ -4286,7 +4286,175 @@ inline static cTMap * AS_SteadyStateCorrection(cTMap * b, cTMap * Trel)
 
 }
 
+inline void Bresenham_Drawline(int x0, int y0, int x1, int y1, std::function<void(int,int)> f)
+{
+  int dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
+  int dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1;
+  int err = dx + dy, e2; /* error value e_xy */
 
+  for (;;){  /* loop */
+    f(x0,y0);
+    if (x0 == x1 && y0 == y1) break;
+    e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+    if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+  }
+}
+inline cTMap * AS_RasterizeLines(cTMap * Mask, std::vector<LSMVector2> points)
+{
+    cTMap * res = Mask->GetCopy0();
+    //we have to rasterize the line, and then for each pixel get the flux component that passes through the line
+
+    //make a series of induvidual line segments
+    for(int i = 0; i < points.size()-1; i++)
+    {
+        LSMVector2 p1 = points.at(i);
+        LSMVector2 p2 = points.at(i+1);
+
+        float ulx = Mask->West();
+        float uly = Mask->North();
+        float brx=  ulx + ((float)(Mask->nrCols()) * Mask->cellSizeX());
+        float bry=  uly + ((float)(Mask->nrRows()) * Mask->cellSizeY());
+
+        float xmin = ulx;
+        float xmax = brx;
+        float ymin = uly;
+        float ymax = bry;
+        if(xmax < xmin)
+        {
+            float temp = xmax;
+            xmax = xmin; xmin = temp;
+        }
+        if(ymax < ymin)
+        {
+            float temp = ymax;
+            ymax = ymin; ymin = temp;
+        }
+        //see if the points are outside of the bounds of the map
+        if((p1.x < xmin && p2.x < xmin) || (p1.x > xmax && p2.x > xmax))
+        {
+            continue;
+        }
+        if((p1.y < ymin && p2.y < ymin) || (p1.y > ymax && p2.y > ymax))
+        {
+            continue;
+        }
+
+        //if so, cut the line by the edge of the map
+        if(p1.x < xmin)
+        {
+            //move p1 to minx;
+            LSMVector2 dir = (p2-p1).Normalize();
+            float units = std::fabs(xmin - p1.x)/std::max(1e-20f,std::fabs(dir.x));
+            p1.x = xmin;
+            p1.y = p1.y + units * dir.y;
+        }
+        if(p2.x > xmax)
+        {
+            //move p1 to minx;
+            LSMVector2 dir = (p2-p1).Normalize();
+            float units = std::fabs(xmax - p2.x)/std::max(1e-20f,std::fabs(dir.x));
+            p2.x = xmax;
+            p2.y = p2.y - units * dir.y;
+        }
+
+        if(p2.x < xmin)
+        {
+            //move p1 to minx;
+            LSMVector2 dir = (p1-p2).Normalize();
+            float units = std::fabs(xmin - p2.x)/std::max(1e-20f,std::fabs(dir.x));
+            p2.x = xmin;
+            p2.y = p2.y + units * dir.y;
+        }
+        if(p1.x > xmax)
+        {
+            //move p1 to minx;
+            LSMVector2 dir = (p1-p2).Normalize();
+            float units = std::fabs(xmax - p1.x)/std::max(1e-20f,std::fabs(dir.x));
+            p1.x = xmax;
+            p1.y = p1.y - units * dir.y;
+        }
+
+
+
+        if(p1.y < ymin)
+        {
+            //move p1 to miny;
+            LSMVector2 dir = (p2-p1).Normalize();
+            float units = std::fabs(ymin - p1.y)/std::max(1e-20f,std::fabs(dir.y));
+            p1.y = ymin;
+            p1.x = p1.x + units * dir.x;
+        }
+        if(p2.y > ymax)
+        {
+            //move p1 to miny;
+            LSMVector2 dir = (p2-p1).Normalize();
+            float units = std::fabs(ymax - p2.y)/std::max(1e-20f,std::fabs(dir.y));
+            p2.y = ymax;
+            p2.x = p2.x - units * dir.x;
+        }
+
+        if(p2.y < ymin)
+        {
+            //move p1 to minx;
+            LSMVector2 dir = (p1-p2).Normalize();
+            float units = std::fabs(ymin - p2.y)/std::max(1e-20f,std::fabs(dir.y));
+            p2.y = ymin;
+            p2.x = p2.x + units * dir.x;
+        }
+        if(p1.y > ymax)
+        {
+            //move p1 to minx;
+            LSMVector2 dir = (p1-p2).Normalize();
+            float units = std::fabs(ymax - p1.y)/std::max(1e-20f,std::fabs(dir.y));
+            p1.y = ymax;
+            p1.x = p1.x - units * dir.x;
+        }
+        //use bresenhams line algorithm, as it produces single-width lines that work better for flux counting
+
+        {
+            int r0 = (p1.y - res->north())/res->cellSizeY();
+            int c0 = (p1.x - res->west())/res->cellSizeX();
+            int r1 = (p2.y - res->north())/res->cellSizeY();
+            int c1 = (p2.x - res->west())/res->cellSizeX();
+
+            r0 = std::max(0, std::min(res->nrRows()-1,r0));
+            r1 = std::max(0, std::min(res->nrRows()-1,r1));
+            c0 = std::max(0, std::min(res->nrCols()-1,c0));
+            c1 = std::max(0, std::min(res->nrCols()-1,c1));
+
+            Bresenham_Drawline(c0,r0,c1,r1,[res](int c, int r){
+
+                r = std::max(0, std::min(res->nrRows()-1,r));
+                c = std::max(0, std::min(res->nrCols()-1,c));
+                res->data[r][c] = 1.0;
+            });
+        }
+    }
+    return res;
+}
+
+inline double AS_RasterFlowThroughLines(cTMap * Qx, cTMap * Qy, std::vector<LSMVector2> points)
+{
+    //we have to rasterize the line, and then for each pixel get the flux component that passes through the line
+
+    //make a series of induvidual line segments
+    for(int i = 0; i < points.size(); i++)
+    {
+        //see if the points are outside of the bounds of the map
+
+
+        //if so, cut the line by the edge of the map
+
+
+        //use bresenhams line algorithm, as it produces single-width lines that work better for flux counting
+
+
+    }
+
+
+    return 0.0;
+}
 
 
 #endif // RASTERFLOW_H

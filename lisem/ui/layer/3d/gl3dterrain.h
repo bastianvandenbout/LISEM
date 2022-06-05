@@ -70,6 +70,9 @@ public:
             glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(i).GetCenterX(),0.0,s.GL_FrameBuffer3DWindow.at(i).GetCenterY());
             glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSize"),s.GL_FrameBuffer3DWindow.at(i).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i).GetSizeY());
 
+
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"DrawLights"),s.draw_lighting);
+            glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"DrawShadows"),s.draw_shadows?1:0);
             if(i > 0)
             {
                 glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"TerrainSizeL"),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeX(),s.GL_FrameBuffer3DWindow.at(i-1).GetSizeY());

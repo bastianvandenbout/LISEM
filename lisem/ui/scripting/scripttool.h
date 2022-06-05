@@ -746,6 +746,10 @@ public slots:
     inline void CloseFile(int index)
     {
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(index);
+        if(ce == nullptr)
+        {
+            return;
+        }
 
         bool close = true;
         if(ce->m_HasBeenEditedSinceSave)
@@ -1212,6 +1216,10 @@ public slots:
     {
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
 
+        if(ce == nullptr)
+        {
+            return;
+        }
         QString m_tabReplace;
         m_tabReplace.clear();
         m_tabReplace.fill(' ', 4);
@@ -1241,33 +1249,47 @@ public slots:
     {
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
 
-        QString m_tabReplace;
-        m_tabReplace.clear();
-        m_tabReplace.fill(' ', 4);
-
-        int selectedLines = 0;
+        if(ce != nullptr)
         {
-            QTextCursor cursor = ce->textCursor();
+            QString m_tabReplace;
+            m_tabReplace.clear();
+            m_tabReplace.fill(' ', 4);
 
-            if(!cursor.selection().isEmpty())
+            int selectedLines = 0;
             {
-                cursor.position();
-                QString str = cursor.selection().toPlainText();
+                QTextCursor cursor = ce->textCursor();
 
-                selectedLines = str.count("\n")+1;
-                str.replace("\n"+ m_tabReplace,"\n");
-                 str.replace("\n\t","\n");
-                str.prepend(m_tabReplace);
-                cursor.insertText(str);
-                cursor.movePosition(QTextCursor::MoveOperation::Left, QTextCursor::MoveMode::KeepAnchor,str.length());
-                ce->setTextCursor(cursor);
+                if(!cursor.selection().isEmpty())
+                {
+                    cursor.position();
+                    QString str = cursor.selection().toPlainText();
+
+                    selectedLines = str.count("\n")+1;
+                    str.replace("\n"+ m_tabReplace,"\n");
+                     str.replace("\n\t","\n");
+                     if(str.startsWith("\t"))
+                     {
+                         str.remove(0,1);
+                     }else if(str.startsWith(m_tabReplace))
+                     {
+                         str.remove(0,4);
+                     }
+
+                    cursor.insertText(str);
+                    cursor.movePosition(QTextCursor::MoveOperation::Left, QTextCursor::MoveMode::KeepAnchor,str.length());
+                    ce->setTextCursor(cursor);
+                }
             }
         }
+
     }
     inline void OnRequestCommentCode()
     {
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
-
+        if(ce == nullptr)
+        {
+            return;
+        }
         QString m_tabReplace;
         m_tabReplace.clear();
         m_tabReplace.fill(' ', 4);
@@ -1321,7 +1343,10 @@ public slots:
     inline void OnRequestRegularCode()
     {
             CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
-
+            if(ce == nullptr)
+            {
+                return;
+            }
             QString m_tabReplace;
             m_tabReplace.clear();
             m_tabReplace.fill(' ', 4);
@@ -1382,7 +1407,10 @@ public slots:
         //ce->selectAll();
 
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
-
+        if(ce == nullptr)
+        {
+            return;
+        }
 
         ce->SetHighlightErrorLocation( -1, -1);
 

@@ -657,16 +657,27 @@ public:
                     for(int c = minc; c < minc + sizec; c++)
                     {
 
-                        int r2 = std::max(0,std::min(m_Map->nrRows(),r));
-                        int c2 = std::max(0,std::min(m_Map->nrCols(),c));
+                        if(r-minr > -1 && c- minc > -1 && r- minr < sizer && c - minc < sizec)
+                        {
+                            if(r > -1 && c > -1 && r < m_Map->nrRows() && c < m_Map->nrCols())
+                            {
+                                int r2 = std::max(0,std::min(m_Map->nrRows(),r));
+                                int c2 = std::max(0,std::min(m_Map->nrCols(),c));
 
-                        datareplace[r - minr][c - minc] = m_Map->data[r2][c2];
+                                datareplace[r - minr][c - minc] = m_Map->data[r2][c2];
+                            }
+                        }
                     }
 
                 }
+
+                std::cout << 3 << std::endl;
                 glad_glBindTexture(GL_TEXTURE_2D,m_Texture->m_texgl);
                 glad_glTexSubImage2D(GL_TEXTURE_2D,0,minc,minr,sizec,sizer,GL_RED,GL_FLOAT,datareplace.data());
                 glad_glBindTexture(GL_TEXTURE_2D,0);
+
+
+                std::cout << 4 << std::endl;
             }
 
         }

@@ -44,7 +44,7 @@ public:
         return y;
     }
 
-    inline float length()
+    inline float length() const
     {
         double lsq = (x*x +y*y);
         return lsq > 0.0f? sqrt(lsq):0.0f;
@@ -73,6 +73,25 @@ public:
         out.y = x;
         return out;
 
+    }
+
+
+    inline static float VDot(const LSMVector2 &v1, const LSMVector2 &v2)
+    {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+    inline static LSMVector2 VNormalize(const LSMVector2 &v1)
+    {
+        LSMVector2 v2 = v1;
+        return v2.Normalize();
+    }
+    inline static float VDistance(const LSMVector2 &v1, const LSMVector2 &v2)
+    {
+        return (v2-v1).length();
+    }
+    inline static float VLength(const LSMVector2 &v1)
+    {
+        return v1.length();
     }
 
     inline double AngleWith(LSMVector2 v2)

@@ -875,6 +875,8 @@ inline static cTMap * AS_ReSampleNearest(cTMap * m , float scale)
         dup->west(), dup->cellSizeX() *(((double)(m->nrCols()))/(colsn)) ,dup->cellSizeY()*(((double)(m->nrRows()))/(rowsn)));
 
     cTMap * ret = new cTMap(std::move(datac),m->projection(),"",false);
+    ret->setcellSizeX(m->cellSizeX() *1.0/scale);
+    ret->setcellSizeY(m->cellSizeY()*1.0/scale);
 
     if(scale > 1.0) // linear interpolation, sparse
     {
@@ -949,6 +951,8 @@ inline static cTMap * AS_ReSampleLinear(cTMap * m , float scale)
         dup->west(), dup->cellSizeX() *(((double)(m->nrCols()))/(colsn)) ,dup->cellSizeY()*(((double)(m->nrRows()))/(rowsn)));
 
     cTMap * ret = new cTMap(std::move(datac),m->projection(),"",false);
+    ret->setcellSizeX(m->cellSizeX() *1.0/scale);
+    ret->setcellSizeY(m->cellSizeY()*1.0/scale);
 
     if(scale > 1.0) // linear interpolation, sparse
     {
@@ -1021,6 +1025,8 @@ inline static cTMap * AS_ReSampleCubic(cTMap * m , float scale)
         dup->west(), dup->cellSizeX() *(((double)(m->nrCols()))/(colsn)) ,dup->cellSizeY()*(((double)(m->nrRows()))/(rowsn)));
 
     cTMap * ret = new cTMap(std::move(datac),m->projection(),"",false);
+    ret->setcellSizeX(m->cellSizeX() *1.0/scale);
+    ret->setcellSizeY(m->cellSizeY()*1.0/scale);
 
     if(scale > 1.0) // linear interpolation, sparse
     {
@@ -1092,6 +1098,8 @@ inline static cTMap * AS_ReSampleSparse(cTMap * m , float scale)
         dup->west(), dup->cellSizeX() *(((double)(m->nrCols()))/(colsn)) ,dup->cellSizeY()*(((double)(m->nrRows()))/(rowsn)));
 
     cTMap * ret = new cTMap(std::move(datac),m->projection(),"",false);
+    ret->setcellSizeX(m->cellSizeX() *1.0/scale);
+    ret->setcellSizeY(m->cellSizeY()*1.0/scale);
 
     if(scale > 1.0) // linear interpolation, sparse
     {

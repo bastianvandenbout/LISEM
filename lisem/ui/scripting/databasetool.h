@@ -305,6 +305,37 @@ public slots:
     }
 };
 
+class QFileDeleteTreeView : public QTreeView
+{
+    Q_OBJECT;
+
+public:
+
+    inline QFileDeleteTreeView() : QTreeView()
+    {
+
+    }
+
+
+
+    inline void keyPressEvent(QKeyEvent * event) override
+    {
+        //check if delete button, then ask to delete file
+        if(event->key() == Qt::Key::Key_Delete)
+        {
+            emit OnDeletePressed();
+
+        }else
+        {
+            QTreeView::keyPressEvent(event);
+        }
+
+    };
+
+signals:
+
+    inline void OnDeletePressed();
+};
 
 class DatabaseTool : public QWidget
 {
@@ -346,9 +377,9 @@ public:
     ScriptManager *m_ScriptManager;
 
     QFileSystemModel *model;
-    QTreeView *m_BrowseTree;
+    QFileDeleteTreeView *m_BrowseTree;
     SPHFileSystemModel *model2;
-    QTreeView *m_BrowseTree2;
+    QFileDeleteTreeView *m_BrowseTree2;
 
     ElidedLabel * m_DirLabel;
 
@@ -401,7 +432,7 @@ public:
         model->setRootPath("");
         model->setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
         QFileIconProvider * iconp =  model->iconProvider();
-        m_BrowseTree = new QTreeView();
+        m_BrowseTree = new QFileDeleteTreeView();
         QString rootPath = "";//GetSite();
         m_BrowseTree->setModel(model);
            if (!rootPath.isEmpty()) {
@@ -427,7 +458,7 @@ public:
 
        QFileIconProvider * iconp2 =  model->iconProvider();
 
-       m_BrowseTree2 = new QTreeView();
+       m_BrowseTree2 = new QFileDeleteTreeView();
        m_BrowseTree2->setDragEnabled(true);
        m_BrowseTree2->setDropIndicatorShown(true);
        m_BrowseTree2->setAcceptDrops(true);
@@ -447,6 +478,21 @@ public:
       m_BrowseTree2->setSortingEnabled(true);
 
 
+
+      connect(m_BrowseTree, &QFileDeleteTreeView::OnDeletePressed,[this]()
+      {
+            OnDelete();
+
+            ;
+      });
+
+      connect(m_BrowseTree2, &QFileDeleteTreeView::OnDeletePressed,[this]()
+      {
+            OnDelete();
+
+
+            ;
+      });
      m_FileConsole = new QPlainTextEdit(this);
      m_FileConsoleLineEdit = new LSMLineEdit(m_ScriptManager,this);
 
@@ -730,16 +776,22 @@ public:
 
         m_ShouldHaveFileWatch = false;
     }
+    QMutex m_FileBrowseMutex;
+    QString m_FileBrowseSetPath;
+    bool m_FileBrowseSet  = false;
 
     inline void OnScriptStopped(QString script, int index)
     {
         std::cout << "enable file watch" <<std::endl;
         QString path = model2->rootPath();
 
-
+        m_FileBrowseMutex.lock();
+        m_FileBrowseSetPath = path;
+        m_FileBrowseSet = true;
         m_ShouldHaveFileWatch = true;
 
-        SetRootFolder(path);
+        m_FileBrowseMutex.unlock();
+
 
     }
 
@@ -758,6 +810,14 @@ public slots:
 
     void UpdateConsole()
     {
+        m_FileBrowseMutex.lock();
+        if(m_FileBrowseSet)
+        {
+            m_FileBrowseSet = false;
+            SetRootFolder(m_FileBrowseSetPath);
+        }
+
+        m_FileBrowseMutex.unlock();
         QList<LeveledMessage> list = GetMessagesS();
 
         for(int i = 0; i < list.length(); i++)

@@ -5,15 +5,24 @@
 #include "pcrtypes.h"
 #include "defines.h"
 
+#define LDD4_VAL_LIST {0,1,2,3,4,5}
 #define LDD_VAL_LIST {0,1,2,3,4,5,6,7,8,9}
 #define LDD_X_LIST {0, -1, 0, 1, -1, 0, 1, -1, 0, 1}
 #define LDD_DIR_LENGTH 10
 #define LDD_Y_LIST {0, 1, 1, 1, 0, 0, 0, -1, -1, -1}
+//these indices are not the final values, but we convert at the end to be consistent with the 8-dir ldd values
+#define LDD4_X_LIST {0, -1, 0, 0, -1, 0}
+#define LDD4_DIR_LENGTH 6
+#define LDD4_Y_LIST {0, 0, 1, -1, 0, 0}
 #define LDD_DIST_DIAG 1.41421356237f
+#define LDD4_DIST 1.0f
+#define LDD4_DIST_LIST {1.0f,LDD_DIST, LDD_DIST, LDD_DIST,LDD_DIST, 1.0f}
 #define LDD_DIST 1.0f
 #define LDD_DIST_LIST {1.0f,LDD_DIST_DIAG, LDD_DIST, LDD_DIST_DIAG,LDD_DIST, 1.0f, LDD_DIST,LDD_DIST_DIAG, LDD_DIST, LDD_DIST_DIAG }
 #define LDD_PIT 5
 #define LDD_FLAT 0
+#define LDD4_PIT 5
+#define LDD4_FLAT 0
 #define LDD_MAKE_TEMP(x) (x + LDD_DIR_LENGTH)
 #define LDD_MAKE_ACTUAL(x) (x - LDD_DIR_LENGTH)
 #define LDD_IS_ACTUAL(x) ((x> 0 && x < LDD_DIR_LENGTH) ? true : false)
@@ -22,7 +31,14 @@
 // check if cell From flows to To
 #define FLOWS_TO(ldd, rFrom, cFrom, rTo, cTo) \
     ( ldd != 0 && rFrom >= 0 && cFrom >= 0 && rFrom+dy[ldd]==rTo && cFrom+dx[ldd]==cTo )
-
+#define LDD4_MAKE_TEMP(x) (x + LDD4_DIR_LENGTH)
+#define LDD4_MAKE_ACTUAL(x) (x - LDD4_DIR_LENGTH)
+#define LDD4_IS_ACTUAL(x) ((x> 0 && x < LDD4_DIR_LENGTH) ? true : false)
+#define LDD4_IS_TEMP(x) (!(x < LDD4_DIR_LENGTH) ? true : false)
+#define INSIDE4(map, r, c) (r>=0 && r<map->data.nr_rows() && c>=0 && c<map->data.nr_cols())
+// check if cell From flows to To
+#define FLOWS4_TO(ldd, rFrom, cFrom, rTo, cTo) \
+    ( ldd != 0 && rFrom >= 0 && cFrom >= 0 && rFrom+dy[ldd]==rTo && cFrom+dx[ldd]==cTo )
 
 extern int n_warnhypergeom;
 
@@ -52,8 +68,8 @@ typedef struct LDD_PITPROPERTIES {
     int connectdir;
     int r_lowestnb;
     int c_lowestnb;
-    int r_lowestnbconnect;
-    int c_lowestnbconnect;
+    int r_lowestnbconnect = -1;
+    int c_lowestnbconnect = -1;
 
     int pi_flowinto = -1;
 
@@ -67,6 +83,11 @@ LISEM_API int GetLDD(int dxin, int dyin);
 LISEM_API int GetReverseLDD(int dxin, int dyin);
 LISEM_API int ReversePath(cTMap * ldd, int r, int c);
 LISEM_API bool ReversePath(cTMap * ldd, int rbegin, int cbegin, int rend, int cend);
+LISEM_API int GetReverseLDD4(int ldd);
+LISEM_API int GetLDD4(int dxin, int dyin);
+LISEM_API int GetReverseLDD4(int dxin, int dyin);
+LISEM_API int ReversePath4(cTMap * ldd, int r, int c);
+LISEM_API bool ReversePath4(cTMap * ldd, int rbegin, int cbegin, int rend, int cend);
 
 
 inline int PitCompFunc(const  LDD_PITPROPERTIES a, const LDD_PITPROPERTIES b)
@@ -258,6 +279,64 @@ inline LDD_LINKEDLIST * ListReplaceFirstByEQNBF(cTMap * LDD,cTMap * Mask_Done, L
 
     return list;
 }
+
+inline LDD_LINKEDLIST * ListReplaceFirstByUSNB4(cTMap * LDD, LDD_LINKEDLIST * list)
+{
+    if(list != nullptr)
+    {
+        LDD_LINKEDLIST *prev = list->prev;
+
+        int rowNr = list->rowNr;
+        int colNr = list->colNr;
+
+        free (list);
+
+        list = prev;
+
+        LDD_LINKEDLIST *temp = NULL;
+        int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+        int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+
+        for(int i =1; i < LDD4_DIR_LENGTH; i++)
+        {
+            int r, c;
+            int ldd = 0;
+
+            // this is the current cell
+            if (i==LDD4_PIT)
+                continue;
+
+            r = rowNr+dy[i];
+            c = colNr+dx[i];
+
+            if (INSIDE4(LDD,r, c) && !pcr::isMV(LDD->data[r][c]))
+            {
+                ldd = (int) LDD->data[r][c];
+            }
+            else
+            {
+                continue;
+            }
+
+            // check if there are more cells upstream, if not subCatchDone remains true
+            if (    FLOWS4_TO(ldd, r, c, rowNr, colNr) &&
+                    INSIDE4(LDD,r, c))
+            {
+                temp = (LDD_LINKEDLIST *)malloc(sizeof(LDD_LINKEDLIST));
+                temp->prev = list;
+                list = temp;
+                list->rowNr = r;
+                list->colNr = c;
+            }
+
+        }
+
+    }
+
+
+    return list;
+}
+
 
 inline LDD_LINKEDLIST * ListReplaceFirstByUSNB(cTMap * LDD, LDD_LINKEDLIST * list)
 {

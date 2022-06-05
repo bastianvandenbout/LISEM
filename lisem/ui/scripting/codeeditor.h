@@ -118,10 +118,59 @@ public:
         return word;
     }
 
+    QString textUnderCursorLeft() const
+    {
+        QTextCursor tc = textCursor();
+        int pos = tc.anchor();
+        tc.select(QTextCursor::WordUnderCursor);
+
+        tc.setPosition(pos, QTextCursor::MoveMode::KeepAnchor);
+        QString word = tc.selectedText();
+        int selstart =  tc.anchor();
+        tc.setPosition(selstart-1);
+        tc.setPosition(selstart, QTextCursor::MoveMode::KeepAnchor);
+
+        QString wordprev = tc.selectedText();
+
+        tc.setPosition(selstart-1);
+        tc.select(QTextCursor::WordUnderCursor);
+        QString wordprev2 = tc.selectedText();
+        if(word == ")")
+        {
+            word = wordprev2;
+        }
+
+        if(wordprev.trimmed() == ".")
+        {
+            word.insert(0,",");
+        }
+
+        return word;
+    }
+
     QString textUnderCursor(QTextCursor tc) const
     {
         tc.select(QTextCursor::WordUnderCursor);
 
+        QString word = tc.selectedText();
+        int selstart =  tc.anchor();
+        tc.setPosition(selstart-1);
+        tc.setPosition(selstart, QTextCursor::MoveMode::KeepAnchor);
+
+        QString wordprev = tc.selectedText();
+        if(wordprev.trimmed() == ".")
+        {
+            word.insert(0,",");
+        }
+        return word;
+    }
+
+    QString textUnderCursorLeft(QTextCursor tc) const
+    {
+        int pos = tc.anchor();
+        tc.select(QTextCursor::WordUnderCursor);
+
+        tc.setPosition(pos, QTextCursor::MoveMode::KeepAnchor);
         QString word = tc.selectedText();
         int selstart =  tc.anchor();
         tc.setPosition(selstart-1);

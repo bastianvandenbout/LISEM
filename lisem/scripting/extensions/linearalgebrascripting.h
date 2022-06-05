@@ -67,6 +67,12 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASVector2C0,(void*),void), asCALL_CDECL_OBJFIRST);
     engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y)", asFUNCTIONPR(AS_ASVector2C1,(void*,float,float),void), asCALL_CDECL_OBJFIRST);
 
+    engine->RegisterObjectMethod("vec2", "vec2 opAdd(vec2 m) const", asMETHODPR(LSMVector2,operator+,(const LSMVector2 &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opSub(vec2 m) const", asMETHODPR(LSMVector2,operator-,(const LSMVector2 &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opMul(float m) const", asMETHODPR(LSMVector2,operator*,(const float &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opDiv(float m) const", asMETHODPR(LSMVector2,operator/,(const float &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opMul_r(float m) const", asMETHODPR(LSMVector2,operator*,(const float &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+
     //vec3
     engine->RegisterObjectType("vec3", sizeof(LSMVector3), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS| asGetTypeTraits<LSMVector3>()); assert( r >= 0 );
     engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT, "void f(int &in) {float,float,float}", asMETHODPR(LSMVector3,AS_FromList, (void*),void), asCALL_THISCALL);
@@ -101,6 +107,15 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterGlobalFunction("float refract(const vec3 &in v1, const vec3 &in v2, float eta)",asFUNCTION(LSMVector3::VRefract),asCALL_CDECL);
     //
 
+
+    engine->RegisterGlobalFunction("float dot(const vec2 &in v1,const vec2 &in v2)",asFUNCTION(LSMVector2::VDot),asCALL_CDECL);
+    //normalization
+    engine->RegisterGlobalFunction("vec2 normalize(const vec2 &in v1)",asFUNCTION(LSMVector2::VNormalize),asCALL_CDECL);
+    //length
+    engine->RegisterGlobalFunction("float length(const vec2 &in v1)",asFUNCTION(LSMVector2::VLength),asCALL_CDECL);
+    //distance
+    engine->RegisterGlobalFunction("float distance(const vec2 &in v1, const vec2 &in v2)",asFUNCTION(LSMVector2::VDistance),asCALL_CDECL);
+
     //vec4
     engine->RegisterObjectType("vec4", sizeof(LSMVector4), asOBJ_VALUE | asOBJ_APP_CLASS_ALLFLOATS| asOBJ_POD| asGetTypeTraits<LSMVector4>()); assert( r >= 0 );
     engine->RegisterObjectProperty("vec4", "float x", asOFFSET(LSMVector4,x)); assert( r >= 0 );
@@ -110,6 +125,22 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
 
     engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASVector4C0,(void*),void), asCALL_CDECL_OBJFIRST);
     engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y, float z, float w)", asFUNCTIONPR(AS_ASVector4C1,(void*,float,float,float,float),void), asCALL_CDECL_OBJFIRST);
+
+
+    engine->RegisterObjectMethod("vec4", "vec4 opAdd(vec4 m) const", asMETHODPR(LSMVector4,operator+,(const LSMVector4 &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec4", "vec4 opSub(vec4 m) const", asMETHODPR(LSMVector4,operator-,(const LSMVector4 &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec4", "vec4 opMul(float m) const", asMETHODPR(LSMVector4,operator*,(const float &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec4", "vec4 opDiv(float m) const", asMETHODPR(LSMVector4,operator/,(const float &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec4", "vec4 opMul_r(float m) const", asMETHODPR(LSMVector4,operator*,(const float &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+
+    engine->RegisterGlobalFunction("float dot(const vec4 &in v1,const vec4 &in v2)",asFUNCTION(LSMVector4::VDot),asCALL_CDECL);
+    //normalization
+    engine->RegisterGlobalFunction("vec4 normalize(const vec4 &in v1)",asFUNCTION(LSMVector4::VNormalize),asCALL_CDECL);
+    //length
+    engine->RegisterGlobalFunction("float length(const vec4 &in v1)",asFUNCTION(LSMVector4::VLength),asCALL_CDECL);
+    //distance
+    engine->RegisterGlobalFunction("float distance(const vec4 &in v1, const vec4 &in v2)",asFUNCTION(LSMVector4::VDistance),asCALL_CDECL);
+
 
     //vecn
 

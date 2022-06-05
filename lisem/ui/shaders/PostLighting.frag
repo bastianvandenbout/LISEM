@@ -11,6 +11,8 @@ uniform sampler2D Props; //Metalness, Rougness, Object Type
 uniform sampler2D Light; // albedo,metalness,roughness
 uniform sampler2D Velocity;
 
+uniform int DrawLights = 0;
+uniform int DrawShadows = 0;
 
 in vec2 texcoord;
 
@@ -288,7 +290,7 @@ void main()
 
 
     //if the object type is 2 (edge), dont do lighting
-    if(props.b > 0.5 && !(props.b > 1.5 && props.b < 2.5))
+    if((props.b > 0.5 && !(props.b > 1.5 && props.b < 2.5) )&& DrawLights > 0)
     {
         //do the physically-based rendering
         float posx = texture(PosX,uv).r;

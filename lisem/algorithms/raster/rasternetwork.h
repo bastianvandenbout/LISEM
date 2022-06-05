@@ -19,8 +19,839 @@
 //#define LDD_PIT 5;
 
 
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation, bool lddin, cTMap * demn)//, bool alter_newdem = false, cTMap * demnew = nullptr
+inline cTMap * AS_DrainageNetwork4(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation, bool lddin, cTMap * demn)//, bool alter_newdem = false, cTMap * demnew = nullptr
 {
+
+    if(DEM->AS_IsSingleValue)
+    {
+        LISEMS_ERROR("Input 1 for spread (points) can not be non-spatial");
+        throw 1;
+    }
+
+    if(!outflowdepth->AS_IsSingleValue)
+    {
+        if(!(DEM->data.nr_rows() ==  outflowdepth->data.nr_rows() && DEM->data.nr_cols() == outflowdepth->data.nr_cols()))
+        {
+            LISEMS_ERROR("Numbers of rows and column do not match");
+            throw -1;
+        }
+    }
+
+    if(!corevolume->AS_IsSingleValue)
+    {
+        if(!(DEM->data.nr_rows() == corevolume->data.nr_rows() && DEM->data.nr_cols() == corevolume->data.nr_cols()))
+        {
+            LISEMS_ERROR("Numbers of rows and column do not match");
+            throw -1;
+        }
+    }
+
+    if(!corearea->AS_IsSingleValue)
+    {
+        if(!(DEM->data.nr_rows() == corearea->data.nr_rows() && DEM->data.nr_cols() == corearea->data.nr_cols()))
+        {
+            LISEMS_ERROR("Numbers of rows and column do not match");
+            throw -1;
+        }
+    }
+    if(!precipitation->AS_IsSingleValue)
+    {
+        if(!(DEM->data.nr_rows() == precipitation->data.nr_rows() && DEM->data.nr_cols() == precipitation->data.nr_cols()))
+        {
+            LISEMS_ERROR("Numbers of rows and column do not match");
+            throw -1;
+        }
+    }
+
+    if(demn != nullptr)
+    {
+        if(!(DEM->data.nr_rows() == demn->data.nr_rows() && DEM->data.nr_cols() == demn->data.nr_cols()))
+        {
+            LISEMS_ERROR("Numbers of rows and column do not match");
+            throw -1;
+        }
+
+        //initialize the map with friction values
+        for(int r = 0; r < DEM->data.nr_rows();r++)
+        {
+            for(int c = 0; c < DEM->data.nr_cols();c++)
+            {
+                demn->data[r][c] = DEM->data[r][c];
+            }
+        }
+
+    }
+
+    int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+    int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+    float dist[LDD4_DIR_LENGTH] = LDD4_DIST_LIST;
+
+
+    //first step in the algiorithm is to produce a locally based network map.
+    //this is done simply setting the value of each cell to the direction of the lowest neighbor
+    //if the cell itself becomes the lowest neighbor, it becomes a pit
+
+    MaskedRaster<float> raster_data(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(),DEM->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),DEM->projection(),"");
+
+
+    //initialize the map with friction values
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(DEM->data[r][c]))
+            {
+                bool nbMV = false;
+                float dem = DEM->data[r][c];
+                float lowest = 1e31;
+                int lowest_i = -1;
+                for(int i = 1; i < LDD4_DIR_LENGTH; i++)
+                {
+                    if(!(i == LDD4_PIT))
+                    {
+
+                        int rn = r + dy[i];
+                        int cn = c + dx[i];
+                        float distn = dist[i];
+
+
+                        if(rn > -1 && rn < map->data.nr_rows() && cn > -1 && cn < map->data.nr_cols())
+                        {
+                            if(!pcr::isMV(DEM->data[rn][cn]))
+                            {
+                                float slope = (DEM->data[rn][cn]-dem)/distn;
+                                if(slope < lowest)
+                                {
+                                    lowest = slope;
+                                    lowest_i = i;
+
+                                }
+                            }else {
+                                nbMV = true;
+                            }
+
+                        }
+
+                    }
+                }
+
+                //case when all surrounding cells are MV
+                if(lowest_i < 0)
+                {
+                    map->data[r][c] = LDD4_PIT;
+                //else there should be at least a single best direction
+                }else
+                {
+                    int i  = lowest_i;
+                    int rn = r + dy[i];
+                    int cn = c + dx[i];
+                    float demn = DEM->data[rn][cn];
+
+                    //now check if this direction is also lower than the cell itself
+
+                    //if lower, normal flow direction
+                    if(demn < dem)
+                    {
+                        map->data[r][c] = lowest_i;
+
+                    //if equal, flat area (need to resolve later
+                    }else if(demn == dem)
+                    {
+                        //if it borders a MV, we assign it as a pit (since it will become outflow)
+                        if(nbMV)
+                        {
+                            map->data[r][c] = LDD4_PIT;
+                        }else
+                        {
+                            map->data[r][c] = LDD4_FLAT;
+                        }
+
+                    //if greater, then pit
+                    }else {
+
+                        map->data[r][c] = LDD4_PIT;
+                    }
+
+
+                }
+            }else {
+
+                pcr::setMV(map->data[r][c]);
+                }
+
+        }
+    }
+
+    //resolve flats that look like a saddle point on a function
+    // this is done in an iterative manner, similar to the spread algorithm
+
+    bool fixed_something = true;
+
+    int iter = 0;
+    while (fixed_something )
+    {
+        iter ++;
+        int fixed_n = 0;
+        fixed_something = false;
+
+
+
+        for(int r = 0; r < map->data.nr_rows();r++)
+        {
+            for(int c = 0; c < map->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    float dem = DEM->data[r][c];
+
+                    float val_current = map->data[r][c];
+                    if(((int)(val_current)) == LDD4_FLAT)
+                    {
+                        for(int i = 1; i < LDD4_DIR_LENGTH; i++)
+                        {
+                            if(i != LDD4_PIT)
+                            {
+                                int rn = r + dy[i];
+                                int cn = c + dx[i];
+
+                                if(rn > -1 && rn < map->data.nr_rows() && cn > -1 && cn < map->data.nr_cols())
+                                {
+                                    int valn = (int) (map->data[rn][cn]);
+                                    int demn = DEM->data[rn][cn];
+
+                                    if(LDD4_IS_ACTUAL(valn))
+                                    {
+                                        int rnn = rn + dy[valn];
+                                        int cnn = cn + dx[valn];
+                                        float demnn = DEM->data[rnn][cnn];
+                                        int valnn = map->data[rnn][cnn];
+
+                                        if(rnn != r && cnn != c && (demn <= dem ) && !(demnn > dem))
+                                        {
+                                            fixed_something = true;
+                                            fixed_n += 1;
+                                            map->data[r][c] = LDD4_MAKE_TEMP(i);
+                                            break;
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+
+            }
+
+        }
+
+        if(fixed_something)
+        {
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        float val_current = map->data[r][c];
+                        if(LDD4_IS_TEMP((int)(val_current)))
+                        {
+                            float valn = LDD4_MAKE_ACTUAL(val_current);
+                            map->data[r][c] = valn;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+
+
+    //resolve flats that are local depressions
+    // this is done in an iterative manner, similar to the spread algorithm
+
+    fixed_something = true;
+    while (fixed_something)
+    {
+
+        int fixed_n = 0;
+        fixed_something = false;
+
+
+
+        for(int r = 0; r < map->data.nr_rows();r++)
+        {
+            for(int c = 0; c < map->data.nr_cols();c++)
+            {
+
+                if(!pcr::isMV(DEM->data[r][c]))
+                {
+                    float dem = DEM->data[r][c];
+
+                    float val_current = map->data[r][c];
+                    if(((int)(val_current)) == LDD4_FLAT)
+                    {
+                        for(int i = 1; i < LDD4_DIR_LENGTH; i++)
+                        {
+                            if(i != LDD4_PIT)
+                            {
+                                int rn = r + dy[i];
+                                int cn = c + dx[i];
+
+                                if(rn > -1 && rn < map->data.nr_rows() && cn > -1 && cn < map->data.nr_cols())
+                                {
+                                    int valn = (int) (map->data[rn][cn]);
+                                    int demn = DEM->data[rn][cn];
+
+                                    if(LDD4_IS_ACTUAL(valn))
+                                    {
+                                        int rnn = rn + dy[valn];
+                                        int cnn = cn + dx[valn];
+
+                                        if(rnn == r && cnn == c)
+                                        {
+                                            for(int j = 1; j < LDD4_DIR_LENGTH; j++)
+                                            {
+                                                if(j != LDD4_PIT)
+                                                {
+                                                    int rnnn = r + dy[j];
+                                                    int cnnn = c + dx[j];
+
+                                                    if(rnnn > -1 && rnnn < map->data.nr_rows() && cnnn > -1 && cnnn < map->data.nr_cols())
+                                                    {
+                                                        int valnn = (int) (map->data[rnnn][cnnn]);
+
+                                                        if(valnn == LDD4_FLAT)
+                                                        {
+                                                            fixed_something = true;
+                                                            fixed_n += 1;
+                                                            map->data[r][c] = LDD4_MAKE_TEMP(j);
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if(fixed_something)
+        {
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    if(!pcr::isMV(DEM->data[r][c]))
+                    {
+                        float val_current = map->data[r][c];
+                        if(LDD4_IS_TEMP((int)(val_current)))
+                        {
+                            float valn = LDD4_MAKE_ACTUAL(val_current);
+                            map->data[r][c] = valn;
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+    }
+
+    //resolve left-over 0 values (which are pits)
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(!pcr::isMV(DEM->data[r][c]))
+            {
+                float val_current = map->data[r][c];
+                if(LDD4_FLAT== ((int)(val_current)))
+                {
+                    map->data[r][c] = LDD4_PIT;
+                }
+            }
+
+        }
+    }
+
+
+    MaskedRaster<int> catchmentsm(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(),DEM->data.cell_sizeY());
+    MaskedRaster<int> catchmentspi(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(),DEM->data.cell_sizeY());
+
+
+    //check if correct and otherwise fix
+    //to do this, we follow the network attached to each pit. If not all cells are found using this method, those non-mv cells do not drain to a pit.
+    //this can be the case of there are two cells directed towards each other
+    //or more generally, if there is a loop within the network.
+
+    for(int ro = 0; ro < map->data.nr_rows();ro++)
+    {
+        for(int co = 0; co < map->data.nr_cols();co++)
+        {
+            catchmentspi[ro][co] = -1;
+        }
+    }
+
+    for(int ro = 0; ro < map->data.nr_rows();ro++)
+    {
+        for(int co = 0; co < map->data.nr_cols();co++)
+        {
+            if(!pcr::isMV(DEM->data[ro][co]))
+            {
+                float dem = DEM->data[ro][co];
+
+                float val_current = map->data[ro][co];
+                if(((int)(val_current)) == LDD4_PIT)
+                {
+
+                    LDD_LINKEDLIST * list = GetListRoot(map,ro,co);
+
+                    while(list != nullptr)
+                    {
+                        int r = list->rowNr;
+                        int c = list->colNr;
+
+                        float dem = DEM->data[r][c];
+
+                        //TODO - check cycles
+
+                        catchmentspi[r][c] = 1;
+
+
+                        list = ListReplaceFirstByUSNB4(map,list);
+                    }
+                }
+            }
+
+        }
+    }
+
+    for(int ro = 0; ro < map->data.nr_rows();ro++)
+    {
+        for(int co = 0; co < map->data.nr_cols();co++)
+        {
+            if(!pcr::isMV(DEM->data[ro][co]))
+            {
+
+                int r = ro;
+                int c = co;
+                bool next = true;
+
+                while(next)
+                {
+                    next = false;
+
+                    if(catchmentspi[r][c] == -1)
+                    {
+                        int ldd = (int) map->data[r][c];
+
+                        if(ldd > 0 && ldd < 10 && ldd != 5)
+                        {
+
+                            int rn = rn + dy[ldd];
+                            int cn = cn + dx[ldd];
+
+                            if(!OUTORMV(map,rn,cn))
+                            {
+                                r = rn;
+                                c = cn;
+                                next = true;
+
+                            }else {
+
+                                map->data[r][c] = 5;
+                                catchmentspi[r][c] = 1;
+                            }
+                        }else
+                        {
+                            map->data[r][c] = 5;
+                            catchmentspi[r][c] = 1;
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    for(int ro = 0; ro < map->data.nr_rows();ro++)
+    {
+        for(int co = 0; co < map->data.nr_cols();co++)
+        {
+            catchmentspi[ro][co] = 0;
+        }
+    }
+
+    bool fixed_pit = true;
+
+    while(fixed_pit)
+    {
+
+        fixed_pit = false;
+
+        std::vector<LDD_PITPROPERTIES> PitList;
+
+        //create a catchment map
+        int catchment=  0;
+        //now check all actual pits and correct them
+        for(int ro = 0; ro < map->data.nr_rows();ro++)
+        {
+            for(int co = 0; co < map->data.nr_cols();co++)
+            {
+                if(!pcr::isMV(DEM->data[ro][co]))
+                {
+                    float val_current = map->data[ro][co];
+                    if(LDD4_PIT == ((int)(val_current)))
+                    {
+
+                        LDD_PITPROPERTIES pitprops;
+                        pitprops.colNr = co;
+                        pitprops.rowNr = ro;
+                        pitprops.catchment_nr = catchment;
+                        pitprops.dem_pit = DEM->data[ro][co];
+
+                        LDD_LINKEDLIST * list = GetListRoot(map,ro,co);
+
+                        while(list != nullptr)
+                        {
+                            int r = list->rowNr;
+                            int c = list->colNr;
+
+
+                            pitprops.catchment_area += map->cellSize() * map->cellSize();
+
+                            list = ListReplaceFirstByUSNB4(map,list);
+                            catchmentspi[r][c] = catchment;
+                        }
+
+
+                        PitList.push_back(pitprops);
+
+                        catchment += 1;
+                    }
+                }
+            }
+
+        }
+
+
+        //sort the pits based on catchment size and pit elevation
+        if(PitList.size() > 1)
+        {
+            std::sort(PitList.begin(),PitList.end(),PitCompFunc);
+        }
+
+        int catchmentunique = 1;
+
+
+
+        //get the best outflow point for this specific depression
+        //if found, solve the
+        for(int i = 0; i < PitList.size()-1; i++)
+        {
+
+
+              LDD_PITPROPERTIES pp = PitList.at(i);
+
+
+              //fix catchment mask map
+              if(pp.r_lowestnb != -1 && pp.c_lowestnb != -1)
+              {
+                  int ro = pp.rowNr;
+                  int co = pp.colNr;
+
+                  LDD_LINKEDLIST * list = GetListRoot(map,ro,co);
+
+                  while(list != nullptr)
+                  {
+                      int r = list->rowNr;
+                      int c = list->colNr;
+
+                      catchmentsm[r][c] = catchmentunique;
+
+                      list = ListReplaceFirstByUSNB4(map,list);
+                  }
+             }
+
+
+              int pi_flowinto = -1;
+
+              //first find the lowest outflow point for this depression
+              {
+                int ro = pp.rowNr;
+                int co = pp.colNr;
+
+                float dem_pit = DEM->data[ro][co];
+
+                float dem_lowestnb = 1e30;
+                int r_lowestnb = -1;
+                int c_lowestnb = -1;
+                int r_lowestnbconnect = -1;
+                int c_lowestnbconnect = -1;
+                int connectdir = -1;
+
+                     //we found the pit of a catchment
+                     //now we get the area, depth, volume, and lowest catchment neighbor location
+                     int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+                     int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+                     LDD_LINKEDLIST * list = GetListRoot(map,ro,co);
+
+                     while(list != nullptr)
+                     {
+                         int r = list->rowNr;
+                         int c = list->colNr;
+                         //here we do the code that needs to be done for each cell
+
+                         for(int j = 1; j < LDD4_DIR_LENGTH; j++)
+                         {
+                             if(j != LDD4_PIT)
+                             {
+                                 int rn = r + dy[j];
+                                 int cn = c + dx[j];
+
+                                 if(rn > -1 && rn < map->data.nr_rows() && cn > -1 && cn < map->data.nr_cols())
+                                 {
+                                     //pit index of other catchment
+                                     int pi_other = catchmentspi[rn][cn];
+                                     //LDD_PITPROPERTIES pp_other = PitList.at(pi_other);
+
+
+                                     if( //&& (pp_other.pi_flowinto != i)
+                                             !pcr::isMV(DEM->data[rn][cn])  && (catchmentsm[rn][cn] != catchmentunique) && LDD4_IS_ACTUAL(map->data[rn][cn]))
+                                     {
+                                         float dem = (DEM->data[rn][cn]);
+
+                                         if(dem < dem_lowestnb)
+                                         {
+                                             r_lowestnbconnect = r;
+                                             c_lowestnbconnect = c;
+                                             connectdir = j;
+                                             r_lowestnb = rn;
+                                             c_lowestnb = cn;
+                                             dem_lowestnb = dem;
+                                             pi_flowinto = pi_other;
+
+                                         }
+                                     }
+                                 }
+                             }
+                         }
+
+                         list = ListReplaceFirstByUSNB4(map,list);
+                     }
+
+                 pp.r_lowestnbconnect =r_lowestnbconnect;
+                 pp.c_lowestnbconnect =c_lowestnbconnect;
+                 pp.dem_lowestnb = dem_lowestnb;
+                 pp.dem_pit = dem_pit;
+                 pp.connectdir = connectdir;
+                 pp.r_lowestnb = r_lowestnb;
+                 pp.c_lowestnb = c_lowestnb;
+              }
+
+
+
+              float precip_actual = 0;
+
+              //get depression properties to determine wether we should remove
+              if(pp.r_lowestnb != -1 && pp.c_lowestnb != -1)
+              {
+                  int ro = pp.rowNr;
+                  int co = pp.colNr;
+
+                  for(int j = 1; j < LDD4_DIR_LENGTH; j++)
+                  {
+                      if(j != LDD4_PIT)
+                      {
+                          int rn = ro + dy[j];
+                          int cn = co + dx[j];
+
+                          if(rn > -1 && rn < DEM->data.nr_rows() && cn > -1 && cn < DEM->data.nr_cols())
+                          {
+                              if(pcr::isMV(DEM->data[rn][cn]))
+                                {
+                                     pp.mvnb = true;
+                                     break;
+                                }
+                          }else
+                          {
+                              pp.mvnb = false;
+                              break;
+                          }
+                      }
+                  }
+                  LDD_LINKEDLIST * list = GetListRoot(map,ro,co);
+
+
+
+
+                  while(list != nullptr)
+                  {
+                      int r = list->rowNr;
+                      int c = list->colNr;
+
+                      float dem = DEM->data[r][c];
+
+                      if(dem < pp.dem_lowestnb)
+                      {
+                         //this cell is within the depression that must flow outwards,
+                          pp.core_area += map->cellSize()* map->cellSize();
+                          pp.core_volume += std::max(0.0f,pp.dem_lowestnb) - dem * map->cellSize()* map->cellSize();
+                      }
+
+                      pp.catchment_area += map->cellSize()* map->cellSize();
+                      precip_actual +=map->cellSize()* map->cellSize() * precipitation->AS_IsSingleValue? precipitation->data[0][0]:precipitation->data[r][c];
+                      list = ListReplaceFirstByUSNB4(map,list);
+                  }
+             }
+
+              pp.core_ouflowdepth = pp.dem_lowestnb -pp.dem_pit;
+
+
+              //check if this pit matches the criteria
+              bool fix = true;
+
+              if((lddin) && pp.mvnb)
+              {
+                    fix = false;
+              }
+              if(pp.core_ouflowdepth > (outflowdepth->AS_IsSingleValue? outflowdepth->data[0][0] : outflowdepth->data[pp.rowNr][pp.colNr]))
+              {
+                    fix = false;
+              }
+              if(pp.core_area > (corearea->AS_IsSingleValue? corearea->data[0][0] : corearea->data[pp.rowNr][pp.colNr]))
+              {
+                    fix = false;
+              }
+              if(pp.core_volume > (corevolume->AS_IsSingleValue? corevolume->data[0][0] : corevolume->data[pp.rowNr][pp.colNr]))
+              {
+                    fix = false;
+              }
+              if(pp.core_volume > precip_actual * pp.core_area)
+              {
+                    fix = false;
+              }
+
+
+              if(fix && pp.r_lowestnbconnect > -1 && pp.c_lowestnbconnect > -1)
+              {
+
+
+                  pp.pi_flowinto = pi_flowinto;
+
+                  //if we found a possible outflow point, reverse the ldd from the pit to this outflow point
+                  ReversePath4(map,pp.rowNr,pp.colNr,pp.r_lowestnbconnect,pp.c_lowestnbconnect);
+
+                  //now we need to connect the connecting cell to the next catchment
+                  map->data[pp.r_lowestnbconnect][pp.c_lowestnbconnect] = pp.connectdir;
+
+                  double lowestdem = DEM->data[pp.r_lowestnbconnect][pp.c_lowestnbconnect];
+
+                  PitList[i]= pp;
+
+                  fixed_pit = true;
+
+                  //if we are correcting a DEM, set all values within this catchment to be at least of the elevetion of the outflow point
+
+                  if(demn != nullptr)
+                  {
+                      int ro = pp.rowNr;
+                      int co = pp.colNr;
+
+                      LDD_LINKEDLIST * list = GetListRoot(map,ro,co);
+
+                      while(list != nullptr)
+                      {
+                          int r = list->rowNr;
+                          int c = list->colNr;
+
+                          float dem = DEM->data[r][c];
+
+                          if(dem < pp.dem_lowestnb)
+                          {
+                             demn->data[r][c] = lowestdem;
+                          }
+                          list = ListReplaceFirstByUSNB4(map,list);
+                      }
+
+                  }
+
+
+              }
+
+              catchmentunique ++;
+         }
+
+    }
+
+    //std::cout << "start4 8"<< std::endl;
+    if(demn != nullptr)
+    {
+        demn->AS_IsLDD = false;
+    }
+
+    int n_pit = 0;
+    for(int ro = 0; ro < map->data.nr_rows();ro++)
+    {
+        for(int co = 0; co < map->data.nr_cols();co++)
+        {
+            int lddval = (int) (map->data[ro][co] + 0.5);
+
+            if(lddval == 5)
+            {
+                n_pit ++;
+            }
+        }
+    }
+    //std::cout << "n_pit " << n_pit << std::endl;
+    //convert all the values from ldd4 to ldd8
+
+    for(int ro = 0; ro < map->data.nr_rows();ro++)
+    {
+        for(int co = 0; co < map->data.nr_cols();co++)
+        {
+            int lddval = (int) (map->data[ro][co] + 0.5);
+            if(lddval == 1)
+            {
+                lddval = 4;
+            }else if(lddval == 2)
+            {
+                lddval = 2;
+            }else if(lddval == 3)
+            {
+                lddval = 8;
+            }else if(lddval == 4)
+            {
+                lddval = 6;
+            }
+            map->data[ro][co] = lddval;
+        }
+    }
+
+
+    map->AS_IsLDD = true;
+    return map;
+
+}
+
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation, bool lddin, cTMap * demn, bool use4 = false)//, bool alter_newdem = false, cTMap * demnew = nullptr
+{
+    if(use4)
+    {
+        return AS_DrainageNetwork4(DEM,outflowdepth,corevolume,corearea,precipitation,lddin,demn);
+    }
 
     if(DEM->AS_IsSingleValue)
     {
@@ -795,74 +1626,78 @@ inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * core
     return map;
 
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap* outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+
+
+
+
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap* outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,outflowdepth,corevolume,corearea,precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,outflowdepth,corevolume,corearea,precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, cTMap * corearea,float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, cTMap * corearea,float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap *  outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap *  outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap *  outflowdepth, float corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,cTMap *  outflowdepth, float corevolume, float corearea, float precipitation,bool lddin, bool use4)
 {
-    return AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,nullptr);
+    return AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,nullptr,use4);
 }
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float  outflowdepth, float  corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM,float  outflowdepth, float  corevolume, float corearea, float precipitation,bool lddin, bool use4)
 {
     return AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,nullptr);
 }
 
-inline cTMap * AS_DrainageNetwork(cTMap *  DEM)
+inline cTMap * AS_DrainageNetwork(cTMap *  DEM, bool use4)
 {
-    return AS_DrainageNetwork(DEM,MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),0.0, nullptr);
+    return AS_DrainageNetwork(DEM,MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),0.0, nullptr,use4);
 }
 
 
@@ -876,128 +1711,128 @@ inline cTMap * AS_DrainageNetwork(cTMap *  DEM)
 
 
 
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap* outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap* outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,outflowdepth,corevolume,corearea,precipitation, lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,outflowdepth,corevolume,corearea,precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap * corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,precipitation, lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,ret);
-    delete ldd;
-    return ret;
-
-}
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, float precipitation,bool lddin)
-{
-    cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,ret);
-    delete ldd;
-    return ret;
-}
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin)
-{
-    cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,cTMap * corevolume, cTMap * corearea, float precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,ret,use4);
     delete ldd;
     return ret;
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, cTMap * corearea,float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, cTMap * precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,ret);
-    delete ldd;
-    return ret;
-}
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin)
-{
-    cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,ret);
-    delete ldd;
-    return ret;
-}
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin)
-{
-    cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,ret);
-    delete ldd;
-    return ret;
-}
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap *  outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin)
-{
-    cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,ret);
-    delete ldd;
-    return ret;
-}
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin)
-{
-    cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap * corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, cTMap * corearea,float precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd =  AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,corearea,MapFactory(precipitation), lddin,ret,use4);
+    delete ldd;
+    return ret;
+}
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
+{
+    cTMap * ret = DEM->GetCopy();
+    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,ret,use4);
+    delete ldd;
+    return ret;
+}
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap * outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin, bool use4)
+{
+    cTMap * ret = DEM->GetCopy();
+    cTMap * ldd = AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,ret,use4);
+    delete ldd;
+    return ret;
+}
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap *  outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin, bool use4)
+{
+    cTMap * ret = DEM->GetCopy();
+    cTMap * ldd = AS_DrainageNetwork(DEM,(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,ret,use4);
+    delete ldd;
+    return ret;
+}
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,float corevolume, float corearea, cTMap * precipitation,bool lddin, bool use4)
+{
+    cTMap * ret = DEM->GetCopy();
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),precipitation, lddin,ret,use4);
     delete ldd;
     return ret;
 
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap *  outflowdepth, float corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,float corevolume, cTMap * corearea, float precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd =  AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),corearea,MapFactory(precipitation), lddin,ret,use4);
     delete ldd;
     return ret;
 }
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float  outflowdepth, float  corevolume, float corearea, float precipitation,bool lddin)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float outflowdepth,cTMap *  corevolume, float corearea, float precipitation,bool lddin, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,ret);
+    cTMap * ldd =  AS_DrainageNetwork(DEM,MapFactory(outflowdepth),corevolume,MapFactory(corearea),MapFactory(precipitation), lddin,ret,use4);
+    delete ldd;
+    return ret;
+
+}
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,cTMap *  outflowdepth, float corevolume, float corearea, float precipitation,bool lddin, bool use4)
+{
+    cTMap * ret = DEM->GetCopy();
+    cTMap * ldd =  AS_DrainageNetwork(DEM,outflowdepth,MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,ret,use4);
+    delete ldd;
+    return ret;
+}
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM,float  outflowdepth, float  corevolume, float corearea, float precipitation,bool lddin, bool use4)
+{
+    cTMap * ret = DEM->GetCopy();
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(outflowdepth),MapFactory(corevolume),MapFactory(corearea),MapFactory(precipitation), lddin,ret,use4);
     delete ldd;
     return ret;
 
 }
 
-inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM)
+inline cTMap * AS_DrainageNetworkDEM(cTMap *  DEM, bool use4)
 {
     cTMap * ret = DEM->GetCopy();
-    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),0.0,ret);
+    cTMap * ldd = AS_DrainageNetwork(DEM,MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),MapFactory(1e31f),0.0,ret,use4);
     delete ldd;
     return ret;
 }

@@ -9,11 +9,12 @@ uniform sampler2D Normal; //normal (in world space)
 uniform sampler2D Props; //Metalness, Rougness, Object Type
 uniform sampler2D Velocity;
 
+uniform int DrawLights = 0;
+uniform int DrawShadows = 0;
 
 uniform sampler2D ShadowMap0;
 uniform sampler2D ShadowMap1;
 uniform sampler2D ShadowMap2;
-
 
 in vec2 texcoord;
 
@@ -175,8 +176,16 @@ void main()
             light = shadow1;
         }
 
+        if(DrawShadows > 0)
+        {
+            fragColor = vec4((0.2 + 0.2 * length(iSolarColor) + 0.6 * dirfac * light ) * vec3(1.0,1.0,1.0)* iSolarColor,1.0);//texture(ShadowMap0,uv);
+
+        }else
+        {
+            fragColor = vec4((0.2 + 0.2 * length(iSolarColor) + 0.6 * dirfac * 1.0 ) * vec3(1.0,1.0,1.0)* iSolarColor,1.0);//texture(ShadowMap0,uv);
+
+        }
         //dirfac * light*iSolarColor
-        fragColor = vec4((0.2 + 0.2 * length(iSolarColor) + 0.6 * dirfac * light ) * vec3(1.0,1.0,1.0)* iSolarColor,1.0);//texture(ShadowMap0,uv);
 
 
 }

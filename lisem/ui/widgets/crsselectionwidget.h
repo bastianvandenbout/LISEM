@@ -56,6 +56,7 @@ class CRSSelectWidget : public QDialog
     bool m_currentset = false;
     int m_currentmodel = 0;
     QModelIndex m_currentindex;
+    QModelIndex m_currentindex2;
 
     QString m_PathFreq;
     QList<int> m_CRSFreqList;
@@ -284,7 +285,7 @@ public:
 
     inline void SetCurrentCRSFreqFromCurrentIndex()
     {
-        int r = m_currentindex.row();
+        int r = m_currentindex2.row();
         QModelIndex i = m_DataModelFreq->index(r,1);
         QVariant data = m_DataModelFreq->data(i,Qt::DisplayRole);
         bool ok = true;
@@ -326,7 +327,14 @@ public slots:
     {
         if(m_currentset)
         {
-            SetCurrentCRSFromCurrentIndex();
+            if(m_currentmodel == 0)
+            {
+
+                SetCurrentCRSFromCurrentIndex();
+            }else
+            {
+                SetCurrentCRSFreqFromCurrentIndex();
+            }
         }
     }
     inline void OnGeneric()
@@ -370,7 +378,7 @@ public slots:
     {
         m_currentset = true;
         m_currentmodel = 1;
-        m_currentindex = index;
+        m_currentindex2 = index;
     }
 
 
@@ -378,7 +386,7 @@ public slots:
     {
         m_currentset = true;
         m_currentmodel = 1;
-        m_currentindex = index;
+        m_currentindex2 = index;
         SetCurrentCRSFreqFromCurrentIndex();
 
     }

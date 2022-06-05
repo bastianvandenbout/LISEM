@@ -303,6 +303,10 @@ public:
             glad_glUniform2f(glad_glGetUniformLocation(m_Program->m_program,"iViewPortSize"),s.GL_PostProcessBuffer2->GetWidth(),s.GL_PostProcessBuffer2->GetHeight());
             glad_glUniform2f(glad_glGetUniformLocation(m_Program->m_program,"iResolution"),s.GL_PostProcessBuffer2->GetWidth(),s.GL_PostProcessBuffer2->GetHeight());
 
+
+            glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"DrawLights"),s.draw_lighting);
+            glad_glUniform1i(glad_glGetUniformLocation(m_Program->m_program,"DrawShadows"),s.draw_shadows?1:0);
+
             LSMVector3 s_color = GetSunColor(s.SunDir);
             LSMVector3 sky_color = GetSkyColor(s.SunDir);
             LSMVector3 base_color = GetBaseColor(s.SunDir);

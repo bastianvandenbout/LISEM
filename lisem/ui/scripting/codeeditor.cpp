@@ -873,7 +873,7 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 
     static QString eow("~!@#$%^&*()_+{}|:\"<>?,/;'[]\\-="); // end of word (without . since we use this in variable names when directly calculating with files)
     bool hasModifier = (e->modifiers() != Qt::NoModifier) && !ctrlOrShift;
-    QString completionPrefix = textUnderCursor();
+    QString completionPrefix = textUnderCursorLeft();
 
     QString fulltext = this->document()->toPlainText();
     int cursorpos = textCursor().position();

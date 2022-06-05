@@ -378,7 +378,7 @@ void LISEMModel::ModelRunLoadData()
         KSATTOPSIMPLE = GetMapWithMultByName(m_Dir_Maps,"KSatSimple");
     }
 
-    if(m_DoHydrology || m_DoInfiltration)
+    if(m_DoHydrology)
     {
         CLAY = GetMapWithMultByName(m_Dir_Maps,"Clay");
         SAND = GetMapWithMultByName(m_Dir_Maps,"Sand");
@@ -692,7 +692,7 @@ void LISEMModel::InitialCalculations()
 
         }
 
-        if(m_DoHydrology || m_DoInfiltration)
+        if(m_DoHydrology)
         {
 
 

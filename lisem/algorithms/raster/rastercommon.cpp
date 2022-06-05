@@ -132,3 +132,122 @@ bool ReversePath(cTMap * ldd, int rbegin, int cbegin, int rend, int cend)
     return true;
 
 }
+
+
+
+int GetReverseLDD4(int ldd)
+{
+
+    int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+    int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+
+    for(int j = 1; j < LDD4_DIR_LENGTH; j++)
+    {
+        if((-dx[j] == dx[ldd]) && (-dy[j] == dy[ldd]))
+        {
+            return j;
+        }
+    }
+    return LDD4_PIT;
+}
+
+int GetLDD4(int dxin, int dyin)
+{
+
+    int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+    int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+
+    for(int j = 1; j < LDD4_DIR_LENGTH; j++)
+    {
+        if(dx[j] == dxin && dy[j] == dyin)
+        {
+            return j;
+        }
+    }
+    return LDD4_PIT;
+}
+
+int GetReverseLDD4(int dxin, int dyin)
+{
+
+    int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+    int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+
+    for(int j = 1; j < LDD4_DIR_LENGTH; j++)
+    {
+        if(-dx[j] == dxin && -dy[j] == dyin)
+        {
+            return j;
+        }
+    }
+    return LDD4_PIT;
+}
+
+int ReversePath4(cTMap * ldd, int r, int c)
+{
+    return GetReverseLDD4(ldd->data[r][c]);
+}
+
+bool ReversePath4(cTMap * ldd, int rbegin, int cbegin, int rend, int cend)
+{
+    int dx[LDD4_DIR_LENGTH] = LDD4_X_LIST;
+    int dy[LDD4_DIR_LENGTH] = LDD4_Y_LIST;
+
+    int r = rend;
+    int c = cend;
+
+    int rprev = r;
+    int cprev = c;
+
+
+    int lddval = (int) ldd->data[r][c];
+    int lddvalold = ldd->data[r][c];
+
+    bool first = true;
+    while((LDD4_IS_ACTUAL(lddval)) )
+    {
+
+        if((lddval == LDD4_PIT) && (r == rbegin && c == cbegin))
+        {
+
+            //find direction toward previous cell
+            ldd->data[r][c] = GetLDD4(cprev-c,rprev-r);
+            break;
+        }else if((lddval == LDD4_PIT))
+        {
+
+            ldd->data[r][c] = GetLDD4(cprev-c,rprev-r);
+            break;
+        }
+
+        if((r == rbegin && c == cbegin))
+        {
+            break;
+        }
+
+        int lddvalnew;
+
+
+        if(first)
+        {
+            lddvalnew = GetReverseLDD4(lddvalold);
+        }else {
+            lddvalnew = GetReverseLDD4(lddvalold);
+        }
+
+        ldd->data[r][c] = lddvalnew;
+        first = false;
+
+        rprev = r;
+        cprev = c;
+        r = r + dy[lddval];
+        c = c + dx[lddval];
+
+        lddvalold = lddval;
+        lddval = (int) ldd->data[r][c];
+
+    }
+
+    return true;
+
+}

@@ -170,6 +170,30 @@ public:
         return QString();
     }
 
+    inline int GetSettingInt(QString name, int def)
+    {
+        int val = def;
+        for(int i = 0; i < m_Names.length(); i++)
+        {
+            if(m_Names.at(i).compare(name) == 0)
+            {
+
+                QString s = m_Values.at(i);
+                bool ok = false;
+                val = s.toInt(&ok);
+
+
+                if(!ok)
+                {
+                    val = def;
+                }
+                break;
+            }
+        }
+
+        return val;
+    }
+
 
 };
 
