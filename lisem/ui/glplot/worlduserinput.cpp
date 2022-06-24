@@ -38,7 +38,6 @@ void WorldWindow::OnMouseMove(double posx,double posy)
         m_MouseState.move_first = false;
     }
 
-
     m_MouseState.Pos_x = posx;
     m_MouseState.Pos_y = posy;
 
@@ -122,15 +121,29 @@ void WorldWindow::OnMouseKey( int key, int action, int mods)
 {
 
     MouseStateMutex.lock();
+
+    m_SM.lock();
     bool shift = glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_LEFT_SHIFT) ==GLFW_PRESS;
     bool c = glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_C) ==GLFW_PRESS;
+
     if(shift)
     {
         m_MouseState.MouseButtonEventsShift.append(true);
+        m_MouseState.MouseButtonSEventsShift.append(true);
 
     }else {
         m_MouseState.MouseButtonEventsShift.append(false);
+        m_MouseState.MouseButtonSEventsShift.append(false);
     }
+
+
+    m_MouseState.MouseButtonSPosX.append(m_MouseState.Pos_x/m_CurrentWindowState.scr_width);
+    m_MouseState.MouseButtonSPosY.append(m_MouseState.Pos_y/m_CurrentWindowState.scr_height);
+
+    m_MouseState.MouseButtonSEvents.append(key);
+    m_MouseState.MouseButtonKeySAction.append(action);
+
+    m_SM.unlock();
 
     m_MouseState.MouseButtonEvents.append(key);
     m_MouseState.MouseButtonKeyAction.append(action);
@@ -139,6 +152,7 @@ void WorldWindow::OnMouseKey( int key, int action, int mods)
         m_MouseState.dragging = true;
         m_MouseState.move_first = true;
 
+        m_MouseState.Button_Left_Pressed = true;
         if(shift)
         {
             LSMVector4 ray = this->m_Camera3D->GetRayFromWindow(m_MouseState.Pos_x,m_MouseState.Pos_y);
@@ -151,6 +165,8 @@ void WorldWindow::OnMouseKey( int key, int action, int mods)
     }else if(key == GLFW_MOUSE_BUTTON_1  && action == GLFW_RELEASE) {
         m_MouseState.dragging = false;
         m_SunDrag = false;
+
+        m_MouseState.Button_Left_Pressed = false;
         if(shift && m_LayerEditor == nullptr)
         {
             float drag_x = m_MouseState.Pos_x - m_MouseState.PosDOO_x;
@@ -199,9 +215,27 @@ void WorldWindow::OnMouseKey( int key, int action, int mods)
             m_FocusMutex.unlock();
         }
     }
+    if (key == GLFW_MOUSE_BUTTON_3  && action == GLFW_PRESS) {
+
+
+        m_MouseState.Button_Middle_Pressed = true;
+
+    }else if (key == GLFW_MOUSE_BUTTON_3  && action == GLFW_RELEASE) {
+
+
+        m_MouseState.Button_Middle_Pressed = false;
+    }
+
     if (key == GLFW_MOUSE_BUTTON_2  && action == GLFW_PRESS) {
 
+
+        m_MouseState.Button_Right_Pressed = true;
+
     }else if (key == GLFW_MOUSE_BUTTON_2  && action == GLFW_RELEASE) {
+
+
+        m_MouseState.Button_Right_Pressed = false;
+
         if(shift)
         {
             m_FocusMutex.lock();
@@ -235,6 +269,9 @@ void WorldWindow::OnKey(int key, int action, int mods)
 {
     MouseStateMutex.lock();
 
+
+    m_SM.lock();
+
     if(glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_LEFT_SHIFT) ==GLFW_PRESS)
     {
 
@@ -248,6 +285,23 @@ void WorldWindow::OnKey(int key, int action, int mods)
     m_MouseState.KeyEvents.append(key);
     m_MouseState.KeyAction.append(action);
     m_MouseState.KeyMods.append(mods);
+
+    if(glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_LEFT_SHIFT) ==GLFW_PRESS)
+    {
+
+        m_MouseState.KeySEventShift.append(true);
+    }else {
+
+        m_MouseState.KeySEventShift.append(false);
+    }
+
+
+    m_MouseState.KeySEvents.append(key);
+    m_MouseState.KeySAction.append(action);
+    m_MouseState.KeySMods.append(mods);
+
+
+    m_SM.unlock();
 
     if( key == GLFW_KEY_P && mods == GLFW_MOD_SHIFT && action == GLFW_PRESS)
     {
@@ -457,7 +511,7 @@ void WorldWindow::InputToLayers()
                 if(m_MouseState.MouseButtonEvents.at(j) == GLFW_MOUSE_BUTTON_1 && m_MouseState.MouseButtonKeyAction.at(j) == GLFW_PRESS)
                 {
                     std::cout << "check collide " << std::endl;
-                    if(e.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y))
+                    if(e.Collides(m_MouseState.Pos_x,m_CurrentWindowState.scr_height - 1- m_MouseState.Pos_y))
                     {
                         std::cout << "selected drag element "<< std::endl;
                         m_SelectedDragElement = e;

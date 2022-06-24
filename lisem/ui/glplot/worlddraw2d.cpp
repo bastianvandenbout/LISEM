@@ -1,7 +1,7 @@
 #include "worldwindow.h"
 
 
-void WorldWindow::DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager * glt)
+void WorldWindow::DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager * glt, bool external)
 {
 
 
@@ -26,6 +26,8 @@ void WorldWindow::DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager 
 
     DrawGeoLayers2DColor(S,glt);
     DrawUILayers(S,glt);
+
+    Draw2DArrows(S, external);
 
     m_OpenGLCLManager->m_ShapePainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);
     m_OpenGLCLManager->m_TextPainter->UpdateRenderTargetProperties(S.GL_PrimaryFrameBuffer->GetFrameBuffer(),m_OpenGLCLManager->GL_GLOBAL.Width,m_OpenGLCLManager->m_height);

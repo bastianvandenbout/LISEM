@@ -48,6 +48,8 @@ typedef struct GeoWindowState
 
     float MousePosX = 0;
     float MousePosY = 0;
+    bool MouseLeftButton = false;
+    bool MouseRightButton = false;
 
 
 

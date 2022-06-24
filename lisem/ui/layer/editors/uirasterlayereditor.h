@@ -67,13 +67,15 @@ public:
             {
                 //if(!pcr::isMV(m_Map->data[r][c]))
                 {
+                    //std::cout << m << " " << m_Map.size() << " " << m_Map.at(0) << " "<< r<< " " << c << std::endl;
+                    //std::cout << "cal1 " << m->data[r][c] << std::endl;
+                    //std::cout << "cal2 " << m_Map.at(0)->data[r][c] << std::endl;
+                    //std::cout << "check " << std::endl;
                     m->data[r][c] = m_Map.at(0)->data[r][c];
                 }
 
             }
         }
-
-
         m_ScriptMutex.unlock();
     }
 

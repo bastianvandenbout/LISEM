@@ -30,7 +30,7 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
 
             UILayer * l = m_UILayerList.at(i);
 
-            if(l->IsMovable() || l->IsRotateAble() || l->IsScaleAble())
+            if((l->IsMovable() || l->IsRotateAble() || l->IsScaleAble()) && l->Is3D())
             {
 
                 if(l->IsMovable() && m_GizmoMode == GIZMO_MOVE)
@@ -476,8 +476,163 @@ void WorldWindow::Arrow3DRayCast()
 
 void WorldWindow::Draw2DArrows(GeoWindowState s, bool external)
 {
+    m_DragElements.clear();
+
+    //if not external and in moving state
+
+    if(m_DrawArrows && !external)
+    {
+        float pixelsizex = (s.tlx-s.brx)/std::max(1.0f,(float)(s.scr_pixwidth));
+        float pixelsizey = (s.tly-s.bry)/std::max(1.0f,(float)(s.scr_pixheight));
+
+        for(int i = 0; i < m_UILayerList.length() ; i++)
+        {
+
+            UILayer * l = m_UILayerList.at(i);
 
 
+            if((l->IsMovable() || l->IsRotateAble() || l->IsScaleAble()) && !l->Is3D())
+            {
+
+                if(l->IsMovable() && m_GizmoMode == GIZMO_MOVE)
+                {
+
+
+                    float ui_ticktextscale = s.ui_textscale;
+                    float width = s.scr_pixwidth;
+                    float height = s.scr_pixheight;
+
+
+                    LSMVector3 FLoc = l->GetPosition();
+
+                    float tlX = s.scr_width * (FLoc.x- s.tlx)/s.width;
+                    float tlY = (s.scr_height * (FLoc.z- s.tly)/s.height);
+
+                    float grey = 0.5;
+                    //movement gizmo, 4-directional arrow in a circle
+                    DragElement elem_mov;
+
+                    elem_mov.Layer = l;
+                    elem_mov.GizmoDirection = 3;
+                    elem_mov.GizmoType = 0;
+                    elem_mov.GizmoAction = 0;
+                    elem_mov.CollisionType = 1;
+
+                    for(int j = 0; j < 25; j++)
+                    {
+                        //get position along great circle made by intersection of plane
+                        float radians = (((float)(j))/25.0)* 2.0 * 3.14159;
+                        float radiansn = (((float)(j+1))/25.0)* 2.0 * 3.14159;
+
+
+                        elem_mov.xc.push_back(tlX + cos(radians) * 10.0);
+                        elem_mov.yc.push_back(tlY + sin(radians) * 10.0);
+
+                        elem_mov.xc.push_back(tlX + cos(radiansn) * 10.0);
+                        elem_mov.yc.push_back(tlY + sin(radiansn) * 10.0);
+
+                    }
+                    elem_mov.fac_x = 1.0* pixelsizex;
+                    elem_mov.fac_y = 1.0*pixelsizey;
+
+                    if(elem_mov.Collides(s.MousePosX,s.MousePosY))
+                    {
+                        grey = 0.0;
+                    }
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawRegularNGon(tlX,tlY,10,20,LSMVector4(1.0,1.0,1.0,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawRegularNGonOutline(tlX,tlY,10,2.0,20,LSMVector4(0.0,0.0,0.0,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX-7,tlY,tlX+7,tlY,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX,tlY-7,tlX,tlY+7,2,LSMVector4(grey,grey,grey,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX,tlY-7,tlX-3,tlY-4,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX,tlY-7,tlX+3,tlY-4,2,LSMVector4(grey,grey,grey,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX,tlY+7,tlX-3,tlY+4,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX,tlY+7,tlX+3,tlY+4,2,LSMVector4(grey,grey,grey,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX-7,tlY,tlX-4,tlY-3,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX-7,tlY,tlX-4,tlY+3,2,LSMVector4(grey,grey,grey,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX+7,tlY,tlX+4,tlY-3,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX+7,tlY,tlX+4,tlY+3,2,LSMVector4(grey,grey,grey,1.0));
+
+                    //m->m_ShapePainter->DrawSquare(0,0,width,framewidth,BorderColor);
+
+                    //m->m_ShapePainter->DrawLine(xpix,ybottom-tickdist,xpix,ybottom-tickdist-ticklength,tickwidth,TickColor);
+
+
+
+                    m_DragElements.push_back(elem_mov);
+
+
+                    //scale gizmo
+                    //based on a current scale, draw two diagonal arrows in the bottom right corner
+
+                    DragElement elem_size;
+
+                    elem_size.Layer = l;
+                    elem_size.GizmoDirection = 3;
+                    elem_size.GizmoType = 2;
+                    elem_size.GizmoAction = 1;
+                    elem_size.CollisionType = 1;
+
+
+
+                    LSMVector3 FScale = l->GetScale();
+
+                    float tlXs = s.scr_width * (FLoc.x + 0.5*FScale.x - s.tlx)/s.width;
+                    float tlYs = (s.scr_height * (FLoc.z - 0.5 * FScale.z - s.tly)/s.height);
+
+
+                    for(int j = 0; j < 25; j++)
+                    {
+                        //get position along great circle made by intersection of plane
+                        float radians = (((float)(j))/25.0)* 2.0 * 3.14159;
+                        float radiansn = (((float)(j+1))/25.0)* 2.0 * 3.14159;
+
+
+                        elem_size.xc.push_back(tlXs + cos(radians) * 10.0);
+                        elem_size.yc.push_back(tlYs + sin(radians) * 10.0);
+
+                        elem_size.xc.push_back(tlXs + cos(radiansn) * 10.0);
+                        elem_size.yc.push_back(tlYs + sin(radiansn) * 10.0);
+
+                    }
+                    elem_size.fac_x = 1.0/std::max(5.0f,tlX - tlXs);
+                    elem_size.fac_y = 1.0/std::max(5.0f,tlY - tlYs);
+
+
+                    grey = 0.5;
+                    if(elem_size.Collides(s.MousePosX,s.MousePosY))
+                    {
+                        grey = 0.0;
+                    }
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlX,tlY,tlXs,tlYs,2,LSMVector4(0.5,0.5,0.5,0.4));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawRegularNGon(tlXs,tlYs,7,20,LSMVector4(1.0,1.0,1.0,0.8));
+                    m_OpenGLCLManager->m_ShapePainter->DrawRegularNGonOutline(tlXs,tlYs,7,2.0,20,LSMVector4(0.0,0.0,0.0,0.8));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlXs-5,tlYs-5,tlXs+5,tlYs+5,2,LSMVector4(grey,grey,grey,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlXs-5,tlYs-5,tlXs-5,tlYs-2,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlXs-5,tlYs-5,tlXs-2,tlYs-5,2,LSMVector4(grey,grey,grey,1.0));
+
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlXs+5,tlYs+5,tlXs+5,tlYs+2,2,LSMVector4(grey,grey,grey,1.0));
+                    m_OpenGLCLManager->m_ShapePainter->DrawLine(tlXs+5,tlYs+5,tlXs+2,tlYs+5,2,LSMVector4(grey,grey,grey,1.0));
+
+
+                    m_DragElements.push_back(elem_size);
+
+
+
+
+                }
+
+            }
+        }
+    }
 
 
 

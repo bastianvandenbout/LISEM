@@ -581,8 +581,8 @@ static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,c
                         float hn = ((std::max(0.00f,(float)(h + flux_x1 + flux_x2 + flux_y1 + flux_y2))));
 
 
-                        float f_centre_x = 0.5 * GRAV*((z<zc_x2?std::min(zc_x2,z + h) : std::min(z,zc_x2 + h_x2)) - (z<zc_x1?std::min(zc_x1,z + h) : std::min(z,zc_x1 + h_x1)))*(h_corr_x1 + h_corr_x2);
-                        float f_centre_y = 0.5 * GRAV*((z<zc_y2?std::min(zc_y2,z + h) : std::min(z,zc_y2 + h_y2)) - (z<zc_y1?std::min(zc_y1,z + h) : std::min(z,zc_y1 + h_y1)))*(h_corr_y1 + h_corr_y2);
+                        float f_centre_x = 0.5 * GRAV*((z<zc_x2?std::min(zc_x2,z + h) : std::min(z,zc_x2 + h_x2)) - (z<zc_x1?std::min(zc_x1,z + h) : std::min(z,zc_x1 + h_x1)))*(h_corr_x1 + h_corr_x2b);
+                        float f_centre_y = 0.5 * GRAV*((z<zc_y2?std::min(zc_y2,z + h) : std::min(z,zc_y2 + h_y2)) - (z<zc_y1?std::min(zc_y1,z + h) : std::min(z,zc_y1 + h_y1)))*(h_corr_y1 + h_corr_y2b);
 
 
                         if(h > 0.01f )
@@ -607,7 +607,7 @@ static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,c
                             float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                             float acc_eff = (vxn -vx)/std::max(0.0001,dt);
 
-                            float v_kin = (sx_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sx_zh>0?sx_zh:-sx_zh))/(0.001f+n);
+                            float v_kin = (sx_zh>0.0f?1.0f:-1.0f) * hn * sqrt(hn) * sqrt(std::max(0.0f,sx_zh>0.0f?sx_zh:-sx_zh))/(0.001f+n);
 
                             vxn = kinfac * v_kin + vxn*(1.0f-kinfac);
 
@@ -618,7 +618,7 @@ static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,c
                             float kinfac = std::max(0.0f,(threshold - hn) / (0.025f * dx));
                             float acc_eff = (vyn -vy)/std::max(0.0001,dt);
 
-                            float v_kin = (sy_zh>0?1:-1) * hn * sqrt(hn) * sqrt(std::max(0.0f,sy_zh>0?sy_zh:-sy_zh))/(0.001f+n);
+                            float v_kin = (sy_zh>0.0f?1.0f:-1.0f) * hn * sqrt(hn) * sqrt(std::max(0.0f,sy_zh>0.0f?sy_zh:-sy_zh))/(0.001f+n);
 
                             vyn = kinfac * v_kin + vyn*(1.0f-kinfac);
 

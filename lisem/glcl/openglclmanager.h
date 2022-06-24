@@ -306,6 +306,8 @@ public:
 
     int CreateGLWindow(QPixmap pixmap, bool visible = true);
 
+    int ToggleFullScreen();
+
     inline void Restart()
     {
         m_GLRestartMutex.lock();

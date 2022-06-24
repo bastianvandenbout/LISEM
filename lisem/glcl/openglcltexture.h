@@ -25,6 +25,7 @@
 #include <sstream>
 #include <string>
 #include "masked_raster.h"
+#include "geo/raster/map.h"
 #include "qimage.h"
 #include "QGLWidget"
 #include "error.h"
@@ -288,6 +289,104 @@ public:
 
         return errCode;
     }
+
+    inline int Create2DFromMaps(cl::Context &c,std::vector<cTMap *> maps, bool render_target = false, bool flipv = false)
+    {
+        if(maps.size() == 0)
+        {
+            std::cout<<"Failed to create OpenGL texture refrence with no maps as input" <<std::endl;
+            return 250;
+        }
+
+        int errCode = 0;
+
+        int bands = std::min(4,(int) maps.size());
+        cTMap * map = maps.at(0);
+
+
+        std::vector<float> data(bands * maps.at(0)->nrCols() * maps.at(0)->nrRows() , 0.0);
+
+        if(flipv)
+        {
+            std::vector<float> data(map->nrCols() * map->nrRows() , 0.0);
+
+            FOR_ROW_COL_MV(maps.at(0))
+            {
+
+                data[(bands) *(r * map->nrCols() + c) + 0] = maps.at(0)->data[maps.at(0)->nrRows() -1 -r][c];
+                if(bands > 1)
+                {
+                    data[(bands) *(r * map->nrCols() + c) + 1] = maps.at(1)->data[maps.at(0)->nrRows() -1 -r][c];
+                }
+                if(bands > 2)
+                {
+                    data[(bands) *(r * map->nrCols() + c) + 2] = maps.at(2)->data[maps.at(0)->nrRows() -1 -r][c];
+                }
+                if(bands > 3)
+                {
+                    data[(bands) *(r * map->nrCols() + c) + 3] = maps.at(3)->data[maps.at(0)->nrRows() -1 -r][c];
+                }
+            }
+        }else
+        {
+            FOR_ROW_COL_MV(maps.at(0))
+            {
+
+                data[(bands) *(r * map->nrCols() + c) + 0] = maps.at(0)->data[r][c];
+                if(bands > 1)
+                {
+                    data[(bands) *(r * map->nrCols() + c) + 1] = maps.at(1)->data[r][c];
+                }
+                if(bands > 2)
+                {
+                    data[(bands) *(r * map->nrCols() + c) + 2] = maps.at(2)->data[r][c];
+                }
+                if(bands > 3)
+                {
+                    data[(bands) *(r * map->nrCols() + c) + 3] = maps.at(3)->data[r][c];
+                }
+
+            }
+        }
+
+        m_texgl = createTexture2D(map->nrCols(),map->nrRows(), data.data(),GL_RED,GL_FLOAT,GL_R32F);
+
+        glad_glFinish();
+        try
+        {
+            std::cout << "create CL Image " << (&c) << " " << m_texgl << std::endl;
+            m_texcl = cl::ImageGL(c,CL_MEM_READ_WRITE,GL_TEXTURE_2D,0,m_texgl,&errCode);
+        }catch(...)
+        {
+            std::cout<<"Error converting GL Image to CL Texture, is OpenGL Device equal to OpenCL Device?"<<errCode<<std::endl;
+            return 250;
+        }
+
+        if(render_target)
+        {
+            m_FramebufferName = 0;
+            m_IsFrambuffer = true;
+            glad_glGenFramebuffers(1, &m_FramebufferName);
+            glad_glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferName);
+            glad_glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_texgl, 0);
+            if(glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                m_IsFrambuffer = false;
+            }
+        }
+
+        m_dims[0] = map->nrCols();
+        m_dims[1] = map->nrRows();
+        m_dims[2] = 0;
+
+        if (errCode!=CL_SUCCESS) {
+            std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
+            return 250;
+        }
+
+        return errCode;
+    }
+
 
     inline int Create2DFromData(cl::Context &c, float * data, int width, int height)
     {

@@ -39,6 +39,8 @@
 #include "extensions/fieldscripting.h"
 
 ScriptManager * CScriptManager;
+int CScriptCounter = 0;
+QMutex CScriptCounterMutex;
 
 ScriptManager::ScriptManager()
 {
@@ -67,6 +69,7 @@ void ScriptManager::Initialize()
     m_Engine->RegisterFuncdef("double CALLBACKDFDD(double, double)");
     m_Engine->RegisterFuncdef("void CALLBACKDFDDBB(double, double, bool, bool)");
     m_Engine->RegisterFuncdef("void CALLBACKDFSBB(string, bool, bool)");
+    m_Engine->RegisterFuncdef("void CALLBACKDFSDDBB(string, double,double,bool, bool)");
     m_Engine->RegisterFuncdef("string CALLBACKSFSL(array<string>)");
 
     RegisterGeoElementScripting(m_Engine);
@@ -214,6 +217,8 @@ void ScriptManager::run()
 
                 try
                 {
+
+                    IncrementScriptCounter();
 
                     int r = ctx->Execute();
 

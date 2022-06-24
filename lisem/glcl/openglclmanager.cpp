@@ -135,6 +135,15 @@ int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
     return 0;
 }
 
+int OpenGLCLManager::ToggleFullScreen()
+{
+
+
+
+    return 0;
+
+}
+
 
 
 void OpenGLCLManager::InitGLCL_int()

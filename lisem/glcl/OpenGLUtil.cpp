@@ -55,6 +55,29 @@ void printShaderInfoLog(GLint shader)
     }
 }
 
+QString GetShaderInfoLog(GLint shader)
+{
+    int infoLogLen = 0;
+    int charsWritten = 0;
+    GLchar *infoLog;
+
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
+
+    if (infoLogLen > 1)
+    {
+        infoLog = new GLchar[infoLogLen];
+        glGetShaderInfoLog(shader,infoLogLen, &charsWritten, infoLog);
+        LISEM_ERROR(QString("Error log for compilation of shader"));
+        LISEM_ERROR(QString(infoLog));
+        QString ret = QString(infoLog);
+        std::cout << "InfoLog:" << std::endl << infoLog << std::endl;
+        delete [] infoLog;
+        return ret;
+
+    }
+    return "unknown error";
+}
+
 void printLinkInfoLog(GLint prog)
 {
     int infoLogLen = 0;
@@ -71,6 +94,74 @@ void printLinkInfoLog(GLint prog)
         std::cout << "InfoLog:" << std::endl << infoLog << std::endl;
         delete [] infoLog;
     }
+}
+
+size_t str_length(const char* myStrChar)
+{
+    size_t count = 0;
+    for (; myStrChar[count] != 0; count++)
+        /* Do nothing */;
+    return count;
+}
+
+shaders_t loadShaderscfs(const char * vert_path, const char * frag_path, std::vector<int> &el, std::vector<QString> &em) {
+    GLuint f, v,g,tc,te;
+
+    char *gs,*tcs,*tes;
+
+    v = glCreateShader(GL_VERTEX_SHADER);
+    f = glCreateShader(GL_FRAGMENT_SHADER);
+    // load shaders & get length of each
+    GLint vlen;
+    const char *vs = loadFile(vert_path,vlen);
+    std::string fss = QString(frag_path).toStdString();
+    const char *fs = fss.c_str();
+
+
+    GLint flen =str_length(fs);
+
+    const char * vv = vs;
+    const char * ff = fs;
+
+    std::cout << "compile shader " << vlen << vv << std::endl;
+    std::cout << "compile shader2 " << flen <<  ff  << std::endl;
+
+    glShaderSource(v, 1, &vv,&vlen);
+    glShaderSource(f, 1, &ff,&flen);
+
+    GLint compiled;
+
+    glCompileShader(v);
+    glGetShaderiv(v, GL_COMPILE_STATUS, &compiled);
+    if (!compiled)
+    {
+        std::cout << "Vertex shader not compiled." <<std::endl;
+        LISEM_ERROR("Vertex shader not compiled.");
+
+        printShaderInfoLog(v);
+        throw 4;
+    }
+
+    glCompileShader(f);
+    glGetShaderiv(f, GL_COMPILE_STATUS, &compiled);
+    if (!compiled)
+    {
+        std::cout << "Fragment shader not compiled." <<std::endl;
+        LISEM_ERROR("Fragment shader not compiled.");
+        QString ferror = GetShaderInfoLog(f);
+
+        //split ferror into line number and error messages
+
+        el.push_back(-1);
+        em.push_back(ferror);
+
+        throw 2;
+    }
+    shaders_t out; out.vertex = v; out.fragment = f;
+
+    delete [] vs; // dont forget to free allocated memory
+
+    return out;
 }
 
 shaders_t loadShaders(const char * vert_path, const char * frag_path) {
@@ -312,6 +403,13 @@ GLuint initShaders(const char* vshaderpath, const char* fshaderpath)
     return shader_program;
 }
 
+GLuint initShaderscfs(const char* vshaderpath, const char* fshaderpath, std::vector<int> &el, std::vector<QString> &em)
+{
+    shaders_t shaders = loadShaderscfs(vshaderpath, fshaderpath,el,em);
+    GLuint shader_program = glCreateProgram();
+    attachAndLinkProgram(shader_program, shaders);
+    return shader_program;
+}
 GLuint initShaders(const char* vshaderpath, const char* fshaderpath, const char* gshaderpath, const char* tcshaderpath, const char* teshaderpath)
 {
     shaders_t shaders = loadShaders(vshaderpath, fshaderpath,gshaderpath,tcshaderpath,teshaderpath);

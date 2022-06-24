@@ -26,6 +26,8 @@ LISEM_API extern OpenGLProgram * GLProgram_uiocean;
 LISEM_API extern OpenGLProgram * GLProgram_uiobject;
 LISEM_API extern OpenGLProgram * GLProgram_uiobjectinstanced;
 LISEM_API extern OpenGLProgram * GLProgram_uifield;
+LISEM_API extern OpenGLProgram * GLProgram_uigeoimage;
+
 
 LISEM_API extern QString KernelDir;
 LISEM_API extern QString AssetDir;
@@ -53,6 +55,7 @@ inline static void InitUIShaders(OpenGLCLManager * m)
     GLProgram_uiterrainshadow = m->GetMGLProgram(KernelDir + "terrain_vs_shadow.glsl", KernelDir + "terrain_fs_shadow.glsl", KernelDir + "terrain_gs_shadow.glsl", KernelDir + "terrain_tc_shadow.glsl", KernelDir + "terrain_te_shadow.glsl");
     GLProgram_uiterrainlayer = m->GetMGLProgram(KernelDir + "terrain_vs_layer.glsl", KernelDir + "terrain_fs_layer.glsl", KernelDir + "terrain_gs_layer.glsl", KernelDir + "terrain_tc_layer.glsl", KernelDir + "terrain_te_layer.glsl");
     GLProgram_uiocean = m->GetMGLProgram(KernelDir + "terrain_vs_ocean.glsl", KernelDir + "terrain_fs_ocean.glsl", KernelDir + "terrain_gs_ocean.glsl", KernelDir + "terrain_tc_ocean.glsl", KernelDir + "terrain_te_ocean.glsl");
+    GLProgram_uigeoimage = m->GetMGLProgram(KernelDir+ "UIGeoImageDraw.vert", KernelDir+ "UIGeoImageDraw.frag");
 
 }
 
@@ -78,7 +81,7 @@ inline static void DestroyUIShaders(OpenGLCLManager * m)
     SAFE_DELETE(GLProgram_uiterrainshadow);
     SAFE_DELETE(GLProgram_uiterrainlayer);
     SAFE_DELETE(GLProgram_uiocean);
-
+    SAFE_DELETE(GLProgram_uigeoimage);
 }
 
 

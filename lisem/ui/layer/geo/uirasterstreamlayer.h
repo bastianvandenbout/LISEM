@@ -424,13 +424,77 @@ public:
     }
     inline void DirectReplace(QList<QList<cTMap *>> maps)
     {
-        RasterDataProvider * RDP = new RasterDataProvider(maps,false,true);
-        if(m_RDP != nullptr)
+
+        bool can_repl_mem = true;
         {
-            m_RDP->Destroy();
+            if(m_RDP->HasTime()  && (m_RDP->GetTimes().length() > 0))
+            {
+                if(maps.length() != m_RDP->GetTimes().length())
+                {
+                    can_repl_mem =false;
+                }
+            }else
+            {
+                if(maps.length() > 1)
+                {
+                    can_repl_mem = false;
+                }
+            }
+
+            for(int i = 0; i < maps.length(); i++)
+            {
+                if(maps.at(i).length() != maps.at(i).length())
+                {
+                    can_repl_mem = false;
+                }
+                for(int j = 0; j < maps.at(i).length(); j++)
+                {
+
+                    cTMap * m = m_RDP->GetMemoryMap(i,j);
+                    if(m->nrRows() != maps.at(i).at(j)->nrRows())
+                    {
+                        can_repl_mem = false;
+                    }
+                    if(m->nrCols() != maps.at(i).at(j)->nrCols())
+                    {
+                        can_repl_mem = false;
+                    }
+                }
+            }
+
         }
-        m_RDP = RDP;
-        m_BoundingBox = RDP->GetBoundingBox();
+
+        if(can_repl_mem)
+        {
+            std::cout << "Direct val replace"<< std::endl;
+            //this can happen during editing
+
+            m_RDP->DirectReplace(maps);
+            //we still own the maps, so delete
+            for(int i = 0; i < maps.size(); i++)
+            {
+                for(int j = 0; j < maps.at(i).size(); j++)
+                {
+                    delete maps.at(i).at(j);
+                }
+            }
+            maps.clear();
+        }else
+        {
+            std::cout << "Direct meme replace " << std::endl;
+            //this should not be allowed to happen during editing, as a new RDP invalidates the memory maps in the layereditor
+            //we tranfer ownership to the rdp, so we dont have to delete maps
+            RasterDataProvider * RDP = new RasterDataProvider(maps,false,true);
+
+            //we do have to delete the old rdp if it was there
+            if(m_RDP != nullptr)
+            {
+                m_RDP->Destroy();
+            }
+            m_RDP = RDP;
+        }
+
+        m_BoundingBox = m_RDP->GetBoundingBox();
         m_HasbeenChangedByScript = true;
 
     }

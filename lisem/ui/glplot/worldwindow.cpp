@@ -239,6 +239,10 @@ bool WorldWindow::Draw()
             }
             require_redraw = true;
         }
+        if(l->IsDynamic())
+        {
+            require_redraw = true;
+        }
 
     }
 
@@ -344,6 +348,28 @@ bool WorldWindow::Draw()
 
     m_ElevationProvider->SetDistanceObjects(dlist);
 
+
+    //check if script wants to update camera position
+    LookAtSafeMutex.lock();
+
+    if(m_View2DSafeSet)
+    {
+        LookAt(m_BBSafe);
+
+    }
+    if(m_View3DSafeSet)
+    {
+        m_Camera3D->SetPosition(m_View3DSafe.x,m_View3DSafe.y,m_View3DSafe.z);
+        m_Camera3D->SetViewDir(m_ViewDir3DSafe.x,m_ViewDir3DSafe.y,m_ViewDir3DSafe.z);
+    }
+
+    m_View2DSafeSet = false;
+    m_View3DSafeSet = false;
+
+    LookAtSafeMutex.unlock();
+
+
+
     //Update Camera properties
     bool cam_dyn = UpdateCamera();
     require_redraw = require_redraw || cam_dyn;
@@ -351,6 +377,10 @@ bool WorldWindow::Draw()
 
     //update GeoWindowState
     bool need_redraw = UpdateCurrentWindowState();
+
+    m_CurrentWindowStateSafeMutex.lock();
+    m_CurrentWindowStateSafe = m_CurrentWindowState;
+    m_CurrentWindowStateSafeMutex.unlock();
 
     require_redraw = require_redraw || need_redraw;
 

@@ -482,6 +482,23 @@ void WorldWindow::RemoveUILayer(UILayer *ML, bool emitsignal)
     ML->SetRemove();
 }
 
+void WorldWindow::RemoveAllUserLayers()
+{
+
+    m_UILayerMutex.lock();
+    for(int i = 0; i < m_UILayerList.size(); i ++)
+    {
+        UILayer *ML = m_UILayerList.at(i);
+        if(ML->IsUser())
+        {
+            ML->SetRemove();
+        }
+
+    }
+
+    m_UILayerMutex.unlock();
+}
+
 void WorldWindow::ReplaceUILayer(UILayer *ML, UILayer *ML2)
 {
     ML->SetReplace(ML2);

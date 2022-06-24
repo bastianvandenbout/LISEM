@@ -60,7 +60,7 @@ QImage *WorldWindow::DoExternalDraw(GeoWindowState s)
 
     }else
     {
-        this->DrawToFrameBuffer2D(m_CurrentDrawWindowState);
+        this->DrawToFrameBuffer2D(m_CurrentDrawWindowState,nullptr,true);
     }
 
 
@@ -151,7 +151,7 @@ uchar *WorldWindow::DoExternalDrawToUChar(GeoWindowState s)
     }else
     {
         std::cout << "external 2d draw" <<std::endl;
-        this->DrawToFrameBuffer2D(m_CurrentDrawWindowState);
+        this->DrawToFrameBuffer2D(m_CurrentDrawWindowState,nullptr,true);
     }
 
 

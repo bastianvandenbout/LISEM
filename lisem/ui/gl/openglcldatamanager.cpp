@@ -17,6 +17,7 @@ OpenGLProgram * GLProgram_uiocean = nullptr;
 OpenGLProgram * GLProgram_uiobject = nullptr;
 OpenGLProgram * GLProgram_uiobjectinstanced = nullptr;
 OpenGLProgram * GLProgram_uifield = nullptr;
+OpenGLProgram * GLProgram_uigeoimage = nullptr;
 
 QString KernelDir;
 QString AssetDir;

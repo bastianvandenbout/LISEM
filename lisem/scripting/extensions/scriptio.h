@@ -106,7 +106,7 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
 
    sm->RegisterGlobalSTDFunction("bool mkdir(const string &in dir)",GetFuncConvert( AS_mkdir));
    sm->RegisterGlobalSTDFunction("bool rmdir(const string &in dir)",GetFuncConvert( AS_rmdir));
-   sm->RegisterGlobalSTDFunction("bool rm(const string &infile)",GetFuncConvert( AS_rm));
+   sm->RegisterGlobalSTDFunction("bool rm(const string &in file)",GetFuncConvert( AS_rm));
    sm->RegisterGlobalSTDFunction("bool cd(const string &in dir)",GetFuncConvert( AS_cd));
    sm->RegisterGlobalSTDFunction("bool pwd()",GetFuncConvert( AS_pwd));
    sm->RegisterGlobalSTDFunction("bool cp(const string &in file, const string &in filen)",GetFuncConvert( AS_cp));

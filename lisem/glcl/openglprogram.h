@@ -31,6 +31,24 @@ public:
 public:
     OpenGLProgram();
 
+
+    std::vector<int> m_ErrorLines;
+    std::vector<QString> m_ErrorMessages;
+
+
+    inline std::vector<int> GetErrorLines()
+    {
+
+        return m_ErrorLines;
+
+
+    }
+    inline std::vector<QString> GetErrorMessages()
+    {
+        return m_ErrorMessages;
+
+    }
+
     inline int LoadProgram(QString vshaderpath, QString fshaderpath)
     {
 
@@ -44,6 +62,16 @@ public:
         m_fshaderpath = QString(fshaderpath);
 
         m_program = initShaders(vshaderpath,fshaderpath);
+
+        return 0;
+    }
+
+    inline int LoadProgramcfs(const char* vshaderpath, const char* fshader)
+    {
+        m_vshaderpath = QString(vshaderpath);
+        m_fshaderpath = QString(fshader);
+
+        m_program = initShaderscfs(vshaderpath,fshader,m_ErrorLines,m_ErrorMessages);
 
         return 0;
     }

@@ -216,6 +216,9 @@ bool WorldWindow::UpdateCurrentWindowState()
 
     m_CurrentWindowState.MousePosX = m_MouseState.Pos_x;
     m_CurrentWindowState.MousePosY = sch - 1 - m_MouseState.Pos_y;
+    m_CurrentWindowState.MouseLeftButton = m_MouseState.Button_Left_Pressed;
+    m_CurrentWindowState.MouseRightButton = m_MouseState.Button_Right_Pressed;
+
 
     //legend and frame stuff
 

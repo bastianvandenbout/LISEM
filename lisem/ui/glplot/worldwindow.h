@@ -73,6 +73,10 @@ typedef struct World2DMouseState
     float Pos_x = 0.0f;
     float Pos_y = 0.0f;
 
+    bool Button_Left_Pressed = false;
+    bool Button_Right_Pressed = false;
+    bool Button_Middle_Pressed = false;
+
     bool move_first = true;
     float Move_X = 0.0f;
     float Move_Y = 0.0f;
@@ -90,6 +94,19 @@ typedef struct World2DMouseState
     QList<int> KeyEvents;
     QList<int> KeyAction;
     QList<int> KeyMods;
+
+
+    QList<bool> KeySEventShift;
+    QList<int> KeySEvents;
+    QList<int> KeySAction;
+    QList<int> KeySMods;
+
+    QList<bool> MouseButtonSEventsShift;
+    QList<int> MouseButtonSEvents;
+    QList<int> MouseButtonKeySAction;
+    QList<double> MouseButtonSPosX;
+    QList<double> MouseButtonSPosY;
+
 
     QList<bool> MouseButtonEventsShift;
     QList<int> MouseButtonEvents;
@@ -216,6 +233,12 @@ typedef struct DragElement
                     {
                         Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
                     }
+
+                    if(GizmoDirection == 3) //both x and y
+                    {
+                        Layer->Move(LSMVector3(fac_x * x,0.0,fac_y * y));
+
+                    }
                 }else if(GizmoType  == 1)
                 {
                     if(GizmoDirection == 0)
@@ -230,6 +253,11 @@ typedef struct DragElement
                     {
                         Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
                     }
+                    if(GizmoDirection == 3) //both x and y
+                    {
+                        Layer->Move(LSMVector3(fac_x * x,0.0,fac_y * y));
+
+                    }
                 }
 
             }else if(GizmoType  == 1)
@@ -243,6 +271,8 @@ typedef struct DragElement
             }else if(GizmoType  == 2)
             {
 
+
+
                 if(GizmoDirection == 0)
                 {
                     Layer->Scale(LSMVector3(1.0 + 1.0*( fac_x * x + fac_y * y),1.0,1.0) );
@@ -254,6 +284,10 @@ typedef struct DragElement
                 if(GizmoDirection == 2)
                 {
                     Layer->Scale(LSMVector3(1.0,1.0,1.0 + 1.0*( fac_x * x + fac_y * y)) );
+                }
+                if(GizmoDirection == 3)
+                {
+                    Layer->Scale(LSMVector3(1.0 + 1.0*(fac_x * x),1.0,1.0 + 1.0*( fac_y * y)) );
                 }
             }
 
@@ -323,6 +357,9 @@ class LISEM_API WorldWindow : public QObject, public GLListener
 public:
 
 
+    QMutex MouseStateMutex;
+    World2DMouseState m_MouseState;
+
 private:
     //new
     //layers
@@ -339,11 +376,12 @@ private:
     GeoWindowState m_CurrentWindowState;
     GeoWindowState m_CurrentDrawWindowState;
 
+    QMutex m_CurrentWindowStateSafeMutex;
+    GeoWindowState m_CurrentWindowStateSafe;
+
     QMutex m_RedrawNeedMutex;
     bool m_RedrawNeed = false;
 
-    QMutex MouseStateMutex;
-    World2DMouseState m_MouseState;
 
     //general draw settings:
     bool m_DrawUI = true;
@@ -385,6 +423,7 @@ private:
 
     LSMVector3 m_Prev_GeoLoc;
 
+
     QList<OpenGLCLMSAARenderTarget *> m_2D3DRenderCTargets;
     QList<OpenGLCLMSAARenderTarget *> m_2D3DRenderDTargets;
     QList<float> m_2D3DRenderTargetScales;
@@ -413,6 +452,9 @@ private:
     QList<BoundingBox> m_FocusSquare;
 
 public:
+
+
+    QMutex m_SM;
     QMutex m_UILayerMutex;
     QMutex m_CRSMutex;
     //default drawing programs
@@ -487,6 +529,14 @@ public:
         return m_LayerEditor;
     }
 
+    inline World2DMouseState GetCurrentMouseState()
+    {
+        World2DMouseState ret;
+       MouseStateMutex.lock();
+       ret = m_MouseState;
+       MouseStateMutex.unlock();
+        return ret;
+    }
     void SetRedrawNeeded();
     void SetDraw3D(bool d);
     void SetDraw3DGlobe(bool d);
@@ -499,6 +549,39 @@ public:
     GeoProjection GetCurrentProjection();
     void SetCurrentProjection(GeoProjection p, bool forceupdate = false);
     GeoWindowState GetCurrentWindowState();
+    inline GeoWindowState GetCurrentWindowStateSafe()
+    {
+        GeoWindowState ret;
+
+        m_CurrentWindowStateSafeMutex.lock();
+        ret =  m_CurrentWindowStateSafe;
+        m_CurrentWindowStateSafeMutex.unlock();
+
+        return ret;
+    }
+
+    QMutex LookAtSafeMutex;
+    bool m_View2DSafeSet = false;
+    bool m_View3DSafeSet = false;
+    BoundingBox m_BBSafe;
+    LSMVector3 m_View3DSafe;
+    LSMVector3 m_ViewDir3DSafe;
+
+    inline void LookAtbbSafe(BoundingBox b)
+    {
+        LookAtSafeMutex.lock();
+        m_View2DSafeSet = true;
+        m_BBSafe = b;
+        LookAtSafeMutex.unlock();
+    }
+    inline void Set3DViewSafe(LSMVector3 pos, LSMVector3 viewdir)
+    {
+        LookAtSafeMutex.lock();
+        m_View3DSafeSet = true;
+        m_View3DSafe = pos;
+        m_ViewDir3DSafe = viewdir;
+        LookAtSafeMutex.unlock();
+    }
 
     QImage *DoExternalDraw(GeoWindowState s);
     uchar * DoExternalDrawToUChar(GeoWindowState s);
@@ -533,6 +616,7 @@ public:
     UILayer * GetGoogleLayer();
     UILayer * GetGoogleDEMLayer();
     void RemoveUILayer(UILayer *ML, bool emitsignal = true);
+    void RemoveAllUserLayers();
     void ReplaceUILayer(UILayer *ML, UILayer *ML2);
     void SetUILayerAs(UILayer *ML,  bool emitsignal = false);
     QList<UILayer *> GetUILayers();
@@ -673,7 +757,7 @@ public:
     void Draw2DArrows(GeoWindowState s, bool external = false);
     void Arrow2DRayCast();
 
-    void DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager * glt = nullptr);
+    void DrawToFrameBuffer2D(GeoWindowState S, WorldGLTransformManager * glt = nullptr, bool external = false);
     void DrawToFrameBuffer2DElevation(GeoWindowState S, WorldGLTransformManager * glt = nullptr);
     void Draw2DPlotDataToBuffer(GeoWindowState S, WorldGLTransformManager * glt = nullptr);
     void DrawToFrameBuffer3D(GeoWindowState S, bool external);

@@ -183,6 +183,18 @@ private:
 
         m_MMaps = Maps;
 
+        CalcMemBandProps();
+
+    }
+
+    inline void CalcMemBandProps()
+    {
+        m_MBandStats.clear();
+        m_MBandProps.clear();
+        m_TBandStats.clear();
+
+        QList<QList<cTMap *>> Maps = m_MMaps;
+
         if(m_IsDuo)
         {
             double b1_tmin = 1e31;
@@ -305,7 +317,6 @@ private:
         }
 
         m_Stats = m_MBandStats.at(0).at(0);
-
     }
 
     inline void RasterDataProviderInitFromFileList(QList<QString> file_paths, bool duo = false)
@@ -612,6 +623,55 @@ public:
         return m_IsMemoryMap;
     }
 
+    inline void DirectReplace(QList<QList<cTMap *>> data)
+    {
+        //we assume the map data is a perfect match for memory layout
+
+        //copy data
+        if(m_IsMemoryMap)
+        {
+            for(int i = 0; i < m_MMaps.length(); i++)
+            {
+                for(int j = 0; j < m_MMaps.at(i).length(); j++)
+                {
+                    if(i < data.length())
+                    {
+                        if(j < data.at(i).length())
+                        {
+                            //copy map properties
+                            m_MMaps.at(i).at(j)->setcellSizeX(data.at(i).at(j)->cellSizeX());
+                            m_MMaps.at(i).at(j)->setcellSizeY(data.at(i).at(j)->cellSizeY());
+                            m_MMaps.at(i).at(j)->setnorth(data.at(i).at(j)->north());
+                            m_MMaps.at(i).at(j)->setwest(data.at(i).at(j)->west());
+
+                            //for now assume projection is the same
+                            //m_MMaps.at(i).at(j)->setProjection(data.at(i).at(j)->projection());
+                            m_MMaps.at(i).at(j)->setprojectionstring(data.at(i).at(j)->projection());
+
+                            for(int r = 0; r < m_MMaps.at(i).at(j)->nrRows(); r++)
+                            {
+                                for(int c = 0; c < m_MMaps.at(i).at(j)->nrCols(); c++)
+                                {
+
+                                    if(r < data.at(i).at(j)->nrRows())
+                                    {
+                                        if(c < data.at(i).at(j)->nrCols())
+                                        {
+                                            m_MMaps.at(i).at(j)->data[r][c] = data.at(i).at(j)->data[r][c];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        //set coordinate system, band props, band stats
+
+        CalcMemBandProps();
+    }
     inline bool Exists()
     {
         return m_HasData;

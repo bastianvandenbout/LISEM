@@ -603,6 +603,8 @@ public:
 
 
 LISEM_API extern ScriptManager * CScriptManager;
+LISEM_API extern int CScriptCounter;
+LISEM_API extern QMutex CScriptCounterMutex;
 
 inline static void InitScriptManager(ScriptManager * m)
 {
@@ -613,6 +615,22 @@ inline static ScriptManager * GetScriptManager()
 {
     return CScriptManager;
 
+}
+
+inline void IncrementScriptCounter()
+{
+    CScriptCounterMutex.lock();
+    CScriptCounter ++;
+    CScriptCounterMutex.unlock();
+}
+
+inline int GetScriptCounter()
+{
+    int ret = 0;
+    CScriptCounterMutex.lock();
+    ret = CScriptCounter;
+    CScriptCounterMutex.unlock();
+    return ret;
 }
 
 inline static void DestroyScriptManager()

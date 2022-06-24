@@ -6,7 +6,7 @@
 #include "geowindowstate.h"
 #include "matrixtable.h"
 #include "QMutex"
-#include "layer/uilayereditor.h"
+//#include "layer/uilayereditor.h"
 #include "layerparameters.h"
 #include "geo/shapes/shapefile.h"
 #include "boundingbox.h"
@@ -195,16 +195,16 @@ public:
         return m_ShadowCaster;
     }
 
-    inline bool IsMovable()
+    virtual inline bool IsMovable()
     {
         return m_IsMovable;
     }
 
-    inline bool IsScaleAble()
+    virtual inline bool IsScaleAble()
     {
         return m_IsScaleable;
     }
-    inline bool IsRotateAble()
+    virtual inline bool IsRotateAble()
     {
         return m_IsRotateable;
     }

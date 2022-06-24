@@ -422,6 +422,11 @@ inline GeoProjection* GetGeoProjectionFromWGS84UTM(int zone, bool north)
     }
     return ret;
 }
+inline GeoProjection* GetGeoProjectionGeneric()
+{
+    GeoProjection * ret = new GeoProjection();
+    return ret;
+}
 
 
 

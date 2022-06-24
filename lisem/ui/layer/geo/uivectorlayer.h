@@ -211,6 +211,17 @@ public:
         }
     }
 
+    inline void OnDraw3DGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
+    {
+
+        //if set in the style, we can draw polygons or lines as 3d elements on top of the terrain
+
+        //we need some kind of height value/attribute
+
+
+
+    }
+
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState state, WorldGLTransformManager * tm) override
     {
 

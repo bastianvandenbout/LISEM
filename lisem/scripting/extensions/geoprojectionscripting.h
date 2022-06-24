@@ -21,8 +21,7 @@ inline void RegisterGeoProjectionToScriptEngine(asIScriptEngine *engine)
     r = engine->RegisterGlobalFunction("GeoProjection &GeoProjectionFromEPSG(int)", asFUNCTIONPR(GetGeoProjectionFromEPSG,(int),GeoProjection *),asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("GeoProjection &GeoProjectionFromWKT(string)", asFUNCTIONPR(GetGeoProjectionFromWKT,(std::string),GeoProjection *),asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("GeoProjection &GeoProjectionFromWGS84UTM(int,bool)", asFUNCTIONPR(GetGeoProjectionFromWGS84UTM,(int, bool),GeoProjection *),asCALL_CDECL); assert( r >= 0 );
-
-
+    r = engine->RegisterGlobalFunction("GeoProjection &GeoProjectionGeneric()", asFUNCTIONPR(GetGeoProjectionGeneric,(),GeoProjection *),asCALL_CDECL); assert( r >= 0 );
 
 }
 #endif // GEOPROJECTIONSCRIPTING_H

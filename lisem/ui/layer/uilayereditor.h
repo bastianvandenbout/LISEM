@@ -19,6 +19,7 @@
 #define UI_PARAMETER_TYPE_COLOR 8
 #define UI_PARAMETER_TYPE_BUTTON 9
 #define UI_PARAMETER_TYPE_STYLE 10
+#define UI_PARAMETER_TYPE_SHADER 11
 
 typedef struct UIParameter
 {
@@ -34,6 +35,7 @@ typedef struct UIParameter
 
 class UIGeoLayer;
 class UILayer;
+
 
 class UILayerEditor
 {
@@ -91,6 +93,8 @@ public:
 
     inline virtual void FillMapWithCurrentEdit(cTMap * m)
     {
+
+
     }
 
 

@@ -181,6 +181,7 @@ public:
         DebugButton->setMaximumSize(QSize(22,22));
         DebugButton->resize(22,22);
         DebugButton->setEnabled(true);
+        DebugButton->setToolTip("Toggles debug view");
 
         QToolButton *CompileButton = new QToolButton(this);
         CompileButton->setIcon(*icon_compile);
@@ -188,6 +189,7 @@ public:
         CompileButton->setMaximumSize(QSize(22,22));
         CompileButton->resize(22,22);
         CompileButton->setEnabled(true);
+        CompileButton->setToolTip("Compile the script, but do not run it");
 
 
         QToolButton *IndentButton = new QToolButton(this);
@@ -196,6 +198,7 @@ public:
         IndentButton->setMaximumSize(QSize(22,22));
         IndentButton->resize(22,22);
         IndentButton->setEnabled(true);
+        IndentButton->setToolTip("Add a tab to the beginning of selected lines");
 
 
         QToolButton *IndentRButton = new QToolButton(this);
@@ -204,6 +207,7 @@ public:
         IndentRButton->setMaximumSize(QSize(22,22));
         IndentRButton->resize(22,22);
         IndentRButton->setEnabled(true);
+        IndentRButton->setToolTip("Remove a tab to the beginning of selected lines");
 
 
         QToolButton *StyleButton = new QToolButton(this);
@@ -212,6 +216,7 @@ public:
         StyleButton->setMaximumSize(QSize(22,22));
         StyleButton->resize(22,22);
         StyleButton->setEnabled(true);
+        StyleButton->setToolTip("Auto-Style and format the code");
 
 
         QToolButton *CommentButton = new QToolButton(this);
@@ -220,7 +225,7 @@ public:
         CommentButton->setMaximumSize(QSize(22,22));
         CommentButton->resize(22,22);
         CommentButton->setEnabled(true);
-
+        CommentButton->setToolTip("Add double slashes to the beginning of selected lines");
 
         QToolButton *RegularButton = new QToolButton(this);
         RegularButton->setIcon(*icon_normal);
@@ -228,6 +233,7 @@ public:
         RegularButton->setMaximumSize(QSize(22,22));
         RegularButton->resize(22,22);
         RegularButton->setEnabled(true);
+        RegularButton->setToolTip("Remove double slashes to the beginning of selected lines");
 
 
 

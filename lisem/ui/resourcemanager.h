@@ -79,7 +79,9 @@
 #define LISEM_ICON_TEXTCOMMENT 69
 #define LISEM_ICON_TEXTREGULAR 70
 #define LISEM_ICON_COMPILE 71
-#define LISEM_ICON_COUNT 72
+#define LISEM_ICON_ADD 72
+#define LISEM_ICON_REMOVE 73
+#define LISEM_ICON_COUNT 74
 
 class SPHResourceManager
 {
@@ -192,6 +194,8 @@ public:
             case LISEM_ICON_TEXTCOMMENT: return "script_comment.png";break;
             case LISEM_ICON_TEXTREGULAR: return "script_normal.png";break;
             case LISEM_ICON_COMPILE: return "compile.png";break;
+            case LISEM_ICON_ADD: return "add.png";break;
+            case LISEM_ICON_REMOVE: return "remove.png";break;
         }
 
         return QString();

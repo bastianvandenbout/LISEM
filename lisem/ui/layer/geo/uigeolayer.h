@@ -1,4 +1,6 @@
 #pragma once
+
+#include "layer/uilayer.h"
 #include "openglclmanager.h"
 #include "qcolor.h"
 #include "model.h"
@@ -10,7 +12,6 @@
 #include "QObject"
 #include "openglcldatabuffer.h"
 #include "color/colorf.h"
-#include "layer/uilayer.h"
 #include "boundingbox.h"
 #include "linear/lsm_vector3.h"
 

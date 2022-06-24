@@ -25,8 +25,8 @@ void WorldWindow::DrawToFrameBuffer3D(GeoWindowState s, bool external = false)
     s.GL_3DFrameBuffer->ClearAll();
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_FrameBuffer->GetFrameBuffer());
-    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glad_glClearColor(m_BackGroundColor.x,m_BackGroundColor.y,m_BackGroundColor.z,m_BackGroundColor.w);
+    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, s.GL_3DFrameBuffer->GetFrameBuffer());
