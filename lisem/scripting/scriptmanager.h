@@ -17,6 +17,7 @@
 #include "lsmscriptengine.h"
 #include "linear/lsm_vector3.h"
 #include "opencv2/core.hpp"
+#include "qfileinfo.h"
 
 LISEM_API void MessageCallback(const asSMessageInfo *msg, void *param);
 LISEM_API void ExecString(asIScriptEngine *engine, std::string &arg);
@@ -240,6 +241,51 @@ public:
 
     inline static int IncludeCallback(const char *include, const char *from, CScriptBuilder *builder, void *userParam)
     {
+
+        std::cout << "include additional script1 " <<  include << std::endl;
+
+
+        std::string path = from;
+        size_t posOfSlash = path.find_last_of("/\\");
+        if( posOfSlash != std::string::npos )
+        {
+            path.resize(posOfSlash+1);
+        }
+        else
+        {
+
+            path = "";
+        }
+
+        std::string includesn = std::string(include);
+
+        // If the include is a relative path, then prepend the path of the originating script
+        if( includesn.find_first_of("/\\") != 0 &&
+            includesn.find_first_of(":") == std::string::npos )
+        {
+            includesn = path + std::string(include);
+
+            QFileInfo f(QString(includesn.c_str()));
+            if(f.exists())
+            {
+                includesn = path + std::string(include);
+            }else
+            {
+                includesn = path + std::string(include);
+
+            }
+        }
+
+        QFileInfo f(QString(includesn.c_str()));
+        if(f.exists())
+        {
+
+            std::cout << "include additional script " <<  includesn << std::endl;
+            builder->AddSectionFromFile(includesn.c_str());
+        }else
+        {
+
+        }
 
         return 0;
     }

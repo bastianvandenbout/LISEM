@@ -4,7 +4,6 @@
 
 #include "QWidget"
 
-#include "
 #include "QVBoxLayout"
 #include "QHBoxLayout"
 #include "QIcon"
@@ -26,7 +25,7 @@
 #include "layer/geo/uishaderlayer.h"
 #include "layer/editors/uishadereditor.h"
 #include "widgets/spoilerwidget.h"
-
+#include "tools/toolparameterwidget.h"
 #include "atomic"
 #include "site.h"
 
@@ -206,7 +205,10 @@ public:
     {
         return m_Texture;
     }
-
+    inline QString GetTextureLink()
+    {
+        return m_Texture;
+    }
 
 
 public slots:
@@ -229,7 +231,7 @@ public slots:
                     QString path = QFileDialog::getOpenFileName(this,
                                                         QString("Select object file"),
                                                         GetFIODir(LISEM_DIR_FIO_GEODATA),
-                                                        GetExtensionsFileFilter(GetModelExtensions()));
+                                                        GetExtensionsFileFilter(GetImageAndMapExtensions()));
                     if(!path.isEmpty())
                     {
 
@@ -253,6 +255,7 @@ class TextureInputSelector : public QWidget
 
     QList<TextureSelector*> m_Selectors;
     QHBoxLayout * m_Layout;
+    int m_N = 0;
 public:
 
     inline TextureInputSelector(int n)
@@ -261,6 +264,7 @@ public:
         m_Layout->setMargin(0);
         this->setLayout(m_Layout);
 
+        m_N = n;
         for(int i = 0; i < n; i++)
         {
             TextureSelector * s = new TextureSelector();
@@ -279,6 +283,23 @@ public:
     {
 
 
+    }
+
+    inline std::vector<QString> GetImageFiles()
+    {
+        std::vector<QString> res;
+
+        for(int i = 0; i < m_N; i++)
+        {
+            res.push_back(m_Selectors.at(i)->GetTextureLink());
+        }
+
+        return res;
+    }
+
+    inline std::vector<cTMap *> GetImageMaps()
+    {
+        return {};
     }
 
 
@@ -336,12 +357,12 @@ public:
 
     inline std::vector<QString> GetImageFiles()
     {
-        return {};
+        return m_TextureSelector->GetImageFiles();
     }
 
     inline std::vector<cTMap *> GetImageMaps()
     {
-        return {};
+        return m_TextureSelector->GetImageMaps();
     }
 
     inline void SetErrors(std::vector<int> lines, std::vector<QString> messages)
@@ -441,6 +462,8 @@ public:
         //shader compile
         //shader play
         //shader pause
+
+
 
 
 
@@ -567,6 +590,14 @@ public:
 
         m_MainLayout->addWidget(m_MenuWidget);
         m_MainLayout->addWidget(m_ScriptTabs);
+        GeoProjectionSelectWidget *gps = new GeoProjectionSelectWidget();
+        BoundingBoxSelectWidget *bbs = new BoundingBoxSelectWidget();
+        QCheckBox * check_rel = new QCheckBox();
+        check_rel->setText("Screen Coords.");
+        QCheckBox * check_scale = new QCheckBox();
+        check_scale->setText("AutoScale");
+
+        m_MainLayout->addWidget(new QWidgetVDuo( new QWidgetHDuo(bbs,gps),new QWidgetHDuo(check_rel,check_scale )));
 
         m_MainLayout->addWidget(spoilerdraw);
 
@@ -703,6 +734,7 @@ public slots:
     {
 
 
+        m_CallBackPause();
 
     }
 
@@ -710,6 +742,7 @@ public slots:
     {
 
 
+        m_CallBackRun();
 
     }
 

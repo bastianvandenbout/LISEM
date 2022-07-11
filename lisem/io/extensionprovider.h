@@ -15,7 +15,21 @@
 #define LISEM_FILE_TYPE_FIELD 7
 #define LISEM_FILE_TYPE_MODEL 8
 
-
+inline static QList<QString> GetImageAndMapExtensions()
+{
+    QList<QString> ret;
+    ret.append(".map");
+    ret.append(".tif");
+    ret.append(".jp2");
+    ret.append(".tiff");
+    ret.append(".asc");
+    ret.append(".jpg");
+    ret.append(".jpeg");
+    ret.append(".png");
+    ret.append(".bmp");
+    ret.append(".cdf"); //netCDF
+    return ret;
+}
 
 inline static QList<QString> GetMapExtensions()
 {
@@ -392,6 +406,28 @@ inline static QString GetExtensionsFileFilter(QList<QString> exts)
     return ret;
 
 }
+
+inline static QStringList GetExtensionsFileFilters(QList<QString> exts)
+{
+    QStringList ret;
+
+    QString filt1;
+
+    for(int i = 0; i < exts.length(); i++)
+    {
+        filt1+= "*" + exts.at(i);
+        filt1 += ";";
+    }
+
+    QString filt2 = ";*.*";
+
+    ret.append(filt1);
+    ret.append(filt2);
+
+    return ret;
+
+}
+
 
 inline static QList<QString> GetAllExtensions()
 {

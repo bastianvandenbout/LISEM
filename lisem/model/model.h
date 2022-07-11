@@ -114,22 +114,32 @@ typedef struct AS_MODELRESULT
     QString Name_SF;
     QString Name_SFC;
     QString Name_SFracMax;
+    QString Name_SoilLoss;
+    QString Name_SoilErode;
+    QString Name_SoilDeposit;
+    QString Name_SedimentLoad;
+    QString Name_CHSedimentLoad;
 
-    float SimulationStartTime;
-    float SimulationDurationTime;
-    float SimulationRealTime;
-    float SimulationArea;
-    float RainTotal;
-    float InterceptionTotal;
-    float InfiltrationTotal;
-    float SlopeFailureFluidTotal;
-    float OutflowFluidTotal;
-    float InitialFluidTotal;
-    float InitialSolidTotal;
-    float SlopeFailureSolidTotal;
-    float OutflowSolidTotal;
+    double SimulationStartTime;
+    double SimulationDurationTime;
+    double SimulationRealTime;
+    double SimulationArea;
+    double RainTotal;
+    double InterceptionTotal;
+    double InfiltrationTotal;
+    double SlopeFailureFluidTotal;
+    double OutflowFluidTotal;
+    double InitialFluidTotal;
+    double InitialSolidTotal;
+    double SlopeFailureSolidTotal;
+    double OutflowSolidTotal;
+    double Outflow;
+    double OutflowSed;
+    double ErosionTotal;
+    double DepositionTotal;
 
-
+    double ErrorF;
+    double ErrorS;
 
 } AS_MODELRESULT;
 
@@ -255,6 +265,7 @@ public:
     bool m_DoInfiltration = false;
     bool m_DoDoubleLayer = false;
     bool m_DoHydrology = false;
+    bool m_DoCustomInfiltration = false;
     bool m_DoEvapoTranspiration = false;
     bool m_DoChannel = false;
     bool m_DoGroundWater = false;
@@ -289,6 +300,8 @@ public:
     bool m_DoOutputTimeseriesVT = false;
     bool m_DoOutputTimeseriesInfil = false;
     bool m_DoOutputTimeseriesGWH = false;
+    bool m_DoOutputTimeseriesErosion  = false;
+    bool m_DoOutputTimeseriesSediment  = false;
 
     double m_ElasticModulus = 1000000000.0;
     double m_ShearModulus = 1000000000.0;
@@ -561,6 +574,11 @@ public:
     cTMap * CHVSX;
     cTMap * PGA;
 
+    cTMap * SED;
+    cTMap * CHSED;
+    cTMap * SLTOT;
+    cTMap * DEPTOT;
+    cTMap * DETTOT;
 
     cTMap * FluxFTotal;
     cTMap * FluxSTotal;

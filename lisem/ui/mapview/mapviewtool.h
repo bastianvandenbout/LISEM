@@ -57,6 +57,7 @@
 #include "layer/ui/uiimage.h"
 #include "layer/ui/uiarrow.h"
 #include "layer/geo/uishaderlayer.h"
+#include "layer/geo/uiparticleeffectlayer.h"
 
 class MapViewTool;
 
@@ -71,6 +72,258 @@ inline static MapViewTool * GetMapViewTool()
 {
     return CMapViewToolManager;
 }
+
+
+
+
+class ASZone2D
+{
+private:
+
+    LISEM::Zone * m_Zone;
+public:
+
+    inline void intern_InitializeFromZone(LISEM::Zone * s, bool copy = true)
+    {
+        if(copy)
+        {
+            m_Zone = s->GetCopy();
+        }else {
+            m_Zone = s;
+           }
+    }
+
+
+    inline void SetAsBoxZone()
+    {
+
+    }
+
+    inline void SetAsDiscSectionZone()
+    {
+
+    }
+
+    inline void SetAsPointZone(LSMVector2 p)
+    {
+
+    }
+
+    inline void SetAsPolygonZone()
+    {
+
+    }
+
+    inline void SetAsDiscZone()
+    {
+
+    }
+
+    inline void SetAsRasterZone()
+    {
+
+    }
+
+    inline void Destroy()
+    {
+
+    }
+
+    int            AS_refcount          = 1;
+    void           AS_AddRef            ()
+    {
+        AS_refcount = AS_refcount + 1;
+
+    }
+    void           AS_ReleaseRef        ()
+    {
+        AS_refcount = AS_refcount - 1;
+        if(AS_refcount == 0)
+        {
+            Destroy();
+            delete this;
+        }
+
+    }
+
+
+    ASZone2D  * AS_Assign            (ASZone2D* sh)
+    {
+        Destroy();
+        intern_InitializeFromZone(sh->m_Zone->GetCopy());
+        return this;
+    }
+
+
+};
+inline static ASZone2D * AS_ZoneFactory()
+{
+    return new ASZone2D();
+}
+
+inline static ASZone2D * AS_GetPointZone()
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetBoxZone()
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetDiscZone()
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetDiscSectorZone()
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetPolygonZone()
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetRasterZone()
+{
+ return new ASZone2D();
+}
+
+
+class ASEmitter
+{
+
+    LISEM::Emitter *m_Emitter;
+
+
+public:
+
+    inline ASEmitter()
+    {
+
+    }
+
+
+    inline void AddInitiator_Position(ASZone2D * z)
+    {
+
+    }
+    inline void AddInitiator_Size(ASZone2D * z)
+    {
+
+    }
+
+    inline void AddInitiator_Velocity(ASZone2D * z)
+    {
+
+    }
+
+    inline void AddBehavior_Move()
+    {
+
+    }
+
+    inline void AddBehavior_MinimumDistance(float distance_min)
+    {
+
+    }
+
+    inline void AddBehavior_ApproachNeighbors()
+    {
+
+
+    }
+
+    inline void AddBehavior_BoundingBox()
+    {
+
+
+    }
+
+    inline void AddBehavior_SpeedLimit()
+    {
+
+
+    }
+
+    inline void AddBehavior_RotateToDirection()
+    {
+
+    }
+
+    inline void AddBehavior_MatchVelocity()
+    {
+
+
+
+    }
+
+    inline void AddInstantiator_Burst(int count)
+    {
+
+    }
+
+    inline void AddInstantiator_Stream(float rate)
+    {
+
+    }
+
+    inline void AddInitiator_Position()
+    {
+
+    }
+
+    inline void AddRenderer_Image()
+    {
+
+
+
+
+    }
+
+    inline void AddRenderer_Particle()
+    {
+
+    }
+
+    inline void Destroy()
+    {
+
+
+    }
+
+    int            AS_refcount          = 1;
+    void           AS_AddRef            ()
+    {
+        AS_refcount = AS_refcount + 1;
+
+    }
+    void           AS_ReleaseRef        ()
+    {
+        AS_refcount = AS_refcount - 1;
+        if(AS_refcount == 0)
+        {
+            Destroy();
+            delete this;
+        }
+
+    }
+
+
+    ASEmitter  * AS_Assign            (ASEmitter* sh)
+    {
+        Destroy();
+        m_Emitter = new LISEM::Emitter(*(sh->m_Emitter));
+        return this;
+    }
+
+
+};
+
+
+inline static ASEmitter * AS_ParticleEffectFactory()
+{
+    return new ASEmitter();
+}
+
+
 
 
 
@@ -672,10 +925,12 @@ public:
         connect(eclAct,SIGNAL(triggered(bool)), this, SLOT(OnAddEVCloudPressed()));
         connect(textAct,SIGNAL(triggered(bool)), this, SLOT(OnAddTextPressed()));
         connect(arrowAct,SIGNAL(triggered(bool)), this, SLOT(OnAddArrowPressed()));
+        connect(textAct,SIGNAL(triggered(bool)), this, SLOT(OnAddTextPressed()));
 
         addEVButton->addAction(eoAct);
         addEVButton->addAction(esAct);
         addEVButton->addAction(eshaderAct);
+        addEVButton->addAction(eiAct);
         addEVButton->addAction(eobAct);
         addEVButton->addAction(eclAct);
         addEVButton->addAction(textAct);
@@ -1562,6 +1817,7 @@ public:
         while (!fin.atEnd())
         {
             QString S = fin.readLine().trimmed();
+            res.append("\n");
             res.append(S);
         }
 
@@ -1572,55 +1828,6 @@ public:
     {
 
 
-    }
-    inline void AddTextLayer()
-    {
-
-
-    }
-
-
-    inline void CompileCustomShader(QString text)
-    {
-
-    }
-
-    inline void AddCustomShader(std::vector<QString> text, int resolutionx, int resolutiony, std::vector<std::vector<cTMap *>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),bool dynamic = true,bool scaling = true, bool is2d = true)
-    {
-
-    }
-
-    inline void AddCustomShader(std::vector<QString> text, int resolutionx, int resolutiony, std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),bool dynamic = true,bool scaling = true, bool is2d = true)
-    {
-
-    }
-
-    inline void AddCustomShader(QString text, int resolutionx, int resolutiony, std::vector<cTMap *> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),bool dynamic = true,bool scaling = true, bool is2d = true)
-    {
-
-    }
-
-    inline void AddCustomShader(QString text, int resolutionx, int resolutiony, std::vector<QString> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),bool dynamic = true,bool scaling = true, bool is2d = true)
-    {
-
-    }
-
-    inline ASUILayer AddCustomShader1(QString text, int resolutionx, int resolutiony, std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0), GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool dynamic = true,bool scaling = true, bool is2d = true)
-    {
-        ASUILayer lay;
-
-        //if(m != nullptr && m2 != nullptr)
-        {
-
-            UIShaderLayer * ret = new UIShaderLayer({text},{{}},{textures},region,p, isabs,!is2d,resolutionx, resolutiony,dynamic,scaling );
-
-            m_WorldWindow->AddUILayer(ret,true);
-
-            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
-
-        }
-
-        return lay;
     }
 
     inline bool IsMouseInScreen()
@@ -1765,7 +1972,7 @@ public:
         m_WorldWindow->RemoveAllUserLayers();
     }
 
-    inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P)
+    inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P, bool rel = false)
     {
         ASUILayer ret;
 
@@ -1781,6 +1988,8 @@ public:
 
         return ret;
     }
+
+
 
     inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P, bool screencoords, bool size_rel, LSMVector4 box_color)
     {
@@ -1824,7 +2033,7 @@ public:
             }
         }
     }
-    inline void SetTextPosition(ASUILayer id, LSMVector3 pos,GeoProjection *p)
+    inline void SetTextPosition(ASUILayer id, LSMVector3 pos,GeoProjection *p, bool rel = false)
     {
         UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
         if(l != nullptr)
@@ -1846,6 +2055,251 @@ public:
             {
                 ((UITextLayer *)(l))->SetTextSize(size);
 
+            }
+        }
+    }
+
+    inline ASUILayer AddImageLayer(QString file, BoundingBox pos, GeoProjection *p, bool rel = false)
+    {
+        ASUILayer lay;
+
+        //if(m != nullptr && m2 != nullptr)
+        {
+
+            UIImageLayer * ret = new UIImageLayer(file,pos,*p,rel);
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+
+
+
+    }
+    inline ASUILayer AddImageLayer2(cTMap * r, cTMap * g, cTMap * b, cTMap * a, BoundingBox pos, GeoProjection *p, bool rel = false)
+    {
+        ASUILayer lay;
+
+        //if(m != nullptr && m2 != nullptr)
+        {
+
+            UIImageLayer * ret = new UIImageLayer(r->GetCopy(),g->GetCopy(),b->GetCopy(),a->GetCopy(),pos,*p,rel);
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+    }
+
+    inline void SetImagePosition(ASUILayer id,BoundingBox pos, GeoProjection *p, bool rel = false )
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ImageLayer")
+            {
+                ((UIImageLayer *)(l))->setPosition(pos,*p,rel);
+
+            }
+        }
+    }
+    inline void SetImageImage(ASUILayer id, QString file)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ImageLayer")
+            {
+                ((UIImageLayer *)(l))->setImage(file);
+
+            }
+        }
+    }
+    inline void SetImageImage2(ASUILayer id, cTMap * r, cTMap * g, cTMap * b, cTMap * a)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ImageLayer")
+            {
+                ((UIImageLayer *)(l))->setImage(r->GetCopy(),g->GetCopy(),b->GetCopy(),a->GetCopy());
+
+            }
+        }
+    }
+
+
+
+    inline ASUILayer AddCustomShader1(QString text,  std::vector<cTMap*>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
+    {
+        ASUILayer lay;
+
+        //if(m != nullptr && m2 != nullptr)
+        {
+
+            UIShaderLayer * ret = new UIShaderLayer({text},{{}},{textures},region,p, isabs,!is2d,resolutionx, resolutiony,true,scaling );
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+    }
+
+
+    inline ASUILayer AddCustomShader2(QString text,  std::vector<QString>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
+    {
+        ASUILayer lay;
+
+
+
+        //if(m != nullptr && m2 != nullptr)
+        {
+            UIShaderLayer * ret = new UIShaderLayer({text},{textures},{{}},region,p, isabs,!is2d,resolutionx, resolutiony,true,scaling );
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+    }
+
+    inline ASUILayer AddCustomShader1mp(std::vector<QString> text,  std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony =-1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
+    {
+        ASUILayer lay;
+
+        //if(m != nullptr && m2 != nullptr)
+        {
+
+            UIShaderLayer * ret = new UIShaderLayer(text,{{}},{textures},region,p, isabs,!is2d,resolutionx, resolutiony,true,scaling );
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+    }
+
+
+    inline ASUILayer AddCustomShader2mp(std::vector<QString> text,  std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection p = GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+    {
+        ASUILayer lay;
+
+        //if(m != nullptr && m2 != nullptr)
+        {
+
+            UIShaderLayer * ret = new UIShaderLayer({text},textures,{{}},region,p, isabs,!is2d,resolutionx, resolutiony,true,scaling );
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+    }
+
+    inline ASUILayer AddParticleEffectLayer(ASEmitter*)
+    {
+        ASUILayer lay;
+        {
+
+            UIParticleEffectLayer * ret = new UIParticleEffectLayer();
+
+            m_WorldWindow->AddUILayer(ret,true);
+
+            lay.SetUID(ret->GetUID(),std::bind(&UILayer::IncreaseScriptRef,ret),std::bind(&UILayer::DecreaseScriptRef,ret));
+
+        }
+
+        return lay;
+    }
+
+    inline void SetParticleEffectLayerReset()
+    {
+
+    }
+
+    inline void HasParticleCollidedWith()
+    {
+
+    }
+
+    inline void SetAllowShift(bool x)
+    {
+        m_WorldWindow->SetAllowShift(x);
+    }
+
+    inline void SetShaderAutoScale(ASUILayer id, bool scale)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ShaderLayer")
+            {
+                ((UIShaderLayer *)(l))->SetAutoScale(scale);
+            }
+        }
+    }
+
+    inline void SetShaderPosition(ASUILayer id, BoundingBox b, GeoProjection * p, bool is_rel)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ShaderLayer")
+            {
+                ((UIShaderLayer *)(l))->setPosition(b,p,is_rel);
+            }
+        }
+    }
+
+
+    inline void SetShaderInputFloats(ASUILayer id, int i, float a, float b, float c, float d)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ShaderLayer")
+            {
+                ((UIShaderLayer *)(l))->SetInputFloats(i,a,b,c,d);
+            }
+        }
+    }
+
+
+    inline void SetShaderInputImage(ASUILayer id, QString image, int i, int pass)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ShaderLayer")
+            {
+                ((UIShaderLayer *)(l))->SetInputImage(image,i,pass);
+            }
+        }
+    }
+
+    inline void SetShaderInputMap(ASUILayer id, cTMap * image,int i, int pass)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ShaderLayer")
+            {
+                ((UIShaderLayer *)(l))->SetInputMap(image,i,pass);
             }
         }
     }
@@ -1926,7 +2380,7 @@ public:
                     }else {
 
                         ctx->PopState();
-                        LISEMS_ERROR("Error when calling optimizing callback function!")
+                        LISEMS_ERROR("Error when calling optimizing callback function!");
                         throw 1;
                     }
 
@@ -1936,7 +2390,7 @@ public:
                     ctx->PopState();
                   }else {
 
-                      LISEMS_ERROR("Error when calling optimizing callback function, could not push state!")
+                      LISEMS_ERROR("Error when calling optimizing callback function, could not push state!");
                       throw 1;
                   }
 
@@ -1967,181 +2421,158 @@ public:
     inline void CallBackKeyScript(asIScriptFunction * f)
     {
 
+        //all glfw key codes with names
+        std::vector<QString> keynames = {
+            "Space",
+            "Apostrophe",
+            "Comma",
+            "Minus",
+            "Period",
+            "Slash",
+            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+            "Semicolon","Equal",
+            "A","B","C","D","E","F","G","H", "i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "LBracket","Backslash","RBracket","Grave","WOrld1","World2",
+            "Escape","enter","tab","backspace","insert","delete","right","left","down","up",
+            "page up","page down","home","end","capslock","scrollock","numlock","printscreen","pause",
+            "F1","F2","F3","F1","F4","F5","F6","F7","F8","F9","F10","F11","F12","F13","F14","F15","F16","F17","F18","F19","F20","F21","F22","F23","F24","F25",
+            "KP 0", "KP 1", "KP 2", "KP 3", "KP 4", "KP 5", "KP 6", "KP 7", "KP 8","KP 9",
+            "KP Decimal","KP divide","KP multiply","kp subtract","kp add","kp enter","kp equal",
+            "LShift","LControl","LAlt","LSuper","RShift","RControl","RAlt","RSuper","Menu"
+
+
+        };
+        std::vector<int> keyindices =
+        {
+            32,39,44,45,46,47,48,49,50,51,52,53,54,55,56,57,59,61,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+            80,81,82,83,84,85,86,87,88,89,90,91,92,93,96,161,162,256,257,258,259,260,261,262,263,264,265,266,267,268,269,280,291,282,283,284,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,
+            309,310,311,12,313,314,320,321,322,323,324,325,326,327,328,329,330,331,332,333,
+            334,335,336,340,341,342,343,344,345,346,347,348
+
+        };
+
+        int sc = GetScriptCounter();
+        if(sc != m_LastScriptCounter)
+        {
+            //clear the inputs list
+            m_WorldWindow->m_SM.lock();
+            m_WorldWindow->m_MouseState.KeySEventShift.clear();
+            m_WorldWindow->m_MouseState.KeySEvents.clear();
+            m_WorldWindow->m_MouseState.KeySAction.clear();
+            m_WorldWindow->m_MouseState.KeySMods.clear();
+            m_WorldWindow->m_SM.unlock();
+
+        }else
+        {
+            //use whats there in the list
+            m_WorldWindow->m_SM.lock();
+
+            for(int i = 0; i < m_WorldWindow->m_MouseState.MouseButtonSEventsShift.size(); i++)
+            {
+
+                bool has_shift = m_WorldWindow->m_MouseState.KeySEventShift.at(i);
+                int key_id = m_WorldWindow->m_MouseState.KeySEvents.at(i);
+                bool press = m_WorldWindow->m_MouseState.KeySAction.at(i) == GLFW_PRESS;
+                int mods = m_WorldWindow->m_MouseState.KeySMods.at(i);
+
+
+                QString key = "";
+                for(int i = 0; i < keynames.size(); i++)
+                {
+                    if(key_id == keyindices.at(i))
+                    {
+                        key = keynames.at(i);
+                    }
+                }
+
+
+
+                asIScriptContext *ctx = asGetActiveContext();
+
+                int ps =  ctx->PushState();
+
+                // Store the current context state so we can restore it later
+                  if( ctx && ps > -1 )
+                  {
+                    // Use the context normally, e.g.
+                    //  ctx->Prepare(...);
+                    //  ctx->Execute(...);
+
+
+
+                    asIScriptEngine *engine = ctx->GetEngine();
+
+                    ctx->Prepare(f);
+
+
+                    // Set the function arguments
+                    ctx->SetArgObject(0,&key);
+                    ctx->SetArgByte(1,press);
+                    ctx->SetArgByte(2,has_shift);
+
+                    int r = ctx->Execute();
+                    if( r == asEXECUTION_FINISHED )
+                    {
+
+                    }else {
+
+                        ctx->PopState();
+                        LISEMS_ERROR("Error when calling optimizing callback function!");
+                        throw 1;
+                    }
+
+
+
+                    // Once done, restore the previous state
+                    ctx->PopState();
+                  }else {
+
+                      LISEMS_ERROR("Error when calling optimizing callback function, could not push state!");
+                      throw 1;
+                  }
+
+
+
+            }
+
+
+            m_WorldWindow->m_MouseState.KeySEventShift.clear();
+            m_WorldWindow->m_MouseState.KeySEvents.clear();
+            m_WorldWindow->m_MouseState.KeySAction.clear();
+            m_WorldWindow->m_MouseState.KeySMods.clear();
+            m_WorldWindow->m_SM.unlock();
+        }
+
         //m_MouseState.KeySEventShift.append(false);
         //m_MouseState.KeySEvents.append(key);
         //m_MouseState.KeySAction.append(action);
         //m_MouseState.KeySMods.append(mods);
         //m_MouseState.m_SM.unlock();
     }
-    inline void SetScriptFunctions(ScriptManager * sm)
+
+
+    inline void LimitWorldWindowView2D(BoundingBox b, float scale)
     {
 
-        std::cout << "add viewlayer calls " << this << std::endl;
-
-        int r = sm->m_Engine->RegisterObjectType("UILayer", sizeof(ASUILayer), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUILayer>());
-        sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUILayerC0,(void*),void), asCALL_CDECL_OBJLAST);
-        sm->m_Engine->RegisterObjectBehaviour("UILayer", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUILayerD0), asCALL_CDECL_OBJLAST);
-        sm->m_Engine->RegisterObjectMethod("UILayer", "UILayer& opAssign(const UILayer &in m)", asMETHODPR(ASUILayer,Assign,(ASUILayer *),ASUILayer*), asCALL_THISCALL); assert( r >= 0 );
-
-        r = sm->m_Engine->RegisterObjectType("UIPlot", sizeof(ASUIPlot), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUIPlot>());
-        sm->m_Engine->RegisterObjectBehaviour("UIPlot", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUIPlotC0,(void*),void), asCALL_CDECL_OBJLAST);
-        sm->m_Engine->RegisterObjectBehaviour("UIPlot", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUIPlotD0), asCALL_CDECL_OBJLAST);
-        sm->m_Engine->RegisterObjectMethod("UIPlot", "UIPlot& opAssign(const UIPlot &in m)", asMETHODPR(ASUIPlot,Assign,(ASUIPlot *),ASUIPlot*), asCALL_THISCALL); assert( r >= 0 );
-
-        r = sm->m_Engine->RegisterObjectType("UIPlotLayer", sizeof(ASUIPlotLayer), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLINTS|asGetTypeTraits<ASUIPlotLayer>());
-        sm->m_Engine->RegisterObjectBehaviour("UIPlotLayer", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASUIPlotLayerC0,(void*),void), asCALL_CDECL_OBJLAST);
-        sm->m_Engine->RegisterObjectBehaviour("UIPlotLayer", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(AS_ASUIPlotLayerD0), asCALL_CDECL_OBJLAST);
-        sm->m_Engine->RegisterObjectMethod("UIPlotLayer", "UIPlotLayer& opAssign(const UIPlotLayer &in m)", asMETHODPR(ASUIPlotLayer,Assign,(ASUIPlotLayer *),ASUIPlotLayer*), asCALL_THISCALL); assert( r >= 0 );
-
-
-        //Create Plot
-        sm->m_Engine->RegisterGlobalFunction("UIPlot CreatePlot(string name)", asMETHODPR( MapViewTool ,CreatePlot, (QString),ASUIPlot),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("UIPlotLayer AddPlotLayer(UIPlot p, const Table &in t, string name)", asMETHODPR( MapViewTool ,AddPlotLayer, (ASUIPlot, MatrixTable *, QString),ASUIPlotLayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void ReplacePlotLayer(UIPlotLayer l, const Table &in t)", asMETHODPR( MapViewTool ,ReplacePlotLayer, (ASUIPlotLayer,MatrixTable * ),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetPlotLayerStyle(UIPlotLayer l, vec3 color)", asMETHODPR( MapViewTool ,SetPlotLayerStyle, (ASUIPlotLayer, LSMVector3),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //add layer
-
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayerVelocity(Map &in mapx, Map &in mapy, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddVelLayerFromScript,(cTMap *,cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //get map view layer is edited
-        sm->m_Engine->RegisterGlobalFunction("bool IsViewLayerEdited(UILayer l, bool reset = true)", asMETHODPR( MapViewTool ,AS_IsViewLayerEdited,(ASUILayer),bool),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("Map @GetEditedMap(UILayer l)", asMETHODPR( MapViewTool ,AS_GetEditedMap,(ASUILayer),cTMap *),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Map &in map, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(cTMap *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-
-        //sm->m_Engine->RegisterGlobalSTDFunction("UILayer AddShaderLayer(QString text, int resolutionx, int resolutiony, const array<array<Map>> &in textures, Region region = Region(0.0,1.0,0.0,1.0), GeoProjection p = GeoProjectionGeneric(),bool isabs = false, bool dynamic = true,bool scaling = true, bool is2d = true)",GetFuncConvert(std::bind(&MapViewTool::AddCustomShader1,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5, std::placeholders::_6,std::placeholders::_7,std::placeholders::_8,std::placeholders::_9,std::placeholders::_10) );
-        sm->m_Engine->RegisterGlobalFunction("string rf(string file)",asMETHODPR( MapViewTool ,rf,(QString),QString),  asCALL_THISCALL_ASGLOBAL,this );
-
-
-        //get mouse geo events
-        //get mouse key events
-        //
-        //
-
-        //m_Engine->RegisterFuncdef("void CALLBACKDFSBB(string, bool, bool)");
-        //m_Engine->RegisterFuncdef("void CALLBACKDFSDDBB(string, double,double,bool, bool)");
-
-        sm->m_Engine->RegisterGlobalFunction("bool IsMouseInScreen()", asMETHODPR( MapViewTool ,IsMouseInScreen,(),bool),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("bool IsMouseButtonPressed(string name)", asMETHODPR( MapViewTool ,IsMouseButtonPressed,(QString),bool),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("bool IsKeyPressed(string name)", asMETHODPR( MapViewTool ,IsKeyPressed,(QString),bool),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec2 MousePosition()", asMETHODPR( MapViewTool ,MousePosition,(),LSMVector2),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec2 MouseGeoPosition()", asMETHODPR( MapViewTool ,MouseGeoPosition,(),LSMVector3),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec3 CameraPosition()", asMETHODPR( MapViewTool ,CameraPosition,(),LSMVector3),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec3 ViewDirection()", asMETHODPR( MapViewTool ,ViewDirection,(),LSMVector3),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec2 Camera2DView()", asMETHODPR( MapViewTool ,Camera2DView,(),BoundingBox),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetCamera2DView(Region r)", asMETHODPR( MapViewTool ,SetCamera2DView,(BoundingBox),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetCamera3DView(vec3 pos, vec3 view)", asMETHODPR( MapViewTool ,SetCamera3DView,(LSMVector3,LSMVector3),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void IsCamera3D()", asMETHODPR( MapViewTool ,IsCamera3D,(),bool),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetUI(bool edge, bool legends)", asMETHODPR( MapViewTool , SetUI,(bool,bool),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetUISize(float size_mult)", asMETHODPR( MapViewTool ,SetUISize,(float),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        //sm->m_Engine->RegisterGlobalFunction("void DeleteAllScriptLayers()", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void DeleteAllLayers()", asMETHODPR( MapViewTool ,DeleteAllScriptLayers,(),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void MouseEventCall(CALLBACKDFSBB @func)", asMETHODPR( MapViewTool ,CallBackMouseScript,(asIScriptFunction *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec2 KeyEventCall(CALLBACKDFSDDBB @func)", asMETHODPR( MapViewTool ,CallBackKeyScript,(asIScriptFunction *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        //sm->m_Engine->RegisterGlobalFunction("void OpenFullScreen()", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("vec2 GetScreenResolution()", asMETHODPR( MapViewTool ,GetScreenResolution,(),LSMVector2),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddTextLayer(string text, vec3 position, float size = 12, vec4 color = vec4(0.0,0.0,0.0,1.0), GeoProjection p = GeoProjectionGeneric())", asMETHODPR( MapViewTool ,AddTextLayer,(QString,LSMVector3,float,LSMVector4,GeoProjection*),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetText(const UILayer &in l, string text)", asMETHODPR( MapViewTool ,SetText,(ASUILayer,QString),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetTextColor(const UILayer &in l, vec4 color)", asMETHODPR( MapViewTool ,SetTextColor,(ASUILayer,LSMVector4),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetTextPosition(const UILayer &in l, vec3 position, GeoProjection p = GeoProjectionGeneric())", asMETHODPR( MapViewTool ,SetTextPosition,(ASUILayer,LSMVector3,GeoProjection*),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("void SetTextSize(const UILayer &in l, string name, bool removeable = true)", asMETHODPR( MapViewTool ,SetTextSize,(ASUILayer,float),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //ask for input
-        r = sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Shapes &in shapes, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(ShapeFile *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(Field &in map, string name, bool removeable =  true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(Field*,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        sm->m_Engine->RegisterGlobalFunction("UILayer AddViewLayer(const RigidModel &in map, string name, bool removeable = true)", asMETHODPR( MapViewTool ,AddLayerFromScript,(RigidPhysicsWorld *,QString,bool),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //remove layer
-        r = sm->m_Engine->RegisterGlobalFunction("void RemoveViewLayer(UILayer layer)", asMETHODPR( MapViewTool ,RemoveLayerFromScript,(ASUILayer),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //replace layer
-        r = sm->m_Engine->RegisterGlobalFunction("void ReplaceViewLayer(UILayer layer, Map &in map)", asMETHODPR( MapViewTool ,ReplaceLayerFromScript,(ASUILayer, cTMap *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        r = sm->m_Engine->RegisterGlobalFunction("void ReplaceViewLayer(UILayer layer, Shapes &in shapes)", asMETHODPR( MapViewTool ,ReplaceLayerFromScript,(ASUILayer, ShapeFile *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        r = sm->m_Engine->RegisterGlobalFunction("void ReplaceViewLayer(UILayer layer, Field &in shapes)", asMETHODPR( MapViewTool ,ReplaceLayerFromScript,(ASUILayer, Field *),void),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //Get Layer Id Map
-        r = sm->m_Engine->RegisterGlobalFunction("UILayer GetUILayer(string name)", asMETHODPR( MapViewTool ,GetLayerMap,(QString),ASUILayer),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-        //get actual layer from id
-
-        r = sm->m_Engine->RegisterGlobalFunction("Map& GetViewLayerMap(UILayer layer)", asMETHODPR( MapViewTool ,ScriptGetLayerMap,(ASUILayer),cTMap*),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-        r = sm->m_Engine->RegisterGlobalFunction("Shapes& GetViewLayerShapes(UILayer layer)", asMETHODPR( MapViewTool ,ScriptGetLayerShapeFile,(ASUILayer),ShapeFile*),  asCALL_THISCALL_ASGLOBAL,this); assert( r >= 0 );
-
-
-        sm->m_Engine->RegisterTypeDebugAction(sm->m_Engine->GetTypeIdByDecl("Map"),"View",[this](void* par){
-            cTMap * m = (cTMap *)par;
-            RasterDataProvider * rdp = new RasterDataProvider(QList<QList<cTMap*>>({{m->GetCopy()}}),false,true);
-
-            if(rdp->Exists())
-            {
-                UIStreamRasterLayer * ret = new UIStreamRasterLayer(rdp,"DebugMap",m->AS_FileName.size() == 0? false : true,m->AS_FileName,!false);
-                if(rdp->GetBandCount() > 1)
-                {
-                    ret->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_MULTIRASTER),true);
-                }else
-                {
-                    ret->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_RASTERUI),true);
-                }
-                m_WorldWindow->AddUILayer(ret,true);
-
-            }
-        });
-
-
-        sm->m_Engine->RegisterTypeDebugAction(sm->m_Engine->GetTypeIdByDecl("Map"),"Calculate Stats",[this](void* par){
-            cTMap * m = (cTMap *)par;
-
-            RasterBandStats stats = m->GetRasterBandStats(true);
-            MatrixTable * t = new MatrixTable();
-            t->SetSize(12,1);
-            t->SetColumnTitle(0,QString("Value"));
-            t->SetRowTitle(0,QString("Band"));t->SetValue(0,0,stats.band);
-            t->SetRowTitle(1,QString("Rows"));t->SetValue(1,0,m->nrRows());
-            t->SetRowTitle(2,QString("Cols"));t->SetValue(2,0,m->nrCols());
-            t->SetRowTitle(3,QString("ULX"));t->SetValue(3,0,m->west());
-            t->SetRowTitle(4,QString("ULY"));t->SetValue(4,0,m->north());
-            t->SetRowTitle(5,QString("dx"));t->SetValue(5,0,m->cellSizeX());
-            t->SetRowTitle(6,QString("dy"));t->SetValue(6,0,m->cellSizeY());
-            t->SetRowTitle(7,QString("Mean"));t->SetValue(7,0,stats.mean);
-            t->SetRowTitle(8,QString("min"));t->SetValue(8,0,stats.min);
-            t->SetRowTitle(9,QString("max"));t->SetValue(9,0,stats.max);
-            t->SetRowTitle(10,QString("stdev"));t->SetValue(10,0,stats.stdev);
-            t->SetRowTitle(11,QString("MV"));t->SetValue(11,0,stats.n_mv);
-            LayerInfoWidget *w = new LayerInfoWidget(t);
-            w->show();
-
-        });
-
-        sm->m_Engine->RegisterTypeDebugAction(sm->m_Engine->GetTypeIdByDecl("Map"),"Save as",[this](void* par){
-            cTMap * m = (cTMap *)par;
-
-            QString path = QFileDialog::getOpenFileName(this,
-                                                QString("Save map"),
-                                                GetFIODir(LISEM_DIR_FIO_GEODATA),
-                                                QString("*.tif;*.map;*.*"));
-
-            if(!path.isEmpty())
-            {
-                SetFIODir(LISEM_DIR_FIO_GEODATA,QFileInfo(path).dir().absolutePath());
-
-                AS_SaveMapToFileAbsolute(m,path);
-            }
-        });
-
-
-
-        connect(this,&MapViewTool::int_on_create_plot,this,&MapViewTool::OnCreatePlot,Qt::ConnectionType::QueuedConnection);
-        connect(this,&MapViewTool::int_on_add_plot,this,&MapViewTool::OnCreatePlotLayer,Qt::ConnectionType::QueuedConnection);
-        connect(this,&MapViewTool::int_on_replace_plot,this,&MapViewTool::OnReplacePlotLayer,Qt::ConnectionType::QueuedConnection);
-        connect(this,&MapViewTool::int_on_style_plot,this,&MapViewTool::OnSetPlotLayerStyle,Qt::ConnectionType::QueuedConnection);
-
-
+        m_WorldWindow->SetLimitedPosition2D(b,scale);
     }
+
+    inline void FixWorldWindowView2D(BoundingBox b)
+    {
+
+        m_WorldWindow->SetFixedCamera2D(b);
+    }
+
+    inline void SetFreeView(bool x)
+    {
+
+        m_WorldWindow->SetFreeCamera(x);
+    }
+
+
+
+    void SetScriptFunctions(ScriptManager * sm);
+
 
 
     inline void Internal_CreateAllPlots()
@@ -2234,6 +2665,8 @@ public:
 
         m_PlotMutex.unlock();
     }
+
+
 
 
 signals:
@@ -2698,6 +3131,62 @@ public slots:
     }
     inline void OnAddEVImagePressed()
     {
+        QCheckBox * cb = new QCheckBox("Add in screen coordinates");
+        cb->setChecked(false);
+
+        const QStringList schemes = QStringList(QStringLiteral("file"));
+
+        QFileDialog F = QFileDialog(this,QString("Select image file"),GetFIODir(LISEM_DIR_FIO_GEODATA),"*.*");
+        F.setOption(QFileDialog::DontUseNativeDialog, true);
+        F.setNameFilters(GetExtensionsFileFilters(GetImageAndMapExtensions()));
+        if(F.layout() != nullptr)
+        {
+            F.layout()->addWidget(cb);
+        }
+        F.setSupportedSchemes(schemes);
+
+        if (F.exec() == QDialog::Accepted) {
+
+            QString path =F.selectedUrls().value(0).toString(); /*QFileDialog::getOpenFileName(this,
+                                                QString("Select image file"),
+                                                ,
+                                                GetExtensionsFileFilter(GetImageAndMapExtensions()));*/
+
+            std::cout << "Selected file: " << path.toStdString() << std::endl;
+            bool abscoords = cb->isChecked();
+
+            if(path.startsWith("file:///"))
+            {
+                path.remove("file:///");
+
+            }
+            if(!path.isEmpty())
+            {
+                if(abscoords)
+                {
+                    BoundingBox pos = BoundingBox(0.4,0.6,0.4,0.6);
+                    UIImageLayer * ret = new UIImageLayer(path,pos,GeoProjection::GetGeneric(),true);
+
+                    ret->SetAdjustInitialSizeForAspectRatio();
+                    m_WorldWindow->AddUILayer(ret,true);
+                }else
+                {
+
+                    BoundingBox pos = m_WorldWindow->GetLook();
+                    pos.ScaleX(0.2);
+                    pos.ScaleY(0.2);
+
+                    UIImageLayer * ret = new UIImageLayer(path,pos,GeoProjection::GetGeneric(),false);
+
+
+                    ret->SetAdjustInitialSizeForAspectRatio();
+                    m_WorldWindow->AddUILayer(ret,true);
+                }
+
+            }
+
+        }
+
 
     }
     inline void OnAddEVArrowPressed()
@@ -3444,6 +3933,57 @@ inline static void GetCurrentMapLayerNamesAndID(QList<QString> & names, QList<in
         }
     }
 }
+
+inline static void GetCurrentMapLayerNamesAndBoundingBoxes(QList<QString> & names, QList<int> &id,QList<BoundingBox> &pos,QList<GeoProjection> &proj)
+{
+
+    MapViewTool * m = GetMapViewTool();
+
+    for(int i = 0; i < m->m_WorldWindow->GetUILayerCount(); i++)
+    {
+        UILayer *ml = m->m_WorldWindow->GetUILayer(i);
+        if(ml->IsUser() && ml->IsGeo())
+        {
+            UIGeoLayer * mlg = (UIGeoLayer *) ml;
+            names.append(ml->GetName());
+            id.append(ml->GetUID());
+            pos.append(mlg->GetBoundingBox());
+            proj.append(mlg->GetProjection());
+
+        }
+    }
+}
+
+inline static ASUILayer CAddCustomShaderLayer1(QString text,  std::vector<cTMap*>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+{
+    MapViewTool * m = GetMapViewTool();
+
+    return m->AddCustomShader1(text,textures,region,resolutionx,resolutiony,*p,isabs,scaling,is2d);
+}
+
+inline static ASUILayer CAddCustomShaderLayer2(QString text,  std::vector<QString>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+{
+    MapViewTool * m = GetMapViewTool();
+
+    return m->AddCustomShader2(text,textures,region,resolutionx,resolutiony,*p,isabs,scaling,is2d);
+}
+
+inline static ASUILayer CAddCustomShaderLayer1mp(std::vector<QString> text,  std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+{
+    MapViewTool * m = GetMapViewTool();
+
+    return m->AddCustomShader1mp(text,textures,region,resolutionx,resolutiony,*p,isabs,scaling,is2d);
+
+}
+
+inline static ASUILayer CAddCustomShaderLayer2mp(std::vector<QString> text,  std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+{
+    MapViewTool * m = GetMapViewTool();
+
+    return m->AddCustomShader2mp(text,textures,region,resolutionx,resolutiony,*p,isabs,scaling,is2d);
+
+}
+
 
 
 #endif // MAPVIEWTOOL_H

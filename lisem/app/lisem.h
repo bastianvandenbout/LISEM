@@ -69,6 +69,8 @@
 
 #include "geo/raster/map.h"
 
+#include "audiomanager.h"
+
 /////
 /// \brief The SPHazard class
 /// This class is the main entry point and controlling agent for
@@ -95,6 +97,7 @@ private:
     QTInterfaceWindow * m_InterfaceWindow;
     //IOManager *m_IOManager;
     OpenGLCLManager *m_OpenGLCLManager;
+    AudioManager * m_AudioManager;
     ParameterManager *m_ParameterManager;
     LISEMModel * m_model;
     ScriptManager * m_ScriptManager;

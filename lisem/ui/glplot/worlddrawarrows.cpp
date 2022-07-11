@@ -600,8 +600,8 @@ void WorldWindow::Draw2DArrows(GeoWindowState s, bool external)
                         elem_size.yc.push_back(tlYs + sin(radiansn) * 10.0);
 
                     }
-                    elem_size.fac_x = 1.0/std::max(5.0f,tlX - tlXs);
-                    elem_size.fac_y = 1.0/std::max(5.0f,tlY - tlYs);
+                    elem_size.fac_x = -1.0/std::max(5.0f,std::fabs(tlX - tlXs));
+                    elem_size.fac_y = 1.0/std::max(5.0f,std::fabs(tlY - tlYs));
 
 
                     grey = 0.5;

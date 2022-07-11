@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef SCRIPTARRAYHELPERS_H
 #define SCRIPTARRAYHELPERS_H
 
@@ -42,7 +44,7 @@ engine->RegisterGlobalFunction("array<Map> @funcname(const array<Map> &in A, con
 #include "geo/raster/field.h"
 
 //type conversion function
-template <typename From, typename tot>
+/*template <typename From, typename tot>
 tot asbind_convert(From x)
 {
     tot y= x;
@@ -146,7 +148,7 @@ CScriptArray* asbind_convert< std::vector<Field*>,CScriptArray*>(std::vector<Fie
     }
 
     return array;
-}
+}*/
 
 
 
@@ -578,6 +580,59 @@ public:
     }
 };
 
+
+template<>
+class asbindc_convert<std::vector<std::vector<QString>>,CScriptArray*>
+{
+
+public:
+
+    inline static CScriptArray * asbind_convert(std::vector<std::vector<QString>> x)
+    {
+        std::cout << "convert output qstringlist " << x.size() << std::endl;
+        // Obtain a pointer to the engine
+        asIScriptContext *ctx = asGetActiveContext();
+        if(ctx != nullptr)
+        {
+            asIScriptEngine *engine = ctx->GetEngine();
+            asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<array<string>>");
+
+            // Create the array object
+            CScriptArray *array = CScriptArray::Create(arrayType);
+
+            array->Resize(x.size());
+
+            for(int i = 0; i < x.size(); ++i)
+            {
+
+                // Obtain a pointer to the engine
+                asIScriptContext *ctx = asGetActiveContext();
+                asIScriptEngine *engine = ctx->GetEngine();
+
+                // TODO: This should only be done once
+                // TODO: This assumes that CScriptArray was already registered
+                asITypeInfo *arrayType = engine->GetTypeInfoByDecl("array<string>");
+
+                // Create the array object
+                CScriptArray *array2 = CScriptArray::Create(arrayType);
+                array2->Resize(x.at(i).size());
+                for(int j = 0; j < x.at(i).size(); j++)
+                {
+                    array2->SetValue(j,(void*)(new QString(x.at(i).at(j))),false);
+                }
+
+                array->SetValue(i,array2,false);
+            }
+
+            std::cout << "return list "<< array->GetSize() <<  std::endl;
+            return array;
+
+        }
+        LISEMS_ERROR("Could not convert list to std::vector");
+        throw 1;
+    }
+
+};
 
 template<>
 class asbindc_convert<std::vector<Field*>,CScriptArray*>

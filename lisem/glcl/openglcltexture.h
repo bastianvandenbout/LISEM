@@ -59,6 +59,14 @@ public:
         return ret;
     }
 
+    inline int GetWidth()
+    {
+        return m_dims[0];
+    }
+    inline int GetHeight()
+    {
+        return m_dims[1];
+    }
     inline void SetPath(QString t)
     {
         m_Path = t;

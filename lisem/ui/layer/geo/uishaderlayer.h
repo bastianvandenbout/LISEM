@@ -19,6 +19,7 @@
 #include "time.h"
 #include "layer/editors/uishadereditor.h"
 #include "gl/openglcldatamanager.h"
+#include "linear/lsm_vector3.h"
 
 class UIShaderLayerEditor;
 
@@ -33,6 +34,24 @@ private:
     int m_RTSizeY = 512;
     int m_Frame = -1;
     float m_TimeStart = 0.0;
+
+    //can be customized by the user for input to the shaders
+    std::vector<float> m_InputFloats = {0.0,0.0,0.0,0.0
+                               ,0.0,0.0,0.0,0.0
+                               ,0.0,0.0,0.0,0.0
+                              ,0.0,0.0,0.0,0.0,
+                               0.0,0.0,0.0,0.0
+                              ,0.0,0.0,0.0,0.0
+                              ,0.0,0.0,0.0,0.0
+                             ,0.0,0.0,0.0,0.0};
+    std::vector<float> m_InputFloats2 = {0.0,0.0,0.0,0.0
+                               ,0.0,0.0,0.0,0.0
+                               ,0.0,0.0,0.0,0.0
+                              ,0.0,0.0,0.0,0.0,
+                               0.0,0.0,0.0,0.0
+                              ,0.0,0.0,0.0,0.0
+                              ,0.0,0.0,0.0,0.0
+                             ,0.0,0.0,0.0,0.0};
 
     //all float, just in case we need it, although slower...
     std::vector<OpenGLCLMSAARenderTarget *> m_Target;
@@ -75,7 +94,7 @@ public:
 
     }
 
-    inline UIShaderLayer(std::vector<QString> buffershaders,std::vector<std::vector<QString>> texture_files,std::vector<std::vector<cTMap *>> textures, BoundingBox bb,GeoProjection p,bool isabs, bool is3d,int resolutionx, int resolutiony, bool dynamic, bool scaling)
+    inline UIShaderLayer(std::vector<QString> buffershaders,std::vector<std::vector<QString>> texture_files,std::vector<std::vector<cTMap *>> textures, BoundingBox bb,GeoProjection p,bool isabs, bool is3d,int resolutionx, int resolutiony, bool dynamic, bool scaling) : UIGeoLayer(p,bb,QString("Custom Shader"),false,QString(""),true)
     {
         m_BoundingBox = bb;
         UpdateRTSize(resolutionx,resolutiony);
@@ -114,6 +133,130 @@ public:
     }
 
 
+    inline void setPosition(BoundingBox b, GeoProjection * p, bool is_rel)
+    {
+        m_BoundingBox = b;
+
+
+        m_Is2DABS = is_rel;
+
+        m_CRS = *p;
+
+
+
+    }
+
+
+    inline void SetAutoScale(bool x)
+    {
+        m_Mutex.lock();
+        m_AutoScale = x;
+        m_Mutex.unlock();
+    }
+
+    inline void SetInputFloats(int i, float a, float b, float c, float d)
+    {
+        m_Mutex.lock();
+
+        if(i < 0)
+        {
+
+        }
+        if(i < 8)
+        {
+            m_InputFloats.at(i*4 + 0) = a;
+            m_InputFloats.at(i*4 + 1) = b;
+            m_InputFloats.at(i*4 + 2) = c;
+            m_InputFloats.at(i*4 + 3) = d;
+
+        }
+        if(i < 16)
+        {
+            m_InputFloats2.at((i-8)*4 + 0) = a;
+            m_InputFloats2.at((i-8)*4 + 1) = b;
+            m_InputFloats2.at((i-8)*4 + 2) = c;
+            m_InputFloats2.at((i-8)*4 + 3) = d;
+
+        }
+
+        m_Mutex.unlock();
+
+
+    }
+    inline void SetInputImage(QString image, int in, int pass)
+    {
+
+        m_Mutex.lock();
+        if(m_Shaders.size() > pass && in < 4)
+        {
+            //if needed, add empty lists to the TextureLinks array
+
+            for(int  i = m_TextureLinks.size(); i < m_Shaders.size(); i++)
+            {
+                m_TextureLinks.push_back(std::vector<QString>());
+            }
+            //get the right sub-array
+
+
+
+            //if needed, add empty items
+
+            for(int i = m_TextureLinks.at(m_Shaders.size() - 1 - pass).size(); i < 4; i++)
+            {
+                m_TextureLinks.at(m_Shaders.size() - 1 - pass).push_back(QString());
+            }
+
+
+            //set our current request
+
+            m_TextureLinks.at(m_Shaders.size() - 1 - pass).at(in) = image;
+
+            m_createdTexture = false;
+            m_IsPrepared = false;
+        }
+
+        m_Mutex.unlock();
+
+    }
+
+    inline void SetInputMap(cTMap * m, int in, int pass)
+    {
+        m_Mutex.lock();
+        if(m_Shaders.size() > pass && in < 4)
+        {
+            //if needed, add empty lists to the TextureLinks array
+
+            for(int  i = textures.size(); i < m_Shaders.size(); i++)
+            {
+                textures.push_back(std::vector<cTMap*>());
+            }
+            //get the right sub-array
+
+
+            //if needed, add empty items
+
+            for(int i = textures[m_Shaders.size() - 1 - pass].size(); i < 4; i++)
+            {
+                textures[m_Shaders.size() - 1 - pass].push_back(nullptr);
+            }
+
+
+            //set our current request
+
+            if(textures[m_Shaders.size() - 1 - pass][in] != nullptr)
+            {
+                delete textures[m_Shaders.size() - 1 - pass][in];
+            }
+            textures.at(m_Shaders.size() - 1 - pass).at(in) = m;
+
+            m_createdTexture = false;
+            m_IsPrepared = false;
+        }
+
+        m_Mutex.unlock();
+
+
+    }
 
     virtual inline bool IsMovable() override
     {
@@ -189,7 +332,7 @@ public:
         m_Mutex.lock();
 
         m_BoundingBox.ScaleX(s.x);
-        m_BoundingBox.ScaleX(s.z);
+        m_BoundingBox.ScaleY(s.z);
 
         m_Mutex.unlock();
 
@@ -311,18 +454,17 @@ public:
                 bbcrs.Set(minx,maxx,miny,maxy);
             }else
             {
-                float minx = (m_BoundingBox.GetMinX() - s.tlx)/(s.tlx-s.brx);
-                float maxx = (m_BoundingBox.GetMaxX() - s.tlx)/(s.tlx-s.brx);
-                float miny = (m_BoundingBox.GetMinY() - s.tly)/(s.tly-s.bry);
-                float maxy = (m_BoundingBox.GetMaxY() - s.tly)/(s.tly-s.bry);
+                float minx = (m_BoundingBox.GetMinX() - s.tlx)/(s.brx-s.tlx);
+                float maxx = (m_BoundingBox.GetMaxX() - s.tlx)/(s.brx-s.tlx);
+                float miny = (m_BoundingBox.GetMinY() - s.tly)/(s.bry-s.tly);
+                float maxy = (m_BoundingBox.GetMaxY() - s.tly)/(s.bry-s.tly);
 
                 bbcrs =m_BoundingBox;
                 bbscreen.Set(minx,maxx,miny,maxy);
             }
 
-            std::cout << s.tlx << " " << s.tly << " " << s.brx << " " << s.bry << std::endl;
-
-            std::cout << bbcrs.GetMinX() << " " << bbcrs.GetMaxX() << " "<< bbcrs.GetMinY() << " " << bbcrs.GetMaxY() << std::endl;
+            LSMVector3 as_ulc = LSMVector3(0.0,0.0,0.0);
+            LSMVector3 as_brc = LSMVector3(1.0,1.0,1.0);
 
             if(this->m_AutoScale)
             {
@@ -361,13 +503,16 @@ public:
 
                 }
 
+                as_ulc.x = (bbscreenreal.GetMinX() - bbscreen.GetMinX())/std::max(1e-12,bbscreen.GetSizeX());
+                as_ulc.y = (bbscreenreal.GetMinY() - bbscreen.GetMinY())/std::max(1e-12,bbscreen.GetSizeY());
+                as_brc.x = (bbscreenreal.GetMaxX() - bbscreen.GetMinX())/std::max(1e-12,bbscreen.GetSizeX());
+                as_brc.y = (bbscreenreal.GetMaxY() - bbscreen.GetMinY())/std::max(1e-12,bbscreen.GetSizeY());
+
             }else
             {
                 bbcrsreal = bbcrs;
                 bbscreenreal = bbscreen;
             }
-
-            std::cout << bbcrsreal.GetMinX() << " " << bbcrsreal.GetMaxX() << " "<< bbcrsreal.GetMinY() << " " << bbcrsreal.GetMaxY() << std::endl;
 
             GLint drawFboId = 0, readFboId = 0;
             glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
@@ -383,14 +528,13 @@ public:
                 }
 
                 glad_glBindFramebuffer(GL_FRAMEBUFFER, m_Target.at(i)->GetFrameBuffer());
+                glad_glViewport(0,0,m_Target.at(i)->GetWidth(),m_Target.at(i)->GetHeight());
                 glad_glClearColor(0.5,0.5,0.5,1.0);
                 glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
                 OpenGLProgram * program = m_Programs.at(i);
                 //set up shader and uniforms
-
-                std::cout << "draw buffer " << i << " " << program <<  std::endl;
 
                 // bind shader
                 glad_glUseProgram(program->m_program);
@@ -408,6 +552,9 @@ public:
                 glad_glUniform1i(islegend_loc,0);
                 glad_glUniform1i(istransformed_loc,1);
                 glad_glUniform1f(alpha_loc,1.0f-GetStyle().GetTransparancy());
+
+                glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"texcoord_ulc"),as_ulc.x,as_ulc.y);
+                glad_glUniform2f(glad_glGetUniformLocation(program->m_program,"texcoord_brc"),as_brc.x,as_brc.y);
 
                 //uniform vec2 iScreenResolution; //resolution of full opengl screen of LISEM
                 //uniform vec2 iResolution; //resolution of shader buffers
@@ -443,8 +590,6 @@ public:
                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"iTime"),s.m_time - m_TimeStart);
 
 
-                std::cout << 2<< std::endl;
-
                 //date
                 std::time_t t = std::time(nullptr);
                 std::tm *const pTInfo = std::localtime(&t);
@@ -453,21 +598,16 @@ public:
                 int day = pTInfo->tm_mday;
                 float seconds = seconds_since_local_midnight();
 
-                std::cout << 3<< std::endl;
                 glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iDate"),year,month,day,seconds);
 
                 //mouse props
                 glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iMouse"),s.MousePosX,s.MousePosY,s.MouseLeftButton?1.0:0.0,s.MouseRightButton?1.0:0.0);
 
-
-                std::cout << 4<< std::endl;
                 //camera stuff
                 //glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"CameraPosition"),s.GL_FrameBuffer3DWindow.at(0).GetCenterX(),s.Camera3D->GetPosition().y,s.GL_FrameBuffer3DWindow.at(0).GetCenterY());
                 glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,s.Camera3D->GetProjectionMatrixNoTranslationXZ().GetMatrixDataPtr());
 
 
-
-                std::cout << 5 <<  std::endl;
                 //coordinates
                 glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScreenCoords"),bbscreen.GetMinX(),bbscreen.GetMaxX(),bbscreen.GetMinY(),bbscreen.GetMaxY());
                 glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iCRSCoords"),bbcrs.GetMinX(),bbcrs.GetMaxX(),bbcrs.GetMinY(),bbcrs.GetMaxY());
@@ -478,8 +618,6 @@ public:
                 std::vector<const char *> names = {"iChannel0","iChannel1","iChannel2","iChannel3"};
                 std::vector<const char *> namesb = {"iChannelB0","iChannelB1","iChannelB2","iChannelB3"};
 
-
-                std::cout << "set textures " << std::endl;
 
                 int n_set_texture = 0;
                 for(int j= 0; j < m_Textures.at(i).size(); j++)
@@ -499,8 +637,6 @@ public:
                     }
                 }
 
-                std::cout << "set bufferst " << std::endl;
-
                 int n_buffer = std::min(4,(int)m_Shaders.size());
                 for(int j = 0; j < n_buffer; j++)
                 {
@@ -516,10 +652,6 @@ public:
                     glad_glActiveTexture(GL_TEXTURE0+ j + n_set_texture);
                     glad_glBindTexture(GL_TEXTURE_2D,m_TargetB.at(index)->GetTexture());
                 }
-
-
-                std::cout << "draw " << std::endl;
-
 
                 // now render stuff
                 glad_glBindVertexArray(m->m_Quad->m_vao);
@@ -539,6 +671,10 @@ public:
 
             GLuint FB = s.GL_FrameBuffer->GetFrameBuffer();
             glad_glBindFramebuffer(GL_FRAMEBUFFER, FB);
+
+            glad_glViewport(0,0,s.scr_pixwidth,s.scr_pixheight);
+
+
             //glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER_BINDING, drawFboId);
             //glad_glBindFramebuffer(GL_READ_FRAMEBUFFER_BINDING, readFboId);
 
@@ -703,6 +839,9 @@ uniform float alpha = 1.0;
             std::cout << "done " << std::endl;
         }
 
+
+        glad_glViewport(0,0,s.scr_pixwidth,s.scr_pixheight);
+
         m_Mutex.unlock();
 
         SwapTargets();
@@ -737,8 +876,11 @@ uniform float alpha = 1.0;
             for(int j =0;j < m_Textures.at(i).size(); j++)
             {
                 OpenGLCLTexture * t = m_Textures.at(i).at(j);
-                t->Destroy();
-                delete t;
+                if(t != nullptr)
+                {
+                    t->Destroy();
+                    delete t;
+                }
             }
         }
         m_Textures.clear();
@@ -775,6 +917,7 @@ uniform float alpha = 1.0;
 
     inline void OnPrepare(OpenGLCLManager * m,GeoWindowState s) override
     {
+        std::cout << "onprepare" << std::endl;
 
         error_pass.clear();
         error_line.clear();
@@ -828,7 +971,7 @@ uniform float alpha = 1.0;
 
                     try
                     {
-                        Program->LoadProgramcfs((KernelDir + "UIMapDraw.vert").toStdString().c_str(), shaderi.toStdString().c_str());
+                        Program->LoadProgramcfs((KernelDir + "UIShaderLayerDraw.vert").toStdString().c_str(), shaderi.toStdString().c_str());
                     }catch(...)
                     {
                         LISEMS_ERROR("Could not compile shader");
@@ -866,9 +1009,11 @@ uniform float alpha = 1.0;
                     //std::vector<QString> m_TextureLinks;
                     //std::vector<std::vector<OpenGLCLTexture*>> m_Textures;
 
+                    std::cout << "destroy texts" <<std::endl;
                     DestroyTextures();
                     std::vector<std::vector<OpenGLCLTexture *>> texs;
 
+                    std::cout << "destroy done" << std::endl;
 
                     for(int i = 0; i < m_Shaders.size(); i++)
                     {
@@ -890,6 +1035,7 @@ uniform float alpha = 1.0;
                         int count_check= std::max(4,std::min((int)size_texts,(int)size_files));
                         std::vector<OpenGLCLTexture *> texs2;
 
+                        std::cout << "size texture files "<< size_files << std::endl;
 
                         for(int j = 0; j < count_check; j++)
                         {
@@ -920,11 +1066,14 @@ uniform float alpha = 1.0;
                                 {
                                     if(!m_TextureLinks.at(i).at(j).isEmpty())
                                     {
-                                        std::cout << "load text from file "<< std::endl;
 
                                         OpenGLCLTexture * t = new OpenGLCLTexture();
                                         QString file =m_TextureLinks.at(i).at(j);
+
+                                        std::cout << "load text from file "<< file.toStdString() <<  std::endl;
+
                                         //is it a regular image
+
                                         if(file.endsWith(".jpg")|| file.endsWith(".jpeg")|| file.endsWith(".png")||file.endsWith(".bmp"))
                                         {
                                             t->Create2DFromFile(file);
@@ -976,6 +1125,7 @@ uniform float alpha = 1.0;
 
 
                     }
+                    std::cout << "textst  done " << std::endl;
                      m_Textures = texs;
                 }
 
@@ -1002,6 +1152,7 @@ uniform float alpha = 1.0;
             }
         }
 
+        std::cout <<" prepare done" << std::endl;
         if(m_CallBackCompileErrorSet && m_shadersucces == false)
         {
             m_CallBackCompileError(error_pass,error_line,error_message);
@@ -1029,17 +1180,20 @@ uniform float alpha = 1.0;
             for(int j =0;j< textures.at(i).size();j++)
             {
 
+                if(textures.at(i).at(j) != nullptr)
+                {
+
                     delete textures.at(i).at(j);
+                    textures.at(i).at(j) = nullptr;
+                }
 
             }
         }
-
         m_Mutex.unlock();
     }
 
     inline void UpdateShader(std::vector<QString> buffershaders)
     {
-        std::cout << "update shaders"<<std::endl;
         m_Mutex.lock();
         m_Shaders = buffershaders;
         m_createdShaders= false;

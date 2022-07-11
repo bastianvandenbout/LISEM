@@ -135,10 +135,46 @@ int OpenGLCLManager::CreateGLWindow(QPixmap pixmap, bool visible)
     return 0;
 }
 
-int OpenGLCLManager::ToggleFullScreen()
+int OpenGLCLManager::ToggleFullScreen(bool alt_monitor)
 {
+    int moncount = 0;
+
+    GLFWmonitor** monitors = glfwGetMonitors(&moncount);
+
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+
+    if(moncount > 1)
+    {
+        if(alt_monitor)
+        {
+            monitor = monitors[1];
+        }
+    }
+
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
 
+
+    if ( !is_fullscreen )
+    {
+        // backup window position and window size
+        glfwGetWindowPos(window, &_wndPos[0], &_wndPos[1] );
+        glfwGetWindowSize( window,&_wndSize[0], &_wndSize[1] );
+
+
+        // switch to full screen
+        glfwSetWindowMonitor( window, monitor, 0, 0, mode->width, mode->height, 0 );
+
+        is_fullscreen= true;
+    }
+    else
+    {
+        // restore last window size and position
+        glfwSetWindowMonitor( window, nullptr,  _wndPos[0], _wndPos[1], _wndSize[0], _wndSize[1], 0 );
+
+
+        is_fullscreen= false;
+    }
 
     return 0;
 

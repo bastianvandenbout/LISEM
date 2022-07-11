@@ -44,6 +44,12 @@ public:
     QLabel * m_LabelChanFlow;
     QLabel * m_LabelOutFlow;
     QLabel * m_LabelFailure;
+    QLabel * m_LabelOutflow;
+    QLabel * m_LabelErosion;
+    QLabel * m_LabelDeposition;
+    QLabel * m_LabelSedOutflow;
+    QLabel * m_LabelErrorF;
+    QLabel * m_LabelErrorS;
 
     inline ModelStatTool( LISEMModel * m, MODELTOINTERFACE *minterface, QWidget *parent = 0): QWidget( parent)
     {
@@ -77,18 +83,31 @@ public:
         m_LabelChanFlow = new QLabel("0");
         m_LabelOutFlow = new QLabel("0");
         m_LabelFailure = new QLabel("0");
-
+        m_LabelOutflow = new QLabel("0");
+        m_LabelErosion = new QLabel("0");
+        m_LabelDeposition = new QLabel("0");
+        m_LabelSedOutflow = new QLabel("0");
+        m_LabelErrorF = new QLabel("0");
+        m_LabelErrorS = new QLabel("0");
         QFormLayout *layout = new QFormLayout();
         layout->addRow(new QLabel("Area (km2)"), m_LabelArea);
         layout->addRow(new QLabel("Time (min)"), m_LabelTime);
         layout->addRow(new QLabel("Rain (mm)"), m_LabelRain);
         layout->addRow(new QLabel("Flow (mm)"), m_LabelFlow);
         layout->addRow(new QLabel("Infil (mm)"), m_LabelInfil);
+        layout->addRow(new QLabel("Outflow (mm)"), m_LabelOutflow);
+        layout->addRow(new QLabel("Sources (mm)"), m_LabelOutflow);
         layout->addRow(new QLabel("Surf. Stor. (mm)"), m_LabelSurfStor);
         layout->addRow(new QLabel("Can. Stor. (mm)"), m_LabelCanStor);
         layout->addRow(new QLabel("Chan. Flow (mm)"), m_LabelChanFlow);
         layout->addRow(new QLabel("Outflow (mm)"), m_LabelOutFlow);
         layout->addRow(new QLabel("Failure (mm)"), m_LabelFailure);
+        layout->addRow(new QLabel("Erosion (mm)"), m_LabelErosion);
+        layout->addRow(new QLabel("Deposition (mm)"), m_LabelDeposition);
+        layout->addRow(new QLabel("Sed Outflow(mm)"), m_LabelSedOutflow);
+
+        layout->addRow(new QLabel("Fluid Error"), m_LabelErrorF);
+        layout->addRow(new QLabel("Solid Error"), m_LabelErrorS);
 
         window1->setLayout(layout);
 

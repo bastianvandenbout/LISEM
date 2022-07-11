@@ -1,0 +1,4 @@
+#ifndef UIBOYDLAYER_H
+#define UIBOYDLAYER_H
+
+#endif // UIBOYDLAYER_H

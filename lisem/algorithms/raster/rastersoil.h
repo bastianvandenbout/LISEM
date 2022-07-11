@@ -230,9 +230,11 @@ inline static std::vector<cTMap *> AS_GreenAndAmpt(cTMap * WFH, cTMap * water, c
             if(!pcr::isMV(WFH->data[r][c]))
             {
                 float space_infil = std::max((float) (0.0),(float)(SD->data[r][c] - WFH->data[r][c]));
+
                 float GA_PSI = psi->data[r][c];
                 float KSattop = ksat->data[r][c];
                 float ksat_wfcomp = KSattop * (1.0f + (GA_PSI * std::max(0.00001f,(float)(ThetaS->data[r][c] - Theta->data[r][c])))/(std::max(0.01f,(float)(WFH->data[r][c]))));
+
                 float infil_pot = std::min((float)(water->data[r][c] * 0.5),std::min((float)(space_infil * 0.5),(float)(ksat_wfcomp * dt)));
 
                 watern->data[r][c] = water->data[r][c] - infil_pot;

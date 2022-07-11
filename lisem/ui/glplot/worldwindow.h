@@ -46,6 +46,7 @@
 #include "layer/post/postdebug.h"
 #include "layer/post/lighting.h"
 #include "opengl3dobject.h"
+#include "particle/particlemanager.h"
 
 #include "geometry/geometrybase.h"
 #include "geometry/shapealgebra.h"
@@ -451,6 +452,10 @@ private:
     LSMVector2 m_FocusSquareStart;
     QList<BoundingBox> m_FocusSquare;
 
+
+
+    QMutex m_AllowShiftMutex;
+    bool m_AllowShift = true;
 public:
 
 
@@ -514,6 +519,7 @@ public:
 
     }
 
+
     inline void SetBackGroundColor(LSMVector4 color)
     {
         m_BackGroundColor = color;
@@ -537,6 +543,25 @@ public:
        MouseStateMutex.unlock();
         return ret;
     }
+
+    inline void SetAllowShift(bool x)
+    {
+        m_AllowShiftMutex.lock();
+        m_AllowShift = x;
+        m_AllowShiftMutex.unlock();
+    }
+
+    inline bool GetShiftAllowd()
+    {
+        bool ret = false;
+
+        m_AllowShiftMutex.lock();
+        ret = m_AllowShift;
+        m_AllowShiftMutex.unlock();
+
+        return ret;
+    }
+
     void SetRedrawNeeded();
     void SetDraw3D(bool d);
     void SetDraw3DGlobe(bool d);
@@ -776,6 +801,28 @@ public:
     void CreateLightBuffer(GeoWindowState s, bool external);
     void DeferredLightPass(GeoWindowState s, bool external);
 
+private:
+
+    QMutex m_CameraLimitMutex;
+    bool m_CameraLock2D = false;
+    bool m_CameraLock3D = false;
+    bool m_CameraFixed2D = false;
+    bool m_CameraFixed3D = false;
+    int m_CameraLastLimit = -1;
+    BoundingBox m_Camera2DLock;
+    double m_Camera2DLockScale = 0.5;
+    BoundingBox3D m_Camera3DLock;
+    LSMVector3 m_Camera3DFixPos;
+    LSMVector3 m_Camera3DFixView;
+    BoundingBox m_Camera2DFixView;
+
+public:
+
+    void SetFixedCamera2D(BoundingBox view);
+    void SetFixedCamera3D(LSMVector3 position, LSMVector3 view);
+    void SetLimitedPosition2D(BoundingBox view, double scale);
+    void SetLimitedPosition3D(BoundingBox3D view);
+    void SetFreeCamera(bool x);
     //serialization
 
     UILayerTypeRegistry * m_LayerRegistry;

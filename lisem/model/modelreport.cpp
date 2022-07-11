@@ -79,6 +79,14 @@ void LISEMModel::GetOutput(float t, float dt)
 
     }
 
+    if(m_DoErosion)
+    {
+        m_OpenGLCLManager->CopyTextureToMap(T_SED,&(SED->data));
+        m_OpenGLCLManager->CopyTextureToMap(T_CHSED,&(CHSED->data));
+        m_OpenGLCLManager->CopyTextureToMap(T_DETTOT,&(DETTOT->data));
+        m_OpenGLCLManager->CopyTextureToMap(T_DEPTOT,&(DEPTOT->data));
+    }
+
 
     if(m_DoInitialSolids || (m_DoSlopeFailure && m_DoHydrology && m_DoSlopeStability))
     {
@@ -147,6 +155,10 @@ void LISEMModel::GetOutput(float t, float dt)
         if(do_solids)
         {
             VELS->Drc = sqrt(VSX->Drc * VSX->Drc + VSY->Drc*VSY->Drc);
+        }
+        if(m_DoErosion)
+        {
+            SLTOT->Drc = DETTOT->Drc - DEPTOT->Drc;
         }
         if(failure)
         {
@@ -290,6 +302,11 @@ void LISEMModel::ReportOutputToDiskAct()
     FinishResult.Name_SF = QString("safetyfactor" + ext) ;
     FinishResult.Name_SFC = QString("safetyfactorc" + ext) ;
     FinishResult.Name_SFracMax = QString("sfracmax" + ext) ;
+    FinishResult.Name_SoilLoss = QString("soilloss" + ext) ;
+    FinishResult.Name_SoilErode = QString("soilerode" + ext) ;
+    FinishResult.Name_SoilDeposit = QString("soildeposit" + ext) ;
+    FinishResult.Name_SedimentLoad = QString("sedimentload" + ext) ;
+    FinishResult.Name_CHSedimentLoad = QString("chsedimentload" + ext) ;
 
     writeRaster(*HF,m_Dir_Res + "hffinal" + ext,format);
     writeRaster(*VELF,m_Dir_Res + "vffinal" + ext,format);
@@ -306,6 +323,21 @@ void LISEMModel::ReportOutputToDiskAct()
         writeRaster(*SURFACESTORAGE,m_Dir_Res + "surfstor" + ext,format);
         writeRaster(*CANOPYSTORAGE,m_Dir_Res + "canstor" + ext,format);
 
+    }
+    if(m_DoErosion)
+    {
+
+        writeRaster(*SLTOT,m_Dir_Res + "soilloss" + ext,format);
+        writeRaster(*DETTOT,m_Dir_Res + "soilerode" + ext,format);
+        writeRaster(*DEPTOT,m_Dir_Res + "soildeposit" + ext,format);
+        writeRaster(*SED,m_Dir_Res + "sedimentload" + ext,format);
+
+        if(m_DoChannel)
+        {
+            writeRaster(*CHSED,m_Dir_Res + "chsedimentload" + ext,format);
+
+
+        }
     }
     if(m_DoHydrology && m_DoGroundWater)
     {
@@ -363,6 +395,12 @@ void LISEMModel::ReportOutputToDiskAct()
         writeRaster(*SFC,m_Dir_Res + "safetyfactorc" + ext,format);
     }
 
+    if(m_DoErosion)
+    {
+
+
+    }
+
 
     if(m_DoSlopeStability && m_DoHydrology && m_DoSlopeFailure)
     {
@@ -376,6 +414,17 @@ void LISEMModel::ReportOutputToDiskAct()
             if(m_DoOutputTimeseriesH)
             {
                 WriteMapSeries(*HF,m_Dir_Res,"hf",m_Step,format);
+            }
+            if(m_DoOutputTimeseriesErosion)
+            {
+                WriteMapSeries(*SLTOT,m_Dir_Res,"sl",m_Step,format);
+
+                if(m_DoChannel)
+                {
+                    writeRaster(*CHSED,m_Dir_Res + "chsedimentload" + ext,format);
+
+
+                }
             }
             if(m_DoInitialSolids || (m_DoSlopeFailure && m_DoHydrology && m_DoSlopeStability))
             {

@@ -266,6 +266,9 @@ public:
         double cx = GetCenterX();
         double cy = GetCenterY();
 
+        std::cout << "correct_ ratio2  " << s << " " << GetSizeX() << std::endl;
+
+
         Set(cx - s* 0.5 * width,cx + s* 0.5 * width,cy -  0.5 * height,cy + 0.5 * height);
     }
 
@@ -277,6 +280,15 @@ public:
         double cy = GetCenterY();
 
         Set(cx -  0.5 * width,cx +  0.5 * width,cy - s* 0.5 * height,cy + s* 0.5 * height);
+    }
+
+    inline void CorrectAspectRatio(double ratio)
+    {
+
+
+        double ratio_this = std::fabs(GetSizeX())/std::max(1e-12,std::fabs(GetSizeY()));
+
+        this->ScaleX(ratio/ratio_this);
     }
 
     inline LSMVector2 GetCoordinateRelativeFromAbsolute(LSMVector2 absolute)

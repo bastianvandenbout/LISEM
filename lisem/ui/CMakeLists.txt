@@ -29,6 +29,7 @@ target_link_libraries(lisem_ui
     lisem_object
     lisem_spatial
     lisem_io
+    lisem_audio
     lisem_glcl
     lisem_model
     lisem_algorithm

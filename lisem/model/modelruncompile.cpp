@@ -1112,35 +1112,35 @@ void LISEMModel::SetUIMaps()
     m_UIMapNames.append("default");
     m_UIMapNums.append(0);
 
-    m_UIMapNames.append("H");
+    m_UIMapNames.append("Flow Height (m)");
     m_UIMapNums.append(1);
-    m_UIMapNames.append("V");
+    m_UIMapNames.append("Flow Velocity (m/s)");
     m_UIMapNums.append(14);
 
     if(m_DoChannel)
     {
-        m_UIMapNames.append("channel h");
+        m_UIMapNames.append("Channel Flow Height (m)");
         m_UIMapNums.append(5);
 
-        m_UIMapNames.append("channel v");
+        m_UIMapNames.append("Channel Flow Velocity (m)");
         m_UIMapNums.append(15);
     }
 
     if(!m_DoHydrology && m_DoInfiltration)
     {
-        m_UIMapNames.append("WFH");
+        m_UIMapNames.append("Wetting Front Depth (m)");
         m_UIMapNums.append(2);
-        m_UIMapNames.append("infil");
+        m_UIMapNames.append("Cumulative Infiltration (m)");
         m_UIMapNums.append(4);
     }
     if(m_DoHydrology)
     {
 
-        m_UIMapNames.append("WFH");
+        m_UIMapNames.append("Wetting Front Depth (m)");
         m_UIMapNums.append(2);
-        m_UIMapNames.append("GWH");
+        m_UIMapNames.append("Ground Water Table (m)");
         m_UIMapNums.append(3);
-        m_UIMapNames.append("infil");
+        m_UIMapNames.append("Cumulative Infiltration (m)");
         m_UIMapNums.append(4);
 
         if(m_DoErosion)
@@ -1157,51 +1157,51 @@ void LISEMModel::SetUIMaps()
 
     if(m_DoHydrology && m_DoSlopeStability)
     {
-        m_UIMapNames.append("FoS");
+        m_UIMapNames.append("Factor Of Safety");
         m_UIMapNums.append(6);
     }
 
     if(m_DoHydrology && m_DoSlopeStability && m_DoSlopeFailure)
     {
 
-        m_UIMapNames.append("Failure Height");
+        m_UIMapNames.append("Failure Height (m)");
         m_UIMapNums.append(7);
     }
     if(m_DoSlopeFailure || m_DoInitialSolids)
     {
-        m_UIMapNames.append("Solid Height");
+        m_UIMapNames.append("Solid Flow Height (m)");
         m_UIMapNums.append(8);
-        m_UIMapNames.append("Solid Velocity");
+        m_UIMapNames.append("Solid Flow Velocity (m/s)");
         m_UIMapNums.append(10);
 
         if(m_DoEntrainment)
         {
-            m_UIMapNames.append("Entrainment");
+            m_UIMapNames.append("Entrainment (m)");
             m_UIMapNums.append(28);
         }
 
         if(m_DoChannel)
         {
-            m_UIMapNames.append("Channel Solid Height");
+            m_UIMapNames.append("Channel Solid Height (m)");
             m_UIMapNums.append(12);
-            m_UIMapNames.append("Channel Solid Velocity");
+            m_UIMapNames.append("Channel Solid Velocity (m/s)");
             m_UIMapNums.append(13);
         }
 
-        m_UIMapNames.append("IFA");
+        m_UIMapNames.append("Internal Friction Angle (Radians)");
         m_UIMapNums.append(17);
-        m_UIMapNames.append("Rocksize");
+        m_UIMapNames.append("Rocksize (m)");
         m_UIMapNums.append(18);
-        m_UIMapNames.append("Density");
+        m_UIMapNames.append("Density (kg/m3)");
         m_UIMapNums.append(19);
-        m_UIMapNames.append("DragC.");
+        m_UIMapNames.append("DragC. (-)");
         m_UIMapNums.append(40);
     }
 
     if(m_DoParticleSolids)
     {
 
-        m_UIMapNames.append("Coh. Fraction");
+        m_UIMapNames.append("Coh. Fraction (fraction)");
         m_UIMapNums.append(20);
 
 
@@ -1210,7 +1210,7 @@ void LISEMModel::SetUIMaps()
     if(m_DoRigidWorld)
     {
 
-        m_UIMapNames.append("Rigid Body Flow Blocking");
+        m_UIMapNames.append("Rigid Body Flow Blocking (fraction)");
         m_UIMapNums.append(30);
 
 

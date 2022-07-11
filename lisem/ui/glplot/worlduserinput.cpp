@@ -126,6 +126,10 @@ void WorldWindow::OnMouseKey( int key, int action, int mods)
     bool shift = glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_LEFT_SHIFT) ==GLFW_PRESS;
     bool c = glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_C) ==GLFW_PRESS;
 
+    if(!GetShiftAllowd())
+    {
+        shift = false;
+    }
     if(shift)
     {
         m_MouseState.MouseButtonEventsShift.append(true);
@@ -268,6 +272,14 @@ void WorldWindow::OnFrameBufferSize(int w,int h)
 void WorldWindow::OnKey(int key, int action, int mods)
 {
     MouseStateMutex.lock();
+
+    if(!GetShiftAllowd())
+    {
+       if( mods == GLFW_MOD_SHIFT)
+       {
+            mods = 0x0000;
+       }
+    }
 
 
     m_SM.lock();

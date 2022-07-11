@@ -254,6 +254,12 @@ public:
 
     QMutex m_GLMutex;
 
+    std::array< int, 2 > _wndPos         {0, 0};
+    std::array< int, 2 > _wndSize        {0, 0};
+    std::array< int, 2 > _vpSize         {0, 0};
+
+    bool is_fullscreen= false;
+
     QMutex m_GLRestartMutex;
     bool m_RequestGLRestart = false;
 
@@ -306,7 +312,7 @@ public:
 
     int CreateGLWindow(QPixmap pixmap, bool visible = true);
 
-    int ToggleFullScreen();
+    int ToggleFullScreen(bool switch_mon);
 
     inline void Restart()
     {
@@ -853,6 +859,13 @@ inline static void glfw_key_callback(GLFWwindow* wind, int key, int scancode, in
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         //glfwSetWindowShouldClose(wind, GL_TRUE);
     }
+    if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
+        man->ToggleFullScreen(false);
+    }
+    if (key == GLFW_KEY_F12 && action == GLFW_PRESS) {
+        man->ToggleFullScreen(true);
+    }
+
 
     for(int i = 0; i < man->m_ListenerList.length(); i++)
     {

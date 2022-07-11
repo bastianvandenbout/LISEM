@@ -272,7 +272,7 @@ public:
     inline virtual void Scale(LSMVector3 s) override
     {
 
-        m_Size = m_Size * std::sqrt(s.x*s.z);
+        m_Size = std::max(5.0f,m_Size * std::sqrt(s.x*s.z));
 
     }
     inline virtual void Move(LSMVector3 m) override

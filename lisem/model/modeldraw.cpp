@@ -20,7 +20,6 @@ void LISEMModel::OnDraw()
 
         if(!m_MemorySave)
         {
-
             m_OpenGLCLManager->CopyTextureToMap(TUI_UI,&(MUI->data));
             m_OpenGLCLManager->CopyTextureToMap(TUI_UX,&(MUIUX->data));
             m_OpenGLCLManager->CopyTextureToMap(TUI_UY,&(MUIUY->data));

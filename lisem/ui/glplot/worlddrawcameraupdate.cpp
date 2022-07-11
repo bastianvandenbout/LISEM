@@ -81,10 +81,164 @@ bool WorldWindow::UpdateCamera()
     }
 
 
+    m_CameraLimitMutex.lock();
+
+    if(m_CameraLock2D && !m_Draw3D)
+    {
+        BoundingBox bb = m_Camera2D->GetBoundingBox();
+        //check if size is smaller then required scale
+
+        double size_min = std::min(bb.GetSizeX(),bb.GetSizeY());
+
+        double req_min = m_Camera2DLockScale * std::min(m_Camera2DLock.GetSizeX(),m_Camera2DLock.GetSizeY());
+
+        if(size_min < req_min)
+        {
+            bb.Scale(req_min/std::max(1e-12,size_min));
+        }
+
+        if(bb.GetSizeX() > m_Camera2DLock.GetSizeX())
+        {
+            bb.Scale(m_Camera2DLock.GetSizeX()/std::max(1e-12,bb.GetSizeX()));
+        }
+
+        if(bb.GetSizeY() > m_Camera2DLock.GetSizeY())
+        {
+            bb.Scale(m_Camera2DLock.GetSizeY()/std::max(1e-12,bb.GetSizeY()));
+        }
+
+
+        //if it is outside the bounds, move it in
+
+        double move_x1 = std::max(0.0,m_Camera2DLock.GetMinX() - bb.GetMinX());
+        double move_x2 = std::min(0.0,m_Camera2DLock.GetMaxX() - bb.GetMaxX());
+        double move_y1 = std::max(0.0,m_Camera2DLock.GetMinY() - bb.GetMinY());
+        double move_y2 = std::min(0.0,m_Camera2DLock.GetMaxY() - bb.GetMaxY());
+
+        bb.Move(LSMVector2(move_x1 + move_x2,move_y1 + move_y2));
+
+        m_Camera2D->LookAt(bb);
+    }
+
+    if(m_CameraLock3D && m_Draw3D)
+    {
+        LSMVector3 pos = m_Camera3D->GetPosition();
+        pos.x = std::max(m_Camera3DLock.GetMinX(),std::min(m_Camera3DLock.GetMaxX(),(double)pos.x));
+        pos.x = std::max(m_Camera3DLock.GetMinY(),std::min(m_Camera3DLock.GetMaxY(),(double)pos.y));
+        pos.x = std::max(m_Camera3DLock.GetMinZ(),std::min(m_Camera3DLock.GetMaxZ(),(double)pos.z));
+        m_Camera3D->SetPosition(pos.x,pos.y,pos.z);
+    }
+
+
+    if(m_CameraFixed2D&& !m_Draw3D)
+    {
+        m_Camera2D->LookAt(m_Camera2DLock);
+    }
+
+
+    if(m_CameraFixed3D && m_Draw3D)
+    {
+        m_Camera3D->SetPosition(m_Camera3DFixPos.x,m_Camera3DFixPos.y,m_Camera3DFixPos.z);
+        m_Camera3D->SetViewDir(m_Camera3DFixView.x,m_Camera3DFixView.y,m_Camera3DFixView.z);
+    }
     m_DoSet3DViewFrom2DOnce = false;
 
     m_Camera3D->SetCurrentMatrix();
 
+
+    m_CameraLimitMutex.unlock();
+
     return false;
+
+}
+
+/*QMutex m_CameraLimitMutex;
+bool m_CameraLock2D = false;
+bool m_CameraLock3D = false;
+bool m_CameraFixed2D = false;
+bool m_CameraFixed3D = false;
+int m_CameraLastLimit = -1;
+BoundingBox m_Camera2DLock;
+double m_Camera2DLockScale = 1.0;
+BoundingBox3D m_Camera3DLock;
+LSMVector3 m_Camera3DFixPos;
+LSMVector3 m_Camera3DFixView;
+BoundingBox m_Camera2DFixView;*/
+
+
+void WorldWindow::SetFixedCamera2D(BoundingBox view)
+{
+    m_CameraLimitMutex.lock();
+
+    m_CameraFixed2D = true;
+    m_CameraLastLimit = 0;
+    m_Camera2DFixView = view;
+    m_CameraLimitMutex.unlock();
+
+}
+void WorldWindow::SetFixedCamera3D(LSMVector3 position, LSMVector3 view)
+{
+    m_CameraLimitMutex.lock();
+
+    m_CameraFixed3D = true;
+    m_CameraLastLimit = 1;
+    m_Camera3DFixView = view;
+    m_Camera3DFixPos = position;
+    m_CameraLimitMutex.unlock();
+
+
+}
+void WorldWindow::SetLimitedPosition2D(BoundingBox view, double minscale )
+{
+    m_CameraLimitMutex.lock();
+
+    m_CameraLock2D = true;
+    m_CameraLastLimit = 2;
+    m_Camera2DLockScale = minscale;
+    m_Camera2DLock = view;
+    m_CameraLimitMutex.unlock();
+
+}
+void WorldWindow::SetLimitedPosition3D(BoundingBox3D view)
+{
+    m_CameraLimitMutex.lock();
+
+    m_CameraLock3D = true;
+    m_CameraLastLimit = 3;
+    m_Camera3DLock = view;
+    m_CameraLimitMutex.unlock();
+
+}
+void WorldWindow::SetFreeCamera(bool x)
+{
+    m_CameraLimitMutex.lock();
+    if(x)
+    {
+        if(m_CameraLastLimit == 0)
+        {
+            m_CameraFixed2D = true;
+        }
+        if(m_CameraLastLimit == 1)
+        {
+            m_CameraFixed3D = true;
+        }
+        if(m_CameraLastLimit == 2)
+        {
+            m_CameraLock2D = true;
+        }
+        if(m_CameraLastLimit == 3)
+        {
+            m_CameraLock3D = true;
+        }
+
+
+    }else
+    {
+        m_CameraLock2D = false;
+        m_CameraLock3D = false;
+        m_CameraFixed2D = false;
+        m_CameraFixed3D = false;
+    }
+    m_CameraLimitMutex.unlock();
 
 }

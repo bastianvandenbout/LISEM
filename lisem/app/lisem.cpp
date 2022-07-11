@@ -366,6 +366,7 @@ int SPHazard::execute(int argc, char *argv[])
 
         //m_IOManager = new IOManager();
         m_OpenGLCLManager = new OpenGLCLManager();
+        m_AudioManager = new AudioManager();
         m_ParameterManager = new ParameterManager();
         m_model = new LISEMModel(m_OpenGLCLManager,m_ParameterManager);
         //m_model->InitModel();
@@ -417,6 +418,10 @@ int SPHazard::execute(int argc, char *argv[])
                 std::cout << "test2 " << std::endl;
 
                 m_OpenGLCLManager->SetCallBackFrame(&SPHazard::OnGLCLFrame,this);
+
+
+                m_AudioManager->SetupDefaultOutputDevice();
+
             }
 
             m_model->InitModel();

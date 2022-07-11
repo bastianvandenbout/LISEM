@@ -6,6 +6,7 @@ UIShaderLayerEditor::UIShaderLayerEditor(UILayer * rl) : UILayerEditor(rl)
 
     m_ShaderLayer =dynamic_cast<UIShaderLayer*>( rl);
 
+    m_ShaderLayer->SetCompileErrorCallback(&UIShaderLayerEditor::OnCompilerError,this);
 
     AddParameter(UI_PARAMETER_TYPE_SHADER,"SHADER","Shader Editor","");
 
@@ -22,6 +23,7 @@ void UIShaderLayerEditor::OnUpdate(std::vector<QString> shaders,std::vector<std:
 }
 void UIShaderLayerEditor::OnRun()
 {
+
 
 
 }

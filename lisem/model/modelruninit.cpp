@@ -252,6 +252,7 @@ void LISEMModel::ModelRunLoadData()
     m_DoInfiltration =  GetOptionInt("Include Infiltration") == 1;
     //m_DoDoubleLayer = GetOptionInt("Include Second Soil Layer") == 1;
     m_DoHydrology = GetOptionInt("Include Hydrology") == 1;
+    m_DoCustomInfiltration = GetOptionInt( "Custom Infiltration") == 1;
     m_DoEvapoTranspiration = GetOptionInt("Include Evapotranspiration") == 1;
     m_DoGroundWater = GetOptionInt("Include GroundWater Flow") == 1;
     m_DoChannel = GetOptionInt("Include Channel") == 1;
@@ -295,6 +296,9 @@ void LISEMModel::ModelRunLoadData()
     m_DoOutputTimeseriesVT = GetOptionInt("Output timeseries of HT (total averaged velocity)") == 1;
     m_DoOutputTimeseriesInfil = GetOptionInt("Output timeseries of Infil") == 1;
     m_DoOutputTimeseriesGWH = GetOptionInt("Output timeseries of GWH") == 1;
+    m_DoOutputTimeseriesErosion = GetOptionInt("Output timeseries of Soil Loss") == 1;
+    m_DoOutputTimeseriesSediment = GetOptionInt("Output timeseries of Sediment Load") == 1;
+
 
     m_SetOutputArrays = false;
 
@@ -378,13 +382,14 @@ void LISEMModel::ModelRunLoadData()
         KSATTOPSIMPLE = GetMapWithMultByName(m_Dir_Maps,"KSatSimple");
     }
 
-    if(m_DoHydrology)
+    if(m_DoHydrology && !m_DoCustomInfiltration)
     {
         CLAY = GetMapWithMultByName(m_Dir_Maps,"Clay");
         SAND = GetMapWithMultByName(m_Dir_Maps,"Sand");
         GRAVEL = GetMapWithMultByName(m_Dir_Maps,"Gravel");
         ORGANIC = GetMapWithMultByName(m_Dir_Maps,"Organic");
         DENSITY = GetMapWithMultByName(m_Dir_Maps,"Density");
+
         ROAD =GetMapWithMultByName(m_Dir_Maps,"Density");
         BUILDING = GetMapWithMultByName(m_Dir_Maps,"Building Cover");
         SD = GetMapWithMultByName(m_Dir_Maps,"Soil Depth");
@@ -398,11 +403,33 @@ void LISEMModel::ModelRunLoadData()
         EVAPOTRANSPIRATION = GetMap(0.0);
     }
 
+    if(m_DoHydrology && m_DoCustomInfiltration)
+    {
+        CLAY = GetMap(0.0);//GetMapWithMultByName(m_Dir_Maps,"Clay");
+        SAND = GetMap(0.0);//GetMapWithMultByName(m_Dir_Maps,"Sand");
+        GRAVEL = GetMap(0.0);//GetMapWithMultByName(m_Dir_Maps,"Gravel");
+        ORGANIC = GetMap(0.0);//GetMapWithMultByName(m_Dir_Maps,"Organic");
+        DENSITY = GetMap(0.0);//GetMapWithMultByName(m_Dir_Maps,"Density");
+
+        ROAD =GetMapWithMultByName(m_Dir_Maps,"Density");
+        BUILDING = GetMapWithMultByName(m_Dir_Maps,"Building Cover");
+        SD = GetMapWithMultByName(m_Dir_Maps,"Soil Depth");
+        GW_US = GetMapWithMultByName(m_Dir_Maps,"Theta Initial");
+        THETAS = GetMapWithMultByName(m_Dir_Maps,"Porosity");
+        KSAT_T =  GetMapWithMultByName(m_Dir_Maps,"KSatSimple");
+        INFIL = GetMap(0.0);
+        INFILTOTAL = GetMap(0.0);
+        SURFACESTORAGE = GetMap(0.0);
+        CANOPYSTORAGE = GetMap(0.0);
+        EVAPOTRANSPIRATION = GetMap(0.0);
+    }
+
+
     if(m_DoEvapoTranspiration)
     {
         CROPF = GetMapWithMultByName(m_Dir_Maps,"CropF");
     }
-    if(m_DoHydrology)
+    if(m_DoHydrology && !m_DoCustomInfiltration)
     {
         SMAX_CANOPY = GetMapWithMultByName(m_Dir_Maps,"SMAX Canopy");
         SMAX_SURFACE = GetMapWithMultByName(m_Dir_Maps,"SMAX Surface");
@@ -413,6 +440,18 @@ void LISEMModel::ModelRunLoadData()
         KSAT_B = GetMap(0.0);
         SWR_A = GetMap(0.0);
         SWR_B = GetMap(0.0);
+    }
+    if(m_DoHydrology && m_DoCustomInfiltration)
+    {
+        SMAX_CANOPY = GetMapWithMultByName(m_Dir_Maps,"SMAX Canopy");
+        SMAX_SURFACE = GetMapWithMultByName(m_Dir_Maps,"SMAX Surface");
+
+        GW_S = GetMapWithMultByName(m_Dir_Maps,"Ground Water Height");
+
+        THETAR = GetMap(0.1);
+        KSAT_B = GetMapWithMultByName(m_Dir_Maps,"KSatBottom");
+        SWR_A = GetMapWithMultByName(m_Dir_Maps,"A");
+        SWR_B = GetMapWithMultByName(m_Dir_Maps,"B");
     }
 
     if(((m_DoHydrology && m_DoErosion) || (((m_DoHydrology && m_DoSlopeFailure) || m_DoInitialSolids) && m_DoEntrainment)))
@@ -486,6 +525,14 @@ void LISEMModel::ModelRunLoadData()
         CH_M =GetMap(0.0);
         CH_WIDTH = GetMap(0.0);
         CH_HEIGHT = GetMap(0.0);
+    }
+    if(m_DoErosion)
+    {
+        SLTOT = GetMap(0.0);
+        SED = GetMap(0.0);
+        CHSED = GetMap(0.0);
+        DETTOT = GetMap(0.0);
+        DEPTOT = GetMap(0.0);
     }
     if(m_DoSlopeStability)
     {
@@ -695,91 +742,99 @@ void LISEMModel::InitialCalculations()
         if(m_DoHydrology)
         {
 
+            if(!m_DoCustomInfiltration)
+            {
 
-            float Densityfactor = 0.9;
+                float Densityfactor = 0.9;
 
 
-                ORGANIC->data[r][c] = ORGANIC->data[r][c] * 1.72/100.0;
-                GRAVEL->data[r][c] = GRAVEL->data[r][c]/100.0f;
+                    ORGANIC->data[r][c] = ORGANIC->data[r][c] * 1.72/100.0;
+                    GRAVEL->data[r][c] = GRAVEL->data[r][c]/100.0f;
 
-                float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
-                float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
-                float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
-                float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
+                    float S = std::min(0.9f,std::max(0.1f,SAND->data[r][c]));
+                    float C = std::min(0.9f,std::max(0.1f,CLAY->data[r][c]));
+                    float OM = std::min(1000.0f,std::max(0.1f,ORGANIC->data[r][c]));
+                    float Gravel = std::min(1000.0f,std::max(0.1f,GRAVEL->data[r][c]));
 
-                float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
-                float M1500adj =M1500+0.14*M1500-0.02;
-                float M33  =-0.251*S+0.195*C+0.011*OM+0.006*S*OM-0.027*C*OM+0.452*S*C+0.299;
-                float M33adj = M33+(1.283*M33*M33-0.374*M33-0.015);
-                float PM33    = 0.278*S+0.034*C+0.022*OM-0.018*S*OM-0.027*C*OM-0.584*S*C+0.078;
-                float PM33adj = PM33+(0.636*PM33-0.107);
-                float SatPM33 = M33adj + PM33adj;
-                float SatSadj = -0.097*S+0.043;
-                float SadjSat = SatPM33  + SatSadj;
-                float Dens_om = (1-SadjSat)*2.65;
-                float Dens_comp = Dens_om * Densityfactor;
-                float PORE_comp =(1-Dens_om/2.65)-(1-Dens_comp/2.65);
-                float M33comp = M33adj - 0.2*PORE_comp;
-                float thetast = 1.0-(Dens_comp/2.65);
-                float PoreMcomp = thetast-M33comp;
-                float LAMBDA = (std::log(M33comp)-std::log(M1500adj))/(std::log(1500)-std::log(33));
-                float GravelRedKsat =(1.0-Gravel)/(1.0-Gravel*(1.0-1.5*(Dens_comp/2.65)));
+                    float M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
+                    float M1500adj =M1500+0.14*M1500-0.02;
+                    float M33  =-0.251*S+0.195*C+0.011*OM+0.006*S*OM-0.027*C*OM+0.452*S*C+0.299;
+                    float M33adj = M33+(1.283*M33*M33-0.374*M33-0.015);
+                    float PM33    = 0.278*S+0.034*C+0.022*OM-0.018*S*OM-0.027*C*OM-0.584*S*C+0.078;
+                    float PM33adj = PM33+(0.636*PM33-0.107);
+                    float SatPM33 = M33adj + PM33adj;
+                    float SatSadj = -0.097*S+0.043;
+                    float SadjSat = SatPM33  + SatSadj;
+                    float Dens_om = (1-SadjSat)*2.65;
+                    float Dens_comp = Dens_om * Densityfactor;
+                    float PORE_comp =(1-Dens_om/2.65)-(1-Dens_comp/2.65);
+                    float M33comp = M33adj - 0.2*PORE_comp;
+                    float thetast = 1.0-(Dens_comp/2.65);
+                    float PoreMcomp = thetast-M33comp;
+                    float LAMBDA = (std::log(M33comp)-std::log(M1500adj))/(std::log(1500)-std::log(33));
+                    float GravelRedKsat =(1.0-Gravel)/(1.0-Gravel*(1.0-1.5*(Dens_comp/2.65)));
 
-                float Ksattop =(1930.0*std::pow((PoreMcomp),(3.0-LAMBDA))*GravelRedKsat);
+                    float Ksattop =(1930.0*std::pow((PoreMcomp),(3.0-LAMBDA))*GravelRedKsat);
 
-                S = SAND->data[r][c];
-                C = CLAY->data[r][c];
-                OM = 0;
-                Gravel = GRAVEL->data[r][c];
+                    S = SAND->data[r][c];
+                    C = CLAY->data[r][c];
+                    OM = 0;
+                    Gravel = GRAVEL->data[r][c];
 
-                M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
-                M1500adj =M1500+0.14*M1500-0.02;
-                M33  =-0.251*S+0.195*C+0.011*OM+0.006*S*OM-0.027*C*OM+0.452*S*C+0.299;
-                M33adj = M33+(1.283*M33*M33-0.374*M33-0.015);
-                PM33    = 0.278*S+0.034*C+0.022*OM-0.018*S*OM-0.027*C*OM-0.584*S*C+0.078;
-                PM33adj = PM33+(0.636*PM33-0.107);
-                SatPM33 = M33adj + PM33adj;
-                SatSadj = -0.097*S+0.043;
-                SadjSat = SatPM33  + SatSadj;
-                Dens_om = (1.0f-SadjSat)*2.65;
-                Dens_comp = Dens_om * Densityfactor;
-                PORE_comp =(1.0f-Dens_om/2.65)-(1.0f-Dens_comp/2.65);
-                M33comp = M33adj - 0.2*PORE_comp;
-                float thetas1 = 1.0-(Dens_comp/2.65);
-                PoreMcomp = thetast-M33comp;
-                LAMBDA = (std::log(M33comp)-std::log(M1500adj))/(std::log(1500)-std::log(33));
-                GravelRedKsat =(1.0-Gravel)/(1.0-Gravel*(1.0-1.5*(Dens_comp/2.65)));
+                    M1500 =-0.024*S+0.487*C+0.006*OM+0.005*S*OM-0.013*C*OM+0.068*S*C+0.031;
+                    M1500adj =M1500+0.14*M1500-0.02;
+                    M33  =-0.251*S+0.195*C+0.011*OM+0.006*S*OM-0.027*C*OM+0.452*S*C+0.299;
+                    M33adj = M33+(1.283*M33*M33-0.374*M33-0.015);
+                    PM33    = 0.278*S+0.034*C+0.022*OM-0.018*S*OM-0.027*C*OM-0.584*S*C+0.078;
+                    PM33adj = PM33+(0.636*PM33-0.107);
+                    SatPM33 = M33adj + PM33adj;
+                    SatSadj = -0.097*S+0.043;
+                    SadjSat = SatPM33  + SatSadj;
+                    Dens_om = (1.0f-SadjSat)*2.65;
+                    Dens_comp = Dens_om * Densityfactor;
+                    PORE_comp =(1.0f-Dens_om/2.65)-(1.0f-Dens_comp/2.65);
+                    M33comp = M33adj - 0.2*PORE_comp;
+                    float thetas1 = 1.0-(Dens_comp/2.65);
+                    PoreMcomp = thetast-M33comp;
+                    LAMBDA = (std::log(M33comp)-std::log(M1500adj))/(std::log(1500)-std::log(33));
+                    GravelRedKsat =(1.0-Gravel)/(1.0-Gravel*(1.0-1.5*(Dens_comp/2.65)));
 
-                float Ksat1 =(1930.0*std::pow((PoreMcomp),(3.0-LAMBDA))*GravelRedKsat);
+                    float Ksat1 =(1930.0*std::pow((PoreMcomp),(3.0-LAMBDA))*GravelRedKsat);
 
-                float BD1 = Gravel*2.65+(1.0f-Gravel)*Dens_comp;
-                float WP1 = M1500adj;
-                float FC1 = M33adj;
-                float PAW1 = (M33adj - M1500adj)*(1.0f-Gravel);
+                    float BD1 = Gravel*2.65+(1.0f-Gravel)*Dens_comp;
+                    float WP1 = M1500adj;
+                    float FC1 = M33adj;
+                    float PAW1 = (M33adj - M1500adj)*(1.0f-Gravel);
 
-                float bB = (std::log(1500.0f)-std::log(33.0f))/((std::log(FC1)-std::log(WP1)));
-                float aA = exp(std::log(33.0f) + bB*std::log(FC1));
+                    float bB = (std::log(1500.0f)-std::log(33.0f))/((std::log(FC1)-std::log(WP1)));
+                    float aA = exp(std::log(33.0f) + bB*std::log(FC1));
 
-                float B = bB;
-                float A = aA;
+                    float B = bB;
+                    float A = aA;
 
-                float psi1 = std::max(10.0f,(float) std::pow(aA*(FC1 + 0.7 * (thetas1 - FC1)),-bB));
-                float thetai1 = (FC1 + GW_US->data[r][c] * (thetas1 - FC1));
+                    float psi1 = std::max(10.0f,(float) std::pow(aA*(FC1 + 0.7 * (thetas1 - FC1)),-bB));
+                    float thetai1 = (FC1 + GW_US->data[r][c] * (thetas1 - FC1));
 
-                THETAS->data[r][c] = thetas1;
-                KSAT_T->data[r][c] = Ksattop * (1.0f/3600000.0f);
+                    THETAS->data[r][c] = thetas1;
+                    KSAT_T->data[r][c] = Ksattop * (1.0f/3600000.0f);
 
-                if(m_DoHydrology)
-                {
                     THETAR->data[r][c] = FC1;
                     KSAT_B->data[r][c] = Ksat1 * (1.0f/3600000.0f);
                     SWR_A->data[r][c] = A;
                     SWR_B->data[r][c] = B;
 
-                    GW_S->data[r][c] = GW_S->data[r][c]*THETAS->data[r][c];
-                    //convert groundwater effective volume fraction of unsaturated layer to meter equivalet
-                    GW_US->data[r][c] = std::max(0.0f,(SD->data[r][c]* THETAS->data[r][c] - GW_S->data[r][c])) * GW_US->data[r][c];
-                }
+            }
+
+
+            if(m_DoHydrology )
+            {
+                GW_S->data[r][c] = GW_S->data[r][c]*THETAS->data[r][c];
+                //convert groundwater effective volume fraction of unsaturated layer to meter equivalet
+                GW_US->data[r][c] = std::max(0.0f,(SD->data[r][c]* THETAS->data[r][c] - GW_S->data[r][c])) * GW_US->data[r][c];
+            }
+
+
+
 
         }
 
@@ -805,7 +860,8 @@ void LISEMModel::InitialCalculations()
 
     float MaxV = 1.0f;
     float MinV = 0.0f;
-            bool hsmaxfirst = false;
+    bool hsmaxfirst = false;
+
     FOR_ROW_COL_MV(HILLSHADE)
     {
         if(!hsmaxfirst)
@@ -1272,6 +1328,11 @@ void LISEMModel::CreateMapBuffers()
         T_MIFA = CreateModelTexture(MIFA);
         T_MROCKSIZE = CreateModelTexture(MROCKSIZE);
         T_MDENSITY = CreateModelTexture(MDENSITY);
+
+    }
+
+    if(m_DoErosion)
+    {
         T_SED = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
         T_CHSED = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
         T_DETTOT = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
@@ -1286,7 +1347,7 @@ void LISEMModel::CreateMapBuffers()
         T_QSEDOUTN = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
     }
 
-    if(((m_DoHydrology && m_DoSlopeFailure) || (m_DoHydrology && m_DoErosion) || (m_DoHydrology && m_DoSlopeFailure) || m_DoInitialSolids) && m_DoEntrainment)
+    if((((m_DoHydrology && m_DoSlopeFailure) || (m_DoHydrology && m_DoErosion) || (m_DoHydrology && m_DoSlopeFailure) || m_DoInitialSolids) && m_DoEntrainment) || m_DoErosion)
     {
         T_ENTRAINMENT = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);
         T_ENTRAINMENTN = CreateModelTexture(DEM->nrCols(),DEM->nrRows(),0.0);

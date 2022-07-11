@@ -1094,6 +1094,12 @@ public:
         m_Layout->addWidget(new  QWidgetHDuo(new QLabel("Min. Y:"),m_MinY));
         m_Layout->addWidget(new  QWidgetHDuo(new QLabel("Max. Y:"),m_MaxY));
 
+        connect(m_MinX,qOverload<double>(&SpinBox::valueChanged),this,&BoundingBoxSelectWidget::onvalueChanged);
+        connect(m_MinY,qOverload<double>(&SpinBox::valueChanged),this,&BoundingBoxSelectWidget::onvalueChanged);
+        connect(m_MaxX,qOverload<double>(&SpinBox::valueChanged),this,&BoundingBoxSelectWidget::onvalueChanged);
+        connect(m_MaxY,qOverload<double>(&SpinBox::valueChanged),this,&BoundingBoxSelectWidget::onvalueChanged);
+
+
         //connect
 
         connect(m_MinX,&SpinBox::OnTextPasted,[this](QString text){
@@ -1348,7 +1354,12 @@ public:
     {
         return "BoundingBox(" + QString::number(m_MinX->value()) + "," +QString::number(m_MaxX->value())  + ","+QString::number(m_MinY->value())  + "," +QString::number(m_MaxY->value()) + ")";
     }
+public slots:
 
+    inline void onvalueChanged(int x)
+    {
+        emit OnValueChanged();
+    }
 
 };
 
@@ -1376,6 +1387,10 @@ public:
 
         m_Layout->addWidget(new  QWidgetHDuo(new QLabel("X:"),m_MinX));
         m_Layout->addWidget(new  QWidgetHDuo(new QLabel("Y:"),m_MinY));
+
+
+        connect(m_MinX,qOverload<double>(&SpinBox::valueChanged),this,&PointSelectWidget::onvalueChanged);
+        connect(m_MinY,qOverload<double>(&SpinBox::valueChanged),this,&PointSelectWidget::onvalueChanged);
 
         //connect
 
@@ -1501,7 +1516,12 @@ public:
     {
         return "Point(" + QString::number(m_MinX->value()) +  ","+QString::number(m_MinY->value()) + ")";
     }
+public slots:
 
+    inline void onvalueChanged(int x)
+    {
+        emit OnValueChanged();
+    }
 
 };
 
