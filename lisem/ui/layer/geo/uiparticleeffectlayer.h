@@ -11,6 +11,8 @@ private:
 
     QMutex m_Mutex;
 
+    bool m_AutoRemove = false;
+    float m_TimeScale = 1.0;
     LISEM::Emitter * m_Emitter = nullptr;
 
 public:
@@ -24,6 +26,15 @@ public:
         m_Emitter = new LISEM::Emitter(std::move(E));
     }
 
+    inline void SetAutoRemove(bool x)
+    {
+        m_AutoRemove = x;
+    }
+
+    inline void SetTimeScale(float x)
+    {
+        m_TimeScale = x;
+    }
 
     inline ~UIParticleEffectLayer()
     {
@@ -57,6 +68,10 @@ public:
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
     {
 
+        if(m_Emitter != nullptr)
+        {
+            m_Emitter->GetRenderer()->DrawParticles(m_Emitter->GetParticleRef(),m,s,tm);
+        }
 
 
     }
@@ -67,11 +82,18 @@ public:
 
     }
 
+    int m_Frame = 0;
+    double m_Time = 0.0;
+
     inline void OnFrame(float dt, GeoWindowState s )
     {
-        //update particles and their behavior
-
-
+        //update particles and their behavio
+        m_Frame ++;
+        m_Time = m_Time + dt;
+        if(m_Emitter != nullptr)
+        {
+            m_Emitter->Update(m_Frame,dt,m_Time);
+        }
 
     }
 
@@ -84,6 +106,7 @@ public:
         if(m_Emitter != nullptr)
         {
             m_Emitter->Instantiate(0,0.0,0.0);
+            m_Emitter->GetRenderer()->Init(m);
         }
 
 

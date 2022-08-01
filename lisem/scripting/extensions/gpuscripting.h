@@ -195,7 +195,7 @@ inline void RegisterGPUToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("float MapMaximumRed(const GPUMap &in m)", asFUNCTION( AS_MapMaximumRedGPU),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("float MapTotalRed(const GPUMap &in m)", asFUNCTION( AS_MapTotalRedGPU),  asCALL_CDECL); assert( r >= 0 );
 
-    r = engine->RegisterGlobalSTDFunction("array<GPUMap> @FlowDynamic(const GPUMap &in DEM, const GPUMap &in N, const GPUMap &in H, const GPUMap &in VX, const GPUMap &in VY, float dt, float courant = 0.15)",GetFuncConvert( AS_DynamicWaveGPU),  asCALL_CDECL);
+    r = engine->RegisterGlobalSTDFunction("array<GPUMap> @FlowDynamic(const GPUMap &in DEM, const GPUMap &in N, const GPUMap &in H, const GPUMap &in VX, const GPUMap &in VY, float dt, float courant = 0.15, float dt_min = 0.0)",GetFuncConvert( AS_DynamicWaveGPU),  asCALL_CDECL);
     r = engine->RegisterGlobalSTDFunction("array<GPUMap> @FlowDebris(const GPUMap &in DEM, const GPUMap &in N, const GPUMap &in H, const GPUMap &in VX, const GPUMap &in VY,const GPUMap &in HS, const GPUMap &in VSX, const GPUMap &in VSY, const GPUMap &in IFA, const GPUMap &in ROCKSIZE, const GPUMap &in DENSITY,float dt, float courant = 0.15, float drag_mult = 1.0)", GetFuncConvert(  AS_MixtureWaveGPU),  asCALL_CDECL);
 
 }

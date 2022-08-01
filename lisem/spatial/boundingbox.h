@@ -241,6 +241,15 @@ public:
         m_MaxY = p.y;
     }
 
+    inline LSMVector2 ULC()
+    {
+        return LSMVector2(m_MinX, m_MinY);
+    }
+
+    inline LSMVector2 Size()
+    {
+        return LSMVector2(GetSizeX(),GetSizeY());
+    }
     inline void Set(double xmin,double xmax, double ymin, double ymax)
     {
         m_MinX = xmin < xmax? xmin : xmax;

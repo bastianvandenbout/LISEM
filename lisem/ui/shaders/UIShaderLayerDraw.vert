@@ -33,7 +33,8 @@ uniform vec2 texcoord_brc = vec2(1.0,1.0);
 
 
 void main() {
-    texcoord = texcoord_ulc + (texcoord_brc - texcoord_ulc)*tex;
+    texcoord.x = texcoord_ulc.x + (texcoord_brc.x - texcoord_ulc.x)*tex.x;
+    texcoord.y = (1.0-(texcoord_ulc.y + (texcoord_brc.y - texcoord_ulc.y)*(1.0-tex.y)));
 
     vec4 posn = vec4(pos,1.0) * matrix;
 

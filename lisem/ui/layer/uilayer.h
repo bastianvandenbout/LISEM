@@ -106,6 +106,7 @@ protected:
     bool m_IsSaveAble = false;
     bool m_IsLayerSaveAble = false;
     bool m_HasStyle = false;
+    bool m_HasStyleChangeFromExternalThread = false;
     bool m_HasParameters = false;
     bool m_IsPostProcessDrawer = false;
     bool m_IsPostPostProcessDrawer = false;
@@ -222,6 +223,41 @@ public:
     {
         return m_Rotation;
 
+    }
+
+    inline bool HasStyleChangeFromExternalThread(bool dolock =false)
+    {
+        bool ret = false;
+        if(!dolock)
+        {
+
+            ret = m_HasStyleChangeFromExternalThread;
+            m_HasStyleChangeFromExternalThread = false;
+        }else
+        {
+            GetStyleMutex()->lock();
+
+            ret  = m_HasStyleChangeFromExternalThread;
+            m_HasStyleChangeFromExternalThread = false;
+            GetStyleMutex()->unlock();
+        }
+
+        return ret;
+    }
+
+    inline void SetStyleChangedFromExternalThread( bool dolock =false)
+    {
+        if(!dolock)
+        {
+
+            m_HasStyleChangeFromExternalThread = true;
+        }else
+        {
+            GetStyleMutex()->lock();
+
+            m_HasStyleChangeFromExternalThread = true;
+            GetStyleMutex()->unlock();
+        }
     }
 
 

@@ -3444,3 +3444,30 @@ inline cTMap * AS_SlopeLength(cTMap * LDD, float friction_source, float friction
     return AS_SlopeLength(LDD, MapFactory(friction_source),MapFactory(friction), two_way);
 }
 
+inline cTMap * AS_ToLDD(cTMap * LDD)
+{
+    cTMap * ret = LDD->GetCopy();
+    ret->AS_IsLDD = true;
+
+    for(int r = 0; r <ret->data.nr_rows();r++)
+    {
+        for(int c = 0; c < ret->data.nr_cols();c++)
+        {
+
+
+            if(!pcr::isMV(ret->data[r][c]) )
+            {
+
+                if(ret->data[r][c] >= 0.5f && ret->data[r][c] < 9.5f)
+                {
+                    ret->data[r][c] = (int)(ret->data[r][c] + 0.5);
+                }else
+                {
+                    pcr::setMV(ret->data[r][c]);
+                }
+
+            }
+        }
+    }
+    return ret;
+}

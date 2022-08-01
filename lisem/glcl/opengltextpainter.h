@@ -257,6 +257,103 @@ public:
         return nullptr;
     }
 
+    inline void DrawStringShadow(QString in_text, Font * f, float pos_x, float pos_y, LSMVector4 color = LSMVector4(1.0,1.0,1.0,1.0), float size = 12, float size_incr = 2)
+    {
+        glad_glBindFramebuffer(GL_FRAMEBUFFER, m_RenderTarget);
+
+
+        Font * useFont = nullptr;
+        if(f == nullptr)
+        {
+            /*float minsizedif = 1e31;
+            bool found = false;
+            for(int i = 0; i < m_MainFonts.size(); i++)
+            {
+                float sizedif = std::fabs((m_MainFonts.at(i)->size - size));
+                if(sizedif < minsizedif)
+                {
+                    found = true;
+                    useFont = m_MainFonts.at(i);
+                    minsizedif = sizedif;
+                }
+            }*/
+
+            //if(!found)
+            {
+                useFont = m_MainFont;
+            }
+        }else
+        {
+            useFont = f;
+        }
+
+        float x = pos_x;
+        float y = pos_y;
+
+        glad_glDisable(GL_DEPTH_TEST);
+        // bind shader
+        glad_glUseProgram(m_GLProgram_DrawText->m_program);
+
+        LSMMatrix4x4 orthom;
+        orthom.SetOrtho(0,m_RenderTargetWidth,0.0,m_RenderTargetHeight,0,1.0);
+        float *ortho = orthom.GetMatrixData();
+        float imatrix[16] = {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f};
+
+        int mat_loc = glad_glGetUniformLocation(m_GLProgram_DrawText->m_program,"projection");
+        glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,ortho);
+
+        glad_glUniform4f(glad_glGetUniformLocation(m_GLProgram_DrawText->m_program, "textColor"), color.x, color.y, color.z,color.w);
+        glad_glActiveTexture(GL_TEXTURE0);
+        glad_glBindVertexArray(VAO);
+
+        std::string text = in_text.toStdString();
+
+        // Iterate through all characters
+        std::string::const_iterator c;
+        for (c = text.begin(); c != text.end(); c++)
+        {
+            Character ch = useFont->Glyphs_Rendered[*c];
+
+            float scale = size/ch.size_org;
+
+            GLfloat xpos = x + ch.Bearing.x * scale + ch.buffer + 0.25 * ch.Size.x * (size_incr/ch.size_org);
+            GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale + 0.5 * ch.buffer + 0.25 * ch.Size.y * (size_incr/ch.size_org);
+
+            GLfloat w = ch.Size.x * scale * (size_incr + size)/(size);
+            GLfloat h = ch.Size.y * scale * (size_incr + size)/(size);
+
+            // Update VBO for each character
+            GLfloat vertices[6][4] = {
+                { xpos,     ypos + h,   0.0, 0.0 },
+                { xpos,     ypos,       0.0, 1.0 },
+                { xpos + w, ypos,       1.0, 1.0 },
+
+                { xpos,     ypos + h,   0.0, 0.0 },
+                { xpos + w, ypos,       1.0, 1.0 },
+                { xpos + w, ypos + h,   1.0, 0.0 }
+            };
+
+            // Render glyph texture over quad
+            glad_glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+            // Update content of VBO memory
+            glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+            // Render quad
+            glad_glDrawArrays(GL_TRIANGLES, 0, 6);
+            // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+            x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
+        }
+        glad_glBindVertexArray(0);
+        glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+        delete[] ortho;
+
+    }
     inline void DrawString(QString in_text, Font * f, float pos_x, float pos_y, LSMVector4 color = LSMVector4(1.0,1.0,1.0,1.0), float size = 12)
     {
         glad_glBindFramebuffer(GL_FRAMEBUFFER, m_RenderTarget);
@@ -352,6 +449,107 @@ public:
         glad_glBindTexture(GL_TEXTURE_2D, 0);
 
         delete[] ortho;
+    }
+
+    inline float DrawStringWidth(QString in_text, Font * f, float pos_x, float pos_y, LSMVector4 color = LSMVector4(1.0,1.0,1.0,1.0), float size = 12)
+    {
+        glad_glBindFramebuffer(GL_FRAMEBUFFER, m_RenderTarget);
+
+
+        Font * useFont = nullptr;
+        if(f == nullptr)
+        {
+            /*float minsizedif = 1e31;
+            bool found = false;
+            for(int i = 0; i < m_MainFonts.size(); i++)
+            {
+                float sizedif = std::fabs((m_MainFonts.at(i)->size - size));
+                if(sizedif < minsizedif)
+                {
+                    found = true;
+                    useFont = m_MainFonts.at(i);
+                    minsizedif = sizedif;
+                }
+            }*/
+
+            //if(!found)
+            {
+                useFont = m_MainFont;
+            }
+        }else
+        {
+            useFont = f;
+        }
+
+        float x_orig = pos_x;
+        float x = pos_x;
+        float y = pos_y;
+
+        //glad_glDisable(GL_DEPTH_TEST);
+        // bind shader
+        //glad_glUseProgram(m_GLProgram_DrawText->m_program);
+
+        LSMMatrix4x4 orthom;
+        orthom.SetOrtho(0,m_RenderTargetWidth,0.0,m_RenderTargetHeight,0,1.0);
+        float *ortho = orthom.GetMatrixData();
+        float imatrix[16] = {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f};
+
+        //int mat_loc = glad_glGetUniformLocation(m_GLProgram_DrawText->m_program,"projection");
+        //glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,ortho);
+
+        //glad_glUniform4f(glad_glGetUniformLocation(m_GLProgram_DrawText->m_program, "textColor"), color.x, color.y, color.z,color.w);
+        //glad_glActiveTexture(GL_TEXTURE0);
+        //glad_glBindVertexArray(VAO);
+
+        std::string text = in_text.toStdString();
+
+        // Iterate through all characters
+        std::string::const_iterator c;
+        for (c = text.begin(); c != text.end(); c++)
+        {
+            Character ch = useFont->Glyphs_Rendered[*c];
+
+            float scale = size/ch.size_org;
+
+            GLfloat xpos = x + ch.Bearing.x * scale + ch.buffer;
+            GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale + 0.5 * ch.buffer;
+
+            GLfloat w = ch.Size.x * scale;
+            GLfloat h = ch.Size.y * scale;
+
+            // Update VBO for each character
+            GLfloat vertices[6][4] = {
+                { xpos,     ypos + h,   0.0, 0.0 },
+                { xpos,     ypos,       0.0, 1.0 },
+                { xpos + w, ypos,       1.0, 1.0 },
+
+                { xpos,     ypos + h,   0.0, 0.0 },
+                { xpos + w, ypos,       1.0, 1.0 },
+                { xpos + w, ypos + h,   1.0, 0.0 }
+            };
+
+            // Render glyph texture over quad
+            //glad_glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+            // Update content of VBO memory
+            //glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            //glad_glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            //glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+            // Render quad
+            //glad_glDrawArrays(GL_TRIANGLES, 0, 6);
+            // Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+            x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
+        }
+        //glad_glBindVertexArray(0);
+        //glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+        delete[] ortho;
+
+        //
+        return x - x_orig;
     }
 
 

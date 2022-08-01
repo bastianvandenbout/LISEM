@@ -32,6 +32,10 @@ private:
     bool m_createdRenderTargets = false;
     int m_RTSizeX = 512;
     int m_RTSizeY = 512;
+    bool m_DoRTSizeRelative = false;
+    float m_RTSizeRelX = 1.0;
+    float m_RTSizeRelY = 1.0;
+
     int m_Frame = -1;
     float m_TimeStart = 0.0;
 
@@ -94,10 +98,26 @@ public:
 
     }
 
-    inline UIShaderLayer(std::vector<QString> buffershaders,std::vector<std::vector<QString>> texture_files,std::vector<std::vector<cTMap *>> textures, BoundingBox bb,GeoProjection p,bool isabs, bool is3d,int resolutionx, int resolutiony, bool dynamic, bool scaling) : UIGeoLayer(p,bb,QString("Custom Shader"),false,QString(""),true)
+    inline UIShaderLayer(std::vector<QString> buffershaders,std::vector<std::vector<QString>> texture_files,std::vector<std::vector<cTMap *>> textures, BoundingBox bb,GeoProjection p,bool isabs, bool is3d,float resolutionx, float resolutiony, bool dynamic, bool scaling) : UIGeoLayer(p,bb,QString("Custom Shader"),false,QString(""),true)
     {
         m_BoundingBox = bb;
-        UpdateRTSize(resolutionx,resolutiony);
+
+        std::cout << "open shader layer " << resolutionx << " " << resolutiony << std::endl;
+        if(resolutionx < 0.0 || resolutiony < 0.0)
+        {
+            m_RTSizeRelX = std::min(16.0f,std::max(0.001f,std::fabs(resolutionx)));
+            m_RTSizeRelY = std::min(16.0f,std::max(0.001f,std::fabs(resolutiony)));
+
+            m_DoRTSizeRelative = true;
+
+            UpdateRTSize(512,512);
+
+        }else
+        {
+            UpdateRTSize(std::max(1,(int)resolutionx),std::max(1,(int)resolutiony));
+
+        }
+
         UpdateShader(buffershaders);
         UpdateImages(texture_files,textures);
         m_Dynamic = dynamic;
@@ -149,6 +169,7 @@ public:
 
     inline void SetAutoScale(bool x)
     {
+        std::cout << "ShaderLayer AutoScale Set " <<std::endl;
         m_Mutex.lock();
         m_AutoScale = x;
         m_Mutex.unlock();
@@ -170,7 +191,7 @@ public:
             m_InputFloats.at(i*4 + 3) = d;
 
         }
-        if(i < 16)
+        if(i < 16 && (i-8 > -1))
         {
             m_InputFloats2.at((i-8)*4 + 0) = a;
             m_InputFloats2.at((i-8)*4 + 1) = b;
@@ -178,7 +199,6 @@ public:
             m_InputFloats2.at((i-8)*4 + 3) = d;
 
         }
-
         m_Mutex.unlock();
 
 
@@ -342,7 +362,6 @@ public:
     {
         m_Mutex.lock();
 
-        std::cout << " move shader  " << std::endl;
         if(m_Is2D)
         {
             if(m_Is2DABS)
@@ -417,7 +436,46 @@ public:
     inline void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm) override
     {
 
+
         m_Mutex.lock();
+
+        //if we want the buffer size to be a constant factor multiplied by the actual window size we correct for this now
+        //only if the desired and actual buffer size are not matching
+        if(m_DoRTSizeRelative)
+        {
+            if(s.scr_width * m_RTSizeRelX != m_RTSizeX || s.scr_height * m_RTSizeRelY != m_RTSizeY)
+            {
+
+                //UpdateRTSize(s.scr_width * m_RTSizeRelX,s.scr_width * m_RTSizeRelY);
+
+                m_RTSizeX = s.scr_width * m_RTSizeRelX;
+                m_RTSizeY = s.scr_height * m_RTSizeRelY;
+                m_createdRenderTargets = false;
+                m_IsPrepared = false;
+
+                if(!m_createdRenderTargets)
+                {
+                    DestroyBuffers();
+
+
+                    for(int i = 0; i < m_Shaders.size(); i++)
+                    {
+                        OpenGLCLMSAARenderTarget * target = new OpenGLCLMSAARenderTarget();
+                        target->Create(m_RTSizeX,m_RTSizeY,1,GL_RGBA32F,GL_RGBA32F,GL_RGBA,GL_FLOAT);
+                        m_Target.push_back(target);
+                    }
+                    for(int i = 0; i < m_Shaders.size(); i++)
+                    {
+                        OpenGLCLMSAARenderTarget * target = new OpenGLCLMSAARenderTarget();
+                        target->Create(m_RTSizeX,m_RTSizeY,1,GL_RGBA32F,GL_RGBA32F,GL_RGBA,GL_FLOAT);
+                        m_TargetB.push_back(target);
+                    }
+                    m_createdRenderTargets= true;
+                    m_IsPrepared= true;
+                }
+            }
+        }
+
 
         oldtlx = s.tlx;
         oldtly =s.tly;
@@ -472,26 +530,25 @@ public:
                 bbcrsreal = bbcrs;
                 if((bbscreen.GetMinX() < 0.0 && bbscreen.GetMaxX() <0.0) || (bbscreen.GetMinX() > 1.0 && bbscreen.GetMaxX() >1.0) || (bbscreen.GetMinY() < 0.0 && bbscreen.GetMaxY() <0.0) ||(bbscreen.GetMinY() >1.0 && bbscreen.GetMaxY() >1.0))
                 {
-                    std::cout << "set0" << std::endl;
                     bbscreenreal.Set(0,0,0,0);
                     bbcrs.Set(0,0,0,0);
                 }else
                 {
-                    if(bbscreen.GetMinX() < 0.0)
+                    if(bbscreenreal.GetMinX() < 0.0)
                     {
-                        bbscreenreal.Set(0.0,bbscreen.GetMaxX(),bbscreen.GetMinY(),bbscreen.GetMaxY());
+                        bbscreenreal.Set(0.0,bbscreenreal.GetMaxX(),bbscreenreal.GetMinY(),bbscreenreal.GetMaxY());
                     }
-                    if(bbscreen.GetMaxX() > 1.0)
+                    if(bbscreenreal.GetMaxX() > 1.0)
                     {
-                        bbscreenreal.Set(bbscreen.GetMinX(),1.0,bbscreen.GetMinY(),bbscreen.GetMaxY());
+                        bbscreenreal.Set(bbscreenreal.GetMinX(),1.0,bbscreenreal.GetMinY(),bbscreenreal.GetMaxY());
                     }
-                    if(bbscreen.GetMinY() < 0.0)
+                    if(bbscreenreal.GetMinY() < 0.0)
                     {
-                        bbscreenreal.Set(bbscreen.GetMinX(),bbscreen.GetMaxX(),0.0,bbscreen.GetMaxY());
+                        bbscreenreal.Set(bbscreenreal.GetMinX(),bbscreenreal.GetMaxX(),0.0,bbscreenreal.GetMaxY());
                     }
-                    if(bbscreen.GetMaxY() > 1.0)
+                    if(bbscreenreal.GetMaxY() > 1.0)
                     {
-                        bbscreenreal.Set(bbscreen.GetMinX(),bbscreen.GetMaxX(),bbscreen.GetMinY(),1.0);
+                        bbscreenreal.Set(bbscreenreal.GetMinX(),bbscreenreal.GetMaxX(),bbscreenreal.GetMinY(),1.0);
                     }
 
                     float minx = s.tlx + bbscreenreal.GetMinX() *(s.brx-s.tlx);
@@ -502,6 +559,7 @@ public:
                     bbcrsreal.Set(minx,maxx,miny,maxy);
 
                 }
+
 
                 as_ulc.x = (bbscreenreal.GetMinX() - bbscreen.GetMinX())/std::max(1e-12,bbscreen.GetSizeX());
                 as_ulc.y = (bbscreenreal.GetMinY() - bbscreen.GetMinY())/std::max(1e-12,bbscreen.GetSizeY());
@@ -529,7 +587,7 @@ public:
 
                 glad_glBindFramebuffer(GL_FRAMEBUFFER, m_Target.at(i)->GetFrameBuffer());
                 glad_glViewport(0,0,m_Target.at(i)->GetWidth(),m_Target.at(i)->GetHeight());
-                glad_glClearColor(0.5,0.5,0.5,1.0);
+                glad_glClearColor(0.0,0.0,0.0,0.0);
                 glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -588,6 +646,31 @@ public:
                 glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"iFrame"),m_Frame);
                 glad_glUniform3f(glad_glGetUniformLocation(program->m_program,"iSunDir"),s.SunDir.x,s.SunDir.y,s.SunDir.z);
                 glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"iTime"),s.m_time - m_TimeStart);
+
+
+                std::vector<QString> iscriptvecnames = {"iScriptVec0","iScriptVec1","iScriptVec2","iScriptVec3","iScriptVec4",
+                                                        "iScriptVec5","iScriptVec6","iScriptVec7","iScriptVec8",
+                                                        "iScriptVec9","iScriptVec10","iScriptVec11","iScriptVec12",
+                                                        "iScriptVec13","iScriptVec14","iScriptVec15"};
+
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec0"),m_InputFloats[0],m_InputFloats[1],m_InputFloats[2],m_InputFloats[3]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec1"),m_InputFloats[4],m_InputFloats[5],m_InputFloats[6],m_InputFloats[7]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec2"),m_InputFloats[8],m_InputFloats[9],m_InputFloats[10],m_InputFloats[11]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec3"),m_InputFloats[12],m_InputFloats[13],m_InputFloats[14],m_InputFloats[15]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec4"),m_InputFloats[16],m_InputFloats[17],m_InputFloats[18],m_InputFloats[19]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec5"),m_InputFloats[20],m_InputFloats[21],m_InputFloats[22],m_InputFloats[23]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec6"),m_InputFloats[24],m_InputFloats[25],m_InputFloats[26],m_InputFloats[27]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec7"),m_InputFloats[28],m_InputFloats[29],m_InputFloats[30],m_InputFloats[31]);
+
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec8"),m_InputFloats2[0],m_InputFloats2[1],m_InputFloats2[2],m_InputFloats2[3]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec9"),m_InputFloats2[4],m_InputFloats2[5],m_InputFloats2[6],m_InputFloats2[7]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec10"),m_InputFloats2[8],m_InputFloats2[9],m_InputFloats2[10],m_InputFloats2[11]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec11"),m_InputFloats2[12],m_InputFloats2[13],m_InputFloats2[14],m_InputFloats2[15]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec12"),m_InputFloats2[16],m_InputFloats2[17],m_InputFloats2[18],m_InputFloats2[19]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec13"),m_InputFloats2[20],m_InputFloats2[21],m_InputFloats2[22],m_InputFloats2[23]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec14"),m_InputFloats2[24],m_InputFloats2[25],m_InputFloats2[26],m_InputFloats2[27]);
+                glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"iScriptVec15"),m_InputFloats2[28],m_InputFloats2[29],m_InputFloats2[30],m_InputFloats2[31]);
+
 
 
                 //date
@@ -683,7 +766,6 @@ public:
             //in the last case, we need real-time reprojection
 
 
-            std::cout << "draw to screen " << std::endl;
 
             //set shader uniform values
             OpenGLProgram * program = GLProgram_uigeoimage;
@@ -729,9 +811,6 @@ uniform sampler2D texY;
 
 uniform float alpha = 1.0;
 ;*/
-
-            std::cout << "abs2d "<< m_Is2DABS << " " <<  bbcrsreal.GetSizeX() << " " << bbcrsreal.GetSizeY() << " " << bbcrsreal.GetCenterX() << " " << bbcrsreal.GetCenterY() << std::endl;
-
             int mat_loc = glad_glGetUniformLocation(program->m_program,"matrix");
             int tex_x_loc = glad_glGetUniformLocation(program->m_program,"texX");
             int tex_y_loc = glad_glGetUniformLocation(program->m_program,"texY");
@@ -758,8 +837,6 @@ uniform float alpha = 1.0;
             glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrwidth"),s.scr_width);
             glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrheight"),s.scr_height);
 
-
-            std::cout << "set buffer as texture " << std::endl;
 
             //set our last shader pass as our image input
             if(m_Target.size() > 0)
@@ -823,9 +900,6 @@ uniform float alpha = 1.0;
             }
 
 
-
-            std::cout << "draw " << std::endl;
-
             // set project matrix
             glad_glUniformMatrix4fv(mat_loc,1,GL_FALSE,matrix);
             glad_glUniform1f(alpha_loc,1.0f-GetStyle().GetTransparancy());
@@ -835,8 +909,6 @@ uniform float alpha = 1.0;
             glad_glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
             glad_glBindVertexArray(0);
 
-
-            std::cout << "done " << std::endl;
         }
 
 
@@ -919,6 +991,14 @@ uniform float alpha = 1.0;
     {
         std::cout << "onprepare" << std::endl;
 
+        if(m_DoRTSizeRelative)
+        {
+            if(s.scr_width * m_RTSizeRelX != m_RTSizeX || s.scr_width * m_RTSizeRelY != m_RTSizeY)
+            {
+                UpdateRTSize(s.scr_width * m_RTSizeRelX,s.scr_width * m_RTSizeRelY);
+            }
+        }
+
         error_pass.clear();
         error_line.clear();
         error_message.clear();
@@ -946,6 +1026,22 @@ uniform float alpha = 1.0;
                     + "uniform int iFrame;\n"
                     + "uniform vec2 iChannelResolution[4];\n"
                     + "uniform vec4 iMouse;\n"
+                    + "uniform vec4 iScriptVec0;\n"
+                    + "uniform vec4 iScriptVec1;\n"
+                    + "uniform vec4 iScriptVec2;\n"
+                    + "uniform vec4 iScriptVec3;\n"
+                    + "uniform vec4 iScriptVec4;\n"
+                    + "uniform vec4 iScriptVec5;\n"
+                    + "uniform vec4 iScriptVec6;\n"
+                    + "uniform vec4 iScriptVec7;\n"
+                    + "uniform vec4 iScriptVec8;\n"
+                    + "uniform vec4 iScriptVec9;\n"
+                    + "uniform vec4 iScriptVec10;\n"
+                    + "uniform vec4 iScriptVec11;\n"
+                    + "uniform vec4 iScriptVec12;\n"
+                    + "uniform vec4 iScriptVec13;\n"
+                    + "uniform vec4 iScriptVec14;\n"
+                    + "uniform vec4 iScriptVec15;\n"
                     + "uniform sampler2D iChannel0;\n"
                     + "uniform sampler2D iChannel1;\n"
                     + "uniform sampler2D iChannel2;\n"
@@ -1134,6 +1230,7 @@ uniform float alpha = 1.0;
                 {
                     DestroyBuffers();
 
+                    std::cout << "create buffers " << m_RTSizeX << " " << m_RTSizeY << std::endl;
 
                     for(int i = 0; i < m_Shaders.size(); i++)
                     {

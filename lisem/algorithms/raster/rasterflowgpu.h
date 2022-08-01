@@ -338,7 +338,7 @@ inline float GetDynamicWaveTimestep(AS_GPUMap * m, AS_GPUMap * HI,  AS_GPUMap * 
 
 }
 
-inline static std::vector<AS_GPUMap *> AS_DynamicWaveGPU(AS_GPUMap * DEM, AS_GPUMap * N, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI, float _dt, float courant )
+inline static std::vector<AS_GPUMap *> AS_DynamicWaveGPU(AS_GPUMap * DEM, AS_GPUMap * N, AS_GPUMap * HI,  AS_GPUMap * VXI, AS_GPUMap * VYI, float _dt, float courant, float mindt = 0.0 )
 {
 
     if(!HasDefaultGPUFlowModels())
@@ -362,7 +362,7 @@ inline static std::vector<AS_GPUMap *> AS_DynamicWaveGPU(AS_GPUMap * DEM, AS_GPU
         //get timestep kernel
         float timestep = GetDynamicWaveTimestep(DEM,HI,VXI,VYI,courant);
         std::cout << "timestep " << timestep << std::endl;
-        timestep = std::max(1e-6f,std::min(std::min(_dt - t,timestep),_dt));
+        timestep = std::max(1e-6f,std::min(std::min(_dt - t,std::max(mindt,timestep)),_dt));
         float dx = std::fabs(DEM->dx);
 
         t += timestep;

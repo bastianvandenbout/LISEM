@@ -210,7 +210,8 @@ void OpenGLCLManager::InitGLCL_int()
     LISEM_PRINT_DEBUG();
 
     glad_glEnable(GL_BLEND);
-    glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glad_glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glad_glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     glad_glEnable(GL_MULTISAMPLE);
 
@@ -593,6 +594,21 @@ void OpenGLCLManager::GLCLLoop()
             restart = true;
         }
         m_GLRestartMutex.unlock();
+
+        m_RequestFullScreenMutex.lock();
+        if(m_RequestFullScreen == true)
+        {
+            m_RequestFullScreen = false;
+            if(is_fullscreen && !m_RequestFullScreenOpen)
+            {
+                ToggleFullScreen(m_RequestFullScreenAlt);
+            }
+            if(!is_fullscreen && m_RequestFullScreenOpen)
+            {
+                ToggleFullScreen(m_RequestFullScreenAlt);
+            }
+        }
+        m_RequestFullScreenMutex.unlock();
 
         //make this thread current for opengl
         glfwMakeContextCurrent(window);

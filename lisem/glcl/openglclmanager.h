@@ -383,6 +383,21 @@ public:
         return 0.0;
     }
 
+    QMutex m_RequestFullScreenMutex;
+    bool m_RequestFullScreen = false;
+    bool m_RequestFullScreenOpen = false;
+    bool m_RequestFullScreenAlt = false;
+
+    inline void RequestToggleFullscreen(bool open, bool alt)
+    {
+        m_RequestFullScreenMutex.lock();
+        m_RequestFullScreen = true;
+        m_RequestFullScreenOpen = open;
+        m_RequestFullScreenAlt = alt;
+        m_RequestFullScreenMutex.unlock();
+
+    }
+
     inline int CopyTextureUsingShaders(ModelTexture * m_Texture_source, OpenGLCLTexture * m_Texture_Target)
     {
 

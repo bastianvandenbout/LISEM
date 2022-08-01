@@ -875,6 +875,8 @@ public:
     template<typename R, typename... Args>
     inline  int            RegisterObjectSTDMethod(const char *obj, const char *declaration, std::function<R(Args...)> funcPointer)
     {
+        ASSTDBasicFunction<R,Args...> *f = new ASSTDBasicFunction<R,Args...>(funcPointer);
+        m_ASSTDFuncs.push_back(f);
         int r = m_ASEngine->RegisterObjectMethod(obj,declaration, asMETHOD(decltype(funcPointer), operator()),  asCALL_CDECL_OBJFIRST);
         if( r < 0)
         {

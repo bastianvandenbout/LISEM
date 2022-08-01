@@ -10,7 +10,7 @@
 namespace LISEM
 {
 
-bool CompareParticleByXPosition(const Particle & p1, const Particle & p2)
+inline bool CompareParticleByXPosition(const Particle & p1, const Particle & p2)
 {
     return p1.m_Position.x < p2.m_Position.x;
 }
@@ -22,11 +22,13 @@ class Emitter
 
     std::vector<Initializer> m_Initializers;
 
+    std::vector<float> m_InitializerWeights;
+
     std::vector<Instantiator> m_Instantiators;
 
     std::vector<Behavior> m_Behaviors;
 
-    ParticleRenderer m_ParticleRenderer;
+    ParticleRenderer *m_ParticleRenderer;
 
     int m_Frame = 0;
     float m_TimeStart = 0.0;
@@ -39,21 +41,38 @@ public:
 
     }
 
-
-
-    inline void AddBehaviour(Behavior behave)
+    inline std::vector<Particle> & GetParticleRef()
     {
+        return m_Particles;
 
     }
+    inline void SetRenderer(ParticleRenderer * renderer)
+    {
+        m_ParticleRenderer = renderer;
+    }
 
-    inline void AddInitializer(Initializer init)
+    inline ParticleRenderer * GetRenderer()
+    {
+        return m_ParticleRenderer;
+    }
+
+
+    inline void AddBehavior(Behavior behave)
     {
 
+        m_Behaviors.push_back(behave);
+    }
+
+    inline void AddInitializer(Initializer init, float weight)
+    {
+
+        m_Initializers.push_back(init);
+        m_InitializerWeights.push_back(weight);
 
     }
     inline void AddInstantiator(Instantiator inst)
     {
-
+        m_Instantiators.push_back(inst);
     }
 
     inline void Instantiate(int frame, float time, float dt)

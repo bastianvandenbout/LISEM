@@ -41,6 +41,23 @@ class LISEM_API Ring
     std::vector<double> vertices;
 
    public:
+
+    inline Ring()
+    {
+
+    }
+    inline Ring(std::vector<LSMVector2> points)
+    {
+
+        for(int i = 0; i < points.size(); i++)
+        {
+            vertices.push_back(points.at(i).x);
+            vertices.push_back(points.at(i).y);
+
+        }
+
+
+    }
     inline void AddVertex(double x, double y)
     {
         vertices.push_back(x);

@@ -5,11 +5,12 @@
 #include "linear/lsm_vector2.h"
 #include "linear/lsm_vector3.h"
 #include "random/randomnumbers.h"
+#include "particle/common/zone.h"
 
 namespace LISEM
 {
 
-class BoxZone
+class BoxZone : public Zone
 {
 
     LSMVector2 m_Point;
@@ -54,8 +55,8 @@ public:
     inline virtual double DistanceTo(LSMVector3 x)
     {
         //single-expression sdf from iq (https://iquilezles.org/articles/distfunctions/)
-        double dx = std::max(std::max(m_Point.x-x.x,0.0),x.x-m_Point.x - m_Size.x);
-        double dy = std::max(std::max(m_Point.y-x.z,0.0),x.z-m_Point.y - m_Size.y);
+        double dx = std::max(std::max(m_Point.x-x.x,0.0f),x.x-m_Point.x - m_Size.x);
+        double dy = std::max(std::max(m_Point.y-x.z,0.0f),x.z-m_Point.y - m_Size.y);
 
         return std::sqrt(dx*dx + dy*dy);
     }

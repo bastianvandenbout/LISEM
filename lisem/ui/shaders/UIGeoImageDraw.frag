@@ -18,6 +18,8 @@ uniform float ul_sizey;
 uniform float ul_transx;
 uniform float ul_transy;
 
+uniform int ul_flipv = 0;
+
 uniform float ug_windowpixsizex;
 uniform float ug_windowpixsizey;
 uniform float ug_windowsizex;
@@ -30,6 +32,11 @@ uniform float tr_sizex;
 uniform float tr_sizey;
 uniform float tr_transx;
 uniform float tr_transy;
+
+uniform float fillmode_offsetx = 0.0;
+uniform float fillmode_scalex = 1.0;
+uniform float fillmode_offsety = 0.0;
+uniform float fillmode_scaley = 1.0;
 
 
 uniform int is_transformedf;
@@ -177,6 +184,31 @@ float GetTex1ValueAt(vec2 texcoordn)
 }
 
 
+vec2 FixFillModeTexCoords(vec2 coords)
+{
+
+    coords.x= (coords.x +fillmode_offsetx) * fillmode_scalex;
+    coords.y= (coords.y +fillmode_offsety) * fillmode_scaley;
+    if(ul_flipv > 0.5)
+    {
+        coords.y = 1.0- coords.y;
+    }
+    return coords;
+
+}
+
+vec4 FixFillModeColor(vec2 coords,vec4 color)
+{
+    vec4 ret = color;
+    if(coords.x < 0.0 || coords.x > 1.0 || coords.y < 0.0 || coords.y > 1.0)
+    {
+        ret.a = 0.0;
+    }
+
+    return ret;
+}
+
+
 
 void main()
 {
@@ -191,8 +223,8 @@ void main()
                 texcoordn = GetTexCoords(texcoord);
             }
 
-            vec4 color =texture2D(tex1,texcoordn).rgba;
-            color.a = color.a * alpha;
+            vec4 color =FixFillModeColor(FixFillModeTexCoords(texcoordn),texture2D(tex1,FixFillModeTexCoords(texcoordn))).rgba;
+            //color.a = color.a * alpha;
 
             if(texcoordn.x < 0 || texcoordn.x > 1 ||texcoordn.y < 0 || texcoordn.y > 1 )
             {
@@ -202,8 +234,9 @@ void main()
                 fragColor = vec4(0.90,0.90,0.90,0.0);
             }else
             {
-                fragColor = texture2D(tex1,texcoordn).rgba;
-                //fragColor = vec4(val1/255,val2/255,val3/255,alpha);
+                vec4 color2 = FixFillModeColor(FixFillModeTexCoords(texcoordn),texture2D(tex1,FixFillModeTexCoords(texcoordn))).rgba;
+                color2.a = color2.a * alpha;
+                fragColor = color2;
             }
 
 

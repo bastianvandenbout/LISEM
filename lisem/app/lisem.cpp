@@ -700,6 +700,7 @@ int SPHazard::execute(int argc, char *argv[])
                 m_InterfaceWindow->show();
 
                 m_InterfaceWindow->SetScriptFunctions(m_ScriptManager);
+                m_InterfaceWindow->Initialize(m_OpenGLCLManager,m_ScriptManager);
 
                 m_OpenGLCLManager->ProcessEvents(); //QTimer::singleShot(0,m_OpenGLCLManager,SLOT(ProcessEvents));
                 std::cout << "execute qt app " << std::endl;

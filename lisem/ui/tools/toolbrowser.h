@@ -227,6 +227,21 @@ public:
 
         m_ToolModel = new QStringListModel();
 
+
+
+        m_MainLayout->addWidget(m_SearchEdit);
+        m_MainLayout->addWidget(m_ToolList);
+
+        m_ToolList->setAlternatingRowColors(true);
+
+        connect(m_SearchEdit, SIGNAL(textChanged(QString)),this,SLOT(OnSearchChanged(QString)));
+        connect(m_ToolList,&QTreeWidget::itemDoubleClicked,this,&ToolBrowser::ItemDoubleClicked);
+
+
+    }
+
+    inline void InitializeFunctions(ScriptManager * sm)
+    {
         QList<ScriptFunctionInfo> items = sm->m_Engine->GetGlobalFunctionList();
         QList<ScriptFunctionInfo> itemsm = sm->m_Engine->GetMemberFunctionList();
         QStringList op_number_u = m_ScriptManager->m_Engine->GetNumberUnaryOperators();
@@ -421,14 +436,6 @@ public:
 
         }
 
-
-        m_MainLayout->addWidget(m_SearchEdit);
-        m_MainLayout->addWidget(m_ToolList);
-
-        m_ToolList->setAlternatingRowColors(true);
-
-        connect(m_SearchEdit, SIGNAL(textChanged(QString)),this,SLOT(OnSearchChanged(QString)));
-        connect(m_ToolList,&QTreeWidget::itemDoubleClicked,this,&ToolBrowser::ItemDoubleClicked);
 
         m_ToolList->expandAll();
 

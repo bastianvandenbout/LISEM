@@ -269,6 +269,26 @@ public:
             m_texcl = cl::ImageGL(c,CL_MEM_READ_WRITE,GL_TEXTURE_2D,0,m_texgl,&errCode);
         }catch(...)
         {
+
+            m_dims[0] = map->nr_cols();
+            m_dims[1] = map->nr_rows();
+            m_dims[2] = 0;
+
+            if(render_target)
+            {
+                m_FramebufferName = 0;
+                m_IsFrambuffer = true;
+                glad_glGenFramebuffers(1, &m_FramebufferName);
+                glad_glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferName);
+                glad_glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_texgl, 0);
+                if(glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+                {
+                    m_IsFrambuffer = false;
+                }
+            }
+
+
+
             std::cout<<"Error converting GL Image to CL Texture, is OpenGL Device equal to OpenCL Device?"<<errCode<<std::endl;
             return 250;
         }
@@ -357,7 +377,19 @@ public:
             }
         }
 
-        m_texgl = createTexture2D(map->nrCols(),map->nrRows(), data.data(),GL_RED,GL_FLOAT,GL_R32F);
+        if(bands == 1)
+        {
+            m_texgl = createTexture2D(map->nrCols(),map->nrRows(), data.data(),GL_RED,GL_FLOAT,GL_R32F);
+        }else if(bands == 2)
+        {
+            m_texgl = createTexture2D(map->nrCols(),map->nrRows(), data.data(),GL_RG,GL_FLOAT,GL_RG32F);
+        }else if(bands == 3)
+        {
+            m_texgl = createTexture2D(map->nrCols(),map->nrRows(), data.data(),GL_RGB,GL_FLOAT,GL_RGB32F);
+        }else if(bands == 4)
+        {
+            m_texgl = createTexture2D(map->nrCols(),map->nrRows(), data.data(),GL_RGBA,GL_FLOAT,GL_RGBA32F);
+        }
 
         glad_glFinish();
         try

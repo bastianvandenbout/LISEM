@@ -189,7 +189,9 @@ public:
     float          SampleCubic              (double x, double y);
     cTMap*         GetCopy             () const;
     cTMap*         GetCopy0             () const;
+    cTMap*         GetCopy1             () const;
     cTMap*         GetCopyMask          () const;
+
 
     cTMapProps     GetRasterProps      ();
     RasterBandStats GetRasterBandStats  (bool stdev);
@@ -608,6 +610,37 @@ inline cTMap * cTMap::GetCopy0() const
     m->AS_IsLDD = AS_IsLDD;
     m->m_Projection = m_Projection;
     m->m_BoundingBox = m_BoundingBox;
+
+    return m;
+}
+
+
+inline cTMap * cTMap::GetCopy1() const
+{
+    const cTMap * dup = this;
+    MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
+        dup->west(), dup->cellSizeX(),dup->cellSizeY());
+
+    cTMap * m = new cTMap(std::move(datac),_projection,_mapName,AS_IsLDD);
+    m->AS_IsSingleValue = AS_IsSingleValue;
+    m->AS_FileName = AS_FileName;
+    m->AS_IsLDD = AS_IsLDD;
+    m->m_Projection = m_Projection;
+    m->m_BoundingBox = m_BoundingBox;
+
+
+    for(int r=0; r < m->nrRows(); r++)
+    {
+      for(int c=0; c < m->nrCols(); c++)
+      {
+        if (!pcr::isMV(data[r][c]))
+          {
+            m->data[r][c] = 1.0;
+          }else {
+            m->data[r][c] = 0.0;
+        }
+      }
+    }
 
     return m;
 }

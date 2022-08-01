@@ -250,6 +250,23 @@ public:
 };
 
 
+
+template<>
+class asbindc_convert<CScriptArray*, std::vector<LSMVector4>>
+{
+
+public:
+
+    inline static std::vector<LSMVector4> asbind_convert(CScriptArray* x)
+    {
+        std::vector<LSMVector4> ret = x->ToSTDList<LSMVector4>();
+        return ret;
+    }
+
+
+};
+
+
 template<>
 class asbindc_convert<CScriptArray*, std::vector<double>>
 {

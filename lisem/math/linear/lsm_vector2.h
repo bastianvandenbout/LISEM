@@ -127,7 +127,7 @@ public:
         return out;
     }
 
-    LSMVector2 operator*(const float & in) const
+    /*LSMVector2 operator*(const float & in) const
     {
         LSMVector2 out;
         out.x = x * in;
@@ -140,10 +140,34 @@ public:
         out.x = x * in;
         out.y = y * in;
         return out;
+    }*/
+
+
+    /*LSMVector2 operator/(float in) const
+    {
+        LSMVector2 out;
+        out.x = x / in;
+        out.y = y / in;
+        return out;
+    }*/
+
+    LSMVector2 operator*(float in) const
+    {
+        LSMVector2 out;
+        out.x = x * in;
+        out.y = y * in;
+        return out;
+    }
+    LSMVector2 operator*(double in) const
+    {
+        LSMVector2 out;
+        out.x = x * in;
+        out.y = y * in;
+        return out;
     }
 
 
-    LSMVector2 operator/(const float & in) const
+    LSMVector2 operator/(float in) const
     {
         LSMVector2 out;
         out.x = x / in;

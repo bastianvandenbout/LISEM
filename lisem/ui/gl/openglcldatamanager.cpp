@@ -18,6 +18,6 @@ OpenGLProgram * GLProgram_uiobject = nullptr;
 OpenGLProgram * GLProgram_uiobjectinstanced = nullptr;
 OpenGLProgram * GLProgram_uifield = nullptr;
 OpenGLProgram * GLProgram_uigeoimage = nullptr;
-
+OpenGLProgram * GLProgram_uigeoimagerotate = nullptr;
 QString KernelDir;
 QString AssetDir;

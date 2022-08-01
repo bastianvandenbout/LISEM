@@ -27,7 +27,7 @@ LISEM_API extern OpenGLProgram * GLProgram_uiobject;
 LISEM_API extern OpenGLProgram * GLProgram_uiobjectinstanced;
 LISEM_API extern OpenGLProgram * GLProgram_uifield;
 LISEM_API extern OpenGLProgram * GLProgram_uigeoimage;
-
+LISEM_API extern OpenGLProgram * GLProgram_uigeoimagerotate;
 
 LISEM_API extern QString KernelDir;
 LISEM_API extern QString AssetDir;
@@ -56,6 +56,7 @@ inline static void InitUIShaders(OpenGLCLManager * m)
     GLProgram_uiterrainlayer = m->GetMGLProgram(KernelDir + "terrain_vs_layer.glsl", KernelDir + "terrain_fs_layer.glsl", KernelDir + "terrain_gs_layer.glsl", KernelDir + "terrain_tc_layer.glsl", KernelDir + "terrain_te_layer.glsl");
     GLProgram_uiocean = m->GetMGLProgram(KernelDir + "terrain_vs_ocean.glsl", KernelDir + "terrain_fs_ocean.glsl", KernelDir + "terrain_gs_ocean.glsl", KernelDir + "terrain_tc_ocean.glsl", KernelDir + "terrain_te_ocean.glsl");
     GLProgram_uigeoimage = m->GetMGLProgram(KernelDir+ "UIGeoImageDraw.vert", KernelDir+ "UIGeoImageDraw.frag");
+    GLProgram_uigeoimagerotate = m->GetMGLProgram(KernelDir+ "UIGeoImageDrawRotate.vert", KernelDir+ "UIGeoImageDrawRotate.frag");
 
 }
 
@@ -82,6 +83,7 @@ inline static void DestroyUIShaders(OpenGLCLManager * m)
     SAFE_DELETE(GLProgram_uiterrainlayer);
     SAFE_DELETE(GLProgram_uiocean);
     SAFE_DELETE(GLProgram_uigeoimage);
+    SAFE_DELETE(GLProgram_uigeoimagerotate);
 }
 
 

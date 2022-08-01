@@ -185,6 +185,10 @@ public:
 
 
     }
+    inline void Initialize(OpenGLCLManager * m, ScriptManager * sm)
+    {
+        m_ToolBoxWidget->InitializeFunctions(sm);
+    }
 
     void CreateParameterWidgets();
 

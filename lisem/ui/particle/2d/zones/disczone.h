@@ -4,18 +4,21 @@
 #include "linear/lsm_vector3.h"
 #include "random/randomnumbers.h"
 
+#include "particle/common/zone.h"
+
 namespace LISEM
 {
 
-class DiscZone
+class DiscZone: public Zone
 {
 
     LSMVector3 m_Point;
-    double m_radius_inner;
-    double m_radius_outer;
+    double m_radius_inner = 0.0;
+    double m_radius_outer = 1.0;
+    bool m_Gaussian = false;
 public:
 
-    inline DiscZone(LSMVector2 p, double radius, double radius_inner = 0.0)
+    inline DiscZone(LSMVector2 p, double radius, double radius_inner = 0.0, bool gaussian = false)
     {
         m_Point = LSMVector3(p.x,0.0,p.y);
         radius =std::abs(radius);

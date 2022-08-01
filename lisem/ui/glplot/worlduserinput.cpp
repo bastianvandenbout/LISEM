@@ -28,6 +28,11 @@ void WorldWindow::OnMouseMove(double posx,double posy)
 
     bool shift = glfwGetKey(m_OpenGLCLManager->window,GLFW_KEY_LEFT_SHIFT) ==GLFW_PRESS;
 
+    if(!GetShiftAllowd())
+    {
+        shift= false;
+    }
+
     MouseStateMutex.lock();
     if(m_MouseState.move_first == true)
     {

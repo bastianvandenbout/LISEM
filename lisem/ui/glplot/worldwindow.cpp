@@ -354,6 +354,7 @@ bool WorldWindow::Draw()
 
     if(m_View2DSafeSet)
     {
+        std::cout << "Set bb for camera from script " << std::endl;
         LookAt(m_BBSafe);
 
     }

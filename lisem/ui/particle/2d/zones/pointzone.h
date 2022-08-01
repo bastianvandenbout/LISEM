@@ -2,10 +2,11 @@
 #define POINTZONEH
 
 #include "linear/lsm_vector3.h"
+#include "particle/common/zone.h"
 namespace LISEM
 {
 
-class PointZone
+class PointZone : public Zone
 {
 
     LSMVector3 m_Point;

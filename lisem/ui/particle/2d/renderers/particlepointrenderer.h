@@ -1,7 +1,7 @@
 #ifndef PARTICLEPOINTRENDERERH
 #define PARTICLEPOINTRENDERERH
 
-#include "particle.h"
+#include "particle/common/particle.h"
 #include "linear/lsm_vector4.h"
 #include "openglclmanager.h"
 

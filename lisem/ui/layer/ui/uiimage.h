@@ -41,25 +41,32 @@ private:
     double oldtly = 0.0;
     double oldbrx = 0.0;
     double oldbry = 0.0;
+    bool m_FlipV = false;
+
+    int m_FillMode = 0;
 
     cTMap * m_R= nullptr;
     cTMap * m_G= nullptr;
     cTMap * m_B= nullptr;
     cTMap * m_A= nullptr;
 
+    bool m_HasRotation = false;
+    double m_Angle = 0.0;
+
     bool m_SetAdjustInitialSizeForAspectRatio = false;
 public:
 
-    inline UIImageLayer(QString file, BoundingBox position, GeoProjection p = GeoProjection::GetGeneric(), bool is_rel = true)
+    inline UIImageLayer(QString file, BoundingBox position, GeoProjection p = GeoProjection::GetGeneric(), bool is_rel = true, int fillmode = 0)
     {
         m_File = file;
         m_BoundingBox = position;
         m_Is2D = true;
         m_Is2DABS =is_rel;
         m_CRS = p;
+        m_FillMode = fillmode;
     }
 
-    inline UIImageLayer(cTMap * r, cTMap * g, cTMap * b, cTMap * a, BoundingBox position, GeoProjection p = GeoProjection::GetGeneric(), bool is_rel = true)
+    inline UIImageLayer(cTMap * r, cTMap * g, cTMap * b, cTMap * a, BoundingBox position, GeoProjection p = GeoProjection::GetGeneric(), bool is_rel = true, int fillmode = 0)
     {
         m_R = r;
         m_G = g;
@@ -70,7 +77,7 @@ public:
         m_Is2D = true;
         m_Is2DABS =is_rel;
         m_CRS = p;
-
+        m_FillMode = fillmode;
     }
 
     inline QString layertypeName()
@@ -96,6 +103,16 @@ public:
     inline void setPosition(BoundingBox pos, GeoProjection p, bool rel = false)
     {
         m_BoundingBox = pos;
+        m_Is2D = true;
+        m_Is2DABS = rel;
+        m_CRS = p;
+    }
+
+    inline void setPositionRotation(BoundingBox pos,float angle, GeoProjection p, bool rel = false)
+    {
+        m_BoundingBox = pos;
+        m_HasRotation = true;
+        m_Angle = angle;
         m_Is2D = true;
         m_Is2DABS = rel;
         m_CRS = p;
@@ -236,6 +253,10 @@ public:
         //set shader uniform values
         OpenGLProgram * program = GLProgram_uigeoimage;
 
+        if(m_HasRotation)
+        {
+            program = GLProgram_uigeoimagerotate;
+        }
         // bind shader
         glad_glUseProgram(program->m_program);
 
@@ -281,6 +302,13 @@ public:
         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transx"),bbcrsreal.GetCenterX());
         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_transy"),bbcrsreal.GetCenterY());
 
+        //set rotation
+        if(m_HasRotation)
+        {
+            glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_angle"),m_Angle);
+
+        }
+
 
         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixx"),m_Texture->GetWidth());
         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ul_pixy"),m_Texture->GetHeight());
@@ -296,6 +324,9 @@ public:
         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrwidth"),s.scr_width);
         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"ug_scrheight"),s.scr_height);
 
+        glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"ul_flipv"),m_FlipV?1:0);
+
+
 
         //set our last shader pass as our image input
         //if(m_Target.size() > 0)
@@ -304,6 +335,79 @@ public:
             glad_glActiveTexture(GL_TEXTURE0);
             glad_glBindTexture(GL_TEXTURE_2D,m_Texture->m_texgl);
         }
+
+        //in either case (absolute or relative coordinates)
+        //we have different fill modes we want to accomodate
+        //0->stretch (default)
+        //1->fit
+        //2->fill
+
+        //we can resolve this with a texture coordinate offset and scaling for either the x-axis or y-axis
+        //first, get screen area pixel width and height, and texture width and height
+
+        float imagescreenpixelsizex = std::max(1.0,bbscreen.GetSizeX() * s.scr_pixwidth);
+        float imagescreenpixelsizey = std::max(1.0,bbscreen.GetSizeY() * s.scr_pixheight);
+        float imagerealsizex = std::max(1.0,(double)m_Texture->GetWidth());
+        float imagerealsizey = std::max(1.0,(double)m_Texture->GetHeight());
+
+
+        //in case of stretch, do nothing
+
+        float TexCoordXOffset = 0.0;
+        float TexCoordXScale = 1.0;
+        float TexCoordYOffset = 0.0;
+        float TexCoordYScale = 1.0;
+
+        //in case of fit
+
+        if(m_FillMode == 1)
+        {
+            //if the width ratio is worse than the height ratio
+
+            if(imagerealsizex/imagescreenpixelsizex > imagerealsizey/imagescreenpixelsizey)
+            {
+                float size_sb_x = imagescreenpixelsizex;
+                float size_sb_y = imagescreenpixelsizex * imagerealsizey/imagerealsizex;
+                TexCoordYOffset = -(0.5 * (imagescreenpixelsizey - size_sb_y))/imagescreenpixelsizey;
+                TexCoordYScale = 1.0/(size_sb_y/imagescreenpixelsizey);
+
+            //else if the height ratio is worse
+            }else
+            {
+                float size_sb_y = imagescreenpixelsizey;
+                float size_sb_x = imagescreenpixelsizey * imagerealsizex/imagerealsizey;
+                TexCoordXOffset = -(0.5 * (imagescreenpixelsizex - size_sb_x))/imagescreenpixelsizex;
+                TexCoordXScale = 1.0/(size_sb_x/imagescreenpixelsizex);
+            }
+        //in case of fill
+        }else if(m_FillMode == 2)
+        {
+
+            //if the width ratio is worse than the height ratio
+
+            if(imagerealsizex/imagescreenpixelsizex < imagerealsizey/imagescreenpixelsizey)
+            {
+                float size_sb_x = imagescreenpixelsizex;
+                float size_sb_y = imagescreenpixelsizex * imagerealsizey/imagerealsizex;
+                TexCoordYOffset = -(0.5 * (imagescreenpixelsizey - size_sb_y))/imagescreenpixelsizey;
+                TexCoordYScale = 1.0/(size_sb_y/imagescreenpixelsizey);
+
+            //else if the height ratio is worse
+            }else
+            {
+                float size_sb_y = imagescreenpixelsizey;
+                float size_sb_x = imagescreenpixelsizey * imagerealsizex/imagerealsizey;
+                TexCoordXOffset = -(0.5 * (imagescreenpixelsizex - size_sb_x))/imagescreenpixelsizex;
+                TexCoordXScale = 1.0/(size_sb_x/imagescreenpixelsizex);
+            }
+        }
+
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_offsetx"),TexCoordXOffset);
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_scalex"),TexCoordXScale);
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_offsety"),TexCoordYOffset);
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_scaley"),TexCoordYScale);
+
+
 
         //uniform float ul_transy;
         if(m_Is2DABS)
@@ -372,6 +476,12 @@ public:
         glad_glBindVertexArray(0);
 
 
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_offsetx"),0.0);
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_scalex"),1.0);
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_offsety"),0.0);
+        glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"fillmode_scaley"),1.0);
+        glad_glUniform1i(glad_glGetUniformLocation(program->m_program,"ul_flipv"),0);
+
 
         m_Mutex.unlock();
 
@@ -396,12 +506,48 @@ public:
          OpenGLCLTexture * t = new OpenGLCLTexture();
          QString file =m_File;
 
-         if(!file.isEmpty())
+
+         if(m_R != nullptr || m_G != nullptr || m_B != nullptr || m_A != nullptr)
+         {
+             cTMap * ref = nullptr;
+             if(m_R != nullptr)
+             {ref = m_R;
+             }else if(m_G != nullptr)
+             {ref = m_G;
+             }else if(m_B != nullptr)
+             {ref = m_B;
+             }else if(m_A != nullptr)
+             {ref = m_A;
+             }
+
+             if(m_R == nullptr)
+             {
+                 m_R = ref->GetCopy0();
+             }
+             if(m_G == nullptr)
+             {
+                 m_G = ref->GetCopy0();
+             }
+             if(m_B == nullptr)
+             {
+                 m_B = ref->GetCopy0();
+             }
+             if(m_A == nullptr)
+             {
+                 m_A = ref->GetCopy1();
+             }
+             std::vector<cTMap *> maps = {m_R,m_G,m_B,m_A};
+             t->Create2DFromMaps(m->context,{maps[0],maps[1],maps[2],maps[3]});
+
+         }else if(!file.isEmpty())
          {
              //is it a regular image
 
              if(file.endsWith(".jpg")|| file.endsWith(".jpeg")|| file.endsWith(".png")||file.endsWith(".bmp"))
              {
+
+                 m_FlipV = true;
+
                  if(t->Create2DFromFile(file) == 1)
                  {
                      LISEM_ERROR("Could not open file as image: "  + file);
@@ -418,7 +564,7 @@ public:
                          t->Create2DFromMaps(m->context,{maps[0],maps[1],maps[2],maps[3]});
                      }else if(maps.size() == 1)
                      {
-                         t->Create2DFromMaps(m->context,{maps[0],maps[1],maps[2]});
+                         t->Create2DFromMaps(m->context,{maps[0],maps[0],maps[0]});
 
                      }else if(maps.size() > 0)
                      {
@@ -433,6 +579,7 @@ public:
 
 
          }
+
 
          if(t != nullptr)
          {

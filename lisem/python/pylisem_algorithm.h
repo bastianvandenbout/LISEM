@@ -237,7 +237,7 @@ inline void init_pylisem_algorithm(py::module &m)
     m.def("FlowDiffusiveMaxCG",&AS_DiffusiveMaxWaveCG,py::arg("Elevation"),py::arg("Height"),py::arg("CGSloep"),py::arg("slopefactor"),py::arg("Iterations") = 10,py::arg("Courant") = 0.1);
     m.def("FlowDiffusiveMax",&AS_DiffusiveMaxWave,py::arg("Elevation"),py::arg("Height"),py::arg("Iterations"),py::arg("Courant"));
 
-    m.def("FlowDynamic",&AS_DynamicWave,py::arg("Elevation"),py::arg("Manning"),py::arg("Height"),py::arg("VX"),py::arg("VY"),py::arg("dt"), py::arg("Courant") = 0.1);
+    m.def("FlowDynamic",&AS_DynamicWave,py::arg("Elevation"),py::arg("Manning"),py::arg("Height"),py::arg("VX"),py::arg("VY"),py::arg("dt"), py::arg("Courant") = 0.1, py::arg("DtMin") = 0.0);
     m.def("Diffusion",&AS_Diffusion,py::arg("Values"),py::arg("Coefficient"),py::arg("dt"),py::arg("iter") = 1);
 
 

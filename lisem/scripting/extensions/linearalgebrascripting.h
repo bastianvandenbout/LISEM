@@ -67,11 +67,11 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT, "void CSF0()", asFUNCTIONPR(AS_ASVector2C0,(void*),void), asCALL_CDECL_OBJFIRST);
     engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y)", asFUNCTIONPR(AS_ASVector2C1,(void*,float,float),void), asCALL_CDECL_OBJFIRST);
 
-    engine->RegisterObjectMethod("vec2", "vec2 opAdd(vec2 m) const", asMETHODPR(LSMVector2,operator+,(const LSMVector2 &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
-    engine->RegisterObjectMethod("vec2", "vec2 opSub(vec2 m) const", asMETHODPR(LSMVector2,operator-,(const LSMVector2 &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
-    engine->RegisterObjectMethod("vec2", "vec2 opMul(float m) const", asMETHODPR(LSMVector2,operator*,(const float &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
-    engine->RegisterObjectMethod("vec2", "vec2 opDiv(float m) const", asMETHODPR(LSMVector2,operator/,(const float &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
-    engine->RegisterObjectMethod("vec2", "vec2 opMul_r(float m) const", asMETHODPR(LSMVector2,operator*,(const float &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opAdd(const vec2 &in m) const", asMETHODPR(LSMVector2,operator+,(const LSMVector2 &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opSub(const vec2 &in m) const", asMETHODPR(LSMVector2,operator-,(const LSMVector2 &) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opMul(float m) const", asMETHODPR(LSMVector2,operator*,(float) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opDiv(float m) const", asMETHODPR(LSMVector2,operator/,(float) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec2", "vec2 opMul_r(float m) const", asMETHODPR(LSMVector2,operator*,(float) const , LSMVector2), asCALL_THISCALL); assert( r >= 0 );
 
     //vec3
     engine->RegisterObjectType("vec3", sizeof(LSMVector3), asOBJ_VALUE | asOBJ_POD| asOBJ_APP_CLASS_ALLFLOATS| asGetTypeTraits<LSMVector3>()); assert( r >= 0 );
@@ -84,8 +84,8 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectProperty("vec3", "float y", asOFFSET(LSMVector3,y)); assert( r >= 0 );
     engine->RegisterObjectProperty("vec3", "float z", asOFFSET(LSMVector3,z)); assert( r >= 0 );
 
-    engine->RegisterObjectMethod("vec3", "vec3 opAdd(vec3 m) const", asMETHODPR(LSMVector3,operator+,(const LSMVector3 &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
-    engine->RegisterObjectMethod("vec3", "vec3 opSub(vec3 m) const", asMETHODPR(LSMVector3,operator-,(const LSMVector3 &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec3", "vec3 opAdd(const vec3 &in m) const", asMETHODPR(LSMVector3,operator+,(const LSMVector3 &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec3", "vec3 opSub(const vec3 &in m) const", asMETHODPR(LSMVector3,operator-,(const LSMVector3 &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
     engine->RegisterObjectMethod("vec3", "vec3 opMul(float m) const", asMETHODPR(LSMVector3,operator*,(const float &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
     engine->RegisterObjectMethod("vec3", "vec3 opDiv(float m) const", asMETHODPR(LSMVector3,operator/,(const float &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
     engine->RegisterObjectMethod("vec3", "vec3 opMul_r(float m) const", asMETHODPR(LSMVector3,operator*,(const float &) const , LSMVector3), asCALL_THISCALL); assert( r >= 0 );
@@ -127,8 +127,8 @@ inline void RegisterLinearAlgebraScripting(asIScriptEngine *engine)
     engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT, "void CSF1(float x, float y, float z, float w)", asFUNCTIONPR(AS_ASVector4C1,(void*,float,float,float,float),void), asCALL_CDECL_OBJFIRST);
 
 
-    engine->RegisterObjectMethod("vec4", "vec4 opAdd(vec4 m) const", asMETHODPR(LSMVector4,operator+,(const LSMVector4 &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
-    engine->RegisterObjectMethod("vec4", "vec4 opSub(vec4 m) const", asMETHODPR(LSMVector4,operator-,(const LSMVector4 &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec4", "vec4 opAdd(const vec4 &in m) const", asMETHODPR(LSMVector4,operator+,(const LSMVector4 &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
+    engine->RegisterObjectMethod("vec4", "vec4 opSub(const vec4 &in m) const", asMETHODPR(LSMVector4,operator-,(const LSMVector4 &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
     engine->RegisterObjectMethod("vec4", "vec4 opMul(float m) const", asMETHODPR(LSMVector4,operator*,(const float &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
     engine->RegisterObjectMethod("vec4", "vec4 opDiv(float m) const", asMETHODPR(LSMVector4,operator/,(const float &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );
     engine->RegisterObjectMethod("vec4", "vec4 opMul_r(float m) const", asMETHODPR(LSMVector4,operator*,(const float &) const , LSMVector4), asCALL_THISCALL); assert( r >= 0 );

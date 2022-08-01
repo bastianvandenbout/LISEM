@@ -419,10 +419,10 @@ inline static QStringList GetExtensionsFileFilters(QList<QString> exts)
         filt1 += ";";
     }
 
-    QString filt2 = ";*.*";
+    QString filt2 = "All files (*.*)";
 
-    ret.append(filt1);
     ret.append(filt2);
+    ret.append(filt1);
 
     return ret;
 

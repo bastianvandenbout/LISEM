@@ -40,6 +40,25 @@ public:
 
 };
 
+
+class MultiZone
+{
+
+    std::vector<Zone*> m_Zones;
+public:
+
+    inline MultiZone()
+    {
+
+    }
+
+    inline void SetZones(std::vector<Zone*> zones)
+    {
+
+    }
+
+};
+
 }
 
 #endif

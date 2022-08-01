@@ -313,7 +313,7 @@ static inline void flow_saintvenant(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,c
     return;
 }
 
-static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY, cTMap * HN,cTMap * VXN,cTMap * VYN, cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float courant = 0.1)
+static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cTMap * VY, cTMap * HN,cTMap * VXN,cTMap * VYN, cTMap * QX1 = nullptr, cTMap * QX2 = nullptr,cTMap * QY1 = nullptr,cTMap * QY2 = nullptr, float courant = 0.1, float mindt = 0.0)
 {
 
 
@@ -426,8 +426,8 @@ static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,c
                         float vy = std::max(std::sqrt(9.81f * std::fabs(hw_y2)),std::max(std::sqrt(9.81f * std::fabs(hw_y1)),std::min(vmax,std::max(-vmax,VY->data[gy][gx]))));
 
                         double dt_req = courant *dx/( std::min(1000.0f,std::max(0.01f,(sqrt(vx*vx + vy * vy)))));
-                        dt_min = std::min(_dt-t,std::min((double)dt_min,dt_req));
-                        dt = std::min(_dt-t,std::min((double)dt_min,dt));
+                        dt_min = std::min(_dt-t,std::max((double)mindt,std::min((double)dt_min,dt_req)));
+                        dt = std::min(_dt-t,std::max((double)mindt,std::min((double)dt_min,dt)));
                     }
 
                 }
@@ -1224,7 +1224,7 @@ static inline void flow_boussinesq(cTMap * DEM,cTMap * N,cTMap * H,cTMap * VX,cT
 
 }
 
-inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * HI, cTMap * VXI, cTMap * VYI, float _dt, float courant)
+inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * HI, cTMap * VXI, cTMap * VYI, float _dt, float courant, float dt_min)
 {
     if(!(DEM->data.nr_rows() == N->data.nr_rows() && DEM->data.nr_cols() == N->data.nr_cols()))
     {
@@ -1256,7 +1256,7 @@ inline std::vector<cTMap*> AS_DynamicWave(cTMap * DEM,cTMap * N,cTMap * HI, cTMa
     cTMap * VXN = VX->GetCopy();
     cTMap * VYN = VY->GetCopy();
 
-    flow_saintvenantdtandflow(_dt,DEM,N,H,VX,VY,HN,VXN,VYN,nullptr,nullptr,nullptr,nullptr,courant);
+    flow_saintvenantdtandflow(_dt,DEM,N,H,VX,VY,HN,VXN,VYN,nullptr,nullptr,nullptr,nullptr,courant, dt_min);
 
 
     /*double t = 0;

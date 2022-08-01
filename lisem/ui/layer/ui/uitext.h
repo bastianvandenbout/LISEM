@@ -33,26 +33,45 @@ private:
     double oldresx = 1.0;
     double oldresy = 1.0;
 
+    bool m_Center =false;
+    bool m_ShadowActive = false;
+    float m_ShadowSizeIncr = 2;
+    LSMVector4 m_ShadowColor = LSMVector4(1.0,1.0,1.0,1.0);
+
 public:
     inline UITextLayer()
     {
 
     }
 
-    inline UITextLayer(QString text, QString font, LSMVector3 Position, GeoProjection Projection, float size, bool bold, bool italic, bool underline, bool coord_abs = false, bool draw_ontop = false,bool size_rel = false, bool box = false, LSMVector4 box_color = LSMVector4(0.0,0.0,0.0,0.0)) : UIGeoLayer()
+    inline UITextLayer(QString text, QString font, LSMVector3 Position, GeoProjection Projection, float size, LSMVector4 Color, bool bold, bool italic, bool underline, bool coord_abs = false, bool draw_ontop = false,bool size_rel = false, bool center = false,bool box = false, LSMVector4 box_color = LSMVector4(0.0,0.0,0.0,0.0)) : UIGeoLayer()
     {
-        Initialize(text,font,Position,Projection,size,bold,italic,underline,coord_abs,draw_ontop, size_rel,box,box_color);
+        Initialize(text,font,Position,Projection,size,Color,bold,italic,underline,coord_abs,draw_ontop, size_rel,center,box,box_color);
     }
-    inline void Initialize(QString text, QString font, LSMVector3 Position, GeoProjection Projection, float size, bool bold, bool italic, bool underline, bool coord_abs = false, bool draw_ontop = false,bool size_rel = false, bool box = false, LSMVector4 box_color = LSMVector4(0.0,0.0,0.0,0.0))
+    inline void Initialize(QString text, QString font, LSMVector3 Position, GeoProjection Projection, float size, LSMVector4 Color, bool bold, bool italic, bool underline, bool coord_abs = false, bool draw_ontop = false,bool size_rel = false, bool center = false,bool box = false, LSMVector4 box_color = LSMVector4(0.0,0.0,0.0,0.0))
     {
         UIGeoLayer::Initialize( Projection,BoundingBox(Position),text,false,"",false);
 
+        m_DrawOnTop = draw_ontop;
+        m_PositionIsScreenSpace = coord_abs;
         m_Size = size;
         m_Text= text;
         m_FontName = font;
         m_Position = Position;
+        m_Color = Color;
+        std::cout << "text layer " << text.toStdString() << " " << center << std::endl;
+        m_Center = center;
+
 
     }
+
+    inline void SetShadow(bool active, float size_incr, LSMVector4 color)
+    {
+        m_ShadowActive = active;
+        m_ShadowSizeIncr = size_incr;
+        m_ShadowColor = color;
+    }
+
     inline void SetText(QString t)
     {
         m_Text = t;
@@ -137,24 +156,54 @@ public:
     inline virtual void OnDrawGeo(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
     {
 
+        if(!m_DrawOnTop)
+        {
+            oldtlx = s.tlx;
+            oldtly = s.tly;
+            oldbrx = s.brx;
+            oldbry = s.bry;
 
-        oldtlx = s.tlx;
-        oldtly = s.tly;
-        oldbrx = s.brx;
-        oldbry = s.bry;
-
-        oldresx = s.scr_width;
-        oldresy = s.scr_width;
-
-
-        //get screen pixel position
-        //get screen pixel size
-
-        float xpix = s.scr_pixwidth* (float)((m_Position.x - s.tlx)/(s.brx-s.tlx));
-        float ypix = s.scr_pixheight* (float)((m_Position.z - s.tly)/(s.bry-s.tly));
+            oldresx = s.scr_width;
+            oldresy = s.scr_width;
 
 
-        m->m_TextPainter->DrawString(m_Text,NULL,xpix,ypix,LSMVector4(0.0,0.0,0.0,1.0),m_Size);
+            //get screen pixel position
+            //get screen pixel size
+
+
+            float xpix = s.scr_pixwidth* (float)((m_Position.x - s.tlx)/(s.brx-s.tlx));
+            float ypix = s.scr_pixheight* (float)((m_Position.z - s.tly)/(s.bry-s.tly));
+
+            if(m_PositionIsScreenSpace)
+            {
+                xpix =s.scr_pixwidth * m_Position.x;
+                ypix = s.scr_pixheight * m_Position.z;
+            }
+
+            //get pixel width of text
+            float width = m->m_TextPainter->DrawStringWidth(m_Text,NULL,xpix,ypix,m_Color,m_Size);
+
+            std::cout << "render text  " << width << " " << xpix <<  " " << xpix - width * 0.5 << std::endl;
+            if(m_Center)
+            {
+                xpix = xpix - width * 0.5;
+            }
+            std::cout << "render text  " << width << " " << xpix <<  " " << xpix - width * 0.5 << std::endl;
+
+            if(m_ShadowActive)
+            {
+                LSMVector4 scolor = m_ShadowColor;
+                scolor.w = scolor.w * (1.0f-GetStyle().GetTransparancy());
+
+                m->m_TextPainter->DrawStringShadow(m_Text,NULL,xpix,ypix,scolor,m_Size,m_ShadowSizeIncr);
+
+            }
+            LSMVector4 color = m_Color;
+            color.w = color.w * (1.0f-GetStyle().GetTransparancy());
+
+            m->m_TextPainter->DrawString(m_Text,NULL,xpix,ypix,color,m_Size);
+
+        }
 
 
 
@@ -163,62 +212,52 @@ public:
     inline virtual void OnPostDraw3DUI(OpenGLCLManager * m, GeoWindowState s, WorldGLTransformManager * tm)
     {
 
-
-        oldtlx = s.tlx;
-        oldtly = s.tly;
-        oldbrx = s.brx;
-        oldbry = s.bry;
-
-
-        oldresx = s.scr_width;
-        oldresy = s.scr_width;
-
-        /*if(s.GL_FrameBuffer->GetWidth() == 0 ||  s.GL_FrameBuffer->GetHeight() == 0)
+        if(m_DrawOnTop)
         {
-            return;
-        }
+            oldtlx = s.tlx;
+            oldtly = s.tly;
+            oldbrx = s.brx;
+            oldbry = s.bry;
 
-        bool draw_ui = s.draw_ui;
-        if(s.is_3d && !do_if_3d)
-        {
+            oldresx = s.scr_width;
+            oldresy = s.scr_width;
 
-            draw_ui = false;
-        }else
-        {
-            if(s.is_3d)
+
+            //get screen pixel position
+            //get screen pixel size
+
+            float xpix = s.scr_pixwidth* (float)((m_Position.x - s.tlx)/(s.brx-s.tlx));
+            float ypix = s.scr_pixheight* (float)((m_Position.z - s.tly)/(s.bry-s.tly));
+            if(m_PositionIsScreenSpace)
             {
-                if(s.ScreenPosX == nullptr || s.ScreenPosY == nullptr || s.ScreenPosZ == nullptr )
-                {
-                    return;
-
-                }
+                xpix =s.scr_pixwidth * m_Position.x;
+                ypix = s.scr_pixheight * m_Position.z;
             }
+
+            //get pixel width of text
+            float width = m->m_TextPainter->DrawStringWidth(m_Text,NULL,xpix,ypix,m_Color,m_Size);
+
+            if(m_Center)
+            {
+                xpix = xpix - width * 0.5;
+            }
+            if(m_ShadowActive)
+            {
+                LSMVector4 scolor = m_ShadowColor;
+                scolor.w = scolor.w * (1.0f-GetStyle().GetTransparancy());
+
+                    m->m_TextPainter->DrawStringShadow(m_Text,NULL,xpix,ypix,scolor,m_Size,m_ShadowSizeIncr);
+
+            }
+
+
+            LSMVector4 color = m_Color;
+            color.w = color.w * (1.0f-GetStyle().GetTransparancy());
+
+            m->m_TextPainter->DrawString(m_Text,NULL,xpix,ypix,color,m_Size);
+
         }
 
-
-
-        double unitsm = s.projection.GetUnitMultiplier();
-        bool projected = s.projection.IsProjected();
-        QString units = s.projection.GetUnitName();
-
-        float width = s.scr_pixwidth;
-        float height = s.scr_pixheight;
-
-        float framewidth = s.ui_framewidth;//0.65*s.ui_scalem *std::max(25.0f,((float)std::max(0.0f,(width + height)/2.0f)) * 0.05f);
-        float ui_ticktextscale = s.ui_textscale;//s.ui_scalem * std::max(0.3f,0.65f * framewidth/25.0f);
-
-        if(!s.is_3d)
-        {
-
-        }
-        if(draw_ui)
-        {
-
-            //m->m_TextPainter->DrawString(QString::number(xtick),NULL,xpix -20.0f,ybottom-tickdist-ticklength-1-1.15f*12 * ui_ticktextscale,LSMVector4(0.0,0.0,0.0,1.0),12 * ui_ticktextscale);
-
-
-
-        }*/
     }
 
 

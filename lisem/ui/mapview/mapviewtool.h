@@ -58,6 +58,23 @@
 #include "layer/ui/uiarrow.h"
 #include "layer/geo/uishaderlayer.h"
 #include "layer/geo/uiparticleeffectlayer.h"
+#include "linear/lsm_vector4.h"
+#include "particle/2d/zones/boxzone.h"
+#include "particle/2d/zones/pointzone.h"
+#include "particle/2d/zones/disczone.h"
+#include "particle/2d/zones/discsectionzone.h"
+#include "particle/2d/initializers/initcolor.h"
+#include "particle/2d/initializers/initposition.h"
+#include "particle/2d/initializers/initsize.h"
+#include "particle/2d/initializers/initvelocity.h"
+#include "particle/2d/initializers/initrotation.h"
+#include "particle/2d/initializers/initrotationalvelocity.h"
+#include "particle/2d/initializers/initscalevel.h"
+#include "particle/2d/behaviors/move.h"
+#include "particle/2d/behaviors/boundbybox.h"
+#include "particle/2d/renderers/particleimagerenderer.h"
+#include "particle/2d/renderers/particlepointrenderer.h"
+#include "particle/common/instantiator.h"
 
 class MapViewTool;
 
@@ -80,7 +97,7 @@ class ASZone2D
 {
 private:
 
-    LISEM::Zone * m_Zone;
+    LISEM::Zone * m_Zone = nullptr;
 public:
 
     inline void intern_InitializeFromZone(LISEM::Zone * s, bool copy = true)
@@ -93,10 +110,21 @@ public:
            }
     }
 
+    inline LISEM::Zone GetZone()
+    {
+        if(m_Zone!= nullptr)
+        {
+            return LISEM::Zone(*m_Zone);
+        }else
+        {
+            return LISEM::Zone();
+        }
+    }
 
-    inline void SetAsBoxZone()
+    inline void SetAsBoxZone(BoundingBox b)
     {
 
+        m_Zone = new LISEM::BoxZone(b.ULC(), b.Size());
     }
 
     inline void SetAsDiscSectionZone()
@@ -106,17 +134,19 @@ public:
 
     inline void SetAsPointZone(LSMVector2 p)
     {
+        m_Zone = new LISEM::PointZone(p);
 
     }
 
-    inline void SetAsPolygonZone()
+    inline void SetAsPolygonZone(std::vector<LSMVector2> points)
     {
 
     }
 
-    inline void SetAsDiscZone()
+    inline void SetAsDiscZone(LSMVector2 p, float radius, float radius_inner = 0.0)
     {
 
+        m_Zone = new LISEM::DiscZone(p,radius,radius_inner);
     }
 
     inline void SetAsRasterZone()
@@ -161,31 +191,46 @@ inline static ASZone2D * AS_ZoneFactory()
     return new ASZone2D();
 }
 
-inline static ASZone2D * AS_GetPointZone()
+inline static ASZone2D * AS_GetPointZone(LSMVector2 p)
 {
- return new ASZone2D();
-}
-inline static ASZone2D * AS_GetBoxZone()
-{
- return new ASZone2D();
-}
-inline static ASZone2D * AS_GetDiscZone()
-{
- return new ASZone2D();
-}
-inline static ASZone2D * AS_GetDiscSectorZone()
-{
- return new ASZone2D();
-}
-inline static ASZone2D * AS_GetPolygonZone()
-{
- return new ASZone2D();
-}
-inline static ASZone2D * AS_GetRasterZone()
-{
- return new ASZone2D();
-}
 
+    ASZone2D * res =  new ASZone2D();
+    res->SetAsPointZone(p);
+    return res;
+}
+inline static ASZone2D * AS_GetBoxZone(BoundingBox b)
+{
+    ASZone2D * res =  new ASZone2D();
+    res->SetAsBoxZone(b);
+    return res;
+}
+inline static ASZone2D * AS_GetDiscZone(LSMVector2 p, float radius, float radius_inner)
+{
+    ASZone2D * res =  new ASZone2D();
+    res->SetAsDiscZone(p,radius,radius_inner);
+    return res;
+}
+inline static ASZone2D * AS_GetDiscZoneGaussian(LSMVector2 p, float radius)
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetDiscSectorZone(LSMVector2 p, float radius, float radius_inner, float angle_min, float angle_max)
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetPolygonZone(std::vector<LSMVector2> points)
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetRasterZone(cTMap * map)
+{
+ return new ASZone2D();
+}
+inline static ASZone2D * AS_GetMultiZone(std::vector<ASZone2D*> zones)
+{
+
+    return new ASZone2D();
+}
 
 class ASEmitter
 {
@@ -198,25 +243,77 @@ public:
     inline ASEmitter()
     {
 
+        m_Emitter = new LISEM::Emitter();
+    }
+
+    inline LISEM::Emitter GetEmitter()
+    {
+        return LISEM::Emitter(*m_Emitter);
     }
 
 
-    inline void AddInitiator_Position(ASZone2D * z)
+    inline void AddInitiator_Position(ASZone2D * z, float weight = 1.0)
+    {
+        m_Emitter->AddInitializer(LISEM::InitializerPosition(z->GetZone()),weight);
+
+    }
+    inline void AddInitiator_Size(ASZone2D * z, float weight = 1.0)
+    {
+        m_Emitter->AddInitializer(LISEM::InitializerScale(z->GetZone()),weight);
+
+    }
+    inline void AddInitiator_Rotation(ASZone2D *z,float weight = 1.0)
     {
 
+        m_Emitter->AddInitializer(LISEM::InitializerRotation(z->GetZone()),weight);
     }
-    inline void AddInitiator_Size(ASZone2D * z)
+
+    inline void AddInitiator_RotationalVelocity(ASZone2D *z,float weight = 1.0)
+    {
+        m_Emitter->AddInitializer(LISEM::InitializerRotationVelocity(z->GetZone()),weight);
+    }
+    inline void AddInitiator_Velocity(ASZone2D * z, float weight = 1.0)
+    {
+        m_Emitter->AddInitializer(LISEM::InitializerVelocity(z->GetZone()),weight);
+
+    }
+    inline void AddInitiator_Color(ASZone2D * z, float alphamin, float alphamax,float weight = 1.0)
+    {
+        m_Emitter->AddInitializer(LISEM::InitializerColor(z->GetZone(), alphamin, alphamax),weight);
+
+    }
+    /*inline void AddInitiator_Color(ASZone2D * z, float weight = 1.0)
     {
 
+    }*/
+
+    inline void AddInstantiator_Burst(int count)
+    {
+        m_Emitter->AddInstantiator(LISEM::BurstInstantiator(count));
     }
 
-    inline void AddInitiator_Velocity(ASZone2D * z)
+    inline void AddInstantiator_Stream(float rate)
     {
 
+        m_Emitter->AddInstantiator(LISEM::StreamInstantiator(rate));
     }
+
+    inline void AddInstantiator_NoisyStream(float rate, float noise_amp,float noise_period)
+    {
+        m_Emitter->AddInstantiator(LISEM::NoisyStreamInstantiator(rate,noise_amp, noise_period));
+
+    }
+
+    inline void AddInstantiator_DecliningNoisyStream(float rate, float noise_amp, float noise_period,float rate_decline)
+    {
+
+        m_Emitter->AddInstantiator(LISEM::DecliningNoisyStreamInstantiator(rate,noise_amp,noise_period,rate_decline));
+    }
+
 
     inline void AddBehavior_Move()
     {
+        m_Emitter->AddBehavior(LISEM::Move());
 
     }
 
@@ -231,9 +328,10 @@ public:
 
     }
 
-    inline void AddBehavior_BoundingBox()
+    inline void AddBehavior_BoundingBox(BoundingBox Region)
     {
 
+        m_Emitter->AddBehavior(LISEM::BoundedByBox(Region));
 
     }
 
@@ -255,25 +353,19 @@ public:
 
     }
 
-    inline void AddInstantiator_Burst(int count)
+
+    inline void SetRenderer_Image(std::vector<QString> filenames, std::vector<float> probs, int fillstyle)
     {
+
+        m_Emitter->SetRenderer(new LISEM::ParticleImageRenderer(filenames,probs,fillstyle));
+
 
     }
 
-    inline void AddInstantiator_Stream(float rate)
+    inline void SetRenderer_Image(QString filename, int fillstyle)
     {
 
-    }
-
-    inline void AddInitiator_Position()
-    {
-
-    }
-
-    inline void AddRenderer_Image()
-    {
-
-
+        m_Emitter->SetRenderer(new LISEM::ParticleImageRenderer({filename},{1.0},fillstyle));
 
 
     }
@@ -317,6 +409,11 @@ public:
 
 };
 
+inline void CSetEmitterImageRenderer(ASEmitter * e, std::vector<QString> files, std::vector<float> probs, int fillstyle)
+{
+
+    e->SetRenderer_Image(files,probs,fillstyle);
+}
 
 inline static ASEmitter * AS_ParticleEffectFactory()
 {
@@ -1404,6 +1501,62 @@ public:
         return lay;
     }
 
+    inline void ReplaceVelLayerFromScript(ASUILayer id, cTMap * mx, cTMap * my)
+    {
+        if(mx != nullptr && my!= nullptr&& id.GetUID()  > -1)
+        {
+            UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID() );
+            if(l != nullptr)
+            {
+
+                if(l->layertypeName() == "RasterStreamLayer")
+                {
+                    UIStreamRasterLayer * lrs =  (UIStreamRasterLayer *) l;
+                    if(lrs->IsLayerDirectReplaceable({{mx,my}}))
+                    {
+                        m_WorldWindow->m_UILayerMutex.lock();
+                        std::cout << "do direct replace " << std::endl;
+                        lrs->DirectReplace({{mx->GetCopy(),my->GetCopy()}});
+
+                        m_WorldWindow->SetRedrawNeeded();
+
+                        m_WorldWindow->m_UILayerMutex.unlock();
+                        return;
+                    }
+                }
+
+                RasterDataProvider * rdp = new RasterDataProvider(QList<QList<cTMap*>>({{mx->GetCopy(),my->GetCopy()}}),false,true);
+
+
+                if(rdp->Exists())
+                {
+                    QString name =l->GetName();
+                    UIStreamRasterLayer * ret = new UIStreamRasterLayer(rdp,name,false,"",!false);
+                    if(rdp->GetBandCount() > 1)
+                    {
+                        ret->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_DUORASTER_VEL),true);
+                    }else
+                    {
+                        ret->SetStyle(GetStyleDefault(LISEM_STYLE_DEFAULT_RASTERUI),true);
+                    }
+
+                    m_WorldWindow->ReplaceUILayer(l,ret);
+                }else
+                {
+
+                    LISEMS_WARNING("Could not create raster layer to replace layer id " + QString::number(id.GetUID()));
+                }
+
+            }else
+            {
+
+                LISEMS_WARNING("Could not replace layer with id " + QString::number(id.GetUID()));
+            }
+        }
+    }
+
+
+
     inline ASUILayer AddLayerFromScript(ShapeFile * m, QString name, bool can_remove)
     {
         ASUILayer lay;
@@ -1458,6 +1611,25 @@ public:
         }
 
         return lay;
+    }
+
+    inline ASUILayer AddLayerFromScript(ASEmitter *m, float time_scale, bool autoremove)
+    {
+        ASUILayer lay;
+
+
+        if(m != nullptr)
+        {
+            UIParticleEffectLayer * uip = new UIParticleEffectLayer();
+            uip->SetEmitter(m->GetEmitter());
+            uip->SetAutoRemove(autoremove);
+            uip->SetTimeScale(time_scale);
+            lay.SetUID(uip->GetUID(),std::bind(&UILayer::IncreaseScriptRef,uip),std::bind(&UILayer::DecreaseScriptRef,uip) );
+
+            return lay;
+        }
+
+    return lay;
     }
 
 
@@ -1858,32 +2030,33 @@ public:
         //all glfw key codes with names
         std::vector<QString> keynames = {
             "Space",
-            "Apostrophe",
-            "Comma",
-            "Minus",
-            "Period",
-            "Slash",
-            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-            "Semicolon","Equal",
-            "A","B","C","D","E","F","G","H", "i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
-            "LBracket","Backslash","RBracket","Grave","WOrld1","World2",
-            "Escape","enter","tab","backspace","insert","delete","right","left","down","up",
-            "page up","page down","home","end","capslock","scrollock","numlock","printscreen","pause",
-            "F1","F2","F3","F1","F4","F5","F6","F7","F8","F9","F10","F11","F12","F13","F14","F15","F16","F17","F18","F19","F20","F21","F22","F23","F24","F25",
-            "KP 0", "KP 1", "KP 2", "KP 3", "KP 4", "KP 5", "KP 6", "KP 7", "KP 8","KP 9",
-            "KP Decimal","KP divide","KP multiply","kp subtract","kp add","kp enter","kp equal",
-            "LShift","LControl","LAlt","LSuper","RShift","RControl","RAlt","RSuper","Menu"
+                        "Apostrophe",
+                        "Comma",
+                        "Minus",
+                        "Period",
+                        "Slash",
+                        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                        "Semicolon","Equal",
+                        "A","B","C","D","E","F","G","H", "i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+                        "LBracket","Backslash","RBracket","Grave","WOrld1","World2",
+                        "Escape","enter","tab","backspace","insert","delete","right","left","down","up",
+                        "page up","page down","home","end","capslock","scrollock","numlock","printscreen","pause",
+                        "F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","F13","F14","F15","F16","F17","F18","F19","F20","F21","F22","F23","F24","F25",
+                        "KP 0", "KP 1", "KP 2", "KP 3", "KP 4", "KP 5", "KP 6", "KP 7", "KP 8","KP 9",
+                        "KP Decimal","KP divide","KP multiply","kp subtract","kp add","kp enter","kp equal",
+                        "LShift","LControl","LAlt","LSuper","RShift","RControl","RAlt","RSuper","Menu"
 
 
         };
         std::vector<int> keyindices =
         {
             32,39,44,45,46,47,48,49,50,51,52,53,54,55,56,57,59,61,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
-            80,81,82,83,84,85,86,87,88,89,90,91,92,93,96,161,162,256,257,258,259,260,261,262,263,264,265,266,267,268,269,280,291,282,283,284,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,
-            309,310,311,12,313,314,320,321,322,323,324,325,326,327,328,329,330,331,332,333,
-            334,335,336,340,341,342,343,344,345,346,347,348
+                        80,81,82,83,84,85,86,87,88,89,90,91,92,93,96,161,162,256,257,258,259,260,261,262,263,264,265,266,267,268,269,280,291,282,283,284,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,
+                        309,310,311,312,313,314,320,321,322,323,324,325,326,327,328,329,330,331,332,333,
+                        334,335,336,340,341,342,343,344,345,346,347,348
 
         };
+
 
         for(int i = 0; i < keynames.size(); i++)
         {
@@ -1972,13 +2145,14 @@ public:
         m_WorldWindow->RemoveAllUserLayers();
     }
 
-    inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P, bool rel = false)
+    inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P, bool rel = false, bool center = false)
     {
+        std::cout << "add text layer " << center << std::endl;
         ASUILayer ret;
 
 
         {
-            UITextLayer * lay = new UITextLayer(text,QString(""),Position,*P,size,false,false,false);
+            UITextLayer * lay = new UITextLayer(text,QString(""),Position,*P,size,Color,false,false,false,rel,false,false,center);
             m_WorldWindow->AddUILayer(lay,true,false);
 
 
@@ -1990,8 +2164,21 @@ public:
     }
 
 
+    inline void SetTextShadow(ASUILayer id, bool active, LSMVector4 color,float size_incr)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "TextLayer")
+            {
+                ((UITextLayer *)(l))->SetShadow(active,size_incr,color);
 
-    inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P, bool screencoords, bool size_rel, LSMVector4 box_color)
+            }
+
+        }
+    }
+
+    inline ASUILayer AddTextLayer(QString text, LSMVector3 Position, float size, LSMVector4 Color, GeoProjection *P, bool screencoords, bool size_rel, LSMVector4 box_color, bool center = false)
     {
         ASUILayer ret;
 
@@ -2059,14 +2246,14 @@ public:
         }
     }
 
-    inline ASUILayer AddImageLayer(QString file, BoundingBox pos, GeoProjection *p, bool rel = false)
+    inline ASUILayer AddImageLayer(QString file, BoundingBox pos, GeoProjection *p, bool rel = false,int fillmode = 0)
     {
         ASUILayer lay;
 
         //if(m != nullptr && m2 != nullptr)
         {
 
-            UIImageLayer * ret = new UIImageLayer(file,pos,*p,rel);
+            UIImageLayer * ret = new UIImageLayer(file,pos,*p,rel,fillmode);
 
             m_WorldWindow->AddUILayer(ret,true);
 
@@ -2079,14 +2266,14 @@ public:
 
 
     }
-    inline ASUILayer AddImageLayer2(cTMap * r, cTMap * g, cTMap * b, cTMap * a, BoundingBox pos, GeoProjection *p, bool rel = false)
+    inline ASUILayer AddImageLayer2(cTMap * r, cTMap * g, cTMap * b, cTMap * a, BoundingBox pos, GeoProjection *p, bool rel = false, int fillmode = 0)
     {
         ASUILayer lay;
 
         //if(m != nullptr && m2 != nullptr)
         {
 
-            UIImageLayer * ret = new UIImageLayer(r->GetCopy(),g->GetCopy(),b->GetCopy(),a->GetCopy(),pos,*p,rel);
+            UIImageLayer * ret = new UIImageLayer(r->GetCopy(),g->GetCopy(),b->GetCopy(),a->GetCopy(),pos,*p,rel,fillmode);
 
             m_WorldWindow->AddUILayer(ret,true);
 
@@ -2105,6 +2292,19 @@ public:
             if(l->layertypeName() == "ImageLayer")
             {
                 ((UIImageLayer *)(l))->setPosition(pos,*p,rel);
+
+            }
+        }
+    }
+
+    inline void SetImagePositionRotation(ASUILayer id,BoundingBox pos, float angle, GeoProjection *p, bool rel = false )
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            if(l->layertypeName() == "ImageLayer")
+            {
+                ((UIImageLayer *)(l))->setPositionRotation(pos,angle,*p,rel);
 
             }
         }
@@ -2136,7 +2336,7 @@ public:
 
 
 
-    inline ASUILayer AddCustomShader1(QString text,  std::vector<cTMap*>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
+    inline ASUILayer AddCustomShader1(QString text,  std::vector<cTMap*>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony = -1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
     {
         ASUILayer lay;
 
@@ -2155,7 +2355,7 @@ public:
     }
 
 
-    inline ASUILayer AddCustomShader2(QString text,  std::vector<QString>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
+    inline ASUILayer AddCustomShader2(QString text,  std::vector<QString>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony = -1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
     {
         ASUILayer lay;
 
@@ -2174,7 +2374,7 @@ public:
         return lay;
     }
 
-    inline ASUILayer AddCustomShader1mp(std::vector<QString> text,  std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony =-1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
+    inline ASUILayer AddCustomShader1mp(std::vector<QString> text,  std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony =-1, GeoProjection p = GeoProjection::GetGeneric(),bool isabs = false, bool scaling = true, bool is2d = true)
     {
         ASUILayer lay;
 
@@ -2193,7 +2393,7 @@ public:
     }
 
 
-    inline ASUILayer AddCustomShader2mp(std::vector<QString> text,  std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection p = GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+    inline ASUILayer AddCustomShader2mp(std::vector<QString> text,  std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1,float resolutiony = -1, GeoProjection p = GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
     {
         ASUILayer lay;
 
@@ -2237,6 +2437,12 @@ public:
 
     }
 
+    inline void OpenFullScreen(bool open = true, bool alt = false)
+    {
+
+        CGlobalGLCLManager->RequestToggleFullscreen(open,alt);
+
+    }
     inline void SetAllowShift(bool x)
     {
         m_WorldWindow->SetAllowShift(x);
@@ -2253,6 +2459,337 @@ public:
             }
         }
     }
+
+    inline void SetLayerStyleHillShade(ASUILayer id, bool x, float angle_1, float angle_2)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            l->GetStyleRef()->angle_hor = angle_2;
+            l->GetStyleRef()->angle_vert = angle_1;
+            l->GetStyleRef()->m_IsHS = true;
+
+
+            l->SetStyleChangedFromExternalThread(false);
+
+            l->GetStyleMutex()->unlock();
+        }
+    }
+
+    inline void SetLayerFillStyle(ASUILayer id,  LSMVector4 color1,float size, float seperation, float angle,LSMVector4 color2,int filltype)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            SPHFillStyle s = GetDefaultFillStyle(LISEM_FILLSTYLE_BLACK);
+
+            s.m_Color1 = ColorF(color1.x,color1.y,color1.z,color1.w);
+            s.m_Color2 = ColorF(color2.x,color2.y,color2.z,color2.w);
+
+            s.m_IsLines = filltype == 1 ;
+            s.m_LineSize = size;
+            s.m_LineAngle = seperation;
+            s.m_LineSeperation = angle;
+            s.m_IsShapes = filltype == 2 || filltype == 3;
+            s.m_ShapeType = filltype == 2?LISEM_FILLSHAPE_CIRCLE : LISEM_FILLSHAPE_SQUARE;
+            s.m_ShapeSize = size;
+            s.m_ShapeSeperation = seperation;
+            s.m_HasBackGroundColor = color1.w > 0.0;
+
+
+
+            l->GetStyleRef()->m_PointFillStyle = s;
+            l->GetStyleRef()->m_PolygonFillStyle = s;
+
+            l->SetStyleChangedFromExternalThread(false);
+
+            l->GetStyleMutex()->unlock();
+        }
+    }
+
+
+    inline void SetLayerLineStyle(ASUILayer id, LSMVector4 color1,float size,LSMVector4 color2,int filltype)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            LSMLineStyle s = GetDefaultLineStyle(LISEM_LINESTYLE_BLACK);
+
+
+            s.m_Color1 = ColorF(color1.x,color1.y,color1.z,color1.w);
+            s.m_Color2 = ColorF(color2.x,color2.y,color2.z,color2.w);
+
+            s.m_HasBackGroundColor = color1.w > 0.0? true:false;
+            s.m_HasPattern = filltype > 0?true:false;
+            if(s.m_HasPattern)
+            {
+                s.pattern = {1.0,1.0};
+            }else
+            {
+                s.pattern = {};
+                s.m_Color2 = s.m_Color1;
+            }
+            s.m_LineWMax =size;
+            s.m_ShapeType = filltype > 0?LISEM_LINESHAPE_SQUARE:0;
+
+            l->GetStyleRef()->m_LineLineStyle = s;
+            l->GetStyleRef()->m_PointLineStyle = s;
+            l->GetStyleRef()->m_PolygonLineStyle = s;
+
+
+
+            l->SetStyleChangedFromExternalThread(false);
+
+            l->GetStyleMutex()->unlock();
+        }
+
+    }
+
+    inline void SetLayerTransparency(ASUILayer id, float trans)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            l->GetStyleRef()->SetTransparancy(1.0-trans);
+
+
+            l->SetStyleChangedFromExternalThread(false);
+
+            l->GetStyleMutex()->unlock();
+        }
+
+    }
+    /*from lsmcolorgradient.h
+#define LISEM_GRADIENT_WH 0
+#define LISEM_GRADIENT_HS 1
+#define LISEM_GRADIENT_UI 12 //Marianne Rainbow
+#define LISEM_GRADIENT_RYG 3
+#define LISEM_GRADIENT_ELEVATION 4
+#define LISEM_GRADIENT_RBGB 5
+#define LISEM_GRADIENT_BLUES 6
+#define LISEM_GRADIENT_REDS 7
+#define LISEM_GRADIENT_MAGMA 8
+#define LISEM_GRADIENT_WH_FLUIDS 9
+#define LISEM_GRADIENT_WH_SOLIDS 10
+#define LISEM_GRADIENT_VEL_WHITE 11
+#define LISEM_GRADIENT_UI_USER 2
+*/
+
+    inline void SetLayerStyleColorGradient(ASUILayer id,QString name)
+    {
+
+
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            if(name.compare("Marianne",Qt::CaseInsensitive) == 0 || name.compare("ui",Qt::CaseInsensitive) == 0  )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_UI);
+            }else if(name.compare("HS",Qt::CaseInsensitive) == 0 || name.compare("Hillshade",Qt::CaseInsensitive) == 0 || name.compare("GreyScale",Qt::CaseInsensitive) == 0 || name.compare("GrayScale",Qt::CaseInsensitive) == 0  )
+            {
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_HS);
+            }else if(name.compare("Water",Qt::CaseInsensitive) == 0 || name.compare("Rain",Qt::CaseInsensitive) == 0 || name.compare("Flow",Qt::CaseInsensitive) == 0  )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_WH);
+
+            }else if(name.compare("Elevation",Qt::CaseInsensitive) == 0 )
+            {
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_ELEVATION);
+
+            }else if(name.compare("RBGB",Qt::CaseInsensitive) == 0  )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_RBGB);
+            }else if(name.compare("BLUES",Qt::CaseInsensitive) == 0 || name.compare("Blue",Qt::CaseInsensitive) == 0  )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_BLUES);
+            }else if(name.compare("REDS",Qt::CaseInsensitive) == 0 || name.compare("Red",Qt::CaseInsensitive) == 0)
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_REDS);
+            }else if(name.compare("MAGMA",Qt::CaseInsensitive) == 0 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_MAGMA);
+
+            }else if(name.compare("FLUIDS",Qt::CaseInsensitive) == 0 || name.compare("Fluid",Qt::CaseInsensitive) == 0  )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_WH_FLUIDS);
+
+            }else if(name.compare("SOLIDS",Qt::CaseInsensitive) == 0 || name.compare("Solid",Qt::CaseInsensitive) == 0 || name.compare("Mud",Qt::CaseInsensitive) == 0 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_WH_SOLIDS);
+
+
+            }else if(name.compare("RYG",Qt::CaseInsensitive) == 0 || name.compare("Hazard",Qt::CaseInsensitive) == 0 || name.compare("Trafficlight",Qt::CaseInsensitive) == 0 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_RYG);
+
+            }else if(name.compare("White",Qt::CaseInsensitive) == 0 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_VEL_WHITE);
+            }else
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_UI);
+            }
+
+
+            l->SetStyleChangedFromExternalThread(false);
+            l->GetStyleMutex()->unlock();
+        }
+
+    }
+    inline void SetLayerStyleColorGradient(ASUILayer id,int index)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+
+            if(index == 0 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_UI);
+            }else if(index == 1 )
+            {
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_HS);
+            }else if(index == 2 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_WH);
+
+            }else if(index == 3 )
+            {
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_ELEVATION);
+
+            }else if(index == 4  )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_RBGB);
+            }else if(index == 5 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_BLUES);
+            }else if(index == 6)
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_REDS);
+            }else if(index == 7)
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_MAGMA);
+
+            }else if(index == 8)
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_WH_FLUIDS);
+
+            }else if(index == 9 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_WH_SOLIDS);
+
+
+            }else if(index == 10 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_RYG);
+
+            }else if(index == 11 )
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_VEL_WHITE);
+            }else
+            {
+
+                l->GetStyleRef()->m_ColorGradientb1 = GetDefaultGradient(LISEM_GRADIENT_UI);
+            }
+
+
+            l->SetStyleChangedFromExternalThread(false);
+            l->GetStyleMutex()->unlock();
+        }
+    }
+
+    inline void SetLayerStyleColorGradient(ASUILayer id,std::vector<float> stops, std::vector<LSMVector4> colors)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            LSMColorGradient grad;
+
+            {
+                for(int i = 0; i < stops.size(); i++)
+                {
+                    grad.m_Gradient_Stops.append(stops[i]);
+                    if(i < colors.size())
+                    {
+                        grad.m_Gradient_Colors.append(ColorF(colors[i].x,colors[i].y,colors[i].z,colors[i].w));
+                    }else
+                    {
+                        grad.m_Gradient_Colors.append(ColorF(0.0,0.0,0.0,0.0));
+                    }
+
+                }
+            }
+            l->GetStyleRef()->m_ColorGradientb1 = grad;
+            l->SetStyleChangedFromExternalThread(false);
+
+            l->GetStyleMutex()->unlock();
+        }
+    }
+
+    inline void SetLayerValueRange(ASUILayer id, double min, double max, int band)
+    {
+        UILayer * l = m_WorldWindow->GetUILayerFromUID(id.GetUID());
+        if(l != nullptr)
+        {
+            l->GetStyleMutex()->lock();
+
+            if(band == 3)
+            {
+                l->GetStyleRef()->m_Intervalb3.SetMax(max);
+                l->GetStyleRef()->m_Intervalb3.SetMin(min);
+            }else if(band == 2)
+            {
+                l->GetStyleRef()->m_Intervalb2.SetMax(max);
+                l->GetStyleRef()->m_Intervalb2.SetMin(min);
+            }else
+            {
+                l->GetStyleRef()->m_Intervalb1.SetMax(max);
+                l->GetStyleRef()->m_Intervalb1.SetMin(min);
+            }
+
+            l->SetStyleChangedFromExternalThread(false);
+
+            l->GetStyleMutex()->unlock();
+        }
+
+
+
+    }
+
 
     inline void SetShaderPosition(ASUILayer id, BoundingBox b, GeoProjection * p, bool is_rel)
     {
@@ -2318,6 +2855,7 @@ public:
             m_WorldWindow->m_MouseState.MouseButtonKeySAction.clear();
             m_WorldWindow->m_MouseState.MouseButtonSPosX.clear();
             m_WorldWindow->m_MouseState.MouseButtonSPosY.clear();
+            m_LastScriptCounter = sc;
             m_WorldWindow->m_SM.unlock();
 
         }else
@@ -2369,7 +2907,7 @@ public:
                     // Set the function arguments
                     ctx->SetArgObject(0,&key);
                     ctx->SetArgDouble(1,posx);
-                    ctx->SetArgDouble(2,posx);
+                    ctx->SetArgDouble(2,posy);
                     ctx->SetArgByte(3,press);
                     ctx->SetArgByte(4,has_shift);
 
@@ -2424,30 +2962,30 @@ public:
         //all glfw key codes with names
         std::vector<QString> keynames = {
             "Space",
-            "Apostrophe",
-            "Comma",
-            "Minus",
-            "Period",
-            "Slash",
-            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-            "Semicolon","Equal",
-            "A","B","C","D","E","F","G","H", "i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
-            "LBracket","Backslash","RBracket","Grave","WOrld1","World2",
-            "Escape","enter","tab","backspace","insert","delete","right","left","down","up",
-            "page up","page down","home","end","capslock","scrollock","numlock","printscreen","pause",
-            "F1","F2","F3","F1","F4","F5","F6","F7","F8","F9","F10","F11","F12","F13","F14","F15","F16","F17","F18","F19","F20","F21","F22","F23","F24","F25",
-            "KP 0", "KP 1", "KP 2", "KP 3", "KP 4", "KP 5", "KP 6", "KP 7", "KP 8","KP 9",
-            "KP Decimal","KP divide","KP multiply","kp subtract","kp add","kp enter","kp equal",
-            "LShift","LControl","LAlt","LSuper","RShift","RControl","RAlt","RSuper","Menu"
+                        "Apostrophe",
+                        "Comma",
+                        "Minus",
+                        "Period",
+                        "Slash",
+                        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                        "Semicolon","Equal",
+                        "A","B","C","D","E","F","G","H", "i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+                        "LBracket","Backslash","RBracket","Grave","WOrld1","World2",
+                        "Escape","enter","tab","backspace","insert","delete","right","left","down","up",
+                        "page up","page down","home","end","capslock","scrollock","numlock","printscreen","pause",
+                        "F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","F13","F14","F15","F16","F17","F18","F19","F20","F21","F22","F23","F24","F25",
+                        "KP 0", "KP 1", "KP 2", "KP 3", "KP 4", "KP 5", "KP 6", "KP 7", "KP 8","KP 9",
+                        "KP Decimal","KP divide","KP multiply","kp subtract","kp add","kp enter","kp equal",
+                        "LShift","LControl","LAlt","LSuper","RShift","RControl","RAlt","RSuper","Menu"
 
 
         };
         std::vector<int> keyindices =
         {
             32,39,44,45,46,47,48,49,50,51,52,53,54,55,56,57,59,61,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
-            80,81,82,83,84,85,86,87,88,89,90,91,92,93,96,161,162,256,257,258,259,260,261,262,263,264,265,266,267,268,269,280,291,282,283,284,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,
-            309,310,311,12,313,314,320,321,322,323,324,325,326,327,328,329,330,331,332,333,
-            334,335,336,340,341,342,343,344,345,346,347,348
+                        80,81,82,83,84,85,86,87,88,89,90,91,92,93,96,161,162,256,257,258,259,260,261,262,263,264,265,266,267,268,269,280,291,282,283,284,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,
+                        309,310,311,312,313,314,320,321,322,323,324,325,326,327,328,329,330,331,332,333,
+                        334,335,336,340,341,342,343,344,345,346,347,348
 
         };
 
@@ -2460,6 +2998,7 @@ public:
             m_WorldWindow->m_MouseState.KeySEvents.clear();
             m_WorldWindow->m_MouseState.KeySAction.clear();
             m_WorldWindow->m_MouseState.KeySMods.clear();
+            m_LastScriptCounter = sc;
             m_WorldWindow->m_SM.unlock();
 
         }else
@@ -2467,7 +3006,7 @@ public:
             //use whats there in the list
             m_WorldWindow->m_SM.lock();
 
-            for(int i = 0; i < m_WorldWindow->m_MouseState.MouseButtonSEventsShift.size(); i++)
+            for(int i = 0; i < m_WorldWindow->m_MouseState.KeySEventShift.size(); i++)
             {
 
                 bool has_shift = m_WorldWindow->m_MouseState.KeySEventShift.at(i);
@@ -2507,8 +3046,10 @@ public:
 
                     // Set the function arguments
                     ctx->SetArgObject(0,&key);
-                    ctx->SetArgByte(1,press);
-                    ctx->SetArgByte(2,has_shift);
+                    ctx->SetArgDouble(1,m_WorldWindow->GetCurrentWindowState().MousePosX);
+                    ctx->SetArgDouble(2,m_WorldWindow->GetCurrentWindowState().MousePosY);
+                    ctx->SetArgByte(3,press);
+                    ctx->SetArgByte(4,has_shift);
 
                     int r = ctx->Execute();
                     if( r == asEXECUTION_FINISHED )
@@ -3256,7 +3797,7 @@ public slots:
     {
         LSMVector3 Position = LSMVector3(m_WorldWindow->GetLook().GetCenterX(),0.0,m_WorldWindow->GetLook().GetCenterY());
         GeoProjection p= m_WorldWindow->GetCurrentProjection();
-        UITextLayer * layer = new UITextLayer("Text","",Position,p,12,false,false,false);
+        UITextLayer * layer = new UITextLayer("Text","",Position,p,12,LSMVector4(0.0,0.0,0.0,1.0),false,false,false);
         m_WorldWindow->AddUILayer(layer,true,false);
     }
 
@@ -3954,21 +4495,21 @@ inline static void GetCurrentMapLayerNamesAndBoundingBoxes(QList<QString> & name
     }
 }
 
-inline static ASUILayer CAddCustomShaderLayer1(QString text,  std::vector<cTMap*>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+inline static ASUILayer CAddCustomShaderLayer1(QString text,  std::vector<cTMap*>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
 {
     MapViewTool * m = GetMapViewTool();
 
     return m->AddCustomShader1(text,textures,region,resolutionx,resolutiony,*p,isabs,scaling,is2d);
 }
 
-inline static ASUILayer CAddCustomShaderLayer2(QString text,  std::vector<QString>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+inline static ASUILayer CAddCustomShaderLayer2(QString text,  std::vector<QString>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
 {
     MapViewTool * m = GetMapViewTool();
 
     return m->AddCustomShader2(text,textures,region,resolutionx,resolutiony,*p,isabs,scaling,is2d);
 }
 
-inline static ASUILayer CAddCustomShaderLayer1mp(std::vector<QString> text,  std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+inline static ASUILayer CAddCustomShaderLayer1mp(std::vector<QString> text,  std::vector<std::vector<cTMap*>>textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
 {
     MapViewTool * m = GetMapViewTool();
 
@@ -3976,7 +4517,7 @@ inline static ASUILayer CAddCustomShaderLayer1mp(std::vector<QString> text,  std
 
 }
 
-inline static ASUILayer CAddCustomShaderLayer2mp(std::vector<QString> text,  std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),int resolutionx = -1, int resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
+inline static ASUILayer CAddCustomShaderLayer2mp(std::vector<QString> text,  std::vector<std::vector<QString>> textures,BoundingBox region = BoundingBox(0.0,1.0,0.0,1.0),float resolutionx = -1, float resolutiony = -1, GeoProjection *p = new GeoProjection(),bool isabs = false, bool scaling = true, bool is2d = true)
 {
     MapViewTool * m = GetMapViewTool();
 
@@ -3984,6 +4525,14 @@ inline static ASUILayer CAddCustomShaderLayer2mp(std::vector<QString> text,  std
 
 }
 
+
+inline static void CSetLayerStyleColorGradient(ASUILayer l, std::vector<float> stops, std::vector<LSMVector4> colors)
+{
+    MapViewTool * m = GetMapViewTool();
+
+    return m->SetLayerStyleColorGradient(l, stops, colors);
+
+}
 
 
 #endif // MAPVIEWTOOL_H

@@ -212,7 +212,7 @@ void WorldWindow::SetLimitedPosition3D(BoundingBox3D view)
 void WorldWindow::SetFreeCamera(bool x)
 {
     m_CameraLimitMutex.lock();
-    if(x)
+    if(!x)
     {
         if(m_CameraLastLimit == 0)
         {
