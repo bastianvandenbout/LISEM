@@ -374,9 +374,17 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
 {
 
     //register algorithm for maps
-
     //spread algorithms
     int r = engine->RegisterGlobalFunction("Map @Spread(const Map &in s1,const Map &in s2,const Map &in s3)", asFUNCTIONPR( AS_Spread,(cTMap*,cTMap*,cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadMT(const Map &in s1,const Map &in s2,const Map &in s3)", asFUNCTIONPR( AS_SpreadMT,(cTMap*,cTMap*,cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadMD(const Map &in s1,const Map &in s2,const Map &in s3)", asFUNCTIONPR( AS_SpreadMD,(cTMap*,cTMap*,cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadFlowField(const Map &in source,const Map &in fx_norm,const Map &in fy_norm, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlow,(cTMap*,cTMap*,cTMap *, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMD(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMD,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMD2(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMD2,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMDCP(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, const Map &in scale, float power, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMDCP,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *,cTMap * ,float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+
+    r = engine->RegisterGlobalFunction("Map @SpreadDirectionalAbsMax(const Map &in s1,const Map &in initialfriction,const Map &in frictionx, const Map &in  frictiony, float delta = 0.0001)", asFUNCTIONPR( AS_SpreadDirectionalAbsMax,(cTMap*,cTMap*,cTMap *,cTMap*, float ),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadDirectionalAbsMaxMD(const Map &in s1,const Map &in initialfriction,const Map &in frictionx1,const Map &in frictionx2, const Map &in  frictiony1,const Map &in  frictiony2, float delta = 0.0001)", asFUNCTIONPR( AS_SpreadDirectionalAbsMaxMD,(cTMap*,cTMap*,cTMap *,cTMap *, cTMap *,cTMap*, float ),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @Spread(const Map &in s1,float s2,const Map &in s3)", asFUNCTIONPR( AS_Spread,(cTMap*,float,cTMap *),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @Spread(const Map &in s1,const Map &in s2,float s3)", asFUNCTIONPR( AS_Spread,(cTMap*,cTMap*,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @Spread(const Map &in s1,float s2,float s3)", asFUNCTIONPR( AS_Spread,(cTMap*,float,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
@@ -412,8 +420,12 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @Slope(const Map &in s1)", asFUNCTION( AS_Slope),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @Aspect(const Map &in s1)", asFUNCTION( AS_Aspect),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @GradientX(const Map &in s1)", asFUNCTION( AS_SlopeX),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @GradientX1(const Map &in s1)", asFUNCTION( AS_SlopeX1),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @GradientX2(const Map &in s1)", asFUNCTION( AS_SlopeX2),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @GradientXX(const Map &in s1)", asFUNCTION( AS_SlopeDx2),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @GradientY(const Map &in s1)", asFUNCTION( AS_SlopeY),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @GradientY1(const Map &in s1)", asFUNCTION( AS_SlopeY1),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @GradientY2(const Map &in s1)", asFUNCTION( AS_SlopeY2),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @GradientYY(const Map &in s1)", asFUNCTION( AS_SlopeDy2),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @CurvPlanar(const Map &in s1)", asFUNCTION( AS_PlanarCurvature),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @CurvProfile(const Map &in s1)", asFUNCTION( AS_ProfileCurvature),  asCALL_CDECL); assert( r >= 0 );

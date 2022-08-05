@@ -480,6 +480,68 @@ inline cTMap * AS_SlopeX(cTMap * dem)
     return map;
 }
 
+inline cTMap * AS_SlopeX1(cTMap * dem)
+{
+    MaskedRaster<float> raster_data(dem->data.nr_rows(), dem->data.nr_cols(), dem->data.north(), dem->data.west(), dem->data.cell_size(),dem->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),dem->projection(),"");
+
+
+    float demVal; /* value in the dem.map */
+        int r, c, nrRows, nrCols;
+
+        nrRows = dem->nrRows();
+        nrCols = dem->nrCols();
+
+        /* For every cell in the dem map calculate the orient. */
+        for (r = 0; r < nrRows; r++) {
+            for (c = 0; c < nrCols; c++) {
+                if (!pcr::isMV(dem->data[r][c])) {
+                    float Dx, Dy;
+
+                    Dx = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_X,1.0,UF_DERIVATIVE_L);
+                    //Dy = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_Y,1.0,UF_DERIVATIVE_LR);
+
+                    map->data[r][c] = Dx;
+                } else
+                    pcr::setMV(map->data[r][c]);
+            }
+        }
+
+    return map;
+}
+
+inline cTMap * AS_SlopeX2(cTMap * dem)
+{
+    MaskedRaster<float> raster_data(dem->data.nr_rows(), dem->data.nr_cols(), dem->data.north(), dem->data.west(), dem->data.cell_size(),dem->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),dem->projection(),"");
+
+
+    float demVal; /* value in the dem.map */
+        int r, c, nrRows, nrCols;
+
+        nrRows = dem->nrRows();
+        nrCols = dem->nrCols();
+
+        /* For every cell in the dem map calculate the orient. */
+        for (r = 0; r < nrRows; r++) {
+            for (c = 0; c < nrCols; c++) {
+                if (!pcr::isMV(dem->data[r][c])) {
+                    float Dx, Dy;
+
+                    Dx = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_X,1.0,UF_DERIVATIVE_R);
+                    //Dy = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_Y,1.0,UF_DERIVATIVE_LR);
+
+                    map->data[r][c] = Dx;
+                } else
+                    pcr::setMV(map->data[r][c]);
+            }
+        }
+
+    return map;
+}
+
+
+
 
 inline cTMap * AS_SlopeY(cTMap *dem)
 {
@@ -510,6 +572,74 @@ inline cTMap * AS_SlopeY(cTMap *dem)
 
     return map;
 }
+
+
+
+
+inline cTMap * AS_SlopeY1(cTMap *dem)
+{
+    MaskedRaster<float> raster_data(dem->data.nr_rows(), dem->data.nr_cols(), dem->data.north(), dem->data.west(), dem->data.cell_size(),dem->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),dem->projection(),"");
+
+
+    float demVal; /* value in the dem.map */
+        int r, c, nrRows, nrCols;
+
+        nrRows = dem->nrRows();
+        nrCols = dem->nrCols();
+
+        /* For every cell in the dem map calculate the orient. */
+        for (r = 0; r < nrRows; r++) {
+            for (c = 0; c < nrCols; c++) {
+                if (!pcr::isMV(dem->data[r][c])) {
+                    float Dx, Dy;
+
+                    //Dx = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_X,1.0,UF_DERIVATIVE_LR);
+                    Dy = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_Y,1.0,UF_DERIVATIVE_L);
+
+                    map->data[r][c] = Dy;
+                } else
+                    pcr::setMV(map->data[r][c]);
+            }
+        }
+
+    return map;
+}
+
+
+
+
+
+inline cTMap * AS_SlopeY2(cTMap *dem)
+{
+    MaskedRaster<float> raster_data(dem->data.nr_rows(), dem->data.nr_cols(), dem->data.north(), dem->data.west(), dem->data.cell_size(),dem->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),dem->projection(),"");
+
+
+    float demVal; /* value in the dem.map */
+        int r, c, nrRows, nrCols;
+
+        nrRows = dem->nrRows();
+        nrCols = dem->nrCols();
+
+        /* For every cell in the dem map calculate the orient. */
+        for (r = 0; r < nrRows; r++) {
+            for (c = 0; c < nrCols; c++) {
+                if (!pcr::isMV(dem->data[r][c])) {
+                    float Dx, Dy;
+
+                    //Dx = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_X,1.0,UF_DERIVATIVE_LR);
+                    Dy = UF2D_Derivative_scaled(dem,r,c,UF_DIRECTION_Y,1.0,UF_DERIVATIVE_R);
+
+                    map->data[r][c] = Dy;
+                } else
+                    pcr::setMV(map->data[r][c]);
+            }
+        }
+
+    return map;
+}
+
 
 
 inline cTMap * AS_SlopeDx2(cTMap *dem)

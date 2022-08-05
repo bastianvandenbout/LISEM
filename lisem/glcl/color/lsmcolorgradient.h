@@ -137,7 +137,7 @@ public:
         {
             if(gradient.m_Gradient_Stops.at(i) < 1.0 && gradient.m_Gradient_Stops.at(i) > 0.0)
             {
-                float stop_new = std::min(1.0,std::max(0.0,std::log((gradient.m_Gradient_Stops.at(i)*100.0))/100.0));
+                float stop_new = std::pow(gradient.m_Gradient_Stops.at(i),4);
                 gradient.m_Gradient_Stops.replace(i,stop_new);
             }
         }
@@ -157,7 +157,7 @@ public:
         {
             if(gradient.m_Gradient_Stops.at(i) < 1.0 && gradient.m_Gradient_Stops.at(i) > 0.0)
             {
-                float stop_new = std::exp((gradient.m_Gradient_Stops.at(i)*100.0))/100.0;
+                float stop_new = std::pow(gradient.m_Gradient_Stops.at(i),0.25);
                 gradient.m_Gradient_Stops.replace(i,stop_new);
             }
         }

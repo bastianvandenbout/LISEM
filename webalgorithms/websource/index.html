@@ -1,0 +1,27 @@
+---
+layout: default
+---
+
+ <script type="text/javascript">
+
+      const module = {};
+	  function fnAction(input){
+        console.log("Executing action");
+		module.readURL(input);
+      }
+    </script>
+	
+     <script type="module">
+	  import {readURL} from './fastflood.js';
+	  module.readURL = readURL;
+    </script>
+	
+		
+<div class="container">
+	
+            <p>
+			Installers are available for windows, linux and pre-built python packages through conda.
+            </p>
+        <input type='file' onchange="fnAction(this);" />
+    <img id="blah" src="#" alt="your image" />
+</div>

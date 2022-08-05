@@ -44,13 +44,13 @@ window.MathJax = {
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="LISEM website, open-source spatial modelling software download and tutorials. Tool for analysis of floods, erosion, hydrology, natural hazards and geo-algorithms." />
 <meta property="og:description" content="LISEM website, open-source spatial modelling software download and tutorials. Tool for analysis of floods, erosion, hydrology, natural hazards and geo-algorithms." />
-<link rel="canonical" href="http://localhost:4000/webalgorithms/" />
-<meta property="og:url" content="http://localhost:4000/webalgorithms/" />
+<link rel="canonical" href="http://localhost:4000/webalgorithms/websource/" />
+<meta property="og:url" content="http://localhost:4000/webalgorithms/websource/" />
 <meta property="og:site_name" content="LISEM" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="LISEM" />
 <script type="application/ld+json">
-{"@type":"WebPage","headline":"LISEM","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://lisemmodel.com/assets/img/LISEM.png"}},"url":"http://localhost:4000/webalgorithms/","description":"LISEM website, open-source spatial modelling software download and tutorials. Tool for analysis of floods, erosion, hydrology, natural hazards and geo-algorithms.","@context":"https://schema.org"}</script>
+{"@type":"WebPage","headline":"LISEM","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://lisemmodel.com/assets/img/LISEM.png"}},"url":"http://localhost:4000/webalgorithms/websource/","description":"LISEM website, open-source spatial modelling software download and tutorials. Tool for analysis of floods, erosion, hydrology, natural hazards and geo-algorithms.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -103,13 +103,27 @@ window.MathJax = {
 
     <div class="page-content">
         <div class="wrapper">
-            <div class="container">
-    <script type="text/javascript" src="fastflood.js"></script>
+             <script type="text/javascript">
+
+      const module = {};
+	  function fnAction(input){
+        console.log("Executing action");
+		module.readURL(input);
+      }
+    </script>
+	
+     <script type="module">
+	  import {readURL} from './fastflood.js';
+	  module.readURL = readURL;
+    </script>
+	
+		
+<div class="container">
 	
             <p>
 			Installers are available for windows, linux and pre-built python packages through conda.
             </p>
-        <input type='file' onchange="readURL(this);" />
+        <input type='file' onchange="fnAction(this);" />
     <img id="blah" src="#" alt="your image" />
 </div>
 
