@@ -44,7 +44,7 @@
 #include "raster/rasterlaplace.h"
 #include "raster/rasterpotentialflow.h"
 #include "raster/rasterfastwave.h"
-
+#include "raster/rastersuperfastflow.h"
 #include "omp.h"
 
 inline cTMap* AS_AssignArray(cTMap * m, CScriptArray * array)
@@ -381,7 +381,9 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @SpreadFlowField(const Map &in source,const Map &in fx_norm,const Map &in fy_norm, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlow,(cTMap*,cTMap*,cTMap *, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMD(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMD,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMD2(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMD2,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMDCP(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, const Map &in scale, float power, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMDCP,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *,cTMap * ,float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMDCP(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, const Map &in S, const Map &in scale, float power, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMDCP,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *,cTMap *,cTMap * ,float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @Depressions(const Map &in DEM,int iter_max = 0)", asFUNCTIONPR( AS_SpreadDepressionFind,(cTMap*,int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @FlowSuperFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration)", asFUNCTIONPR( AS_FlowSuperFast,(cTMap*,cTMap *,cTMap *,float),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
     r = engine->RegisterGlobalFunction("Map @SpreadDirectionalAbsMax(const Map &in s1,const Map &in initialfriction,const Map &in frictionx, const Map &in  frictiony, float delta = 0.0001)", asFUNCTIONPR( AS_SpreadDirectionalAbsMax,(cTMap*,cTMap*,cTMap *,cTMap*, float ),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @SpreadDirectionalAbsMaxMD(const Map &in s1,const Map &in initialfriction,const Map &in frictionx1,const Map &in frictionx2, const Map &in  frictiony1,const Map &in  frictiony2, float delta = 0.0001)", asFUNCTIONPR( AS_SpreadDirectionalAbsMaxMD,(cTMap*,cTMap*,cTMap *,cTMap *, cTMap *,cTMap*, float ),cTMap*),  asCALL_CDECL); assert( r >= 0 );

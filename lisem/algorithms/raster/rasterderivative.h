@@ -378,19 +378,23 @@ inline cTMap * AS_ProfileCurvature(cTMap * dem)
 
 
     float val;
-    float Z[10], D, E, F, G, H;
-
      int nrRows, nrCols, r, c;
 
      nrRows = dem->nrRows();
      nrCols = dem->nrCols();
 
+    #pragma omp parallel for collapse(2)
      for (r = 0; r < nrRows; r++)
      {
              for (c = 0; c < nrCols; c++)
              {
+
                  if (!pcr::isMV(dem->data[r][c]))
                  {
+
+                     float Z[10], D, E, F, G, H;
+
+
                      ZevenbergenGrid(Z, dem, r, c);
                      PCR_CurvStuff(dem->cellSizeX(),&D, &E, &F, &G, &H, Z);
                      if (G == 0 && H == 0)
@@ -419,18 +423,21 @@ inline cTMap * AS_PlanarCurvature(cTMap * dem)
 
     float val; /* value read in dem.map */
         int nrRows, nrCols, r, c;
-        float Z[10], D, E, F, G, H;
-
 
         nrRows = dem->nrRows();
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the curv. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++)
         {
             for (c = 0; c < nrCols; c++)
             {
                 if(!pcr::isMV(dem->data[r][c])) {
+
+                    float Z[10], D, E, F, G, H;
+
+
                     ZevenbergenGrid(Z, dem, r, c);
                     PCR_CurvStuff(dem->cellSizeX(),&D, &E, &F, &G, &H, Z);
                     if (G == 0 && H == 0)
@@ -463,6 +470,7 @@ inline cTMap * AS_SlopeX(cTMap * dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -493,6 +501,7 @@ inline cTMap * AS_SlopeX1(cTMap * dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -523,6 +532,7 @@ inline cTMap * AS_SlopeX2(cTMap * dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -556,6 +566,7 @@ inline cTMap * AS_SlopeY(cTMap *dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -589,6 +600,7 @@ inline cTMap * AS_SlopeY1(cTMap *dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -623,6 +635,7 @@ inline cTMap * AS_SlopeY2(cTMap *dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -655,6 +668,7 @@ inline cTMap * AS_SlopeDx2(cTMap *dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {
@@ -686,6 +700,7 @@ inline cTMap * AS_SlopeDy2(cTMap *dem)
         nrCols = dem->nrCols();
 
         /* For every cell in the dem map calculate the orient. */
+        #pragma omp parallel for collapse(2)
         for (r = 0; r < nrRows; r++) {
             for (c = 0; c < nrCols; c++) {
                 if (!pcr::isMV(dem->data[r][c])) {

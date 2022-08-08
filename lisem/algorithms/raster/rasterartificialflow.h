@@ -67,6 +67,12 @@ inline cTMap * AS_DiffusiveMaxWave(cTMap * DEM,cTMap * H, int iter, float couran
 
     for(int i = 0; i < iter; i++)
     {
+        courant = 0.5;
+        if(i > iter - 10)
+        {
+            float in = i-(iter-10);
+            courant = (1.0- in/10.0)*0.5 + (in/10.0) * 0.05;
+        }
         if(i%2 == 0)
         {
             for(int r = DEM->data.nr_rows()-1; r >-1 ;r--)
@@ -152,8 +158,8 @@ inline cTMap * AS_DiffusiveMaxWave(cTMap * DEM,cTMap * H, int iter, float couran
                         }
 
 
-                        sx = dem_xr-dem_xl;
-                        sy = dem_yr-dem_yl;
+                        sx = (h_xr +dem_xr)-(h_xl+dem_xl);
+                        sy = (h_yr +dem_yr)-(h_yl+dem_yl);
 
 
                         //velocity
@@ -175,8 +181,8 @@ inline cTMap * AS_DiffusiveMaxWave(cTMap * DEM,cTMap * H, int iter, float couran
                         qmaxx = signx > 0.0? qmax_xr : qmax_xl;
                         qmaxy = signy > 0.0? qmax_yr : qmax_yl;
 
-                        qx = std::min(0.5f*h,std::min(qmaxx,std::abs(0.5f*h * vx)));
-                        qy = std::min(0.5f*h,std::min(qmaxy,std::abs(0.5f*h * vy)));
+                        qx = std::min(courant*h,std::min(qmaxx,std::abs(courant*h * vx)));
+                        qy = std::min(courant*h,std::min(qmaxy,std::abs(courant*h * vy)));
                         //change height
 
                         hn = h - qx - qy;
@@ -301,8 +307,8 @@ inline cTMap * AS_DiffusiveMaxWave(cTMap * DEM,cTMap * H, int iter, float couran
                         }
 
 
-                        sx = dem_xr-dem_xl;
-                        sy = dem_yr-dem_yl;
+                        sx = (h_xr +dem_xr)-(h_xl+dem_xl);
+                        sy = (h_yr +dem_yr)-(h_yl+dem_yl);
 
 
                         //velocity
@@ -324,8 +330,8 @@ inline cTMap * AS_DiffusiveMaxWave(cTMap * DEM,cTMap * H, int iter, float couran
                         qmaxx = signx > 0.0? qmax_xr : qmax_xl;
                         qmaxy = signy > 0.0? qmax_yr : qmax_yl;
 
-                        qx = std::min(0.5f*h,std::min(qmaxx,std::abs(0.5f*h * vx)));
-                        qy = std::min(0.5f*h,std::min(qmaxy,std::abs(0.5f*h * vy)));
+                        qx = std::min(courant*h,std::min(qmaxx,std::abs(courant*h * vx)));
+                        qy = std::min(courant*h,std::min(qmaxy,std::abs(courant*h * vy)));
                         //change height
 
                         hn = h - qx - qy;
@@ -440,6 +446,13 @@ inline cTMap * AS_DiffusiveMaxWaveCG(cTMap * DEM,cTMap * H,cTMap * SLOPEDEM,floa
 
     for(int i = 0; i < iter; i++)
     {
+        courant = 0.5;
+        if(i > iter - 10)
+        {
+            float in = i-(iter-10);
+            courant = (1.0- in/10.0)*0.5 + (in/10.0) * 0.05;
+        }
+
         if(i%2 == 0)
         {
             for(int r = DEM->data.nr_rows()-1; r >-1 ;r--)
@@ -556,11 +569,11 @@ inline cTMap * AS_DiffusiveMaxWaveCG(cTMap * DEM,cTMap * H,cTMap * SLOPEDEM,floa
 
 
 
-                        sx = (dem_xr-dem_xl)/dx;
-                        sy = (dem_yr-dem_yl)/dx;
+                        sx = (h_xr +dem_xr)-(h_xl+dem_xl);
+                        sy = (h_yr +dem_yr)-(h_yl+dem_yl);
 
-                        sx2 = (dems_xr-dems_xl)/dx;
-                        sy2 = (dems_yr-dems_yl)/dx;
+                        sx2 = (h_xr + dems_xr-dems_xl - h_xl)/dx;
+                        sy2 = (h_yr + dems_yr-dems_yl - h_yl)/dx;
 
                         sl = std::sqrt(sx2*sx2 + sy2*sy2);
                         float slopefac = std::max(0.0f,std::min(1.0f,(sl - slope_factor/3.0f)/slope_factor));
@@ -590,8 +603,8 @@ inline cTMap * AS_DiffusiveMaxWaveCG(cTMap * DEM,cTMap * H,cTMap * SLOPEDEM,floa
                         qmaxx = signx > 0.0? qmax_xr : qmax_xl;
                         qmaxy = signy > 0.0? qmax_yr : qmax_yl;
 
-                        qx = std::min(0.5f*h,std::min(qmaxx,std::abs(0.5f*h * vx)));
-                        qy = std::min(0.5f*h,std::min(qmaxy,std::abs(0.5f*h * vy)));
+                        qx = std::min(courant*h,std::min(qmaxx,std::abs(courant*h * vx)));
+                        qy = std::min(courant*h,std::min(qmaxy,std::abs(courant*h * vy)));
                         //change height
 
                         hn = h - qx - qy;
@@ -743,13 +756,11 @@ inline cTMap * AS_DiffusiveMaxWaveCG(cTMap * DEM,cTMap * H,cTMap * SLOPEDEM,floa
                             h_yr = h;
                         }
 
+                        sx = (h_xr +dem_xr)-(h_xl+dem_xl);
+                        sy = (h_yr +dem_yr)-(h_yl+dem_yl);
 
-
-                        sx = (dem_xr-dem_xl)/dx;
-                        sy = (dem_yr-dem_yl)/dx;
-
-                        sx2 = (dems_xr-dems_xl)/dx;
-                        sy2 = (dems_yr-dems_yl)/dx;
+                        sx2 = (h_xr + dems_xr-dems_xl - h_xl)/dx;
+                        sy2 = (h_yr + dems_yr-dems_yl - h_yl)/dx;
 
                         sl = std::sqrt(sx2*sx2 + sy2*sy2);
                         float slopefac = 1.0-std::max(0.0f,std::min(1.0f,(sl - slope_factor/3.0f)/slope_factor));
@@ -778,8 +789,8 @@ inline cTMap * AS_DiffusiveMaxWaveCG(cTMap * DEM,cTMap * H,cTMap * SLOPEDEM,floa
                         qmaxx = signx > 0.0? qmax_xr : qmax_xl;
                         qmaxy = signy > 0.0? qmax_yr : qmax_yl;
 
-                        qx = std::min(0.5f*h,std::min(qmaxx,std::abs(0.5f*h * vx)));
-                        qy = std::min(0.5f*h,std::min(qmaxy,std::abs(0.5f*h * vy)));
+                        qx = std::min(courant*h,std::min(qmaxx,std::abs(courant*h * vx)));
+                        qy = std::min(courant*h,std::min(qmaxy,std::abs(courant*h * vy)));
                         //change height
 
                         hn = h - qx - qy;

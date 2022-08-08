@@ -7,9 +7,553 @@
 #include "rasterderivative.h"
 
 
+/*
+inline cTMap * AS_SpreadConserveHydro(cTMap * source, cTMap * DEM, int iter_max = 0)
+{
+
+
+    MaskedRaster<float> raster_data(points->data.nr_rows(), points->data.nr_cols(), points->data.north(), points->data.west(), points->data.cell_size(),points->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),points->projection(),"");
+
+
+    //initialize the map with friction values
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(pcr::isMV(source->data[r][c]))
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                map->data[r][c] = source->data[r][c];
+
+            }
+        }
+    }
+
+
+    float dx = map->cellSize();
+
+    //we keep iterating through this algorithm untill there is no change left to make
+    bool change = true;
+    bool first = true;
+
+    int iter = 0;
+
+    while(change && ((iter_max <= 0) || (iter_max > 0 && iter < iter_max)))
+    {
+        iter ++;
+        change = false;
+
+        if(iter%2 == 0)
+        {
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+                        if((r-1 > -1))
+                        {
+
+
+
+                            float vn_points = points->data[r-1][c];
+                            float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r-1][c];
+                            float vn_current = map->data[r-1][c];
+
+                            float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                            if(v_new < v_current)
+                            {
+                                change  = true;
+                                map->data[r][c] = v_new;
+                                v_current = v_new;
+                            }
+                        }
+
+                        if((c-1 > -1))
+                        {
+                            float vn_points = points->data[r][c-1];
+                            float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c-1];
+                            float vn_current = map->data[r][c-1];
+
+                            float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                            if(v_new < v_current)
+                            {
+                                change  = true;
+                                map->data[r][c] = v_new;
+                                v_current = v_new;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = points->data[r][c];
+                    float v_current = map->data[r][c];
+                    float v_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c];
+
+                    if(!pcr::isMV(v_points))
+                    {
+                        if((r+1 < map->data.nr_rows()))
+                        {
+                            float vn_points = points->data[r+1][c];
+                            float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r+1][c];
+                            float vn_current = map->data[r+1][c];
+
+                            float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                            if(v_new < v_current)
+                            {
+                                change  = true;
+                                map->data[r][c] = v_new;
+                                v_current = v_new;
+
+
+                            }
+                        }
+
+                        if((c+1 < map->data.nr_cols()))
+                        {
+                            float vn_points = points->data[r][c+1];
+                            float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c+1];
+                            float vn_current = map->data[r][c+1];
+
+                            float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                            if(v_new < v_current)
+                            {
+                                change  = true;
+                                map->data[r][c] = v_new;
+                                v_current = v_new;
+                            }
+                        }
+                    }
+
+                }
+
+            }
+        }else
+            {
+                //first we move in right-lower direction
+                for(int r = 0; r < map->data.nr_rows();r++)
+                {
+                    for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                    {
+                        float v_points = points->data[r][c];
+                        float v_current = map->data[r][c];
+                        float v_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c];
+
+                        if(!pcr::isMV(v_points))
+                        {
+                            if((r-1 > -1))
+                            {
+                                float vn_points = points->data[r-1][c];
+                                float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r-1][c];
+                                float vn_current = map->data[r-1][c];
+
+                                float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                                if(v_new < v_current)
+                                {
+                                    change  = true;
+                                    map->data[r][c] = v_new;
+                                    v_current = v_new;
+
+
+                                }
+                            }
+
+
+                            if((c+1 < map->data.nr_cols()))
+                            {
+                                float vn_points = points->data[r][c+1];
+                                float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c+1];
+                                float vn_current = map->data[r][c+1];
+
+                                float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                                if(v_new < v_current)
+                                {
+                                    change  = true;
+                                    map->data[r][c] = v_new;
+                                    v_current = v_new;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //then we move in left-upper direction
+                for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+                {
+                    for(int c = 0; c < map->data.nr_cols();c++)
+                    {
+                        float v_points = points->data[r][c];
+                        float v_current = map->data[r][c];
+                        float v_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c];
+
+                        if(!pcr::isMV(v_points))
+                        {
+                            if((r+1 < map->data.nr_rows()))
+                            {
+                                float vn_points = points->data[r+1][c];
+                                float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r+1][c];
+                                float vn_current = map->data[r+1][c];
+
+                                float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                                if(v_new < v_current)
+                                {
+                                    change  = true;
+                                    map->data[r][c] = v_new;
+                                    v_current = v_new;
+
+
+                                }
+                            }
+
+                            if((c-1 > -1))
+                            {
+                                float vn_points = points->data[r][c-1];
+                                float vn_fric = friction->AS_IsSingleValue? friction->data[0][0]:friction->data[r][c-1];
+                                float vn_current = map->data[r][c-1];
+
+                                float v_new = vn_current + std::fabs((0.5f * (vn_fric + v_fric))*dx);
+
+                                if(v_new < v_current)
+                                {
+                                    change  = true;
+                                    map->data[r][c] = v_new;
+                                    v_current = v_new;
+                                }
+                            }
+                        }
+
+                    }
+            }
+
+
+        }
+
+
+        first = false;
+
+    }
+
+    return map;
+
+
+}*/
+
+inline cTMap * AS_SpreadDepressionFind(cTMap * DEM, int iter_max = 0)
+{
+
+    MaskedRaster<float> raster_data(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(),DEM->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),DEM->projection(),"");
+
+
+    //initialize the map with friction values
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(pcr::isMV(DEM->data[r][c]))
+            {
+                pcr::setMV(map->data[r][c]);
+            }else {
+                map->data[r][c] = 1e31;
+            }
+        }
+    }
+
+
+    float dx = map->cellSize();
+
+    //we keep iterating through this algorithm untill there is no change left to make
+    bool change = true;
+    bool first = true;
+
+    int iter = 0;
+
+    while(change && ((iter_max <= 0) || (iter_max > 0 && iter < iter_max)))
+    {
+        iter ++;
+        change = false;
+
+        if(iter%2 == 0)
+        {
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = DEM->data[r][c];
+
+                    if(!pcr::isMV(v_points))
+                    {
+                        if((r-1 > -1))
+                        {
+                            float vn_points = DEM->data[r-1][c];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r-1][c],DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+
+                        if((c-1 > -1))
+                        {
+                            float vn_points = DEM->data[r][c-1];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r][c-1],DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = DEM->data[r][c];
+
+                    if(!pcr::isMV(v_points))
+                    {
+                        if((r+1 < map->data.nr_rows()))
+                        {
+                            float vn_points = DEM->data[r+1][c];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r+1][c],DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+
+                        if((c+1 < map->data.nr_cols()))
+                        {
+                            float vn_points = DEM->data[r][c+1];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r][c+1],DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+                    }
+
+                }
+
+            }
+        }else
+            {
+                //first we move in right-lower direction
+                for(int r = 0; r < map->data.nr_rows();r++)
+                {
+                    for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                    {
+                        float v_points = DEM->data[r][c];
+
+                        if(!pcr::isMV(v_points))
+                        {
+                            if((r-1 > -1))
+                            {
+                                float vn_points = DEM->data[r-1][c];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+                                        demh = std::max(map->data[r-1][c],DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+
+
+                            if((c+1 < map->data.nr_cols()))
+                            {
+                                float vn_points = DEM->data[r][c+1];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+                                        demh = std::max(map->data[r][c+1],DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+                        }
+                    }
+                }
+
+
+                //then we move in left-upper direction
+                for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+                {
+                    for(int c = 0; c < map->data.nr_cols();c++)
+                    {
+                        float v_points = DEM->data[r][c];
+
+                        if(!pcr::isMV(v_points))
+                        {
+                            if((r+1 < map->data.nr_rows()))
+                            {
+                                float vn_points = DEM->data[r+1][c];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+                                        demh = std::max(map->data[r+1][c],DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+
+                            if((c-1 > -1))
+                            {
+                                float vn_points = DEM->data[r][c-1];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+
+                                        demh = std::max(map->data[r][c-1],DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+                        }
+
+                    }
+            }
+
+
+        }
+
+
+        first = false;
+
+    }
+
+    return map;
+
+}
 
 //state-full spread algorithm using direct delta-propagation and adaptive flowpaths based on pressure scaling
-inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2o, cTMap * fracy1o,cTMap * fracy2o, cTMap* scale, float power, int iter_max = 0)
+inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2o, cTMap * fracy1o,cTMap * fracy2o, cTMap * DEM, cTMap* scale, float power, int iter_max = 0)
 {
 
     MaskedRaster<float> raster_data(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
@@ -106,6 +650,13 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                        float my1 = !OUTORMV(map,r-1,c)? map->data[r-1][c] : m;
                        float my2 = !OUTORMV(map,r+1,c)? map->data[r+1][c] : m;
 
+                       float dem = DEM->data[r][c];
+                       float demx1 = !OUTORMV(DEM,r,c-1)? DEM->data[r][c-1] : dem;
+                       float demx2 = !OUTORMV(DEM,r,c+1)? DEM->data[r][c+1] : dem;
+                       float demy1 = !OUTORMV(DEM,r-1,c)? DEM->data[r-1][c] : dem;
+                       float demy2 = !OUTORMV(DEM,r+1,c)? DEM->data[r+1][c] : dem;
+
+
                        float mh = std::pow(scale->data[r][c] * m,power);
                        float mhx1 = std::pow(scale->data[r][c] * mx1,power);
                        float mhx2 = std::pow(scale->data[r][c] * mx2,power);
@@ -113,13 +664,27 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                        float mhy2 = std::pow(scale->data[r][c] * my2,power);
 
                        //get pressure ratio
+                       float r =
+
+                       //which directions does the pressure-driven force go?
+                       float r_x1 = fracx1o->data[r][c] < 0.0? (std::max(0.0,0.5 * (mh + mhx1)/())*std::max(0.00001,mh)/std::max(0.00001,mhx1) : 0.0;
+                       float r_x2 = fracx2o->data[r][c] > 0.0?std::max(0.00001,mh)/std::max(0.00001,mhx2) : 0.0;
+                       float r_y1 = fracy1o->data[r][c] < 0.0?std::max(0.00001,mh)/std::max(0.00001,mhy1) : 0.0;
+                       float r_y2 = fracy2o->data[r][c] > 0.0?std::max(0.00001,mh)/std::max(0.00001,mhy2) : 0.0;
+
+                       //normalize these contributions
 
 
 
-                       //fracx1->data[r][c] = fracx1o->data[r][c];
-                       //fracx2->data[r][c] = fracx2o->data[r][c];
-                       //fracy1->data[r][c] = fracy1o->data[r][c];
-                       //fracy2->data[r][c] = fracy2o->data[r][c];
+                       //because of the way we set up things, its either in or out flux at each cell boundary.
+                       //if a cell is outflowing, it never returns because of have a monotonic terrain description
+                       //we can alter the flow directions based on pressure by
+
+                       float nout_total =
+                       fracx1->data[r][c] = fracx1o->data[r][c] ;
+                       fracx2->data[r][c] = fracx2o->data[r][c];
+                       fracy1->data[r][c] = fracy1o->data[r][c];
+                       fracy2->data[r][c] = fracy2o->data[r][c];
 
                    }
                }
@@ -145,7 +710,7 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                }
            }
 
-           if(true)
+           if(iter%2 == 0)
            {
 
                //first we move in right-lower direction
@@ -167,7 +732,7 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    float delta = myf2 - my2o->data[r][c];
                                    if(delta < 0.0)
                                    {
-                                       std::cout << "delta " << delta << " " << r << " "  << c <<  " " << mmyf2 << " " << my2o->data[r][c] << std::endl;
+                                       //std::cout << "delta " << delta << " " << r << " "  << c <<  " " << myf2 << " " << my2o->data[r][c] << std::endl;
                                    }
                                    mx1->data[r+1][c] += delta * fracx1->data[r+1][c];
                                    my1->data[r+1][c] += delta * fracy1->data[r+1][c];
@@ -175,8 +740,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    my2->data[r+1][c] += delta * fracy2->data[r+1][c];
 
                                    change  = true;
-                                   map->data[r+1][c] += myf2 + delta;
-                                   my2o->data[r][c] = myf2 + delta;
+                                   map->data[r+1][c] += myf2 ;
+                                   my2o->data[r][c] = myf2 ;
 
                                }
 
@@ -189,15 +754,15 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    float delta = mxf2 - mx2o->data[r][c];
                                    if(delta < 0.0)
                                    {
-                                       std::cout << "delta " << delta << " " << r << " "  << c <<  " " << xmf2 << " " << mx2o->data[r][c] << std::endl;
+                                       //std::cout << "delta " << delta << " " << r << " "  << c <<  " " << mxf2 << " " << mx2o->data[r][c] << std::endl;
                                    }
                                    mx1->data[r][c+1] += delta * fracx1->data[r][c+1];
                                    my1->data[r][c+1] += delta * fracy1->data[r][c+1];
                                    mx2->data[r][c+1] += delta * fracx2->data[r][c+1];
                                    my2->data[r][c+1] += delta * fracy2->data[r][c+1];
                                    change  = true;
-                                   map->data[r][c+1] += mxf2 + delta;
-                                   mx2o->data[r][c] = mxf2 + delta;
+                                   map->data[r][c+1] += mxf2 ;
+                                   mx2o->data[r][c] = mxf2 ;
 
                                }
 
@@ -209,7 +774,7 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                }
 
                //then we move in left-upper direction
-               /*for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+               for(int r = map->data.nr_rows()-1; r > -1 ;r--)
                {
                    for(int c = map->data.nr_cols()-1; c > -1 ;c--)
                    {
@@ -230,8 +795,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    mx2->data[r-1][c] -= delta * fracx2->data[r-1][c];
                                    my2->data[r-1][c] -= delta * fracy2->data[r-1][c];
                                    change  = true;
-                                   map->data[r-1][c] -= myf1 + delta;
-                                   my1o->data[r][c] = myf1 + delta;
+                                   map->data[r-1][c] -= myf1;
+                                   my1o->data[r][c] = myf1;
                                }
 
                                my1->data[r][c] = 0.0;
@@ -246,8 +811,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    mx2->data[r][c-1] -= delta * fracx2->data[r][c-1];
                                    my2->data[r][c-1] -= delta * fracy2->data[r][c-1];
                                    change  = true;
-                                   map->data[r][c-1] -= mxf1 + delta;
-                                   mx1o->data[r][c] = mxf1 + delta;
+                                   map->data[r][c-1] -= mxf1;
+                                   mx1o->data[r][c] = mxf1;
 
                                }
 
@@ -257,7 +822,7 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
 
 
                    }
-               }*/
+               }
            }else
            {
 
@@ -285,8 +850,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    my2->data[r+1][c] += delta * fracy2->data[r+1][c];
 
                                    change  = true;
-                                   map->data[r+1][c] += myf2 + delta;
-                                   my2o->data[r][c] = myf2 + delta;
+                                   map->data[r+1][c] += myf2;
+                                   my2o->data[r][c] = myf2 ;
 
                                }
 
@@ -302,8 +867,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    mx2->data[r][c-1] -= delta * fracx2->data[r][c-1];
                                    my2->data[r][c-1] -= delta * fracy2->data[r][c-1];
                                    change  = true;
-                                   map->data[r][c-1] -= mxf1 + delta;
-                                   mx1o->data[r][c] = mxf1 + delta;
+                                   map->data[r][c-1] -= mxf1;
+                                   mx1o->data[r][c] = mxf1 ;
                                }
 
                                mx1->data[r][c] = 0.0;
@@ -337,8 +902,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    mx2->data[r-1][c] -= delta * fracx2->data[r-1][c];
                                    my2->data[r-1][c] -= delta * fracy2->data[r-1][c];
                                    change  = true;
-                                   map->data[r-1][c] -= myf1 + delta;
-                                   my1o->data[r][c] = myf1 + delta;
+                                   map->data[r-1][c] -= myf1;
+                                   my1o->data[r][c] = myf1 ;
                                }
 
                                my1->data[r][c] = 0.0;
@@ -353,8 +918,8 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
                                    mx2->data[r][c+1] += delta * fracx2->data[r][c+1];
                                    my2->data[r][c+1] += delta * fracy2->data[r][c+1];
                                    change  = true;
-                                   map->data[r][c+1] += mxf2 + delta;
-                                   mx2o->data[r][c] = mxf2 + delta;
+                                   map->data[r][c+1] += mxf2;
+                                   mx2o->data[r][c] = mxf2 ;
 
                                }
 
@@ -3073,6 +3638,5 @@ inline cTMap * AS_ViewCriticalAngle(cTMap * DEM, float x, float y, float height)
     return slopes;
 
 }
-
 
 #endif // RASTERSPREAD_H
