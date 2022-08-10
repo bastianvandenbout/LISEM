@@ -950,6 +950,851 @@ inline cTMap * AS_SpreadFlowMDCP(cTMap * source ,cTMap * fracx1o, cTMap * fracx2
        return map;
 }
 
+inline cTMap * AS_SpreadFlowMD2DepressionProp(cTMap * source ,cTMap * prop,cTMap * fracx1, cTMap * fracx2, cTMap * fracy1,cTMap * fracy2, int iter_max, cTMap * DEPRESSIONID, std::vector<float> & DEPRESSIONVOLS, std::vector<float> & DEPRESSIONCVOLS, bool store_depressionvol)
+{
+
+    std::vector<float> temp;
+    std::vector<float> *DEPRESSIONCVOLSH;
+    if(store_depressionvol)
+    {
+        for(int i = 0; i < DEPRESSIONCVOLS.size(); i++)
+        {
+            temp.push_back(0.0);
+        }
+        DEPRESSIONCVOLSH = &temp;
+    }else
+    {
+        DEPRESSIONCVOLSH = &DEPRESSIONCVOLS;
+    }
+
+
+    MaskedRaster<float> raster_data(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mx1 = new cTMap(std::move(raster_data),source->projection(),"");
+    MaskedRaster<float> raster_data2(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *my1 = new cTMap(std::move(raster_data2),source->projection(),"");
+    MaskedRaster<float> raster_data3(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mx2 = new cTMap(std::move(raster_data3),source->projection(),"");
+    MaskedRaster<float> raster_data4(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *my2 = new cTMap(std::move(raster_data4),source->projection(),"");
+
+    MaskedRaster<float> raster_data5(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data5),source->projection(),"");
+
+
+    MaskedRaster<float> raster_data6(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mpx1 = new cTMap(std::move(raster_data6),source->projection(),"");
+    MaskedRaster<float> raster_data7(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mpy1 = new cTMap(std::move(raster_data7),source->projection(),"");
+    MaskedRaster<float> raster_data8(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mpx2 = new cTMap(std::move(raster_data8),source->projection(),"");
+    MaskedRaster<float> raster_data9(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mpy2 = new cTMap(std::move(raster_data9),source->projection(),"");
+
+    MaskedRaster<float> raster_data10(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mapp = new cTMap(std::move(raster_data10),source->projection(),"");
+
+
+    //initialize the map with friction values
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(pcr::isMV(source->data[r][c]))
+            {
+                pcr::setMV(map->data[r][c]);
+            }else {
+                map->data[r][c] = 0.0;
+                mx1->data[r][c] = fracx1->data[r][c] * source->data[r][c];
+                my1->data[r][c] = fracy1->data[r][c] * source->data[r][c];
+                mx2->data[r][c] = fracx2->data[r][c] * source->data[r][c];
+                my2->data[r][c] = fracy2->data[r][c] * source->data[r][c];
+
+            }
+        }
+    }
+
+    float dx = map->cellSize();
+
+    //we keep iterating through this algorithm untill there is no change left to make
+    bool change = true;
+    bool first = true;
+
+    int iter = 0;
+
+    while(change && ((iter_max <= 0) || (iter_max > 0 && iter < iter_max)))
+    {
+        iter ++;
+        change = false;
+
+        if(iter%2 == 0)
+        {
+
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+                        if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                        {
+                            int id = DEPRESSIONID->data[r][c];
+                            float vol = DEPRESSIONVOLS.at(id);
+                            float cvol = DEPRESSIONCVOLSH->at(id);
+                            if(cvol < vol - 0.0001)
+                            {
+                                float frac_depr;
+                                if(mxf2 + myf2 < vol - cvol)
+                                {
+                                    frac_depr = 1.0;
+                                }else
+                                {
+                                    frac_depr = (mxf2 + myf2)/std::max(0.0001f,vol-cvol);
+                                }
+
+                                DEPRESSIONCVOLSH->at(id) += mxf2 + myf2 * (1.0-frac_depr);
+
+                                mxf2 = mxf2 * frac_depr;
+                                myf2 = myf2 * frac_depr;
+                            }
+                        }
+
+                        if((r+1 < map->data.nr_rows()) && myf2 > 1e-10)
+                        {
+                            {
+                                mx1->data[r+1][c] += myf2 * fracx1->data[r+1][c];
+                                my1->data[r+1][c] += myf2 * fracy1->data[r+1][c];
+                                mx2->data[r+1][c] += myf2 * fracx2->data[r+1][c];
+                                my2->data[r+1][c] += myf2 * fracy2->data[r+1][c];
+
+                                change  = true;
+                                map->data[r][c] += myf2;
+
+                            }
+
+                            my2->data[r][c] = 0.0;
+                        }
+
+                        if((c+1 < map->data.nr_cols()) && mxf2 > 1e-10)
+                        {
+                            {
+                                mx1->data[r][c+1] += mxf2 * fracx1->data[r][c+1];
+                                my1->data[r][c+1] += mxf2 * fracy1->data[r][c+1];
+                                mx2->data[r][c+1] += mxf2 * fracx2->data[r][c+1];
+                                my2->data[r][c+1] += mxf2 * fracy2->data[r][c+1];
+                                change  = true;
+                                map->data[r][c] += mxf2;
+
+                            }
+
+                            mx2->data[r][c] = 0.0;
+                        }
+
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+                        if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                        {
+                            int id = DEPRESSIONID->data[r][c];
+                            float vol = DEPRESSIONVOLS.at(id);
+                            float cvol = DEPRESSIONCVOLSH->at(id);
+                            if(cvol < vol - 0.0001)
+                            {
+                                float frac_depr;
+                                if(mxf1 + myf1 < vol - cvol)
+                                {
+                                    frac_depr = 1.0;
+                                }else
+                                {
+                                    frac_depr = (mxf1 + myf1)/std::max(0.0001f,vol-cvol);
+                                }
+
+                                DEPRESSIONCVOLSH->at(id) += mxf1 + myf1 * (1.0-frac_depr);
+
+                                mxf1 = mxf1 * frac_depr;
+                                myf1 = myf1 * frac_depr;
+                            }
+                        }
+
+                        if((r-1 > -1) && myf1 < -1e-10)
+                        {
+                            {
+                                mx1->data[r-1][c] -= myf1 * fracx1->data[r-1][c];
+                                my1->data[r-1][c] -= myf1 * fracy1->data[r-1][c];
+                                mx2->data[r-1][c] -= myf1 * fracx2->data[r-1][c];
+                                my2->data[r-1][c] -= myf1 * fracy2->data[r-1][c];
+                                change  = true;
+                                map->data[r][c] -= myf1;
+
+                            }
+
+                            my1->data[r][c] = 0.0;
+                        }
+
+                        if((c-1 > -1) && mxf1 < -1e-10)
+                        {
+                            {
+                                mx1->data[r][c-1] -= mxf1 * fracx1->data[r][c-1];
+                                my1->data[r][c-1] -= mxf1 * fracy1->data[r][c-1];
+                                mx2->data[r][c-1] -= mxf1 * fracx2->data[r][c-1];
+                                my2->data[r][c-1] -= mxf1 * fracy2->data[r][c-1];
+                                change  = true;
+                                map->data[r][c] -= mxf1;
+
+                            }
+
+                            mx1->data[r][c] = 0.0;
+                        }
+                    }
+
+
+                }
+            }
+        }else
+        {
+
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+                        if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                        {
+                            int id = DEPRESSIONID->data[r][c];
+                            float vol = DEPRESSIONVOLS.at(id);
+                            float cvol = DEPRESSIONCVOLSH->at(id);
+                            if(cvol < vol - 0.0001)
+                            {
+                                float frac_depr;
+                                if(mxf1 + myf2 < vol - cvol)
+                                {
+                                    frac_depr = 1.0;
+                                }else
+                                {
+                                    frac_depr = (mxf1 + myf2)/std::max(0.0001f,vol-cvol);
+                                }
+
+                                DEPRESSIONCVOLSH->at(id) += mxf1 + myf2 * (1.0-frac_depr);
+
+                                mxf1 = mxf1 * frac_depr;
+                                myf2 = myf2 * frac_depr;
+                            }
+                        }
+
+                        if((r+1 < map->data.nr_rows()) && myf2 > 1e-10)
+                        {
+                            {
+                                mx1->data[r+1][c] += myf2 * fracx1->data[r+1][c];
+                                my1->data[r+1][c] += myf2 * fracy1->data[r+1][c];
+                                mx2->data[r+1][c] += myf2 * fracx2->data[r+1][c];
+                                my2->data[r+1][c] += myf2 * fracy2->data[r+1][c];
+
+                                change  = true;
+                                map->data[r][c] += myf2;
+
+                            }
+
+                            my2->data[r][c] = 0.0;
+                        }
+                        if((c-1 > -1) && mxf1 < -1e-10)
+                        {
+                            {
+                                mx1->data[r][c-1] -= mxf1 * fracx1->data[r][c-1];
+                                my1->data[r][c-1] -= mxf1 * fracy1->data[r][c-1];
+                                mx2->data[r][c-1] -= mxf1 * fracx2->data[r][c-1];
+                                my2->data[r][c-1] -= mxf1 * fracy2->data[r][c-1];
+                                change  = true;
+                                map->data[r][c] -= mxf1;
+
+                            }
+
+                            mx1->data[r][c] = 0.0;
+                        }
+
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+                        if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                        {
+                            int id = DEPRESSIONID->data[r][c];
+                            float vol = DEPRESSIONVOLS.at(id);
+                            float cvol = DEPRESSIONCVOLSH->at(id);
+                            if(cvol < vol - 0.0001)
+                            {
+                                float frac_depr;
+                                if(mxf2 + myf1 < vol - cvol)
+                                {
+                                    frac_depr = 1.0;
+                                }else
+                                {
+                                    frac_depr = (mxf2 + myf1)/std::max(0.0001f,vol-cvol);
+                                }
+
+                                DEPRESSIONCVOLSH->at(id) += mxf2 + myf1 * (1.0-frac_depr);
+
+                                mxf2 = mxf2 * frac_depr;
+                                myf1 = myf1 * frac_depr;
+                            }
+                        }
+
+                        if((r-1 > -1) && myf1 < -1e-10)
+                        {
+                            {
+                                mx1->data[r-1][c] -= myf1 * fracx1->data[r-1][c];
+                                my1->data[r-1][c] -= myf1 * fracy1->data[r-1][c];
+                                mx2->data[r-1][c] -= myf1 * fracx2->data[r-1][c];
+                                my2->data[r-1][c] -= myf1 * fracy2->data[r-1][c];
+                                change  = true;
+                                map->data[r][c] -= myf1;
+
+                            }
+
+                            my1->data[r][c] = 0.0;
+                        }
+
+                        if((c+1 < map->data.nr_cols()) && mxf2 > 1e-10)
+                        {
+                            {
+                                mx1->data[r][c+1] += mxf2 * fracx1->data[r][c+1];
+                                my1->data[r][c+1] += mxf2 * fracy1->data[r][c+1];
+                                mx2->data[r][c+1] += mxf2 * fracx2->data[r][c+1];
+                                my2->data[r][c+1] += mxf2 * fracy2->data[r][c+1];
+                                change  = true;
+                                map->data[r][c] += mxf2;
+
+                            }
+
+                            mx2->data[r][c] = 0.0;
+                        }
+
+                    }
+
+
+                }
+            }
+
+        }
+        first = false;
+
+    }
+
+    delete mx1;
+    delete my1;
+    delete mx2;
+    delete my2;
+
+    return map;
+
+}
+
+
+inline cTMap * AS_SpreadFlowMD2Depression(cTMap * source ,cTMap * fracx1, cTMap * fracx2, cTMap * fracy1,cTMap * fracy2, int iter_max, cTMap * DEPRESSIONID, std::vector<float> & DEPRESSIONVOLS, std::vector<float> & DEPRESSIONCVOLS, bool store_depressionvol, float scale)
+{
+
+    std::cout << "spread with depression "<< DEPRESSIONVOLS.size() << " " << DEPRESSIONCVOLS.size() << " " << std::endl;
+
+    std::vector<float> temp;
+    std::vector<float> *DEPRESSIONCVOLSH;
+    if(!store_depressionvol)
+    {
+        for(int i = 0; i < DEPRESSIONCVOLS.size(); i++)
+        {
+            temp.push_back(0.0);
+        }
+        DEPRESSIONCVOLSH = &temp;
+    }else
+    {
+        DEPRESSIONCVOLSH = &DEPRESSIONCVOLS;
+    }
+    std::cout << "spread with depression "<< DEPRESSIONVOLS.size() << " " << DEPRESSIONCVOLS.size() << " " << DEPRESSIONCVOLSH->size() << std::endl;
+
+
+    MaskedRaster<float> raster_data(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mx1 = new cTMap(std::move(raster_data),source->projection(),"");
+    MaskedRaster<float> raster_data2(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *my1 = new cTMap(std::move(raster_data2),source->projection(),"");
+    MaskedRaster<float> raster_data3(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *mx2 = new cTMap(std::move(raster_data3),source->projection(),"");
+    MaskedRaster<float> raster_data4(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *my2 = new cTMap(std::move(raster_data4),source->projection(),"");
+
+    MaskedRaster<float> raster_data5(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data5),source->projection(),"");
+
+
+    //initialize the map with friction values
+
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(pcr::isMV(source->data[r][c]))
+            {
+                pcr::setMV(map->data[r][c]);
+            }else {
+                map->data[r][c] = 0.0;
+                mx1->data[r][c] = fracx1->data[r][c] * source->data[r][c];
+                my1->data[r][c] = fracy1->data[r][c] * source->data[r][c];
+                mx2->data[r][c] = fracx2->data[r][c] * source->data[r][c];
+                my2->data[r][c] = fracy2->data[r][c] * source->data[r][c];
+
+            }
+        }
+    }
+
+    float dx = map->cellSize();
+
+    //we keep iterating through this algorithm untill there is no change left to make
+    bool change = true;
+    bool first = true;
+
+    int iter = 0;
+
+    while(change && ((iter_max <= 0) || (iter_max > 0 && iter < iter_max)))
+    {
+        iter ++;
+        change = false;
+
+        if(iter%2 == 0)
+        {
+
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+
+                        if((r+1 < map->data.nr_rows()) && myf2 > 1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,myf2)*scale < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,myf2*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,myf2*scale) * (frac_depr);
+
+                                    myf2 = myf2 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r+1][c] += myf2 * fracx1->data[r+1][c];
+                                my1->data[r+1][c] += myf2 * fracy1->data[r+1][c];
+                                mx2->data[r+1][c] += myf2 * fracx2->data[r+1][c];
+                                my2->data[r+1][c] += myf2 * fracy2->data[r+1][c];
+
+                                change  = true;
+                                map->data[r][c] += myf2;
+
+                            }
+
+                            my2->data[r][c] = 0.0;
+                        }
+
+                        if((c+1 < map->data.nr_cols()) && mxf2 > 1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,mxf2)*scale < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,mxf2*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,mxf2*scale) *  (frac_depr);
+
+                                    mxf2 = mxf2 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r][c+1] += mxf2 * fracx1->data[r][c+1];
+                                my1->data[r][c+1] += mxf2 * fracy1->data[r][c+1];
+                                mx2->data[r][c+1] += mxf2 * fracx2->data[r][c+1];
+                                my2->data[r][c+1] += mxf2 * fracy2->data[r][c+1];
+                                change  = true;
+                                map->data[r][c] += mxf2;
+
+                            }
+
+                            mx2->data[r][c] = 0.0;
+                        }
+
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+
+
+                        if((r-1 > -1) && myf1 < -1e-10)
+                        {
+
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,-myf1)*scale < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,-myf1*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,-myf1*scale) *  (frac_depr);
+
+                                    myf1 = myf1 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r-1][c] -= myf1 * fracx1->data[r-1][c];
+                                my1->data[r-1][c] -= myf1 * fracy1->data[r-1][c];
+                                mx2->data[r-1][c] -= myf1 * fracx2->data[r-1][c];
+                                my2->data[r-1][c] -= myf1 * fracy2->data[r-1][c];
+                                change  = true;
+                                map->data[r][c] -= myf1;
+
+                            }
+
+                            my1->data[r][c] = 0.0;
+                        }
+
+                        if((c-1 > -1) && mxf1 < -1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,-mxf1)*scale < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,-mxf1*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,-mxf1*scale) *  (frac_depr);
+
+                                    mxf1 = mxf1 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r][c-1] -= mxf1 * fracx1->data[r][c-1];
+                                my1->data[r][c-1] -= mxf1 * fracy1->data[r][c-1];
+                                mx2->data[r][c-1] -= mxf1 * fracx2->data[r][c-1];
+                                my2->data[r][c-1] -= mxf1 * fracy2->data[r][c-1];
+                                change  = true;
+                                map->data[r][c] -= mxf1;
+
+                            }
+
+                            mx1->data[r][c] = 0.0;
+                        }
+                    }
+
+
+                }
+            }
+        }else
+        {
+
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+
+                        if((r+1 < map->data.nr_rows()) && myf2 > 1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,myf2*scale) < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,myf2*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,myf2*scale) *  (frac_depr);
+
+                                    myf2 = myf2 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r+1][c] += myf2 * fracx1->data[r+1][c];
+                                my1->data[r+1][c] += myf2 * fracy1->data[r+1][c];
+                                mx2->data[r+1][c] += myf2 * fracx2->data[r+1][c];
+                                my2->data[r+1][c] += myf2 * fracy2->data[r+1][c];
+
+                                change  = true;
+                                map->data[r][c] += myf2;
+
+                            }
+
+                            my2->data[r][c] = 0.0;
+                        }
+                        if((c-1 > -1) && mxf1 < -1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,-mxf1*scale) < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,-mxf1*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,-mxf1*scale) *  (frac_depr);
+
+                                    mxf1 = mxf1 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r][c-1] -= mxf1 * fracx1->data[r][c-1];
+                                my1->data[r][c-1] -= mxf1 * fracy1->data[r][c-1];
+                                mx2->data[r][c-1] -= mxf1 * fracx2->data[r][c-1];
+                                my2->data[r][c-1] -= mxf1 * fracy2->data[r][c-1];
+                                change  = true;
+                                map->data[r][c] -= mxf1;
+
+                            }
+
+                            mx1->data[r][c] = 0.0;
+                        }
+
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = source->data[r][c];
+                    if(!pcr::isMV(v_points))
+                    {
+
+                        float mxf1 = mx1->data[r][c];
+                        float myf1 = my1->data[r][c];
+                        float mxf2 = mx2->data[r][c];
+                        float myf2 = my2->data[r][c];
+
+
+
+                        if((r-1 > -1) && myf1 < -1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,-myf1*scale) < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,-myf1*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,-myf1*scale) *  (frac_depr);
+
+                                    myf1 = myf1 * (1.0-frac_depr);
+                                }
+                            }
+                            {
+                                mx1->data[r-1][c] -= myf1 * fracx1->data[r-1][c];
+                                my1->data[r-1][c] -= myf1 * fracy1->data[r-1][c];
+                                mx2->data[r-1][c] -= myf1 * fracx2->data[r-1][c];
+                                my2->data[r-1][c] -= myf1 * fracy2->data[r-1][c];
+                                change  = true;
+                                map->data[r][c] -= myf1;
+
+                            }
+
+                            my1->data[r][c] = 0.0;
+                        }
+
+                        if((c+1 < map->data.nr_cols()) && mxf2 > 1e-10)
+                        {
+                            if(!pcr::isMV(DEPRESSIONID->data[r][c]))
+                            {
+                                float frac_depr = 0.0;
+                                int id = DEPRESSIONID->data[r][c];
+                                float vol = DEPRESSIONVOLS.at(id);
+                                float cvol = DEPRESSIONCVOLSH->at(id);
+                                if(cvol < vol - 0.0001)
+                                {
+                                    if(std::max(0.0f,mxf2)*scale < vol - cvol)
+                                    {
+                                        frac_depr = 1.0;
+                                    }else
+                                    {
+                                        frac_depr = std::max(0.0001f,vol-cvol)/(std::max(0.001f,mxf2*scale));
+                                    }
+
+                                    DEPRESSIONCVOLSH->at(id) += std::max(0.0f,mxf2*scale) *  (frac_depr);
+
+                                    mxf2 = mxf2 * (1.0-frac_depr);
+                                }
+                            }
+
+                            {
+                                mx1->data[r][c+1] += mxf2 * fracx1->data[r][c+1];
+                                my1->data[r][c+1] += mxf2 * fracy1->data[r][c+1];
+                                mx2->data[r][c+1] += mxf2 * fracx2->data[r][c+1];
+                                my2->data[r][c+1] += mxf2 * fracy2->data[r][c+1];
+                                change  = true;
+                                map->data[r][c] += mxf2;
+
+                            }
+
+                            mx2->data[r][c] = 0.0;
+                        }
+
+                    }
+
+
+                }
+            }
+
+        }
+        first = false;
+
+    }
+
+    delete mx1;
+    delete my1;
+    delete mx2;
+    delete my2;
+
+    return map;
+
+}
+
 inline cTMap * AS_SpreadFlowMD2(cTMap * source ,cTMap * fracx1, cTMap * fracx2, cTMap * fracy1,cTMap * fracy2, int iter_max = 0)
 {
     MaskedRaster<float> raster_data(source->data.nr_rows(), source->data.nr_cols(), source->data.north(), source->data.west(), source->data.cell_size(),source->data.cell_sizeY());
@@ -1567,7 +2412,7 @@ inline cTMap * AS_SpreadDirectionalAbsMaxMD(cTMap * points ,cTMap * friction_sta
                     {
                         float vn_points = points->data[r-1][c];
                         float vn_fric = friction_y2->data[r-1][c];
-                        if(vn_fric< 0.0)
+                        if(vn_fric< delta)
                         {
                             vn_fric = delta;
                         }
@@ -1590,7 +2435,7 @@ inline cTMap * AS_SpreadDirectionalAbsMaxMD(cTMap * points ,cTMap * friction_sta
                         float vn_points = points->data[r][c-1];
                         float vn_fric = friction_x2->data[r][c-1];
                         float vn_current = map->data[r][c-1];
-                        if(vn_fric< 0.0)
+                        if(vn_fric< delta)
                         {
                             vn_fric = delta;
                         }
@@ -1622,7 +2467,7 @@ inline cTMap * AS_SpreadDirectionalAbsMaxMD(cTMap * points ,cTMap * friction_sta
                         float vn_points = points->data[r+1][c];
                         float vn_fric = -friction_y1->data[r+1][c];
                         float vn_current = map->data[r+1][c];
-                        if(vn_fric< 0.0)
+                        if(vn_fric< delta)
                         {
                             vn_fric = delta;
                         }
@@ -1643,7 +2488,7 @@ inline cTMap * AS_SpreadDirectionalAbsMaxMD(cTMap * points ,cTMap * friction_sta
                         float vn_points = points->data[r][c+1];
                         float vn_fric = -friction_x1->data[r][c+1];
                         float vn_current = map->data[r][c+1];
-                        if(vn_fric< 0.0)
+                        if(vn_fric< delta)
                         {
                             vn_fric = delta;
                         }
