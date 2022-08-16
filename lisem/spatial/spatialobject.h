@@ -1,4 +1,0 @@
-#ifndef SPATIALOBJECT_H
-#define SPATIALOBJECT_H
-
-#endif // SPATIALOBJECT_H

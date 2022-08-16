@@ -1,4 +1,0 @@
-#ifndef FIELDSPREAD_H
-#define FIELDSPREAD_H
-
-#endif // FIELDSPREAD_H

@@ -1,4 +1,0 @@
-#ifndef MAPCREATWIDGET_H
-#define MAPCREATWIDGET_H
-
-#endif // MAPCREATWIDGET_H

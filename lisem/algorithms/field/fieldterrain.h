@@ -1,4 +1,0 @@
-#ifndef FIELDTERRAIN_H
-#define FIELDTERRAIN_H
-
-#endif // FIELDTERRAIN_H
