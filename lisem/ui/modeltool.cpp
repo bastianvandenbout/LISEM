@@ -367,6 +367,13 @@ void ModelTool::UpdateInterfaceFromModelData()
     m_Model->m_ModelDataMutex.unlock();
 
 
+    if(m_ModelData->step == m_ModelData->timesteps)
+    {
+        if(m_HasCallBackOnFinished)
+        {
+            m_CallBackOnFinished();
+        }
+    }
 
 }
 

@@ -7,6 +7,62 @@
 #include "rasterreduce.h"
 #include "rasterartificialflow.h"
 
+inline cTMap *AS_DemMonotonicReconstruct(cTMap * DEM)
+{
+
+    float dx = DEM->cellSizeX();
+    int iters= 25 * std::max(1,std::max(DEM->nrCols(),DEM->nrRows())/1000);
+    cTMap * GradX1 = AS_SlopeX1(DEM);
+    cTMap * GradY1 = AS_SlopeY1(DEM);
+    cTMap * GradX2 = AS_SlopeX2(DEM);
+    cTMap * GradY2 = AS_SlopeY2(DEM);
+
+    MaskedRaster<float> raster_data3(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(),DEM->data.cell_sizeY());
+    cTMap *Seeds = new cTMap(std::move(raster_data3),DEM->projection(),"");
+
+    int r = 0,c = 0;
+    int seeds = 0;
+    float mindem = AS_MapMinimumRed(DEM);
+
+    #pragma omp parallel for collapse(2)
+    for (r = 0; r < DEM->Rows(); r++) {
+        for (c = 0; c < DEM->Cols(); c++) {
+            if (!pcr::isMV(DEM->data[r][c])) {
+
+                //if dem < smallest dem, or if it is an edge cell, make it a seed for the new dem
+                if(OUTORMV(DEM,r,c) || OUTORMV(DEM,r,c+1) || OUTORMV(DEM,r,c-1) || OUTORMV(DEM,r+1,c) || OUTORMV(DEM,r-1,c) || (DEM->data[r][c] < mindem + 1e-6))
+                {
+                    seeds ++;
+                    Seeds->data[r][c] =1.0;
+                }else
+                {
+                    Seeds->data[r][c] =0.0;
+                }
+            }else
+            {
+                Seeds->data[r][c] =0.0;
+            }
+        }
+    }
+
+    //then do the elevation model fix
+    cTMap * DEM2;
+
+
+    DEM2 = AS_SpreadDirectionalAbsMaxMD(Seeds,DEM,GradX1,GradX2,GradY1,GradY2);
+
+    delete GradX1;
+    delete GradX2;
+    delete GradY1;
+    delete GradY2;
+    delete Seeds;
+
+    return DEM2;
+
+
+}
+
+
 //super-fast flood algorithm
 //besides some multi-threading upportunities, SSE/AVX instructions, etc
 //from a data-dependency perspective I dont see how any physically-based method could be significantly faster than this
@@ -169,7 +225,7 @@ inline cTMap * AS_FlowSuperFast(cTMap * DEM,  cTMap * N,cTMap * Rain, float dura
                 float gy1 =std::min(0.0,-UF2D_Derivative_scaled(DEM2,r,c,UF_DIRECTION_Y,1.0,UF_DERIVATIVE_L));
                 float gy2 =std::max(0.0,-UF2D_Derivative_scaled(DEM2,r,c,UF_DIRECTION_Y,1.0,UF_DERIVATIVE_R));
 
-                float gtot = std::max(0.00001f,std::fabs(gx1) + std::fabs(gx2) + std::fabs(gy1) + std::fabs(gy2));
+                float gtot = std::max(1e-12f,std::fabs(gx1) + std::fabs(gx2) + std::fabs(gy1) + std::fabs(gy2));
 
                 GradX1->data[r][c] = gx1/gtot;
                 GradX2->data[r][c] = gx2/gtot;

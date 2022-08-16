@@ -185,7 +185,7 @@ inline cTMap * AS_Mapsqrt(cTMap * Other)
 
 }
 
-#include "stack/threadpool.h"
+/*#include "stack/threadpool.h"
 
 inline void AS_MapTest(int rmax)
 {
@@ -204,21 +204,12 @@ inline void AS_MapTest(int rmax)
     pool.parallelize_loop(0, rmax, loop, 0);
 
 
-    /*#pragma omp parallel for private(r) shared(data,datao) schedule(static)
-    for(r = 0; r < rmax;r++)
-    {
-
-           data[r] = 3 + datao[r] / 5.0;
-
-
-    }
-    map->AS_IsSingleValue = Other->AS_IsSingleValue;*/
 
 
     return;
 
 
-}
+}*/
 
 
 

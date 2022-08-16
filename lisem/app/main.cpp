@@ -1,6 +1,9 @@
 
 #include <iostream>
 #include "qsslsocket.h"
+
+
+//all the chrono stuff is to prevent runtime errors in this external library
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverAPGD.h"
@@ -55,6 +58,7 @@ inline void DoChrono()
 
 }
 
+//finally we get to our simple main
 #include "lisem.h"
 
 int main(int argc, char *argv[])

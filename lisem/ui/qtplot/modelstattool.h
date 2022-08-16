@@ -51,6 +51,15 @@ public:
     QLabel * m_LabelErrorF;
     QLabel * m_LabelErrorS;
 
+    float range_x_min = 0.0;
+    float range_x_max = 0.0;
+    float range_y1_min = 0.0;
+    float range_y1_max = 0.0;
+    float range_y2_min = 0.0;
+    float range_y2_max = 0.0;
+
+
+    bool firstaxisset = true;
     inline ModelStatTool( LISEMModel * m, MODELTOINTERFACE *minterface, QWidget *parent = 0): QWidget( parent)
     {
 
@@ -116,7 +125,35 @@ public:
         m_SpinBox->setMinimum(0);
         m_SpinBox->setMaximum(0);
 
+
+        QString m_Dir = GetSite();
+
+        QIcon iconR;
+        iconR.addFile((m_Dir + LISEM_FOLDER_ASSETS + "refresh.png"), QSize(), QIcon::Normal, QIcon::Off);
+
+
+        QToolButton *ResetViewButton = new QToolButton();
+        ResetViewButton->setIcon(iconR);
+        ResetViewButton->setIconSize(QSize(22,22));
+        ResetViewButton->resize(22,22);
+        ResetViewButton->setEnabled(true);
+        ResetViewButton->setToolTip("Reset graph view");
+
+
+        connect(ResetViewButton,&QToolButton::pressed,[this]()
+        {
+
+            firstaxisset = true;
+            m_CustomPlot->resetHasDoneDrag();
+
+            m_CustomPlot->xAxis->setRange(0,range_x_max);
+            m_CustomPlot->yAxis->setRange(0,range_y1_max);
+            m_CustomPlot->yAxis2->setRange(0,range_y2_max);
+
+        });
+
         layout2->addRow(new QLabel("Graph Settings"),new QLabel(""));
+        layout2->addRow(new QLabel("Reset Graph View"),ResetViewButton);
         layout2->addRow(new QLabel("Outlet"), m_SpinBox);
 
         connect(m_SpinBox,SIGNAL(valueChanged(int)),this,SLOT(OnSpinBoxIndexChanged(int)));
@@ -149,6 +186,10 @@ public:
 
         m_CustomPlot->legend->setVisible(true);
         m_CustomPlot->legend->setBrush(QColor(255, 255, 255, 150));
+        m_CustomPlot->setInteraction(QCP::iRangeDrag, true);
+        m_CustomPlot->setInteraction(QCP::iRangeZoom, true);
+
+
 
     }
 
@@ -160,6 +201,11 @@ public:
         m_SpinBox->setMaximum(m_ModelData->outlets.length()-1);
 
 
+        if(m_ModelData->step == 0)
+        {
+            firstaxisset = true;
+            m_CustomPlot->resetHasDoneDrag();
+        }
 
 
         m_LabelArea->setText(QString::number(m_ModelData->area/(1000000.0f)));
@@ -222,9 +268,24 @@ public:
              rmax = std::max(rmax,m_ModelData->rain.at(i));
         }
 
-        m_CustomPlot->xAxis->setRange(0,((float)(m_ModelData->rain.length())*m_ModelData->dt)/60.0f);
-        m_CustomPlot->yAxis->setRange(0,std::max(std::max(qmax,vmax),hmax));
-        m_CustomPlot->yAxis2->setRange(0,rmax);
+        range_x_max = ((float)(m_ModelData->rain.length())*m_ModelData->dt)/60.0f;
+        range_y1_max = std::max(std::max(qmax,vmax),hmax);
+        range_y2_max = rmax;
+
+        if(firstaxisset)
+        {
+            if(m_CustomPlot->hasDoneDrag())
+            {
+                firstaxisset = false;
+            }
+
+            m_CustomPlot->xAxis->setRange(0,((float)(m_ModelData->rain.length())*m_ModelData->dt)/60.0f);
+            m_CustomPlot->yAxis->setRange(0,std::max(std::max(qmax,vmax),hmax));
+            m_CustomPlot->yAxis2->setRange(0,rmax);
+        }else
+        {
+             m_CustomPlot->yAxis2->setRange(0,rmax);
+        }
 
         m_CustomPlot->addGraph();
         QColor color(20+200/4.0*1.0,70*(1.6-1.0/4.0), 150, 150);

@@ -1017,10 +1017,10 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
             float flux_y1 = z_y1 < -1000.0f? max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):max(-max(err,h) * C,min(max(err,h_y1) * C,(float)(+tx*(hll_y1.x))));
             float flux_y2 = z_y2 < -1000.0f? max(-h * C,(float)(-h * sqrt(h) *dt* sqrt(h)/(dx*(0.001f+n)))):max(-max(err,h) * C,min(max(err,h_y2) * C,(float)(-tx*(hll_y2.x))));
 
-            qfout = qfout +z_x1 < -1000.0f? flux_x1 : 0.0f;
-            qfout = qfout +z_x2 < -1000.0f? flux_x2 : 0.0f;
-            qfout = qfout +z_y1 < -1000.0f? flux_y1 : 0.0f;
-            qfout = qfout +z_y2 < -1000.0f? flux_y2 : 0.0f;
+            qfout = qfout +(z_x1 < -1000.0f? flux_x1 : 0.0f);
+            qfout = qfout +(z_x2 < -1000.0f? flux_x2 : 0.0f);
+            qfout = qfout +(z_y1 < -1000.0f? flux_y1 : 0.0f);
+            qfout = qfout +(z_y2 < -1000.0f? flux_y2 : 0.0f);
 
             write_imagef(QFX1, int2(gx,gy), flux_x1 *(dx*dx));
             write_imagef(QFX2, int2(gx,gy), flux_x2 *(dx*dx));
@@ -1089,7 +1089,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
             srocksizen = isnan(srocksizen)? 0.1f : srocksizen;
             sdensityn = isnan(sdensityn)? 2000.0f : sdensityn;
 
-            hn = hn + rain * dt_hydro/max(1e-10f,dt);
+            hn = hn + rain * dt/max(1e-10f,dt_hydro);
 
             write_imagef(InfilAct, int2(gx,gy), infilcum + infil_act);
             write_imagef(Hn, int2(gx,gy), hn);

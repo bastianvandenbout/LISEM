@@ -124,7 +124,6 @@ void LISEMModel::GetOutput(float t, float dt)
 
             if(m_DoCPU)
             {
-                std::cout << "fill buffers during report" << std::endl;
                 m_DataPos->UpdateBufferFromDataGL();
                 m_DataUI->UpdateBufferFromDataGL();
             }
@@ -235,12 +234,11 @@ void LISEMModel::ModelReportThread()
 {
     while(true)
     {
-        std::cout << "tryr wait "<< std::endl;
         std::unique_lock<std::mutex> lock(m_ReportStartCondition);
-        std::cout << "tryr wait_2 " << std::endl;
+
         m_ReportStartRequestedCondition.wait(lock);
 
-         std::cout << "testr quit"<< std::endl;
+
          m_ReportQuitCondition.lock();
          if(m_ReportQuitRequested)
          {
@@ -248,7 +246,7 @@ void LISEMModel::ModelReportThread()
          }
          m_ReportQuitCondition.unlock();
 
-         std::cout << "runr"<< std::endl;
+
          if(m_ReportStartRequested)
          {
              lock.unlock();
@@ -557,7 +555,7 @@ void LISEMModel::ReportOutputToInterface(float t, float dt)
         rain += RAIN->Drc;
         flow += HF->Drc;
 
-        outflow += QFOUT->Drc;
+        outflow -= QFOUT->Drc;
         if(m_DoHydrology || m_DoInfiltration)
         {
 
@@ -599,6 +597,7 @@ void LISEMModel::ReportOutputToInterface(float t, float dt)
         }
     }
 
+
     //now set all the values in the MODELTOINTERFACE structure
 
     m_InterfaceData.area = area;
@@ -613,6 +612,7 @@ void LISEMModel::ReportOutputToInterface(float t, float dt)
     m_InterfaceData.failures_total = 1000.0 * failures;
     m_InterfaceData.sh_total = 1000.0 * sflow/n;
     m_InterfaceData.outflows_total += 1000.0 * outflows/area;
+
 
 
 
@@ -688,7 +688,9 @@ void LISEMModel::ReportOutputToInterface(float t, float dt)
         }else {
             m_InterfaceData.H.at(i)->append(0);
             m_InterfaceData.V.at(i)->append(std::fabs(0));
-            m_InterfaceData.Q.at(i)->append(0);
+            m_InterfaceData.Q.at(i)->append(outflow - outflow_last);
+
+            outflow_last = outflow;
         }
     }
     m_InterfaceData.rain.append(rain);

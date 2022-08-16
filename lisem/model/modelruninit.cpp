@@ -301,6 +301,7 @@ void LISEMModel::ModelRunLoadData()
 
 
     m_SetOutputArrays = false;
+    outflow_last = 0.0;
 
     //Get Maps
 

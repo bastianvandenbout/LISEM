@@ -303,7 +303,7 @@ inline void RequestStartAndWaitPyVis(QList<QString> options, RigidPhysicsWorld *
         std::cout << "test2" << std::endl;
 
          m->FinishMutex.unlock();
-        m->SetCallBackTimeStep([d,m,f,channel](bool start, bool stop){
+        m->SetCallBackTimeStep([d,m,f,channel](int step, int step_max,bool start, bool stop){
 
             if(start)
             {

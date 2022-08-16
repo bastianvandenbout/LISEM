@@ -362,9 +362,15 @@ public:
 
         m_DatabaseWidget->SetWorkingDir(dir);
 
-        m_DatabaseWidget->m_FileEditor->OpenAndRunCode(file,std::function<void(void)>([this](){ if(has_callback_commandline)
+        m_DatabaseWidget->m_FileEditor->OpenAndRunCode(file,std::function<void(void)>([this,quit](){ if(has_callback_commandline)
             {
-                m_CallBack_CommandLine();
+                if(quit)
+                {
+
+                    LISEMS_STATUS("Finished task, closing");
+                    close();
+                }
+
             };
                 ;}));
 
@@ -376,9 +382,14 @@ public:
     {
         m_DatabaseWidget->SetWorkingDir(dir);
 
-        m_DatabaseWidget->m_FileEditor->OpenAndCompileCode(file,std::function<void(void)>([this](){ if(has_callback_commandline)
+        m_DatabaseWidget->m_FileEditor->OpenAndCompileCode(file,std::function<void(void)>([this,quit](){ if(has_callback_commandline)
             {
-                m_CallBack_CommandLine();
+                if(quit)
+                {
+
+                    LISEMS_STATUS("Finished task, closing");
+                    close();
+                }
             };
                 ;}));
 
@@ -388,6 +399,16 @@ public:
 
     inline bool SetCommandLineRunModel(QString file, bool has_dir, QString dir, bool quit)
     {
+        this->m_ModelTool->SetCallBackOnFinished(std::function<void(void)>([this,quit](){
+            {
+                if(quit)
+                {
+
+                    LISEMS_STATUS("Finished task, closing");
+                    close();
+                }
+            };
+                ;}));
         this->m_ModelTool->InterfaceOpenRunFile(dir + file);
         this->m_ModelTool->start();
 
@@ -398,7 +419,11 @@ public:
     {
         m_DatabaseWidget->SetWorkingDir(dir);
 
-        m_DatabaseWidget->OnConsoleCommand(calc);
+        m_DatabaseWidget->OnConsoleCommand(calc,std::function<void(void)>([this,quit](){
+            {
+                //m_CallBack_CommandLine();
+            };
+                ;}));
 
         return false;
     }
@@ -407,7 +432,7 @@ public:
     {
         for(int i = 0; i < files.length(); i++)
         {
-            OnFileOpenRequest(dir + files.at(i),LISEM_FILE_TYPE_UNKNOWN);
+            OnFileOpenRequest(files.at(i),LISEM_FILE_TYPE_UNKNOWN);
         }
 
         return false;
@@ -420,6 +445,7 @@ public slots:
 
     inline void showEvent(QShowEvent* event) override
     {
+        std::cout << "onshow " << std::endl;
         if(first_onshow)
         {
             first_onshow = false;

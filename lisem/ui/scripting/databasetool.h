@@ -806,6 +806,11 @@ public:
         m_FileCallBackSet = true;
     }
 
+
+    bool m_HasCallBackOnFinished = false;
+    std::function<void(void)> m_CallBackOnFinished;
+
+
 public slots:
 
     void UpdateConsole()
@@ -908,7 +913,7 @@ public slots:
             {
                 QString ext = filepath.right(4);
 
-                if((ext.compare(".script") == 0) || (ext.compare(".run") == 0))
+                if((ext.compare(".script") == 0) || (ext.compare(".run") == 0) || (ext.compare(".glsl") == 0) || (ext.compare(".frag") == 0)|| (ext.compare(".vert") == 0)|| (ext.compare(".txt") == 0)|| (ext.compare(".ini") == 0))
                 {
                     //raster extension, try to open with map display
                     m_FileEditor->OpenCode(filepath);
@@ -1270,6 +1275,17 @@ public slots:
 
     }
 
+
+    inline void OnConsoleCommand(QString command, std::function<void(void)> onfinish)
+    {
+
+        m_HasCallBackOnFinished = true;
+        m_CallBackOnFinished = onfinish;
+
+        OnConsoleCommand(command);
+
+    }
+
     inline void OnConsoleCommand(QString command)
     {
         m_ConsoleMutex->lock();
@@ -1293,7 +1309,7 @@ public slots:
             ;
                                                                     }),this,s,std::placeholders::_1);
 
-        s->SetCallBackDone(std::function<void(DatabaseTool *,SPHScript*,bool x)>([](DatabaseTool *dt,SPHScript*, bool finished) ->
+        s->SetCallBackDone(std::function<void(DatabaseTool *,SPHScript*,bool x)>([this](DatabaseTool *dt,SPHScript*, bool finished) ->
                                                                     void{
 
             dt->m_ConsoleMutex->lock();
@@ -1301,6 +1317,11 @@ public slots:
             dt->m_ConsoleRunning = true;
             dt->m_ConsoleMutex->unlock();
             LISEMS_DEBUG("Done");
+
+                               if(m_HasCallBackOnFinished)
+                               {
+                                    m_CallBackOnFinished();
+                               }
             ;
                                                                     }),this,s,std::placeholders::_1);
 

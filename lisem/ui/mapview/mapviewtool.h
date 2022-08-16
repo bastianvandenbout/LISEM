@@ -839,6 +839,9 @@ public:
         QIcon iconSave;
         iconSave.addFile((m_Dir + LISEM_FOLDER_ASSETS + "filesave.png"), QSize(), QIcon::Normal, QIcon::Off);
 
+        QIcon iconDeleteAll;
+        iconDeleteAll.addFile((m_Dir + LISEM_FOLDER_ASSETS + "delete.png"), QSize(), QIcon::Normal, QIcon::Off);
+
 
         QToolButton *loadButton = new QToolButton();
         loadButton->setIcon(iconLoad);
@@ -1071,6 +1074,15 @@ public:
 
         CRSLabel = new QLabel("CRS: Generic");
 
+        QToolButton *DeleteButton = new QToolButton();
+        DeleteButton->setIcon(iconDeleteAll);
+        DeleteButton->setIconSize(QSize(22,22));
+        DeleteButton->resize(22,22);
+        DeleteButton->setEnabled(true);
+        DeleteButton->setToolTip("Delete all user layers");
+
+
+
         QSpacerItem * spacer = new QSpacerItem(5000,20,QSizePolicy::Expanding, QSizePolicy::Minimum);
         QSpacerItem * spacer2 = new QSpacerItem(5000,20,QSizePolicy::Expanding, QSizePolicy::Minimum);
 
@@ -1088,7 +1100,7 @@ public:
         TitleLayout->addWidget(addEVButton);
         TitleLayout->addWidget(CRSButton);
         TitleLayout->addWidget(CRSLabel);
-
+        TitleLayout->addWidget(DeleteButton);
         m_Layers = new ListWidgetE();
         m_Layers->setMinimumSize(QSize(500,250));
         m_Layers->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
@@ -1110,6 +1122,7 @@ public:
         connect(addWebButton,SIGNAL(clicked(bool)), this, SLOT(OnAddWebPressed()));
         connect(addPCButton,SIGNAL(clicked(bool)), this, SLOT(OnAddPCPressed()));
         connect(CRSButton,SIGNAL(clicked(bool)), this, SLOT(OnCRSPressed()));
+        connect(DeleteButton,SIGNAL(clicked(bool)), this, SLOT(OnDeleteressed()));
 
         connect(m_Layers,SIGNAL(OnItemDragDrop()),this,SLOT(OnListOrderChanged()),Qt::ConnectionType::QueuedConnection);
         connect(m_Layers,SIGNAL(itemSelectionChanged()),this,SLOT(OnSelectedLayerChanged()),Qt::ConnectionType::QueuedConnection);
@@ -4357,6 +4370,11 @@ public slots:
 
     }
 
+    inline void OnDeleteressed()
+    {
+
+        m_WorldWindow->RemoveAllUserLayers();
+    }
 
     inline void SavePressed()
     {

@@ -2100,7 +2100,16 @@ public:
   Q_SLOT void setSelectedParts(const QCPAxis::SelectableParts &selectedParts);
   void setLowerEnding(const QCPLineEnding &ending);
   void setUpperEnding(const QCPLineEnding &ending);
-  
+
+  bool m_HasDragging = false;
+  bool hasDoneDrag()
+  {
+      return m_HasDragging;
+  }
+  void resetHasDoneDrag()
+  {
+      m_HasDragging = false;
+  }
   // reimplemented virtual methods:
   virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const Q_DECL_OVERRIDE;
   
@@ -2177,6 +2186,7 @@ protected:
   bool mCachedMarginValid;
   int mCachedMargin;
   bool mDragging;
+
   QCPRange mDragStartRange;
   QCP::AntialiasedElements mAADragBackup, mNotAADragBackup;
   
@@ -3704,6 +3714,19 @@ public:
   QCPAbstractItem *itemAt(const QPointF &pos, bool onlySelectable=false) const;
   bool hasItem(QCPAbstractItem *item) const;
   
+  inline bool hasDoneDrag()
+  {
+      return xAxis->hasDoneDrag()||yAxis->hasDoneDrag() ||xAxis2->hasDoneDrag()||yAxis2->hasDoneDrag();
+  }
+  inline void resetHasDoneDrag()
+  {
+      xAxis->resetHasDoneDrag();
+      yAxis->resetHasDoneDrag();
+      xAxis2->resetHasDoneDrag();
+      yAxis2->resetHasDoneDrag();
+  }
+
+
   // layer interface:
   QCPLayer *layer(const QString &name) const;
   QCPLayer *layer(int index) const;

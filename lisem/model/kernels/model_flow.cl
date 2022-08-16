@@ -444,10 +444,10 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
 
 
-            qfout = qfout +z_x1 < -1000? flux_x1 : 0.0;
-            qfout = qfout +z_x2 < -1000? flux_x2 : 0.0;
-            qfout = qfout +z_y1 < -1000? flux_y1 : 0.0;
-            qfout = qfout +z_y2 < -1000? flux_y2 : 0.0;
+            qfout = qfout +(z_x1 < -1000? flux_x1 : 0.0);
+            qfout = qfout +(z_x2 < -1000? flux_x2 : 0.0);
+            qfout = qfout +(z_y1 < -1000? flux_y1 : 0.0);
+            qfout = qfout +(z_y2 < -1000? flux_y2 : 0.0);
 
             write_imagef(QFX1, int2(gx,gy), flux_x1 *(dx*dx));
             write_imagef(QFX2, int2(gx,gy), flux_x2 *(dx*dx));
@@ -529,7 +529,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
 
             float infil_act = min((float)(infilpot),(float)(hn));
 
-            hn = hn - infil_act + rain * dt_hydro/max(1e-10f,dt);
+            hn = hn - infil_act + rain * dt/max(1e-10f,dt_hydro);
 
             hn = edges > 2? 0.0f:(isnan(hn)? 0.0:hn);
             vxn = edges > 2? 0.0f:isnan(vxn)? 0.0:vxn;

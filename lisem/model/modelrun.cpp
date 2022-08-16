@@ -105,7 +105,6 @@ void LISEMModel::DoModelRun()
         if(m_Loaded)
         {
 
-               std::cout << "get rain values " << std::endl;
             //get time-input stuff and upload maps
                 m_Rain.fillValues(t,dt, RAIN);
 
@@ -114,7 +113,6 @@ void LISEMModel::DoModelRun()
                     RAIN->Drc=  RAIN->Drc* dt/(3600.0 *1000.0);
                 }
 
-                std::cout << "done with rain " << std::endl;
 
                 if(m_DoEvapoTranspiration)
                 {
@@ -144,9 +142,6 @@ void LISEMModel::DoModelRun()
                 glfwMakeContextCurrent(NULL);
                 m_OpenGLCLManager->m_GLMutex.unlock();
                 m_OpenGLCLManager->m_GLOutputUIMutex.unlock();
-
-                std::cout << "done with upload " << std::endl;
-
 
 
                 if(m_DoInfiltration && !m_DoHydrology)
@@ -983,7 +978,7 @@ void LISEMModel::DoModelRun()
         {
             if(m_CallBackTimeStepSet)
             {
-                m_CallBackTimeStep(true,false);
+                m_CallBackTimeStep(0,steps,true,false);
             }
             m_RequiresUIReset = true; // this also lets the viewer know to redraw
         }else
@@ -1001,7 +996,7 @@ void LISEMModel::DoModelRun()
 
         if(m_CallBackTimeStepSet)
         {
-            m_CallBackTimeStep(false, false);
+            m_CallBackTimeStep(m_Step,steps,false, false);
         }
 
         //
@@ -1013,7 +1008,7 @@ void LISEMModel::DoModelRun()
 
     if(m_CallBackTimeStepSet)
     {
-        m_CallBackTimeStep(false,true);
+        m_CallBackTimeStep(m_Step,steps,false,true);
     }
 
     if(m_ThreadReport.joinable())

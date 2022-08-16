@@ -1309,7 +1309,6 @@ inline void writeGDALRaster(
     GDALDriver& driver)
 {
 
-    std::cout << "write raster list to multi-band" <<std::endl;
 
     QFileInfo fi(pathName);
     if(!fi.dir().exists())
@@ -1411,7 +1410,6 @@ inline void writeGDALRaster(
     }
 
 
-    std::cout << "write raster " << bandn << " " << pathName.toStdString() << std::endl;
     if(bandn == -1)
     {
         // Create new dataset.
@@ -1644,7 +1642,6 @@ inline void writeRaster(
     int bandn = -1)
 {
 
-    std::cout << "get driver "<< std::endl;
     {
         if(raster.AS_IsLDD)
         {
@@ -1682,7 +1679,6 @@ inline void writeRaster(
             writePCRasterRaster(raster, pathName);
     }else */
     if(driverSupportsCreate) {
-        std::cout << "write raster "<< std::endl;
     // All is well, write using GDAL.
     writeGDALRaster(raster, pathName, *driver,bandn);
     }else {
@@ -1691,11 +1687,8 @@ inline void writeRaster(
                 format.toLatin1().constData()));
         throw 1;
     }
-    std::cout << "remove xml" << std::endl;
-
     QFile f(pathName + ".aux.xml");
     f.remove();
-    std::cout << "remove xml done" << std::endl;
 
 
 }

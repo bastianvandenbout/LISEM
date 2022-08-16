@@ -361,6 +361,17 @@ public:
 
     }
 
+
+    bool m_HasCallBackOnFinished = false;
+    std::function<void(void)> m_CallBackOnFinished;
+
+    inline void SetCallBackOnFinished(
+            std::function<void(void)> onfinish)
+    {
+        m_HasCallBackOnFinished = true;
+        m_CallBackOnFinished = onfinish;
+    }
+
 public slots:
 
 

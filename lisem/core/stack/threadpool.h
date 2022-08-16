@@ -545,4 +545,4 @@ private:
 // ============================================================================================= //
 
 
-LISEM_API extern thread_pool pool;
+//LISEM_API extern thread_pool pool;

@@ -466,7 +466,6 @@ public:
 
         if(can_repl_mem)
         {
-            std::cout << "Direct val replace"<< std::endl;
             //this can happen during editing
 
             m_RDP->DirectReplace(maps);
@@ -481,7 +480,6 @@ public:
             maps.clear();
         }else
         {
-            std::cout << "Direct meme replace " << std::endl;
             //this should not be allowed to happen during editing, as a new RDP invalidates the memory maps in the layereditor
             //we tranfer ownership to the rdp, so we dont have to delete maps
             RasterDataProvider * RDP = new RasterDataProvider(maps,false,true);
@@ -735,13 +733,10 @@ public:
 
                 }
 
-                std::cout << 3 << std::endl;
                 glad_glBindTexture(GL_TEXTURE_2D,m_Texture->m_texgl);
                 glad_glTexSubImage2D(GL_TEXTURE_2D,0,minc,minr,sizec,sizer,GL_RED,GL_FLOAT,datareplace.data());
                 glad_glBindTexture(GL_TEXTURE_2D,0);
 
-
-                std::cout << 4 << std::endl;
             }
 
         }
@@ -784,10 +779,14 @@ public:
             if(rsb->write_done && !rsb->rRead_Started)
             {
 
+                std::cout << "write done followup" << std::endl;
                 //now check if the data from the cpu needs to be refreshed to gpu
 
                 if(rsb->update_gpu)
                 {
+
+                    std::cout << "join thread" << std::endl;
+
 
                     if(rsb->tRead.joinable())
                     {
@@ -795,16 +794,23 @@ public:
                     }
 
                     //std::cout << "data upload"<< std::endl;
+                    std::cout << "set bb" << std::endl;
 
                     rsb->update_gpu = false;
                     rsb->SetFromFuture();
 
+                    std::cout << "texture up" << std::endl;
+
                     glad_glBindTexture(GL_TEXTURE_2D,rsb->GLTexture->m_texgl);
                     glad_glTexSubImage2D(GL_TEXTURE_2D,0,0,0,rsb->Map->nrCols(),rsb->Map->nrRows(),GL_RED,GL_FLOAT,rsb->Map->data[0]);
                     glad_glBindTexture(GL_TEXTURE_2D,0);
+                    std::cout << "texture up done" << std::endl;
+
                 }
 
             }
+
+            std::cout << "done gpu udpate" << std::endl;
 
 
             rsb->m_SignMutex->unlock();
@@ -1045,6 +1051,7 @@ public:
                     }
                     rsb_i->m_SignMutex->unlock();
                 }
+                std::cout << "rsb check "<< rsb << std::endl;
 
                 //make new one
                 if(rsb == nullptr)
@@ -1061,6 +1068,7 @@ public:
                 }
                 //do actual loading on a seperate thread
 
+                std::cout << "do stuff with rsb"<<std::endl;
                 rsb->m_SignMutex->lock();
                 if(rsb->write_done)
                 {
@@ -1087,10 +1095,12 @@ public:
                             rsb->m_SignMutex->unlock();
 
 
+                            std::cout << "raster fill start 1"<< std::endl;
                             //std::cout << "read values pre " << bfinal.GetMinX() << " " << bfinal.GetMaxX() << " " << bfinal.GetMinY() << " " << bfinal.GetMaxY() << std::endl;
                             m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex,[this, rsb,bfinal,band]()
                             {
 
+                                std::cout << "raster fill start2 "<< std::endl;
                                 rsb->m_SignMutex->lock();
 
                                 rsb->SetFutureFrom(bfinal,GetProjection(),band);
@@ -1106,28 +1116,41 @@ public:
                                 m_RedrawNeeded = true;
 
                                 m_RedrawNeedMutex.unlock();
-
+                                std::cout << "raster fill end2 " << std::endl;
 
                             });
+
+                            std::cout << "raster fill end 1" << std::endl;
                         };
 
+                        std::cout << "postfill1 " << std::endl;
                         m_ReadThreadStartMutex.unlock();
+                        std::cout << "postfill2 " << std::endl;
                         m_ReadThreadWaitCondition.notify_all();
+                        std::cout << "postfill3 " << std::endl;
                         m_ReadThreadDoneCondition.wait(&m_ReadThreadDoneMutex);
+                        std::cout << "postfill4 " << std::endl;
                         m_ReadThreadDoneMutex.unlock();
+                        std::cout << "postfill5 " << std::endl;
 
 
                         m_ReadInstructMutex.unlock();
+                        std::cout << "postfill6 " << std::endl;
 
 
                     });
+                    std::cout << "postfill7 " << std::endl;
 
                     rsb->m_SignMutex->unlock();
 
                 }else
                 {
+                    std::cout << "postfill8 " << std::endl;
+
                     rsb->m_SignMutex->unlock();
                 }
+
+                std::cout << "stuff done"<<std::endl;
             }
 
             rsb->m_SignMutex->lock();
@@ -1140,6 +1163,7 @@ public:
             //std::cout << "fill raster buffers done " << band <<  std::endl;
 
 
+            std::cout << "return rsb"<< std::endl;
             return rsb;
         }
 

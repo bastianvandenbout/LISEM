@@ -1098,7 +1098,7 @@ for(int id_1d_cpu = 0; id_1d_cpu < id_1d_cpum; id_1d_cpu++)
         vxn = edges > 2? 0.0f:isnan(vxn)? 0.0f:vxn;
         vyn = edges > 2? 0.0f:isnan(vyn)? 0.0f:vyn;
 
-        hn = hn + rain * dt_hydro/max(1e-10f,dt) + sfluidhadd;
+        hn = hn + rain * dt/max(1e-10f,dt_hydro) + sfluidhadd;
 
         if(sfluidhadd > 0.0f)
         {

@@ -46,6 +46,7 @@ LISEM_API QString ToString(bool x);
 
 static void TranslateException(asIScriptContext *ctx, void* /*userParam*/)
 {
+    std::cout << "exception from script " << std::endl;
   try
   {
     // Retrow the original exception so we can catch it again

@@ -9,6 +9,7 @@
 #include "algorithm"
 #include "random"
 #include "scriptarray.h"
+#include "error.h"
 using namespace std;
 
 BEGIN_AS_NAMESPACE
@@ -889,9 +890,11 @@ void CScriptArray::RemoveRange(asUINT start, asUINT count)
 	if( buffer == 0 || start > buffer->numElements )
 	{
 		// If this is called from a script we raise a script exception
-		asIScriptContext *ctx = asGetActiveContext();
-		if (ctx)
-			ctx->SetException("Index out of bounds");
+        //asIScriptContext *ctx = asGetActiveContext();
+        //if (ctx)
+        //	ctx->SetException("Index out of bounds");
+        LISEMS_ERROR("Index out of bounds");
+        throw 1;
 		return;
 	}
 
@@ -943,10 +946,10 @@ void CScriptArray::Resize(int delta, asUINT at)
 		else
 		{
 			// Out of memory
-			asIScriptContext *ctx = asGetActiveContext();
-			if( ctx )
-				ctx->SetException("Out of memory");
-			return;
+            LISEMS_ERROR("Out of memory");
+            throw 1;
+            return;
+            return;
 		}
 
 		// As objects in arrays of objects are not stored inline, it is safe to use memcpy here
@@ -993,9 +996,9 @@ bool CScriptArray::CheckMaxSize(asUINT numElements)
 
 	if( numElements > maxSize )
 	{
-		asIScriptContext *ctx = asGetActiveContext();
-		if( ctx )
-			ctx->SetException("Too large array size");
+        LISEMS_ERROR("Array size too large");
+        throw 1;
+        return false;
 
 		return false;
 	}
@@ -1025,9 +1028,9 @@ void CScriptArray::InsertAt(asUINT index, void *value)
 	{
 		// If this is called from a script we raise a script exception
 		asIScriptContext *ctx = asGetActiveContext();
-		if( ctx )
-			ctx->SetException("Index out of bounds");
-		return;
+        LISEMS_ERROR("Index out of bounds");
+        throw 1;
+        return;
 	}
 
 	// Make room for the new element
@@ -1042,9 +1045,9 @@ void CScriptArray::InsertAt(asUINT index, const CScriptArray &arr)
 	if (index > buffer->numElements)
 	{
 		asIScriptContext *ctx = asGetActiveContext();
-		if (ctx)
-			ctx->SetException("Index out of bounds");
-		return;
+        LISEMS_ERROR("Index out of bounds");
+        throw 1;
+        return;
 	}
 
 	if (objType != arr.objType)
@@ -1052,9 +1055,9 @@ void CScriptArray::InsertAt(asUINT index, const CScriptArray &arr)
 		// This shouldn't really be possible to happen when
 		// called from a script, but let's check for it anyway
 		asIScriptContext *ctx = asGetActiveContext();
-		if (ctx)
-			ctx->SetException("Mismatching array types");
-		return;
+        LISEMS_ERROR("Index out of bounds");
+        throw 1;
+        return;
 	}
 
 	asUINT elements = arr.GetSize();
@@ -1109,9 +1112,9 @@ void CScriptArray::RemoveAt(asUINT index)
 	{
 		// If this is called from a script we raise a script exception
 		asIScriptContext *ctx = asGetActiveContext();
-		if( ctx )
-			ctx->SetException("Index out of bounds");
-		return;
+        LISEMS_ERROR("Index out of bounds");
+        throw 1;
+        return;
 	}
 
 	// Remove the element
@@ -1129,10 +1132,9 @@ const void *CScriptArray::At(asUINT index) const
 	if( buffer == 0 || index >= buffer->numElements )
 	{
 		// If this is called from a script we raise a script exception
-		asIScriptContext *ctx = asGetActiveContext();
-		if( ctx )
-			ctx->SetException("Index out of bounds");
-		return 0;
+        LISEMS_ERROR("Index out of bounds error: index is " + QString::number(index) + " and length is " + QString::number(buffer->numElements));
+        throw 1;
+        return nullptr;
 	}
 
 	if( (subTypeId & asTYPEID_MASK_OBJECT) && !(subTypeId & asTYPEID_OBJHANDLE) )
@@ -1165,9 +1167,9 @@ void CScriptArray::CreateBuffer(SArrayBuffer **buf, asUINT numElements)
 	else
 	{
 		// Oops, out of memory
-		asIScriptContext *ctx = asGetActiveContext();
-		if( ctx )
-			ctx->SetException("Out of memory");
+        LISEMS_ERROR("Out of memory");
+        throw 1;
+        return;
 	}
 }
 
@@ -1811,13 +1813,9 @@ void CScriptArray::Sort(asIScriptFunction *func, asUINT startAt, asUINT count)
 
 	if (start >= buffer->numElements)
 	{
-		asIScriptContext *ctx = asGetActiveContext();
-
-		// Throw an exception
-		if (ctx)
-			ctx->SetException("Index out of bounds");
-
-		return;
+        LISEMS_ERROR("Index out of bounds error: index is " + QString::number(start) + " and length is " + QString::number(buffer->numElements));
+        throw 1;
+        return;
 	}
 
 	asBYTE tmp[16];

@@ -82,6 +82,10 @@ public:
     QMutex m_MutexQuit;
     QWaitCondition m_WaitConditionQuit;
 
+    bool m_HasCallBackFinished = false;
+    std::function<void(void)> m_CallBackFinished;
+
+
     inline ScriptTool( ScriptManager * sm, QWidget *parent = 0, const char *name = 0 ): QWidget( parent)
     {
         m_ScriptManager = sm;
@@ -709,27 +713,53 @@ public slots:
 
     inline void OpenAndRunCode(QString path, std::function<void(void)> onfinish)
     {
+
+        m_HasCallBackFinished = true;
+        m_CallBackFinished = onfinish;
+
         OpenCode(path);
         OnRequestRunCode();
     }
 
     inline void OpenAndCompileCode(QString path, std::function<void(void)> onfinish)
     {
+
+        m_HasCallBackFinished = true;
+        m_CallBackFinished = onfinish;
+
         OpenCode(path);
-        OnRequestRunCode();
+        OnRequestCompileCode();
     }
 
 
 
     inline void OpenCode(QString path)
     {
-        CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
-        ce->SetHomeDir(m_HomeDir);
-        m_ScriptTabs->addTab(ce,"");
-        m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
-        ce->LoadFileDirect(path);
-        ExportOpenFileList();
-        OnTitleChanged();
+        bool found = false;
+        QList<QString> list;
+        for(int i = 0;i < m_ScriptTabs->count();i++)
+        {
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(i);
+            QString name = ce->m_FileName;
+            if(name == path)
+            {
+
+                m_ScriptTabs->setCurrentIndex(i);
+                break;
+            }
+
+        }
+
+        if(!found)
+        {
+            CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
+            ce->SetHomeDir(m_HomeDir);
+            m_ScriptTabs->addTab(ce,"");
+            m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
+            ce->LoadFileDirect(path);
+            ExportOpenFileList();
+            OnTitleChanged();
+        }
     }
     inline void OpenCode()
     {

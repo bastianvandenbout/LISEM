@@ -191,6 +191,11 @@ public:
     inline void fillValues(float t, float dt, cTMap * fill)
     {
 
+        FOR_ROW_COL_MV(fill)
+        {
+            fill->data[r][c] = 0.0;
+        }
+
 
         //get all relevent moments in time that influence the value to obtain
         QList<float> timings;
@@ -215,14 +220,15 @@ public:
 
             float t_this = i == 0? -1e31 : d.t;
 
-            float overlap = std::max(0.f,std::min(t_next, t+dt) - std::max(t, t));
-            if(overlap > 0)
+            float overlap = std::max(0.f,std::min(t_next, t+dt) - std::max(t, t_this));
+            float val = d.valuesf.at(0);
+
+            if(overlap > 0.0)
             {
 
                 timetotal += overlap;
                 if(d.is_map)
                 {
-                    std::cout << "load map for rain "<< std::endl;
                     //read raster
                     cTMap * mapr = new cTMap(readRaster(folder + d.value,0));
 
@@ -231,7 +237,7 @@ public:
 
                         if(pcr::isMV(mapr->data[r][c]))
                         {
-                           fill->data[r][c] = 0.0;
+                           fill->data[r][c] += 0.0;
                         }else
                         {
                             fill->data[r][c] = m_Mult*mapr->data[r][c];
@@ -244,9 +250,10 @@ public:
                 }else {
 
                     float val = d.valuesf.at(0);
+
                     FOR_ROW_COL_MV(fill)
                     {
-                        fill->data[r][c] += m_Mult*val;
+                        fill->data[r][c] += overlap * m_Mult*val;
                     }
 
                 }
@@ -254,7 +261,7 @@ public:
         }
 
 
-        if(timetotal > 0)
+        if(timetotal > 0.0)
         {
             FOR_ROW_COL_MV(fill)
             {

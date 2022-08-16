@@ -207,10 +207,10 @@ public:
     float uimin = 1e31;
     float uiavg = 0;
 
-    std::function<void(bool,bool)> m_CallBackTimeStep;
+    std::function<void(int,int, bool,bool)> m_CallBackTimeStep;
     bool m_CallBackTimeStepSet = false;
 
-    inline void SetCallBackTimeStep(std::function<void(bool, bool)> f)
+    inline void SetCallBackTimeStep(std::function<void(int, int,bool, bool)> f)
     {
         m_CallBackTimeStep = f;
         m_CallBackTimeStepSet = true;
@@ -350,6 +350,7 @@ public:
     QMutex m_ModelDataMutex;
     MODELTOINTERFACE m_InterfaceData;
     bool m_SetOutputArrays = false;
+    float outflow_last = 0.0;
     QList<int> Outlets;
     QList<int> OutletsR;
     QList<int> OutletsC;

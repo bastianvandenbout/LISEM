@@ -8836,6 +8836,7 @@ void QCPAxis::mousePressEvent(QMouseEvent *event, const QVariant &details)
   if (event->buttons() & Qt::LeftButton)
   {
     mDragging = true;
+    m_HasDragging  = true;
     // initialize antialiasing backup in case we start dragging:
     if (mParentPlot->noAntialiasingOnDrag())
     {

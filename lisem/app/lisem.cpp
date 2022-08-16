@@ -18,9 +18,9 @@
 #include "omp.h"
 #include "QThread"
 #include "QString"
-
+#include <stdlib.h>
 #include <mpi.h>
-
+#include <cstdlib>
 #include <QtConcurrent/QtConcurrent>
 #include "site.h"
 
@@ -149,14 +149,36 @@ int SPHazard::execute(int argc, char *argv[])
         LISEM_STATUS("-h Help information");
         LISEM_STATUS("-r file.script - run script file with ui, script is first found in working directory, then in executable path");
         LISEM_STATUS("-c file.script - try to compile script file, script is first found in working directory, then in executable path");
-        LISEM_STATUS("-d path/to/dir - set working directory, without this option, executable path is used");
+        LISEM_STATUS("-d path/to/dir - set working directory, without this option, executable working directory is used");
         LISEM_STATUS("-m file.run - run a model by opening a .run file");
+        LISEM_STATUS("-mo 'option1=value|option2=value2|...'");
         LISEM_STATUS("-v data1.tif data2.shp ... - view a data files in the viewer window");
         LISEM_STATUS("-o 'a.map = sqrt(b.tif*c.map)' - carry out a calculation");
         LISEM_STATUS("-x - open with interface");
         LISEM_STATUS("-q - quite when done");
+
+
+        m_App = new QApplication(argc, argv);
+        m_App->quit();
+
+        int initialized = false;
+        MPI_Initialized(&initialized);
+        if(initialized)
+        {
+            MPI_Finalize();
+        }
+
+        std::exit( EXIT_SUCCESS );
+
+        return 0;
+
     }
+
+    QString dir = QDir::currentPath();
+    bool has_dir = false;
+
     QString file = "";
+    QString modeloptions = "";
     bool run_file =false;
     if(cmdOptionExists(argv, argv+argc, "-r"))
     {
@@ -189,6 +211,10 @@ int SPHazard::execute(int argc, char *argv[])
             }
 
             file = filename;
+            if(!QFileInfo(file).isAbsolute())
+            {
+                file = QFileInfo(dir + "/"+ file).absoluteFilePath();
+            }
         }
     }
 
@@ -217,7 +243,9 @@ int SPHazard::execute(int argc, char *argv[])
                 return 0;
             }
 
+            //is actually a calculation string
             file = filename;
+
         }
     }
 
@@ -234,13 +262,47 @@ int SPHazard::execute(int argc, char *argv[])
 
             if(!filename)
             {
-                LISEM_STATUS("Could not find option for -c, no file to compile");
+                LISEM_STATUS("Could not find option for -m, no run-file provided");
                 return 0;
             }
 
             file = filename;
+            if(!QFileInfo(file).isAbsolute())
+            {
+                file = QFileInfo(dir + "/"+ file).absoluteFilePath();
+            }
+        }
+
+        if(cmdOptionExists(argv, argv+argc, "-mo"))
+        {
+            char * options = getCmdOption(argv, argv + argc, "-o");
+
+            if(!options)
+            {
+                LISEMS_STATUS("Empty model options");
+            }
+            modeloptions = options;
         }
     }
+
+
+    if(cmdOptionExists(argv, argv+argc, "-d"))
+    {
+        has_dir = true;
+        char * filename = getCmdOption(argv, argv + argc, "-d");
+        if(!filename)
+        {
+            LISEM_STATUS("Could not find option for -d, no directory to set");
+            return 0;
+        }
+        dir = filename;
+        if(!QDir(dir).isAbsolute())
+        {
+            dir = QDir::cleanPath(QDir(dir).absoluteFilePath(filename));
+        }
+    }
+
+
     QList<QString> files;
     bool do_view = false;
     if(cmdOptionExists(argv, argv+argc, "-v"))
@@ -260,6 +322,17 @@ int SPHazard::execute(int argc, char *argv[])
             }
 
             files = filename;
+            //if(has_dir)
+            {
+                for(int i= 0; i < files.size(); i++)
+                {
+                    if(!QDir(files[i]).isAbsolute())
+                    {
+                        files[i] = file = QFileInfo(dir + "/"+ file[i]).absoluteFilePath();
+                    }
+                }
+            }
+
         }
     }
 
@@ -273,20 +346,7 @@ int SPHazard::execute(int argc, char *argv[])
         // Do stuff
     }
 
-    QString dir = QDir::currentPath();
-    bool has_dir = false;
 
-    if(cmdOptionExists(argv, argv+argc, "-d"))
-    {
-        has_dir = true;
-        char * filename = getCmdOption(argv, argv + argc, "-d");
-        if(!filename)
-        {
-            LISEM_STATUS("Could not find option for -d, no directory to set");
-            return 0;
-        }
-        dir = filename;
-    }
 
     if(quit_direct)
     {
@@ -304,7 +364,6 @@ int SPHazard::execute(int argc, char *argv[])
     {
         do_interface = true;
     }
-
 
 
 
@@ -393,6 +452,11 @@ int SPHazard::execute(int argc, char *argv[])
 
             if(do_interface)
             {
+
+            }
+            if(do_interface)
+            {
+
                 int suc = m_OpenGLCLManager->CreateGLWindow(iconp);
                 if(suc > 0)
                 {
@@ -405,17 +469,41 @@ int SPHazard::execute(int argc, char *argv[])
                     }
                     throw 1;
                 }
+
                 suc = m_OpenGLCLManager->InitGLCL();
 
                 if(suc > 0)
                 {
                     throw 1;
                 }
+            }else if(run_model)
+            {
+                int suc = m_OpenGLCLManager->CreateGLWindow(iconp, false);
+                if(suc > 0)
+                {
+                    if(suc == 254)
+                    {
+                        QMessageBox::warning(
+                            nullptr,
+                            tr("LISEM"),
+                            tr("Could not create OpenGL Context with OpenGL 4.0 support!") );
+                    }
+                    throw 1;
+                }
 
-                std::cout << "test1 " << std::endl;
+                suc = m_OpenGLCLManager->InitGLCL();
+
+                if(suc > 0)
+                {
+                    throw 1;
+                }
+                glfwMakeContextCurrent(NULL);
+
+            }
+            if(do_interface)
+            {
                 InitUIShaders(m_OpenGLCLManager);
 
-                std::cout << "test2 " << std::endl;
 
                 m_OpenGLCLManager->SetCallBackFrame(&SPHazard::OnGLCLFrame,this);
 
@@ -424,23 +512,16 @@ int SPHazard::execute(int argc, char *argv[])
 
             }
 
+
             m_model->InitModel();
 
             if(do_interface)
             {
-                std::cout << "test3 " << std::endl;
 
                 m_WorldPainter = new WorldWindow(m_OpenGLCLManager);
                 m_WorldPainter->SetModel(m_model);
 
-
-                std::cout << "test4 " << std::endl;
-
                 m_OpenGLCLManager->SetCallBackFrame(&WorldWindow::Draw,m_WorldPainter);
-
-
-                std::cout << "test5 " << std::endl;
-
                 glfwMakeContextCurrent(NULL);
 
             }
@@ -527,6 +608,8 @@ int SPHazard::execute(int argc, char *argv[])
 
                         file_read = true;
 
+
+
                         QFile fin(file);
                         if (!fin.open(QFile::ReadOnly | QFile::Text)) {
 
@@ -560,7 +643,7 @@ int SPHazard::execute(int argc, char *argv[])
                         s->SetSingleLine(false);
                     }
                     s->SetPreProcess(true);
-                    s->SetHomeDir(dir);
+                    s->SetHomeDir(dir + "/");
 
 
                     if(file_read)
@@ -672,21 +755,60 @@ int SPHazard::execute(int argc, char *argv[])
                     //but instead we want to report to the command prompt how our progress is
 
                     //
+
+                    m_OpenGLCLManager->ProcessEvents();
+
+                    ParameterManager* m_ParameterManager = new ParameterManager();
+                    m_ParameterManager->InitParameters();
+
+
+
                     LISEMModel * m = GetGLobalModel();
                     if(m != nullptr)
                     {
+                        LISEM_STATUS("Starting LISEM Model");
+                        LISEM_STATUS("Load run-file: " +file);
                         m->FinishMutex.lock();
                         m->m_ModelStateMutex.lock();
-                        //m->m_Options = QList<QString>(options);
+                        m->m_Options = m_ParameterManager->GetParameterListFromFile(file,modeloptions);
                         //m->m_RigidWorld = world;
                         m->m_StartRequested = true;
                         m->m_ModelStateMutex.unlock();
 
+                        m->OnStep();
+
                         m->FinishCondition.wait(&m->FinishMutex);
                         m->FinishMutex.unlock();
+                        m->SetCallBackTimeStep([](int step, int step_max,bool start, bool stop){
+
+
+                            if(start)
+                            {
+                                LISEM_STATUS("LISEM Model started");
+                                LISEM_STATUS("0 %");
+                            }else if(stop)
+                            {
+
+                                LISEM_STATUS("100 %");
+                            }else
+                            {
+                                LISEM_STATUS(QString::number(float(step)/float(step_max)) + " %");
+                            }
+
+
+                        });
+
+
                         AS_MODELRESULT res = m->FinishResult;
 
+
+                        LISEM_STATUS("Finished running LISEM model");
+
                     }
+
+                    glfwSetWindowShouldClose(m_OpenGLCLManager->window,GL_TRUE);
+
+
 
 
                 }
@@ -703,13 +825,13 @@ int SPHazard::execute(int argc, char *argv[])
                 m_InterfaceWindow->Initialize(m_OpenGLCLManager,m_ScriptManager);
 
                 m_OpenGLCLManager->ProcessEvents(); //QTimer::singleShot(0,m_OpenGLCLManager,SLOT(ProcessEvents));
-                std::cout << "execute qt app " << std::endl;
+
 
                 //set instructions from command line to interface window
 
-                m_InterfaceWindow->SetCommandLineCallBack(std::function<void(void)>([this,run_file,compile_file,run_model,do_calc,do_view,file,files,has_dir,dir,quit_post](){
+                /*m_InterfaceWindow->SetCommandLineCallBack(std::function<void(void)>([this,run_file,compile_file,run_model,do_calc,do_view,file,files,has_dir,dir,quit_post](){
 
-                    std::cout << "command line callback" << std::endl;
+                    */std::cout << "command line callback" << std::endl;
                     if(run_file)
                     {
                         m_InterfaceWindow->SetCommandLineRun(file,has_dir,dir,quit_post);
@@ -726,7 +848,7 @@ int SPHazard::execute(int argc, char *argv[])
                     {
                         m_InterfaceWindow->SetCommandLineOpenFiles(files,has_dir,dir,quit_post);
                     };
-                }));
+                //}));
 
 
 
@@ -797,6 +919,8 @@ int SPHazard::execute(int argc, char *argv[])
         MPI_Finalize();
     }
 
+
+    std::exit( EXIT_SUCCESS );
     return 0;
 }
 

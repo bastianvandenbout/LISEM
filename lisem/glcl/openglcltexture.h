@@ -267,6 +267,7 @@ public:
         {
             std::cout << "create CL Image " << (&c) << " " << m_texgl << std::endl;
             m_texcl = cl::ImageGL(c,CL_MEM_READ_WRITE,GL_TEXTURE_2D,0,m_texgl,&errCode);
+
         }catch(...)
         {
 
