@@ -38,21 +38,21 @@ window.MathJax = {
 
     <link rel="shortcut icon" href="/favicon.ico?1">
     <!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Lisem Classic | LISEM</title>
+<title>Compiling LISEM yourself | LISEM</title>
 <meta name="generator" content="Jekyll v3.9.2" />
-<meta property="og:title" content="Lisem Classic" />
+<meta property="og:title" content="Compiling LISEM yourself" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="The classic lisem software is a physically-based modelling tool for hydrology, erosion and flooding at various spatial scales (plots to catchments and countries). The software features a rich history of application and continuous development since 1993." />
-<meta property="og:description" content="The classic lisem software is a physically-based modelling tool for hydrology, erosion and flooding at various spatial scales (plots to catchments and countries). The software features a rich history of application and continuous development since 1993." />
-<link rel="canonical" href="http://localhost:4000/docs/lisemclassic/" />
-<meta property="og:url" content="http://localhost:4000/docs/lisemclassic/" />
+<meta name="description" content="We welcome anyone to compile LISEM yourself, and contribute to the development. All of the required software and dependencies can be obtained for free and are open-source. Despite this, compiling all of the external depencies can take a lot of work, so we provide a full set of pre-compiled dependencies to which you can link during compilation." />
+<meta property="og:description" content="We welcome anyone to compile LISEM yourself, and contribute to the development. All of the required software and dependencies can be obtained for free and are open-source. Despite this, compiling all of the external depencies can take a lot of work, so we provide a full set of pre-compiled dependencies to which you can link during compilation." />
+<link rel="canonical" href="http://localhost:4000/docs/compiling/" />
+<meta property="og:url" content="http://localhost:4000/docs/compiling/" />
 <meta property="og:site_name" content="LISEM" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2022-09-09T12:16:13+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Lisem Classic" />
+<meta property="twitter:title" content="Compiling LISEM yourself" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","dateModified":"2022-09-09T12:16:13+02:00","datePublished":"2022-09-09T12:16:13+02:00","description":"The classic lisem software is a physically-based modelling tool for hydrology, erosion and flooding at various spatial scales (plots to catchments and countries). The software features a rich history of application and continuous development since 1993.","headline":"Lisem Classic","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://lisemmodel.com/assets/img/LISEM.png"}},"url":"http://localhost:4000/docs/lisemclassic/"}</script>
+{"@context":"https://schema.org","@type":"WebPage","dateModified":"2022-09-09T12:16:13+02:00","datePublished":"2022-09-09T12:16:13+02:00","description":"We welcome anyone to compile LISEM yourself, and contribute to the development. All of the required software and dependencies can be obtained for free and are open-source. Despite this, compiling all of the external depencies can take a lot of work, so we provide a full set of pre-compiled dependencies to which you can link during compilation.","headline":"Compiling LISEM yourself","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://lisemmodel.com/assets/img/LISEM.png"}},"url":"http://localhost:4000/docs/compiling/"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -133,7 +133,7 @@ window.MathJax = {
           
             
             
-            <a class="list-group-item active" href="/docs/lisemclassic/">Lisem Classic</a>
+            <a class="list-group-item " href="/docs/lisemclassic/">Lisem Classic</a>
           
         </div>
       </div>
@@ -154,7 +154,7 @@ window.MathJax = {
       </div>
       
       
-      <div class="panel-collapse collapse" id="collapse-1-2" role="tabpanel" aria-label="Side Navigation">
+      <div class="panel-collapse" id="collapse-1-2" role="tabpanel" aria-label="Side Navigation">
         <div class="list-group">
           
             
@@ -183,7 +183,7 @@ window.MathJax = {
           
             
             
-            <a class="list-group-item " href="/docs/compiling/">Compiling LISEM yourself</a>
+            <a class="list-group-item active" href="/docs/compiling/">Compiling LISEM yourself</a>
           
         </div>
       </div>
@@ -301,33 +301,63 @@ window.MathJax = {
         </div>
 
         <div class="col-md-8">
-            <h1>Lisem Classic</h1>
-            <div id="markdown-content-container"><p>The classic lisem software is a physically-based modelling tool for hydrology, erosion and flooding at various spatial scales (plots to catchments and countries).
-The software features a rich history of application and continuous development since 1993.</p>
+            <h1>Compiling LISEM yourself</h1>
+            <div id="markdown-content-container"><p>We welcome anyone to compile LISEM yourself, and contribute to the development. All of the required software and dependencies can be obtained for free and are open-source.
+Despite this, compiling all of the external depencies can take a lot of work, so we provide a full set of pre-compiled dependencies to which you can link during compilation.</p>
 
-<p>The main interface of the software shows the model settings.</p>
+<p>When you want to compile LISEM yourself, the following steps must usually be taken:</p>
+<ol>
+  <li>Install MSYS2</li>
+  <li>Install the required library packages</li>
+  <li>Get the LISEM Source code using Git</li>
+  <li>Download the pre-compiled external dependencies</li>
+  <li>Create build files using CMAKE</li>
+  <li>Compilation</li>
+</ol>
 
-<p><img src="/assets/img/lisem_classic.png" alt="LisemClassic" /></p>
+<h3 id="1-install-msys2">1. Install MSYS2</h3>
+<p>MSYS2 is a highly usefull development environment for c++ code that uses a package manager and features a large number of pre-built libraries as packages.
+It comes with the most recent version of the gcc compiler, but other compilers such as clang can also be used.
+We will use gcc to ease compilation. It is typically easier to add the msys64/mingw64/bin directory to your environment variable PATH.
+Download <a href="https://www.msys2.org/">MSYS2</a></p>
 
-<p>Here, the model controls, process settings and output settings are visible.
-When opening the map database, an overview of required input maps is available.
-Double-clicking a map name allows you to select a file, although it is usually easy to use the default filenames.
-The lighter text indicates an input map is not required for the simulation, as the relevant process has not been activated.
-Input maps are usually constructed using a geo-spatial scripting tool such as PCRaster+Nutshell or the new LISEM software.
-All input maps must be of identical rows and columns, but might be of any format supported by GDAL (.map, GeoTiff, ascii, etc..).</p>
+<h3 id="2-install-the-required-library-packages">2. Install the required library packages</h3>
+<p>Using the MSYS2 package maneger, install the required library packages. We provide a list that can be automatically installed using the MSYS2 Mingw64 shell.
+<a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Compile/packages_windows.txt/download">package script</a>.
+Run the script using the command ‘sh packages_windows.txt’</p>
 
-<p><img src="/assets/img/lisem_classic2.png" alt="LisemClassic" /></p>
+<h3 id="3-get-the-lisem-source-code-using-git">3. Get the LISEM Source code using Git</h3>
+<p>Use git to download the source code from the reposity <a href="https://github.com/bastianvandenbout/LISEM">https://github.com/bastianvandenbout/LISEM</a>.
+There are multiple branches in the repository. The “main” branch is the currently published version. The “develop” branch contains the recent developments after the latest release.
+Finally, the “website” branch contains the files for this website.</p>
 
-<p>When the simulation is running, real-time output can be visualized in the simulation tab.
-Here, hydrological statistics of the simulation are provided in catchment-average mm equivalent.
-Additionally, a spatial view of many model variables can be shown, such as infiltration, flow heights, flow velocities and soil loss.
-<img src="/assets/img/lisem_classic3.png" alt="LisemClassic" /></p>
+<p><img src="/assets/img/gitpage.png" alt="GitPage" /></p>
 
-<p>When viewing soil loss, a spatially-distributed balance between erosion and deposition due to splash and flow erosive processes is shown.
-<img src="/assets/img/lisem_classic4.png" alt="LisemClassic" /></p>
+<h3 id="4-download-the-pre-compiled-external-dependencies">4. Download the pre-compiled external dependencies</h3>
+<p>The pre-compiled dependencies are available for windows and available as a multi-part 7zip file on sourceforge. Download them all the extract them.
+<a href="https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Compile/">Compiled dependencies zip files</a>.
+One additional external dependency must be installed seperately, which is the <a href="https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi">Microsoft MPI framework</a>.</p>
 
-<p>For specified points in the simulation, such as channel outlets or bridges, a discharge curve (hydrograph) can be viewed during the simulation.
-<img src="/assets/img/lisem_classic5.png" alt="LisemClassic" /></p>
+<h3 id="5-create-build-files-using-cmake">5. Create build files using CMAKE</h3>
+<p>Install <a href="https://cmake.org/">CMAKE GUI</a> (or optionally use cmake from the command line). Open the source directory, and specify the build directory.
+By defeault, LISEM will try to find the pre-compiled dependencies and search for those in the folder LISEM_EXTERNAL_DIR. Set this variable to the right directory to continue.
+If you dont want to use the LISEM_EXTERNAL_DIR, disable LISEM_USE_EXTERNAL_DIR.</p>
+
+<p><img src="/assets/img/cmake.png" alt="CMAKE" /></p>
+
+<h3 id="6-compilation">6. Compilation</h3>
+<p>Once the build files have been generated, open qt creator or another IDE. Qt creator should be installed by msys2, so check the mingw64/bin folder for qtcreator.exe.</p>
+
+<p><img src="/assets/img/qtopen.png" alt="qt" /></p>
+
+<p>Let qt run cmake (or qmake) as well, and finally, press the compile button to start the compilation.</p>
+
+<p>During compilation, several minor fixes might need to be made. 
+One of the external libraries present in the compiled dependencies puts the installation folder itself within the file. Go to armadillo_bits/config.hpp and correct the paths in some defines in line 154, 309 and 310.
+Qt does not allways realize the location of compiled ui-files. When prompted with an error about “findandreplacedialog.h”, replace this include with “widgets/findandreplacedialog.h”.</p>
+
+<p>After compilation, make sure to copy all of the required dependencies (for windows, dll files, the gdal data files, image and font assets, shaders and computational shaders) to the build folder.
+You might easily take all these files from the latest released version of LISEM.</p>
 
 </div>
             <div style="clear:both;">
@@ -365,61 +395,29 @@ Additionally, a spatial view of many model variables can be shown, such as infil
 
   
   
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/docs/usingmodel/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
 
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
+      
+        
+        
+        <li class="next">
+          <a href="/docs/elevationdata/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+      </ul>
+    <div class="clear"></div>
+    
 
         </div>
 
