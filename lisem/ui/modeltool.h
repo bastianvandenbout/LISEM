@@ -52,6 +52,7 @@ class ModelTool  : public QWidget
     QSignalMapper *m_SignalMapper_Map2;
     QSignalMapper *m_SignalMapper_Dir;
     QSignalMapper *m_SignalMapper_File;
+    QSignalMapper *m_SignalMapper_File2;
     QSignalMapper *m_SignalMapper_Float;
     QSignalMapper *m_SignalMapper_Int;
     QSignalMapper *m_SignalMapper_bool;
@@ -117,6 +118,7 @@ public:
         m_SignalMapper_Map2 = new QSignalMapper(this);
         m_SignalMapper_Dir = new QSignalMapper(this);
         m_SignalMapper_File = new QSignalMapper(this);
+        m_SignalMapper_File2 = new QSignalMapper(this);
         m_SignalMapper_Float = new QSignalMapper(this);
         m_SignalMapper_Int = new QSignalMapper(this);
         m_SignalMapper_MultiCheck = new QSignalMapper(this);
@@ -126,6 +128,7 @@ public:
         connect(m_SignalMapper_Map,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Map(int)));
         connect(m_SignalMapper_Map2,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Map2(int)));
         connect(m_SignalMapper_File,SIGNAL(mapped(int)),this,SLOT(SignalFunction_File(int)));
+        connect(m_SignalMapper_File2,SIGNAL(mapped(int)),this,SLOT(SignalFunction_File2(int)));
         connect(m_SignalMapper_Float,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Float(int)));
         connect(m_SignalMapper_Int,SIGNAL(mapped(int)),this,SLOT(SignalFunction_Int(int)));
         connect(m_SignalMapper_MultiCheck,SIGNAL(mapped(int)),this,SLOT(SignalFunction_MultiCheck(int)));
@@ -418,6 +421,7 @@ public slots:
     void SignalFunction_Map2(int index);
     void SignalFunction_Dir(int index);
     void SignalFunction_File(int index);
+    void SignalFunction_File2(int index);
     void SignalFunction_Float(int index);
     void SignalFunction_Int(int index);
     void SignalFunction_MultiCheck(int index);

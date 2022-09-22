@@ -10,20 +10,29 @@
 #include "extensionprovider.h"
 #include "site.h"
 #include "version.h"
+#include "QStyle"
+
+#include "widgets/minimap/minimapproxystylehelper.h"
+#include "widgets/minimap/minimapproxystyle.h"
+
 
 int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManager * sm, WorldWindow * window )
 {
+    // set style
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+    // increase font size for better reading
+    QFont defaultFont = QApplication::font();
+    defaultFont.setPointSize(defaultFont.pointSize()+2);
+    qApp->setFont(defaultFont);
 
+        QStyle *m_oldStyle = QApplication::style();
+        auto *minimapStyle = new Minimap::Internal::MinimapProxyStyle(m_oldStyle);
+        QApplication::setStyle(minimapStyle);
+        QApplication::style()->moveToThread(QApplication::instance()->thread());
 
     LISEM_DEBUG("Creating Interface using QT")
 
 
-            // set style
-            qApp->setStyle(QStyleFactory::create("Fusion"));
-            // increase font size for better reading
-            QFont defaultFont = QApplication::font();
-            defaultFont.setPointSize(defaultFont.pointSize()+2);
-            qApp->setFont(defaultFont);
 
 
     m_Dir = GetSite();
@@ -142,7 +151,9 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
 
     TabWidget->addTab(m_MapViewTool,"Map View");
 
-    m_DatabaseWidget = new DatabaseTool(m_ScriptManager,this);
+    this->statusBar()->hide();
+
+    m_DatabaseWidget = new DatabaseTool(m_ScriptManager,this,statusBar());
     m_DatabaseWidget->SetCallBackFileOpened(&QTInterfaceWindow::OnFileOpenRequest,this);
     TabWidget->addTab(m_DatabaseWidget,"Script");
 
@@ -523,7 +534,7 @@ void QTInterfaceWindow::UpdateInterfaceFromModelData()
 
 bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
 {
-    std::cout << "fopen request " << filepath.toStdString() << std::endl;
+    std::cout << "fopen request " << type << " " << filepath.toStdString() << std::endl;
     bool use = false;
 
     if(type == LISEM_FILE_TYPE_UNKNOWN)
@@ -537,6 +548,7 @@ bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
 
     }
 
+    std::cout << "file type " << type << std::endl;
     if(type == LISEM_FILE_TYPE_RUN)
     {
 
@@ -559,8 +571,8 @@ bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
     {
         use = true;
         m_MapViewTool->AddLayerFromFile(filepath);
-    }else if(type == LISEM_FILE_TYPE_UNKNOWN){
-
+    }else// if(type == LISEM_FILE_TYPE_UNKNOWN){
+    {
         if(filepath.length() > 3)
         {
             QString ext = filepath.right(4);

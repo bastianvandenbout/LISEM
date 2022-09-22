@@ -17,7 +17,7 @@
 #include "lsmio.h"
 #include "scriptmanager.h"
 #include "extensionprovider.h"
-
+#include "ScriptAnalyzer.h"
 #include "iostream"
 
 //table view for popup
@@ -158,25 +158,6 @@ public slots:
     }
 };
 
-
-typedef struct ScriptToken
-{
-    QString text;
-    asETokenClass tokenclass;
-    int pos = 0;
-    int length = 0;
-    int nesting = 0;
-    QString nspace;
-    QString name;
-    QString memberclass;
-    QString Type;
-    QList<QString> ParamTypes;
-    QList<QString> ParamNames;
-    bool is_function = false;
-    bool is_variable = false;
-    bool is_class = false;
-
-} ScriptToken;
 
 class SPHScriptCompleter : public QCompleter
 {

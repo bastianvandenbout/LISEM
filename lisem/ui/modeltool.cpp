@@ -1,6 +1,9 @@
 #include "modeltool.h"
 #include "site.h"
 
+#include "uihelper.h"
+
+
 void ModelTool::start()
 {
     UpdateParameters();
@@ -568,12 +571,25 @@ void ModelTool::CreateParameterWidgets()
                 addButton->resize(22,22);
                 addButton->setEnabled(true);
 
+                QIcon icon2;
+                icon2.addFile((m_Dir + LISEM_FOLDER_ASSETS + "table.png"), QSize(), QIcon::Normal, QIcon::Off);
+
+                QToolButton *addviewButton = new QToolButton(this);
+                addviewButton->setIcon(icon2);
+                addviewButton->setIconSize(QSize(22,22));
+                addviewButton->resize(22,22);
+                addviewButton->setEnabled(true);
+
+                connect(addviewButton,SIGNAL(pressed()),m_SignalMapper_File2,SLOT(map()));
+                m_SignalMapper_File2->setMapping(addviewButton,pwindex);
+
 
                 connect(addButton,SIGNAL(pressed()),m_SignalMapper_File,SLOT(map()));
                 m_SignalMapper_File->setMapping(addButton,pwindex);
 
                 QString buttonStyle = "QPushButton{border:none;background-color:rgba(255, 255, 255,100);}";
                 addButton->setStyleSheet(buttonStyle);
+                templayout->addWidget(addviewButton);
                 templayout->addWidget(addButton);
                 templayout->setSpacing(0);
                 templayout->setMargin(0);
@@ -1176,6 +1192,27 @@ void ModelTool::SignalFunction_File(int index)
 
     }
 
+}
+
+void ModelTool::SignalFunction_File2(int index)
+{
+    ParameterWidget pw = m_ParameterWidgetList.at(index);
+    SPHParameter p = m_ParameterManager->m_Parameters.at(pw.m_ParameterIndex);
+
+
+    QString dir = m_ParameterManager->GetParameterValueString("Map Directory");
+
+    for(int i= 0; i < m_ParameterManager->m_Parameters.length(); i++)
+    {
+        if(m_ParameterManager->m_Parameters.at(i).m_Name == "Map Directory")
+        {
+            SPHParameter p = (m_ParameterManager->m_Parameters.at(i));
+            dir = p.m_Value;
+        }
+    }
+
+    QString file = dir + p.m_Value;
+    ShowTextfile(file,this);
 }
 
 void ModelTool::SignalFunction_Float(int index)

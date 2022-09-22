@@ -62,6 +62,12 @@ void EditorWidget::CreateWidgetFromLayerEditor(UILayerEditor *  l)
                 }
                 l->setDecimals(6);
                 l->setValue(p.Value.toDouble());
+                m_Editor->SetParameterUICallBack(p.Name,[l](QString name, QString value)
+                {
+                    l->setValue(value.toDouble());
+                    return true;
+                    ;
+                });
                 CurrentLayout->addWidget(new QLabeledWidget(p.Name,l));
                 QString name = p.Name;
                 connect(l,static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),[this,l,name](double){
@@ -89,6 +95,12 @@ void EditorWidget::CreateWidgetFromLayerEditor(UILayerEditor *  l)
                 }
                 l->setDecimals(12);
                 l->setValue(p.Value.toDouble());
+                m_Editor->SetParameterUICallBack(p.Name,[l](QString name, QString value)
+                {
+                    l->setValue(value.toDouble());
+                    return true;
+                    ;
+                });
                 CurrentLayout->addWidget(new QLabeledWidget(p.Name,l));
                 QString name = p.Name;
                 connect(l,static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),[this,l,name](double){
@@ -178,6 +190,7 @@ void EditorWidget::CreateWidgetFromLayerEditor(UILayerEditor *  l)
                 QLineEdit * l = new QLineEdit();
                 l->setText(p.Value);
                 CurrentLayout->addWidget(new QLabeledWidget(p.Name,l));
+
                 QString name = p.Name;
                 connect(l,static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged),[this,l,name](const QString &){
                     QString name2 = name;

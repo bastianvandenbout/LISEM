@@ -1,337 +1,337 @@
-autoconf 2.71-1
-autogen 5.18.16-1
-automake-wrapper 11-1
-automake1.10 1.10.3-4
-automake1.11 1.11.6-4
-automake1.12 1.12.6-4
-automake1.13 1.13.4-5
-automake1.14 1.14.1-4
-automake1.15 1.15.1-2
-automake1.16 1.16.3-1
-automake1.6 1.6.3-3
-automake1.7 1.7.9-3
-automake1.8 1.8.5-4
-automake1.9 1.9.6-3
-base 2020.12-1
-bash 5.1.004-1
-bash-completion 2.11-1
-brotli 1.0.9-1
-bsdtar 3.5.1-1
-bzip2 1.0.8-2
-ca-certificates 20190110-1
-coreutils 8.32-1
-curl 7.74.0-4
-dash 0.5.11.3-1
-db 5.3.28-3
-diffutils 3.7-1
-file 5.39-2
-filesystem 2021.02-1
-findutils 4.7.0-1
-gawk 5.1.0-1
-gcc-libs 10.2.0-1
-gdbm 1.19-1
-getent 2.18.90-2
-gettext 0.19.8.1-1
-glib2 2.66.6-1
-gmp 6.2.1-1
-gnupg 2.2.27-1
-grep 3.0-2
-gzip 1.10-1
-heimdal-libs 7.7.0-2
-icu 68.2-1
-inetutils 1.9.4-2
-info 6.7-3
-less 563-2
-libargp 20110921-2
-libasprintf 0.19.8.1-1
-libassuan 2.5.4-1
-libatomic_ops 7.6.10-1
-libbz2 1.0.8-2
-libcrypt 2.1-2
-libcrypt-devel 2.1-2
-libcurl 7.74.0-4
-libdb 5.3.28-3
-libedit 20191231_3.1-2
-libexpat 2.2.10-1
-libffi 3.3-1
-libgc 8.0.4-1
-libgcrypt 1.8.7-1
-libgdbm 1.19-1
-libgettextpo 0.19.8.1-1
-libgnutls 3.7.0-1
-libgpg-error 1.41-2
-libgpgme 1.15.1-1
-libguile 2.2.7-1
-libhogweed 3.7-1
-libiconv 1.16-2
-libidn2 2.3.0-1
-libintl 0.19.8.1-1
-libksba 1.4.0-1
-libltdl 2.4.6-9
-liblz4 1.9.3-1
-liblzma 5.2.5-1
-libmetalink 0.1.3-3
-libnettle 3.7-1
-libnghttp2 1.41.0-1
-libnpth 1.6-1
-libopenssl 1.1.1.i-1
-libp11-kit 0.23.22-2
-libpcre 8.44-1
-libpcre2_8 10.36-1
-libpsl 0.21.1-2
-libreadline 8.1.0-1
-libsqlite 3.34.0-1
-libssh2 1.9.0-1
-libtasn1 4.16.0-1
-libtool 2.4.6-9
-libunistring 0.9.10-1
-libutil-linux 2.35.2-1
-libxml2 2.9.10-7
-libxslt 1.1.34-3
-libzstd 1.4.8-1
-m4 1.4.18-2
-make 4.3-1
-mingw-w64-x86_64-SDL2 2.0.14-2
-mingw-w64-x86_64-aom 2.0.2-1
-mingw-w64-x86_64-armadillo 10.1.1-1
-mingw-w64-x86_64-arpack 3.8.0-1
-mingw-w64-x86_64-assimp 5.0.1-4
-mingw-w64-x86_64-binutils 2.36.1-1
-mingw-w64-x86_64-boost 1.75.0-2
-mingw-w64-x86_64-brotli 1.0.9-2
-mingw-w64-x86_64-bzip2 1.0.8-2
-mingw-w64-x86_64-c-ares 1.17.1-1
-mingw-w64-x86_64-ca-certificates 20200601-2
-mingw-w64-x86_64-cairo 1.17.4-2
-mingw-w64-x86_64-celt 0.11.3-4
-mingw-w64-x86_64-cereal 1.3.0-1
-mingw-w64-x86_64-ceres-solver 2.0.0-2
-mingw-w64-x86_64-cfitsio 3.450-2
-mingw-w64-x86_64-cgal 5.1.1-1
-mingw-w64-x86_64-cmake 3.19.3-2
-mingw-w64-x86_64-cppunit 1.15.1-1
-mingw-w64-x86_64-crt-git 9.0.0.6118.ea40a87a-1
-mingw-w64-x86_64-crypto++ 8.4.0-2
-mingw-w64-x86_64-curl 7.75.0-1
-mingw-w64-x86_64-dav1d 0.8.1-1
-mingw-w64-x86_64-dbus 1.12.20-1
-mingw-w64-x86_64-double-conversion 3.1.5-1
-mingw-w64-x86_64-eigen3 3.3.9-1
-mingw-w64-x86_64-expat 2.2.10-1
-mingw-w64-x86_64-ffmpeg 4.3.2-1
-mingw-w64-x86_64-ffms2 2.40-1
-mingw-w64-x86_64-fontconfig 2.13.93-1
-mingw-w64-x86_64-freeglut 3.2.1-1
-mingw-w64-x86_64-freeimage 3.18.0-5
-mingw-w64-x86_64-freetype 2.10.4-1
-mingw-w64-x86_64-frei0r-plugins 1.7.0-2
-mingw-w64-x86_64-fribidi 1.0.10-2
-mingw-w64-x86_64-gavl 1.4.0-1
-mingw-w64-x86_64-gcc 10.2.0-6
-mingw-w64-x86_64-gcc-fortran 10.2.0-6
-mingw-w64-x86_64-gcc-libgfortran 10.2.0-6
-mingw-w64-x86_64-gcc-libs 10.2.0-6
-mingw-w64-x86_64-gdal 3.2.0-2
-mingw-w64-x86_64-gdb 10.1-2
-mingw-w64-x86_64-geos 3.8.0-1
-mingw-w64-x86_64-gettext 0.19.8.1-10
-mingw-w64-x86_64-gflags 2.2.2-2
-mingw-w64-x86_64-giflib 5.2.1-1
-mingw-w64-x86_64-glib2 2.66.7-1
-mingw-w64-x86_64-glog 0.4.0-2
-mingw-w64-x86_64-glsl-optimizer-git r66914.9a2852138d-1
-mingw-w64-x86_64-gmp 6.2.1-1
-mingw-w64-x86_64-gnutls 3.7.0-1
-mingw-w64-x86_64-graphite2 1.3.14-2
-mingw-w64-x86_64-gsl 2.6-1
-mingw-w64-x86_64-gsm 1.0.19-1
-mingw-w64-x86_64-harfbuzz 2.7.4-1
-mingw-w64-x86_64-hdf5 1.12.0-2
-mingw-w64-x86_64-headers-git 9.0.0.6118.ea40a87a-1
-mingw-w64-x86_64-hlsl2glsl-git r848.957cd20-1
-mingw-w64-x86_64-icu 68.2-2
-mingw-w64-x86_64-icu-debug-libs 68.2-2
-mingw-w64-x86_64-ilmbase 2.5.4-4
-mingw-w64-x86_64-intel-tbb 1~2020.2-2
-mingw-w64-x86_64-isl 0.23-1
-mingw-w64-x86_64-jansson 2.13.1-1
-mingw-w64-x86_64-jasper 2.0.24-1
-mingw-w64-x86_64-jemalloc 5.2.1-1
-mingw-w64-x86_64-json-c 0.15-1
-mingw-w64-x86_64-jsoncpp 1.9.4-1
-mingw-w64-x86_64-jxrlib 1.1-3
-mingw-w64-x86_64-l-smash 2.14.5-1
-mingw-w64-x86_64-lame 3.100-1
-mingw-w64-x86_64-lcms2 2.12-1
-mingw-w64-x86_64-leptonica 1.80.0-1
-mingw-w64-x86_64-libarchive 3.5.1-1
-mingw-w64-x86_64-libass 0.15.0-1
-mingw-w64-x86_64-libbluray 1.2.1-1
-mingw-w64-x86_64-libcaca 0.99.beta19-5
-mingw-w64-x86_64-libdatrie 0.2.12-1
-mingw-w64-x86_64-libde265 1.0.8-1
-mingw-w64-x86_64-libdeflate 1.7-1
-mingw-w64-x86_64-libexif 0.6.22-1
-mingw-w64-x86_64-libffi 3.3-3
-mingw-w64-x86_64-libfreexl 1.0.6-1
-mingw-w64-x86_64-libgcrypt 1.9.2-1
-mingw-w64-x86_64-libgeotiff 1.6.0-1
-mingw-w64-x86_64-libgpg-error 1.41-3
-mingw-w64-x86_64-libheif 1.11.0-1
-mingw-w64-x86_64-libiconv 1.16-2
-mingw-w64-x86_64-libidn2 2.3.0-1
-mingw-w64-x86_64-libjpeg-turbo 2.0.6-1
-mingw-w64-x86_64-libkml 1.3.0-8
-mingw-w64-x86_64-libmangle-git 9.0.0.6118.ea40a87a-1
-mingw-w64-x86_64-libmariadbclient 3.1.11-1
-mingw-w64-x86_64-libmetalink 0.1.3-3
-mingw-w64-x86_64-libmfx 1.25-1
-mingw-w64-x86_64-libmng 2.0.3-4
-mingw-w64-x86_64-libmodplug 0.8.9.0-1
-mingw-w64-x86_64-libmysofa 1.1-1
-mingw-w64-x86_64-libogg 1.3.4-3
-mingw-w64-x86_64-libpng 1.6.37-3
-mingw-w64-x86_64-libpsl 0.21.1-2
-mingw-w64-x86_64-libraw 0.20.2-2
-mingw-w64-x86_64-libsoxr 0.1.3-2
-mingw-w64-x86_64-libspatialite 5.0.0-1
-mingw-w64-x86_64-libssh2 1.9.0-2
-mingw-w64-x86_64-libsystre 1.0.1-4
-mingw-w64-x86_64-libtasn1 4.16.0-1
-mingw-w64-x86_64-libthai 0.1.28-2
-mingw-w64-x86_64-libtheora 1.1.1-4
-mingw-w64-x86_64-libtiff 4.2.0-1
-mingw-w64-x86_64-libtre-git r128.6fb7206-2
-mingw-w64-x86_64-libunistring 0.9.10-2
-mingw-w64-x86_64-libunwind 11.0.0-7
-mingw-w64-x86_64-libuv 1.40.0-1
-mingw-w64-x86_64-libvorbis 1.3.7-1
-mingw-w64-x86_64-libvpx 1.9.0-1
-mingw-w64-x86_64-libwebp 1.2.0-1
-mingw-w64-x86_64-libwinpthread-git 9.0.0.6118.ea40a87a-1
-mingw-w64-x86_64-libxml2 2.9.10-6
-mingw-w64-x86_64-libxslt 1.1.34-2
-mingw-w64-x86_64-lld 11.0.0-7
-mingw-w64-x86_64-llvm 11.0.0-7
-mingw-w64-x86_64-lz4 1.9.3-1
-mingw-w64-x86_64-lzo2 2.10-1
-mingw-w64-x86_64-make 4.3-1
-mingw-w64-x86_64-metis 5.1.0-3
-mingw-w64-x86_64-minizip-git 1.2.445.e67b996-1
-mingw-w64-x86_64-mpc 1.2.1-1
-mingw-w64-x86_64-mpdecimal 2.5.0-1
-mingw-w64-x86_64-mpfr 4.1.0-3
-mingw-w64-x86_64-msmpi 10.1.1-4
-mingw-w64-x86_64-muparser 2.3.2-2
-mingw-w64-x86_64-ncurses 6.2-2
-mingw-w64-x86_64-netcdf 4.7.4-1
-mingw-w64-x86_64-nettle 3.7-1
-mingw-w64-x86_64-nghttp2 1.41.0-1
-mingw-w64-x86_64-nspr 4.25-1
-mingw-w64-x86_64-nss 3.52.1-1
-mingw-w64-x86_64-ogre3d 1.12.6-1
-mingw-w64-x86_64-openal 1.21.0-1
-mingw-w64-x86_64-openblas 0.3.13-2
-mingw-w64-x86_64-opencore-amr 0.1.5-1
-mingw-w64-x86_64-opencv 4.5.1-2
-mingw-w64-x86_64-openexr 2.5.4-4
-mingw-w64-x86_64-openjpeg2 2.3.1-1
-mingw-w64-x86_64-openssl 1.1.1.j-1
-mingw-w64-x86_64-opus 1.3.1-1
-mingw-w64-x86_64-p11-kit 0.23.22-1
-mingw-w64-x86_64-pango 1.48.2-1
-mingw-w64-x86_64-pcre 8.44-2
-mingw-w64-x86_64-pcre2 10.36-1
-mingw-w64-x86_64-pixman 0.40.0-2
-mingw-w64-x86_64-pkgconf 1.7.3-6
-mingw-w64-x86_64-poppler 20.12.1-2
-mingw-w64-x86_64-poppler-data 0.4.10-1
-mingw-w64-x86_64-postgresql 13.1-1
-mingw-w64-x86_64-proj 6.3.2-1
-mingw-w64-x86_64-protobuf 3.12.4-1
-mingw-w64-x86_64-pugixml 1.11.4-1
-mingw-w64-x86_64-pybind11 2.6.0-1
-mingw-w64-x86_64-python 3.8.8-2
-mingw-w64-x86_64-python-appdirs 1.4.4-1
-mingw-w64-x86_64-python-attrs 20.3.0-1
-mingw-w64-x86_64-python-ordered-set 3.1.1-1
-mingw-w64-x86_64-python-packaging 20.8-1
-mingw-w64-x86_64-python-pip 21.0.1-2
-mingw-w64-x86_64-python-pyparsing 2.4.7-1
-mingw-w64-x86_64-python-setuptools 53.0.0-1
-mingw-w64-x86_64-python-six 1.15.0-1
-mingw-w64-x86_64-qbs 1.18.0-1
-mingw-w64-x86_64-qt-creator 4.14.0-1
-mingw-w64-x86_64-qt5 5.15.2-6
-mingw-w64-x86_64-qt5-static 5.15.2-2
-mingw-w64-x86_64-qtbinpatcher 2.2.0-4
-mingw-w64-x86_64-rav1e 0.4.0-1
-mingw-w64-x86_64-readline 8.0.004-2
-mingw-w64-x86_64-rhash 1.4.1-2
-mingw-w64-x86_64-rtmpdump-git r514.c5f04a5-3
-mingw-w64-x86_64-speex 1.2.0-1
-mingw-w64-x86_64-speexdsp 1.2.0-1
-mingw-w64-x86_64-sqlite3 3.34.1-1
-mingw-w64-x86_64-srt 1.4.2-1
-mingw-w64-x86_64-suitesparse 5.8.1-1
-mingw-w64-x86_64-szip 2.1.1-2
-mingw-w64-x86_64-tcl 8.6.11-2
-mingw-w64-x86_64-termcap 1.3.1-6
-mingw-w64-x86_64-tesseract-ocr 4.1.1-6
-mingw-w64-x86_64-tinyxml 2.6.2-4
-mingw-w64-x86_64-tk 8.6.11.1-1
-mingw-w64-x86_64-tools-git 9.0.0.6118.ea40a87a-1
-mingw-w64-x86_64-uriparser 0.9.4-1
-mingw-w64-x86_64-vulkan-headers 1.2.168-1
-mingw-w64-x86_64-vulkan-loader 1.2.166-1
-mingw-w64-x86_64-wavpack 5.3.0-1
-mingw-w64-x86_64-windows-default-manifest 6.4-3
-mingw-w64-x86_64-wineditline 2.205-3
-mingw-w64-x86_64-winpthreads-git 9.0.0.6118.ea40a87a-1
-mingw-w64-x86_64-x264-git r2991.1771b556-1
-mingw-w64-x86_64-x265 3.4-1
-mingw-w64-x86_64-xerces-c 3.2.3-3
-mingw-w64-x86_64-xpm-nox 4.2.0-5
-mingw-w64-x86_64-xvidcore 1.3.7-1
-mingw-w64-x86_64-xxhash 0.8.0-1
-mingw-w64-x86_64-xz 5.2.5-2
-mingw-w64-x86_64-z3 4.8.9-1
-mingw-w64-x86_64-zlib 1.2.11-9
-mingw-w64-x86_64-zstd 1.4.8-2
-mingw-w64-x86_64-zziplib 0.13.71-1
-mintty 1~3.4.5-1
-mpdecimal 2.5.0-1
-mpfr 4.1.0-1
-msys2-keyring 1~20210213-1
-msys2-launcher 1.0-1
-msys2-runtime 3.1.7-4
-nano 5.4-1
-ncurses 6.2-1
-nettle 3.7-1
-openssl 1.1.1.i-1
-p11-kit 0.23.22-2
-pacman 5.2.2-12
-pacman-contrib 1.4.0-1
-pacman-mirrors 20210227-1
-patch 2.7.6-1
-perl 5.32.0-2
-pinentry 1.1.0-2
-pkgconf 1.7.3-2
-python 3.8.7-1
-python-devel 3.8.7-1
-rebase 4.4.4-2
-sed 4.8-1
-tar 1.33-1
-tcl 8.6.10-1
-texinfo 6.7-3
-texinfo-tex 6.7-3
-tftp-hpa 5.2-3
-time 1.9-1
-tzcode 2020f-1
-util-linux 2.35.2-1
-wget 1.21.1-2
-which 2.21-2
-winpty 0.4.3-1
-xz 5.2.5-1
-zlib 1.2.11-1
-zstd 1.4.8-1
+pacman -S autoconf --noconfirm
+pacman -S autogen --noconfirm
+pacman -S automake-wrapper --noconfirm
+pacman -S automake1.10 --noconfirm
+pacman -S automake1.11 --noconfirm
+pacman -S automake1.12 --noconfirm
+pacman -S automake1.13 --noconfirm
+pacman -S automake1.14 --noconfirm
+pacman -S automake1.15 --noconfirm
+pacman -S automake1.16 --noconfirm
+pacman -S automake1.6 --noconfirm
+pacman -S automake1.7 --noconfirm
+pacman -S automake1.8 --noconfirm
+pacman -S automake1.9 --noconfirm
+pacman -S base --noconfirm
+pacman -S bash --noconfirm
+pacman -S bash-completion --noconfirm
+pacman -S brotli --noconfirm
+pacman -S bsdtar --noconfirm
+pacman -S bzip2 --noconfirm
+pacman -S ca-certificates --noconfirm
+pacman -S coreutils --noconfirm
+pacman -S curl --noconfirm
+pacman -S dash --noconfirm
+pacman -S db --noconfirm
+pacman -S diffutils --noconfirm
+pacman -S file --noconfirm
+pacman -S filesystem --noconfirm
+pacman -S findutils --noconfirm
+pacman -S gawk --noconfirm
+pacman -S gcc-libs --noconfirm
+pacman -S gdbm --noconfirm
+pacman -S getent --noconfirm
+pacman -S gettext --noconfirm
+pacman -S glib2 --noconfirm
+pacman -S gmp --noconfirm
+pacman -S gnupg --noconfirm
+pacman -S grep --noconfirm
+pacman -S gzip --noconfirm
+pacman -S heimdal-libs --noconfirm
+pacman -S icu --noconfirm
+pacman -S inetutils --noconfirm
+pacman -S info --noconfirm
+pacman -S less --noconfirm
+pacman -S libargp --noconfirm
+pacman -S libasprintf --noconfirm
+pacman -S libassuan --noconfirm
+pacman -S libatomic_ops --noconfirm
+pacman -S libbz2 --noconfirm
+pacman -S libcrypt --noconfirm
+pacman -S libcrypt-devel --noconfirm
+pacman -S libcurl --noconfirm
+pacman -S libdb --noconfirm
+pacman -S libedit --noconfirm
+pacman -S libexpat --noconfirm
+pacman -S libffi --noconfirm
+pacman -S libgc --noconfirm
+pacman -S libgcrypt --noconfirm
+pacman -S libgdbm --noconfirm
+pacman -S libgettextpo --noconfirm
+pacman -S libgnutls --noconfirm
+pacman -S libgpg-error --noconfirm
+pacman -S libgpgme --noconfirm
+pacman -S libguile --noconfirm
+pacman -S libhogweed --noconfirm
+pacman -S libiconv --noconfirm
+pacman -S libidn2 --noconfirm
+pacman -S libintl --noconfirm
+pacman -S libksba --noconfirm
+pacman -S libltdl --noconfirm
+pacman -S liblz4 --noconfirm
+pacman -S liblzma --noconfirm
+pacman -S libmetalink --noconfirm
+pacman -S libnettle --noconfirm
+pacman -S libnghttp2 --noconfirm
+pacman -S libnpth --noconfirm
+pacman -S libopenssl --noconfirm
+pacman -S libp11-kit --noconfirm
+pacman -S libpcre --noconfirm
+pacman -S libpcre2_8 --noconfirm
+pacman -S libpsl --noconfirm
+pacman -S libreadline --noconfirm
+pacman -S libsqlite --noconfirm
+pacman -S libssh2 --noconfirm
+pacman -S libtasn1 --noconfirm
+pacman -S libtool --noconfirm
+pacman -S libunistring --noconfirm
+pacman -S libutil-linux --noconfirm
+pacman -S libxml2 --noconfirm
+pacman -S libxslt --noconfirm
+pacman -S libzstd --noconfirm
+pacman -S m4 --noconfirm
+pacman -S make --noconfirm
+pacman -S mingw-w64-x86_64-SDL2 --noconfirm
+pacman -S mingw-w64-x86_64-aom --noconfirm
+pacman -S mingw-w64-x86_64-armadillo --noconfirm
+pacman -S mingw-w64-x86_64-arpack --noconfirm
+pacman -S mingw-w64-x86_64-assimp --noconfirm
+pacman -S mingw-w64-x86_64-binutils --noconfirm
+pacman -S mingw-w64-x86_64-boost --noconfirm
+pacman -S mingw-w64-x86_64-brotli --noconfirm
+pacman -S mingw-w64-x86_64-bzip2 --noconfirm
+pacman -S mingw-w64-x86_64-c-ares --noconfirm
+pacman -S mingw-w64-x86_64-ca-certificates --noconfirm
+pacman -S mingw-w64-x86_64-cairo --noconfirm
+pacman -S mingw-w64-x86_64-celt --noconfirm
+pacman -S mingw-w64-x86_64-cereal --noconfirm
+pacman -S mingw-w64-x86_64-ceres-solver --noconfirm
+pacman -S mingw-w64-x86_64-cfitsio --noconfirm
+pacman -S mingw-w64-x86_64-cgal --noconfirm
+pacman -S mingw-w64-x86_64-cmake --noconfirm
+pacman -S mingw-w64-x86_64-cppunit --noconfirm
+pacman -S mingw-w64-x86_64-crt-git --noconfirm
+pacman -S mingw-w64-x86_64-crypto++ --noconfirm
+pacman -S mingw-w64-x86_64-curl --noconfirm
+pacman -S mingw-w64-x86_64-dav1d --noconfirm
+pacman -S mingw-w64-x86_64-dbus --noconfirm
+pacman -S mingw-w64-x86_64-double-conversion --noconfirm
+pacman -S mingw-w64-x86_64-eigen3 --noconfirm
+pacman -S mingw-w64-x86_64-expat --noconfirm
+pacman -S mingw-w64-x86_64-ffmpeg --noconfirm
+pacman -S mingw-w64-x86_64-ffms2 --noconfirm
+pacman -S mingw-w64-x86_64-fontconfig --noconfirm
+pacman -S mingw-w64-x86_64-freeglut --noconfirm
+pacman -S mingw-w64-x86_64-freeimage --noconfirm
+pacman -S mingw-w64-x86_64-freetype --noconfirm
+pacman -S mingw-w64-x86_64-frei0r-plugins --noconfirm
+pacman -S mingw-w64-x86_64-fribidi --noconfirm
+pacman -S mingw-w64-x86_64-gavl --noconfirm
+pacman -S mingw-w64-x86_64-gcc --noconfirm
+pacman -S mingw-w64-x86_64-gcc-fortran --noconfirm
+pacman -S mingw-w64-x86_64-gcc-libgfortran --noconfirm
+pacman -S mingw-w64-x86_64-gcc-libs --noconfirm
+pacman -S mingw-w64-x86_64-gdal --noconfirm
+pacman -S mingw-w64-x86_64-gdb --noconfirm
+pacman -S mingw-w64-x86_64-geos --noconfirm
+pacman -S mingw-w64-x86_64-gettext --noconfirm
+pacman -S mingw-w64-x86_64-gflags --noconfirm
+pacman -S mingw-w64-x86_64-giflib --noconfirm
+pacman -S mingw-w64-x86_64-glib2 --noconfirm
+pacman -S mingw-w64-x86_64-glog --noconfirm
+pacman -S mingw-w64-x86_64-glsl-optimizer-git --noconfirm
+pacman -S mingw-w64-x86_64-gmp --noconfirm
+pacman -S mingw-w64-x86_64-gnutls --noconfirm
+pacman -S mingw-w64-x86_64-graphite2 --noconfirm
+pacman -S mingw-w64-x86_64-gsl --noconfirm
+pacman -S mingw-w64-x86_64-gsm --noconfirm
+pacman -S mingw-w64-x86_64-harfbuzz --noconfirm
+pacman -S mingw-w64-x86_64-hdf5 --noconfirm
+pacman -S mingw-w64-x86_64-headers-git --noconfirm
+pacman -S mingw-w64-x86_64-hlsl2glsl-git --noconfirm
+pacman -S mingw-w64-x86_64-icu --noconfirm
+pacman -S mingw-w64-x86_64-icu-debug-libs --noconfirm
+pacman -S mingw-w64-x86_64-ilmbase --noconfirm
+pacman -S mingw-w64-x86_64-intel-tbb --noconfirm
+pacman -S mingw-w64-x86_64-isl --noconfirm
+pacman -S mingw-w64-x86_64-jansson --noconfirm
+pacman -S mingw-w64-x86_64-jasper --noconfirm
+pacman -S mingw-w64-x86_64-jemalloc --noconfirm
+pacman -S mingw-w64-x86_64-json-c --noconfirm
+pacman -S mingw-w64-x86_64-jsoncpp --noconfirm
+pacman -S mingw-w64-x86_64-jxrlib --noconfirm
+pacman -S mingw-w64-x86_64-l-smash --noconfirm
+pacman -S mingw-w64-x86_64-lame --noconfirm
+pacman -S mingw-w64-x86_64-lcms2 --noconfirm
+pacman -S mingw-w64-x86_64-leptonica --noconfirm
+pacman -S mingw-w64-x86_64-libarchive --noconfirm
+pacman -S mingw-w64-x86_64-libass --noconfirm
+pacman -S mingw-w64-x86_64-libbluray --noconfirm
+pacman -S mingw-w64-x86_64-libcaca --noconfirm
+pacman -S mingw-w64-x86_64-libdatrie --noconfirm
+pacman -S mingw-w64-x86_64-libde265 --noconfirm
+pacman -S mingw-w64-x86_64-libdeflate --noconfirm
+pacman -S mingw-w64-x86_64-libexif --noconfirm
+pacman -S mingw-w64-x86_64-libffi --noconfirm
+pacman -S mingw-w64-x86_64-libfreexl --noconfirm
+pacman -S mingw-w64-x86_64-libgcrypt --noconfirm
+pacman -S mingw-w64-x86_64-libgeotiff --noconfirm
+pacman -S mingw-w64-x86_64-libgpg-error --noconfirm
+pacman -S mingw-w64-x86_64-libheif --noconfirm
+pacman -S mingw-w64-x86_64-libiconv --noconfirm
+pacman -S mingw-w64-x86_64-libidn2 --noconfirm
+pacman -S mingw-w64-x86_64-libjpeg-turbo --noconfirm
+pacman -S mingw-w64-x86_64-libkml --noconfirm
+pacman -S mingw-w64-x86_64-libmangle-git --noconfirm
+pacman -S mingw-w64-x86_64-libmariadbclient --noconfirm
+pacman -S mingw-w64-x86_64-libmetalink --noconfirm
+pacman -S mingw-w64-x86_64-libmfx --noconfirm
+pacman -S mingw-w64-x86_64-libmng --noconfirm
+pacman -S mingw-w64-x86_64-libmodplug --noconfirm
+pacman -S mingw-w64-x86_64-libmysofa --noconfirm
+pacman -S mingw-w64-x86_64-libogg --noconfirm
+pacman -S mingw-w64-x86_64-libpng --noconfirm
+pacman -S mingw-w64-x86_64-libpsl --noconfirm
+pacman -S mingw-w64-x86_64-libraw --noconfirm
+pacman -S mingw-w64-x86_64-libsoxr --noconfirm
+pacman -S mingw-w64-x86_64-libspatialite --noconfirm
+pacman -S mingw-w64-x86_64-libssh2 --noconfirm
+pacman -S mingw-w64-x86_64-libsystre --noconfirm
+pacman -S mingw-w64-x86_64-libtasn1 --noconfirm
+pacman -S mingw-w64-x86_64-libthai --noconfirm
+pacman -S mingw-w64-x86_64-libtheora --noconfirm
+pacman -S mingw-w64-x86_64-libtiff --noconfirm
+pacman -S mingw-w64-x86_64-libtre-git --noconfirm
+pacman -S mingw-w64-x86_64-libunistring --noconfirm
+pacman -S mingw-w64-x86_64-libunwind --noconfirm
+pacman -S mingw-w64-x86_64-libuv --noconfirm
+pacman -S mingw-w64-x86_64-libvorbis --noconfirm
+pacman -S mingw-w64-x86_64-libvpx --noconfirm
+pacman -S mingw-w64-x86_64-libwebp --noconfirm
+pacman -S mingw-w64-x86_64-libwinpthread-git --noconfirm
+pacman -S mingw-w64-x86_64-libxml2 --noconfirm
+pacman -S mingw-w64-x86_64-libxslt --noconfirm
+pacman -S mingw-w64-x86_64-lld --noconfirm
+pacman -S mingw-w64-x86_64-llvm --noconfirm
+pacman -S mingw-w64-x86_64-lz4 --noconfirm
+pacman -S mingw-w64-x86_64-lzo2 --noconfirm
+pacman -S mingw-w64-x86_64-make --noconfirm
+pacman -S mingw-w64-x86_64-metis --noconfirm
+pacman -S mingw-w64-x86_64-minizip-git --noconfirm
+pacman -S mingw-w64-x86_64-mpc --noconfirm
+pacman -S mingw-w64-x86_64-mpdecimal --noconfirm
+pacman -S mingw-w64-x86_64-mpfr --noconfirm
+pacman -S mingw-w64-x86_64-msmpi --noconfirm
+pacman -S mingw-w64-x86_64-muparser --noconfirm
+pacman -S mingw-w64-x86_64-ncurses --noconfirm
+pacman -S mingw-w64-x86_64-netcdf --noconfirm
+pacman -S mingw-w64-x86_64-nettle --noconfirm
+pacman -S mingw-w64-x86_64-nghttp2 --noconfirm
+pacman -S mingw-w64-x86_64-nspr --noconfirm
+pacman -S mingw-w64-x86_64-nss --noconfirm
+pacman -S mingw-w64-x86_64-ogre3d --noconfirm
+pacman -S mingw-w64-x86_64-openal --noconfirm
+pacman -S mingw-w64-x86_64-openblas --noconfirm
+pacman -S mingw-w64-x86_64-opencore-amr --noconfirm
+pacman -S mingw-w64-x86_64-opencv --noconfirm
+pacman -S mingw-w64-x86_64-openexr --noconfirm
+pacman -S mingw-w64-x86_64-openjpeg2 --noconfirm
+pacman -S mingw-w64-x86_64-openssl --noconfirm
+pacman -S mingw-w64-x86_64-opus --noconfirm
+pacman -S mingw-w64-x86_64-p11-kit --noconfirm
+pacman -S mingw-w64-x86_64-pango --noconfirm
+pacman -S mingw-w64-x86_64-pcre --noconfirm
+pacman -S mingw-w64-x86_64-pcre2 --noconfirm
+pacman -S mingw-w64-x86_64-pixman --noconfirm
+pacman -S mingw-w64-x86_64-pkgconf --noconfirm
+pacman -S mingw-w64-x86_64-poppler --noconfirm
+pacman -S mingw-w64-x86_64-poppler-data --noconfirm
+pacman -S mingw-w64-x86_64-postgresql --noconfirm
+pacman -S mingw-w64-x86_64-proj --noconfirm
+pacman -S mingw-w64-x86_64-protobuf --noconfirm
+pacman -S mingw-w64-x86_64-pugixml --noconfirm
+pacman -S mingw-w64-x86_64-pybind11 --noconfirm
+pacman -S mingw-w64-x86_64-python --noconfirm
+pacman -S mingw-w64-x86_64-python-appdirs --noconfirm
+pacman -S mingw-w64-x86_64-python-attrs --noconfirm
+pacman -S mingw-w64-x86_64-python-ordered-set --noconfirm
+pacman -S mingw-w64-x86_64-python-packaging --noconfirm
+pacman -S mingw-w64-x86_64-python-pip --noconfirm
+pacman -S mingw-w64-x86_64-python-pyparsing --noconfirm
+pacman -S mingw-w64-x86_64-python-setuptools --noconfirm
+pacman -S mingw-w64-x86_64-python-six --noconfirm
+pacman -S mingw-w64-x86_64-qbs --noconfirm
+pacman -S mingw-w64-x86_64-qt-creator --noconfirm
+pacman -S mingw-w64-x86_64-qt5 --noconfirm
+pacman -S mingw-w64-x86_64-qt5-static --noconfirm
+pacman -S mingw-w64-x86_64-qtbinpatcher --noconfirm
+pacman -S mingw-w64-x86_64-rav1e --noconfirm
+pacman -S mingw-w64-x86_64-readline --noconfirm
+pacman -S mingw-w64-x86_64-rhash --noconfirm
+pacman -S mingw-w64-x86_64-rtmpdump-git --noconfirm
+pacman -S mingw-w64-x86_64-speex --noconfirm
+pacman -S mingw-w64-x86_64-speexdsp --noconfirm
+pacman -S mingw-w64-x86_64-sqlite3 --noconfirm
+pacman -S mingw-w64-x86_64-srt --noconfirm
+pacman -S mingw-w64-x86_64-suitesparse --noconfirm
+pacman -S mingw-w64-x86_64-szip --noconfirm
+pacman -S mingw-w64-x86_64-tcl --noconfirm
+pacman -S mingw-w64-x86_64-termcap --noconfirm
+pacman -S mingw-w64-x86_64-tesseract-ocr --noconfirm
+pacman -S mingw-w64-x86_64-tinyxml --noconfirm
+pacman -S mingw-w64-x86_64-tk --noconfirm
+pacman -S mingw-w64-x86_64-tools-git --noconfirm
+pacman -S mingw-w64-x86_64-uriparser --noconfirm
+pacman -S mingw-w64-x86_64-vulkan-headers --noconfirm
+pacman -S mingw-w64-x86_64-vulkan-loader --noconfirm
+pacman -S mingw-w64-x86_64-wavpack --noconfirm
+pacman -S mingw-w64-x86_64-windows-default-manifest --noconfirm
+pacman -S mingw-w64-x86_64-wineditline --noconfirm
+pacman -S mingw-w64-x86_64-winpthreads-git --noconfirm
+pacman -S mingw-w64-x86_64-x264-git --noconfirm
+pacman -S mingw-w64-x86_64-x265 --noconfirm
+pacman -S mingw-w64-x86_64-xerces-c --noconfirm
+pacman -S mingw-w64-x86_64-xpm-nox --noconfirm
+pacman -S mingw-w64-x86_64-xvidcore --noconfirm
+pacman -S mingw-w64-x86_64-xxhash --noconfirm
+pacman -S mingw-w64-x86_64-xz --noconfirm
+pacman -S mingw-w64-x86_64-z3 --noconfirm
+pacman -S mingw-w64-x86_64-zlib --noconfirm
+pacman -S mingw-w64-x86_64-zstd --noconfirm
+pacman -S mingw-w64-x86_64-zziplib --noconfirm
+pacman -S mintty --noconfirm
+pacman -S mpdecimal --noconfirm
+pacman -S mpfr --noconfirm
+pacman -S msys2-keyring --noconfirm
+pacman -S msys2-launcher --noconfirm
+pacman -S msys2-runtime --noconfirm
+pacman -S nano --noconfirm
+pacman -S ncurses --noconfirm
+pacman -S nettle --noconfirm
+pacman -S openssl --noconfirm
+pacman -S p11-kit --noconfirm
+pacman -S pacman --noconfirm
+pacman -S pacman-contrib --noconfirm
+pacman -S pacman-mirrors --noconfirm
+pacman -S patch --noconfirm
+pacman -S perl --noconfirm
+pacman -S pinentry --noconfirm
+pacman -S pkgconf --noconfirm
+pacman -S python --noconfirm
+pacman -S python-devel --noconfirm
+pacman -S rebase --noconfirm
+pacman -S sed --noconfirm
+pacman -S tar --noconfirm
+pacman -S tcl --noconfirm
+pacman -S texinfo --noconfirm
+pacman -S texinfo-tex --noconfirm
+pacman -S tftp-hpa --noconfirm
+pacman -S time --noconfirm
+pacman -S tzcode --noconfirm
+pacman -S util-linux --noconfirm
+pacman -S wget --noconfirm
+pacman -S which --noconfirm
+pacman -S winpty --noconfirm
+pacman -S xz --noconfirm
+pacman -S zlib --noconfirm
+pacman -S zstd --noconfirm

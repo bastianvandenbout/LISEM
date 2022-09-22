@@ -20,10 +20,13 @@
 #include "resourcemanager.h"
 #include "QTextDocument"
 #include "QTextDocumentFragment"
+#include "QStatusBar"
 
 #include "stackdisplay.h"
 #include "atomic"
 #include "site.h"
+#include "uihelper.h"
+
 class ScriptTool : public QWidget
 {
     Q_OBJECT
@@ -85,8 +88,9 @@ public:
     bool m_HasCallBackFinished = false;
     std::function<void(void)> m_CallBackFinished;
 
+    QStatusBar *m_Bar = nullptr;
 
-    inline ScriptTool( ScriptManager * sm, QWidget *parent = 0, const char *name = 0 ): QWidget( parent)
+    inline ScriptTool( ScriptManager * sm, QWidget *parent = 0, const char *name = 0, QStatusBar * bar = nullptr): QWidget( parent)
     {
         m_ScriptManager = sm;
         m_Dir = GetSite();
@@ -100,6 +104,7 @@ public:
         m_MenuWidget = new QWidget(this);
         m_MenuLayout = new QHBoxLayout(m_MenuWidget);
 
+        m_Bar = bar;
 
         icon_start = new QIcon();
         icon_pause = new QIcon();
@@ -373,12 +378,13 @@ public:
                     {
                         fin_temp.close();
 
-                        CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
+                        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
                         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
 
 
                         m_ScriptTabs->addTab(ce,"");
                         m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
+                        m_ScriptTabs->setTabToolTip(m_ScriptTabs->count()-1,S);
 
                         ce->SetFile(S);
                     }
@@ -459,15 +465,21 @@ public:
         closeallbutAct->setToolTip(tr("Close all but this file"));
         connect(closeallbutAct, &QAction::triggered, this, &ScriptTool::CMCloseAllBut);
 
+        QAction * showexplAct = new QAction(*icon_new,tr("Show in explorer"), this);
+        //saveAct->setShortcuts(QKeySequence::Save);
+        showexplAct->setToolTip(tr("Open graphical file explorer at file location"));
+        connect(showexplAct, &QAction::triggered, this, &ScriptTool::CMShowExplorer);
 
         m_contextmenu->addAction(closeAct);
         m_contextmenu->addAction(newAct);
         m_contextmenu->addAction(saveAct);
         m_contextmenu->addAction(closeallAct);
         m_contextmenu->addAction(closeallbutAct);
+        m_contextmenu->addAction(showexplAct);
 
         m_ScriptTabs->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(m_ScriptTabs->tabBar(), SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(on_contextMenuRequested(const QPoint &)));
+
 
 
     }
@@ -574,6 +586,17 @@ public slots:
             NewCode();
         }
         m_LastIndexContex = -1;
+    }
+    inline void CMShowExplorer()
+    {
+        if(m_LastIndexContex > -1)
+        {
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+            showInGraphicalShell(this,ce->m_File);
+
+        }
+
     }
     inline void CMCloseAll()
     {
@@ -684,6 +707,8 @@ public slots:
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
         ce->SaveFile(false);
 
+        m_ScriptTabs->setTabToolTip(m_ScriptTabs->currentIndex(),ce->m_File);
+
         ExportOpenFileList();
     }
 
@@ -696,16 +721,19 @@ public slots:
         CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
          ce->SaveFileAs();
 
+         m_ScriptTabs->setTabToolTip(m_ScriptTabs->currentIndex(),ce->m_File);
          ExportOpenFileList();
     }
 
     inline void NewCode()
     {
-        CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
+        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
         ce->SetHomeDir(m_HomeDir);
         m_ScriptTabs->addTab(ce,"");
         m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
+
+        m_ScriptTabs->setTabToolTip(m_ScriptTabs->count()-1,"unsaved file");
 
         ce->SetEmpty();
 
@@ -752,10 +780,12 @@ public slots:
 
         if(!found)
         {
-            CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
+            CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
             ce->SetHomeDir(m_HomeDir);
             m_ScriptTabs->addTab(ce,"");
             m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
+
+            m_ScriptTabs->setTabToolTip(m_ScriptTabs->count()-1,path);
             ce->LoadFileDirect(path);
             ExportOpenFileList();
             OnTitleChanged();
@@ -765,12 +795,14 @@ public slots:
     {
         QString openDir = GetSite();
 
-        CodeEditor * ce = new CodeEditor(this,m_ScriptManager);
+        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
         ce->SetHomeDir(m_HomeDir);
 
         m_ScriptTabs->addTab(ce,"");
         m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
+
+        m_ScriptTabs->setTabToolTip(m_ScriptTabs->count()-1,openDir);
 
 
         ce->LoadFile(openDir);

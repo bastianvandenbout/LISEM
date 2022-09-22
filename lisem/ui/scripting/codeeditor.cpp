@@ -7,9 +7,15 @@
 #include <QCompleter>
 #include "sphsyntaxhighlighter.h"
 #include "site.h"
+#include "widgets/minimap/minimapproxystylehelper.h"
+#include "widgets/minimap/minimapproxystyle.h"
+#include "extensionprovider.h"
+#include "ScriptAnalyzer.h"
 
-CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm) : QPlainTextEdit(parent)
+
+CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm, QStatusBar * b) : QPlainTextEdit(parent)
 {
+    m_Bar = b;
     m_ScriptManager = sm;
     lineNumberArea = new LineNumberArea(this);
 
@@ -85,18 +91,166 @@ CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm) : QPlainTextEdit(par
 
     }
 
+    Minimap::Internal::MinimapProxyStyle::baseEditorCreated(this);
+
     StartDrawUpdateOnLine();
 
 
     emit OnEditedSinceSave();
 }
 
-void CodeEditor::mousePressEvent ( QMouseEvent * event )
+void CodeEditor::wheelEvent(QWheelEvent * event)
 {
 
 
-    QPlainTextEdit::mousePressEvent(event);
+    QWheelEvent *wheel = event;
+        if( wheel->modifiers() == Qt::ControlModifier )
+        {
+            if(wheel->delta() > 0)
+            {
+                float delta = event->angleDelta().y() / 120.f;
+                zoomInF(delta);
+                m_CurrentZoom += delta;
+                ShowOverlayMessage("Zoom to " + QString::number(((float)m_CurrentZoom)/((float)(12))),2.000);
+                /*if(m_Bar)
+                {
+                    m_Bar->showMessage("Zoom to " + QString::number(((float)m_CurrentZoom)/((float)(12))),2000);
+                    std::cout << "wheel event with control " << m_Bar << std::endl;
 
+                }*/
+                return;
+            }
+            else
+            {
+                float delta = event->angleDelta().y() / 120.f;
+                zoomInF(delta);
+                m_CurrentZoom += delta;
+                ShowOverlayMessage("Zoom to " + QString::number(((float)m_CurrentZoom)/((float)(12))),2.000);
+                /*if(m_Bar)
+                {
+                    m_Bar->showMessage("Zoom to " + QString::number(((float)m_CurrentZoom)/((float)(12))),2000);
+                }*/
+                return;
+            }
+        }
+
+
+
+    QPlainTextEdit::wheelEvent(event);
+
+
+}
+void CodeEditor::mousePressEvent ( QMouseEvent * event )
+{
+
+    if(event->button() == Qt::RightButton)
+    {
+        QString text = textUnderCursor(cursorForPosition(event->pos()));
+        int line = cursorForPosition(event->pos()).blockNumber();
+        int column = cursorForPosition(event->pos()).positionInBlock();
+
+        std::cout << "line/col " << line << "  " << column << std::endl;
+        std::cout << "left of cursor " << textLeftUnderCursor(cursorForPosition(event->pos())).toStdString() << "  "  << textRightUnderCursor(cursorForPosition(event->pos())).toStdString() <<  "  "  << textRightRightUnderCursor(cursorForPosition(event->pos())).toStdString() <<  std::endl;
+
+
+        if(text.size() > 1)
+        {
+
+
+        bool is_memberorfile = true;
+        if(text.startsWith(","))
+        {
+            text = text.replace(0,1,".");
+        }
+        bool file = CheckIfSupportedFileName(text);
+
+
+        //if file is supported, we need to get the text item before the extension, as the wordundercursor function gives it including the dot (.tif for example)
+        if(file)
+        {
+            text = textLeftUnderCursor(cursorForPosition(event->pos())) + text;
+        }else if(text.startsWith("."))
+        {
+            text = text.remove(0,1);
+        }
+
+        QString tr =textRightUnderCursor(cursorForPosition(event->pos()));
+
+        if(tr.length() > 0)
+        {
+            tr.replace(0,1,".");
+            if(CheckIfSupportedFileName(tr))
+            {
+                file = true;
+                text = text + tr;
+            }
+
+        }
+
+        QMenu *menu = createStandardContextMenu();
+
+
+
+            if(file)
+            {
+                menu->addAction("Open file location '" + text + QString("'"));
+                menu->addAction("Open file '" + text + QString("'"));
+                menu->addAction("Replace file references to '" + text + QString("'"));
+                menu->addAction("Search '" + text + QString("'"));
+            }else
+            {
+                menu->addAction("Replace occurances of '" + text + QString("'"));
+                menu->addAction("Search '" + text + QString("'"));
+                menu->addAction("Follow '" + text + QString("'"));
+                menu->addAction("Find references to '" + text + QString("'"));
+            }
+
+            //...
+        QAction * select = menu->exec(event->globalPos());
+
+        if(select)
+        {
+
+            ScriptAnalyzer s(m_ScriptManager);
+            s.AnalyzeScript(this->document()->toPlainText());
+
+            if(select->text().startsWith("Replace Occurances of "))
+            {
+
+            }
+            if(select->text().startsWith("Search "))
+            {
+
+            }
+            if(select->text().startsWith("Follow "))
+            {
+
+            }
+            if(select->text().startsWith("Find references to "))
+            {
+
+            }
+            if(select->text().startsWith("Open file location '"))
+            {
+
+            }
+            if(select->text().startsWith("Open file '"))
+            {
+
+            }
+            if(select->text().startsWith("Replace file references to '"))
+            {
+
+            }
+
+
+        }
+        delete menu;
+}
+    }else
+    {
+        QPlainTextEdit::mousePressEvent(event);
+    }
 }
 
 void CodeEditor::updateExtraSelection()
@@ -1168,6 +1322,38 @@ void CodeEditor::highlightParenthesis(QList<QTextEdit::ExtraSelection>& extraSel
     }
 }
 
+
+void CodeEditor::overlayPaintEvent(QPaintEvent * event)
+{
+
+    float alpha = 0.0;
+
+    if(m_OverlayActive)
+    {
+        alpha = 1.0;
+        if(m_OverlayTimep > 0.0)
+        {
+            alpha = std::max(0.0f,1.0f - m_OverlayTimep);
+        }
+    }
+
+    QPainter painter(viewport());
+    QPointF offset(contentOffset());
+    QRect er = event->rect();
+    QRect viewportRect = viewport()->rect();
+
+    QColor green70 = Qt::black;
+    green70.setAlphaF( 0.5 * alpha );
+
+    painter.fillRect(QRect(viewportRect.left() + viewportRect.size().width() * 0.35,viewportRect.top() + viewportRect.size().height() * 0.42,viewportRect.size().width() * 0.3,viewportRect.size().height() * 0.16),QBrush(green70));
+
+    QColor penb = Qt::white;
+    penb.setAlphaF(1.0 * alpha);
+    painter.setPen(penb);
+    painter.drawText(viewportRect.left() + viewportRect.size().width() * 0.35,viewportRect.top()+ viewportRect.size().height() * 0.42,viewportRect.size().width() * 0.3, fontMetrics().height(),
+                     Qt::AlignCenter, "test message");
+
+}
 
 
 void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)

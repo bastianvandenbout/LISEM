@@ -36,7 +36,7 @@ public:
         return m_Projection;
     }
 
-    inline void SetProjection(GeoProjection proj)
+    inline virtual void SetProjection(GeoProjection proj)
     {
         m_Projection = proj;
 

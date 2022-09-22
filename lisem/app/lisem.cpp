@@ -155,7 +155,7 @@ int SPHazard::execute(int argc, char *argv[])
         LISEM_STATUS("-v data1.tif data2.shp ... - view a data files in the viewer window");
         LISEM_STATUS("-o 'a.map = sqrt(b.tif*c.map)' - carry out a calculation");
         LISEM_STATUS("-x - open with interface");
-        LISEM_STATUS("-q - quite when done");
+        LISEM_STATUS("-q - quite when done (when using interface)");
 
 
         m_App = new QApplication(argc, argv);

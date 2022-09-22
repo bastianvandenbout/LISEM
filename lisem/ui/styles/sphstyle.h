@@ -62,6 +62,10 @@ public:
         LSMSerialize::From(obj,"PlaySpeed",m_PlaySpeed);
         LSMSerialize::From(obj,"Play",m_Play);
 
+        LSMSerialize::From(obj,"IsVectorHeight",m_VectorIsHeight);
+        LSMSerialize::From(obj,"VectorHeight",m_VectorHeightValue);
+        LSMSerialize::From(obj,"VectorHeightParameter",m_VectorHeightParameter);
+
         LSMSerialize::From(obj,"CurrentTime",m_CurrentTime);
         LSMSerialize::From(obj,"PlaySpeed",m_PlaySpeed);
         LSMSerialize::From(obj,"Play",m_Play);
@@ -111,6 +115,10 @@ public:
         LSMSerialize::To(obj,"CurrentTime",m_CurrentTime);
         LSMSerialize::To(obj,"PlaySpeed",m_PlaySpeed);
         LSMSerialize::To(obj,"Play",m_Play);
+
+        LSMSerialize::To(obj,"IsVectorHeight",m_VectorIsHeight);
+        LSMSerialize::To(obj,"VectorHeight",m_VectorHeightValue);
+        LSMSerialize::To(obj,"VectorHeightParameter",m_VectorHeightParameter);
 
         LSMSerialize::To(obj,"CurrentTime",m_CurrentTime);
         LSMSerialize::To(obj,"PlaySpeed",m_PlaySpeed);
@@ -195,6 +203,11 @@ public:
     float m_PlaySpeed = 0.1;
     float m_TimePassed = 0.0;
     bool m_Play = false;
+
+    bool m_VectorIsHeight = false;
+    QString m_VectorHeightParameter = "";
+    float m_VectorHeightValue = 10.0;
+
 
     //DEM properties
     ColorF SunColor;
@@ -367,6 +380,10 @@ public:
         m_CurrentTime = s.m_CurrentTime;
         m_PlaySpeed = s.m_PlaySpeed;
         m_Play = s.m_Play;
+
+        m_VectorIsHeight = s.m_VectorIsHeight;
+        m_VectorHeightParameter = s.m_VectorHeightParameter;
+        m_VectorHeightValue = s.m_VectorHeightValue;
 
         //DEM properties
         SunColor = s.SunColor;

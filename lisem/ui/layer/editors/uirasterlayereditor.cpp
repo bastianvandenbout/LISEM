@@ -58,6 +58,39 @@ void UIRasterLayerEditor::OnDraw(OpenGLCLManager * m,GeoWindowState state)
 
     LSMVector2 MousePosLoc = transformer->Transform(LSMVector2(state.MouseGeoPosX,state.MouseGeoPosZ));
 
+    if(m_HasDoneCtrlF)
+    {
+        for(int i = 0; i < m_Map.length(); i++)
+        {
+            cTMap * Target = m_Map.at(i);
+
+            LSMVector2 tr = transformer->Transform(LSMVector2(state.MouseGeoPosX ,state.MouseGeoPosZ));
+
+            float tlX = tr.x;
+            float tlY = tr.y;
+
+            int r = (tlX - Target->west())/Target->cellSizeX();
+            int c = (tlY - Target->north())/Target->cellSizeY();
+
+            if(r > -1 && r < Target->nrRows() && c > -1 && c < Target->nrCols())
+            {
+                float valhere = Target->data[r][c];
+                if(!pcr::isMV(valhere))
+                {
+
+                    if(i == 0)
+                    {
+                        //get current value under cursor and set as value
+                        SetUIParameterValueDouble("Value",valhere);
+                    }
+                }
+
+
+            }
+
+
+        }
+    }
 
     float edit_cx = MousePosLoc.x;
     float edit_cy = m_Map.at(0)->cellSizeY() > 0? (m_Map.at(0)->north() + (m_Map.at(0)->nrRows() * m_Map.at(0)->cellSizeY()) - MousePosLoc.y) : MousePosLoc.y;
@@ -561,6 +594,8 @@ void UIRasterLayerEditor::OnDraw(OpenGLCLManager * m,GeoWindowState state)
 
     m_HasDoneEnter = false;
     m_HasDoneCtrlZ = false;
+
+    m_HasDoneCtrlF = false;
     m_HasDoneMouseClick = false;
     m_HasDoneEscape = false;
     m_HasDoneMouseDoubleClick = false;

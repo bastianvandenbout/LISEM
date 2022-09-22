@@ -38,6 +38,7 @@ private:
 
     bool m_HasDoneEnter = false;
     bool m_HasDoneCtrlZ = false;
+    bool m_HasDoneCtrlF = false;
     bool m_HasDoneMouseClick = false;
     bool m_HasDoneMouseDoubleClick = false;
     bool m_HasDoneEscape = false;
@@ -91,6 +92,7 @@ public:
             m_HasDoneEscape = false;
             m_HasDoneEnter = false;
             m_HasDoneCtrlZ = false;
+            m_HasDoneCtrlF = false;
             m_HasDoneMouseClick = false;
             m_HasDoneMouseDoubleClick = false;
         }
@@ -162,6 +164,15 @@ public:
             if(button == GLFW_KEY_Z && action == GLFW_PRESS)
             {
                 m_HasDoneCtrlZ = true;
+            }
+        }
+
+        if(modifiers & GLFW_MOD_CONTROL)
+        {
+
+            if(button == GLFW_KEY_F && action == GLFW_PRESS)
+            {
+                m_HasDoneCtrlF = true;
             }
         }
 

@@ -456,6 +456,23 @@ inline static QList<QString> GetAllExtensions()
     return ret;
 }
 
+inline static bool CheckIfSupportedFileName(QString fname)
+{
+    QList<QString> exts = GetAllExtensions();
+
+    for(int i = 0; i < exts.length(); i++)
+    {
+        if(fname.endsWith(exts.at(i)))
+        {
+            return true;
+        }
+
+    }
+    return false;
+
+
+}
+
 inline static QList<QString> GetAllExtensionsFilter()
 {
 

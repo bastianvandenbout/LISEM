@@ -59,6 +59,7 @@ protected:
     QList<ShapeLayerChange> m_Edits;
 
     QList<UIParameter> m_ParameterList;
+    QList<std::function<bool(QString,QString)>> m_ParameterUICallBackList;
 
     bool m_DoRemove = false;
     bool m_IsPrepared = false;
@@ -158,6 +159,17 @@ public:
 
     }
 
+    inline void SetParameterUICallBack(QString par, std::function<bool(QString,QString)> cb)
+    {
+        for(int i = 0;i < m_ParameterList.length(); i++)
+        {
+            if(m_ParameterList.at(i).Name.compare(par) == 0)
+            {
+                 m_ParameterUICallBackList.replace(i,cb);
+            }
+        }
+
+    }
 
 
     inline void AddParameter(int type, QString name, QString description, QString value, double min = 0.0, double max = 0.0)
@@ -172,11 +184,48 @@ public:
         p.min = min;
 
         m_ParameterList.append(p);
+        m_ParameterUICallBackList.append([](QString name, QString value){
+            return false;
+        });
     }
 
     inline QList<UIParameter> GetParameters()
     {
         return m_ParameterList;
+    }
+
+    inline void SetUIParameterValueDouble(QString name, double value)
+    {
+
+        for(int i = 0;i < m_ParameterList.length(); i++)
+        {
+            if(m_ParameterList.at(i).Name.compare(name) == 0)
+            {
+                UIParameter p = m_ParameterList.at(i);
+                p.Value = QString::number(value);
+                m_ParameterList.replace(i,p);
+                m_ParameterUICallBackList.at(i)(m_ParameterList.at(i).Name,QString::number(value));
+
+            }
+        }
+
+    }
+
+    inline void SetUIParameterValue(QString name, QString value)
+    {
+
+        for(int i = 0;i < m_ParameterList.length(); i++)
+        {
+            if(m_ParameterList.at(i).Name.compare(name) == 0)
+            {
+                UIParameter p = m_ParameterList.at(i);
+                p.Value = value;
+                m_ParameterList.replace(i,p);
+                m_ParameterUICallBackList.at(i)(m_ParameterList.at(i).Name,value);
+
+            }
+        }
+
     }
 
     inline double GetParameterValueDouble(QString name)

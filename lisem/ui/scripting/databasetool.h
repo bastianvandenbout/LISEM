@@ -30,6 +30,7 @@
 #include "lsmio.h"
 #include "site.h"
 #include "defines.h"
+#include "QStatusBar"
 
 class SPHFileSystemModel : public QFileSystemModel
 {
@@ -389,7 +390,7 @@ public:
 
     bool m_ShouldHaveFileWatch =true;
 
-    inline DatabaseTool( ScriptManager * sm,QWidget *parent = 0, const char *name = 0 ): QWidget( parent)
+    inline DatabaseTool( ScriptManager * sm,QWidget *parent = 0, QStatusBar *bar = nullptr): QWidget( parent)
     {
 
         m_ScriptManager = sm;
@@ -500,7 +501,7 @@ public:
      m_TabFiles->setTabsClosable(true);
      m_TabFiles->setMovable(true);
 
-     m_FileEditor = new ScriptTool(sm);
+     m_FileEditor = new ScriptTool(sm, bar);
 
      m_FileEditor->SetCallBackStart(&DatabaseTool::OnScriptStarted,this);
      m_FileEditor->SetCallBackStop(&DatabaseTool::OnScriptStopped,this);

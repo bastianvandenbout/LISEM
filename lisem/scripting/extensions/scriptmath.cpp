@@ -132,6 +132,42 @@ bool closeTo(double a, double b, double epsilon)
 	return diff / (fabs(a) + fabs(b)) < epsilon;
 }
 
+inline static double maxfd(double a, double b)
+{
+    return std::max(a,b);
+
+
+}
+inline static double minfd(double a, double b)
+{
+    return std::min(a,b);
+}
+
+inline static double absfd(double a)
+{
+    return a < 0.0? -a : a;
+}
+
+inline double absmaxfd(double a, double b)
+{
+    a = std::fabs(a);
+    if(std::fabs(b) < a)
+    {
+        return b<0.0? -a:a;
+    }
+    return b;
+}
+inline double absminfd(double a, double b)
+{
+    return abs(a) < abs(b) ? a : b;
+}
+
+inline double  signfd(double v)
+{
+    return v < 0.0 ? -1.0 : 1.0;
+}
+
+
 void RegisterScriptMath_Native(asIScriptEngine *engine)
 {
 	int r;
@@ -179,6 +215,12 @@ void RegisterScriptMath_Native(asIScriptEngine *engine)
 	// Don't register modf because AngelScript already supports the % operator
 #else
 	// double versions of the same
+    r = engine->RegisterGlobalFunction("double max(double,double)", asFUNCTIONPR(maxfd, (double, double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double min(double,double)", asFUNCTIONPR(minfd, (double, double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double absmax(double,double)", asFUNCTIONPR(absmaxfd, (double, double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double absmin(double,double)", asFUNCTIONPR(absminfd, (double, double), double), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("double sign(double)", asFUNCTIONPR(signfd, (double), double), asCALL_CDECL); assert( r >= 0 );
+    //r = engine->RegisterGlobalFunction("double abs(double)", asFUNCTIONPR(absfd, (double), double), asCALL_CDECL); assert( r >= 0 );
 	r = engine->RegisterGlobalFunction("double cos(double)", asFUNCTIONPR(cos, (double), double), asCALL_CDECL); assert( r >= 0 );
 	r = engine->RegisterGlobalFunction("double sin(double)", asFUNCTIONPR(sin, (double), double), asCALL_CDECL); assert( r >= 0 );
 	r = engine->RegisterGlobalFunction("double tan(double)", asFUNCTIONPR(tan, (double), double), asCALL_CDECL); assert( r >= 0 );

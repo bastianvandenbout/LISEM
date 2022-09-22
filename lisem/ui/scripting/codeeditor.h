@@ -26,6 +26,8 @@
 #include "QMouseEvent"
 #include "QTextStream"
 #include "site.h"
+#include "QStatusBar"
+#include "QTimer"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -73,12 +75,91 @@ public:
 
     QString m_HomeDir;
 
-    CodeEditor(QWidget *parent = 0, ScriptManager* sm = 0);
+    QStatusBar * m_Bar = nullptr;
+
+    CodeEditor(QWidget *parent = 0, ScriptManager* sm = 0, QStatusBar * b = nullptr);
 
     void setCompleter(SPHScriptCompleter *m_Completer);
     QCompleter *completer() const;
 
     ScriptManager * m_ScriptManager;
+
+    float m_CurrentZoom = 12;
+
+    QString m_OverlayMessage = "";
+    bool m_OverlayActive = false;
+    bool m_OverlayFirst = true;
+    float m_OverlayTime = 0.0;
+    float m_OverlayTimep = 0.0;
+    float m_OverlayAlpha = 1.0;
+    QTimer m_OverlayTimer;
+    bool m_OverlayDeactivated = false;
+
+
+    inline void ShowOverlayMessage(QString m, float time)
+    {
+        m_OverlayMessage = m;
+        m_OverlayTime = time;
+        m_OverlayTimep = 0.0;
+        m_OverlayActive = true;
+        m_OverlayFirst = true;
+        m_OverlayDeactivated = false;
+        m_OverlayAlpha = 1.0;
+        m_OverlayTimer.stop();
+        m_OverlayTimer.setSingleShot(true);
+        m_OverlayTimer.setInterval(time * 1000.0);
+        viewport()->update();
+
+        QObject::connect(&m_OverlayTimer, &QTimer::timeout,[this]()
+        {
+            std::cout << "timer timeout 1 " << std::endl;
+            this->UpdateOverlayMessage();
+        });
+        m_OverlayTimer.start();
+
+    }
+    inline void UpdateOverlayMessage()
+    {
+        if(m_OverlayDeactivated == false)
+        {
+
+
+        if(m_OverlayFirst)
+        {
+            m_OverlayTimep += m_OverlayTime;
+            m_OverlayFirst = false;
+        }else
+        {
+            m_OverlayTimep += 0.033;
+        }
+
+        if(m_OverlayTimep >= m_OverlayTime + 1.0)
+        {
+            std::cout << " overlay end "  << std::endl;
+
+            m_OverlayDeactivated = true;
+            m_OverlayActive = false;
+            m_OverlayTimer.stop();
+            m_OverlayTime = 0.0;
+            m_OverlayTimep = 0.0;
+            m_OverlayFirst = true;
+        }else
+        {
+            m_OverlayTimer.setSingleShot(true);
+            m_OverlayTimer.setInterval(33);
+            std::cout << "set timer again " << m_OverlayTimep <<  m_OverlayTime + 1.0 << std::endl;
+            QObject::connect(&m_OverlayTimer, &QTimer::timeout,[this]()
+            {
+                std::cout << "timer timeout" << std::endl;
+                this->UpdateOverlayMessage();
+            });
+            m_OverlayTimer.start();
+
+        }
+        }
+        viewport()->update();
+
+    }
 
     int getIndentationSpaces();
     QChar CharUnderCursor(QTextCursor tc, int offset = 0) const;
@@ -86,9 +167,14 @@ public:
     QString wordUnderCursor() const;
     QString wordUnderCursor(QTextCursor tc) const;
 protected:
+    void wheelEvent(QWheelEvent * event) override;
     void mousePressEvent ( QMouseEvent * event )  override;
     void keyPressEvent(QKeyEvent *e) override;
     void focusInEvent(QFocusEvent *e) override;
+    void paintEvent(QPaintEvent *event) override {
+        QPlainTextEdit::paintEvent(event);
+        this->overlayPaintEvent(event);
+    }
 public:
     QString textUnderCursor() const
     {
@@ -183,6 +269,84 @@ public:
         }
         return word;
     }
+
+    QString textUnderCursorRight(QTextCursor tc) const
+    {
+        int pos = tc.anchor();
+        tc.select(QTextCursor::WordUnderCursor);
+        int selstart =  tc.position();
+
+        tc.setPosition(pos, QTextCursor::MoveMode::MoveAnchor);
+        tc.setPosition(selstart, QTextCursor::MoveMode::KeepAnchor);
+        QString word = tc.selectedText();
+
+        return word;
+    }
+
+    QString textRightRightUnderCursor(QTextCursor tc) const
+    {
+        int pos = tc.anchor();
+        tc.select(QTextCursor::WordUnderCursor);
+        int selstart = tc.position();
+        tc.setPosition(selstart + 1);
+        tc.select(QTextCursor::WordUnderCursor);
+        selstart = tc.position();
+        tc.setPosition(selstart + 1);
+        tc.select(QTextCursor::WordUnderCursor);
+        QString word = tc.selectedText();
+        int selstart2 =  tc.anchor();
+        tc.setPosition(selstart2-1);
+        tc.setPosition(selstart2, QTextCursor::MoveMode::KeepAnchor);
+
+        QString wordprev = tc.selectedText();
+        if(wordprev.trimmed() == ".")
+        {
+            word.insert(0,",");
+        }
+        return word;
+    }
+
+    QString textRightUnderCursor(QTextCursor tc) const
+    {
+        int pos = tc.anchor();
+        tc.select(QTextCursor::WordUnderCursor);
+        int selstart = tc.position();
+        tc.setPosition(selstart + 1);
+        tc.select(QTextCursor::WordUnderCursor);
+        QString word = tc.selectedText();
+        int selstart2 =  tc.anchor();
+        tc.setPosition(selstart2-1);
+        tc.setPosition(selstart2, QTextCursor::MoveMode::KeepAnchor);
+
+        QString wordprev = tc.selectedText();
+        if(wordprev.trimmed() == ".")
+        {
+            word.insert(0,",");
+        }
+        return word;
+    }
+    QString textLeftUnderCursor(QTextCursor tc) const
+    {
+        int pos = tc.anchor();
+        tc.select(QTextCursor::WordUnderCursor);
+        int selstart = tc.anchor();
+        tc.setPosition(selstart - 2);
+        tc.select(QTextCursor::WordUnderCursor);
+        QString word = tc.selectedText();
+        int selstart2 =  tc.anchor();
+        tc.setPosition(selstart2-1);
+        tc.setPosition(selstart2, QTextCursor::MoveMode::KeepAnchor);
+
+        QString wordprev = tc.selectedText();
+        if(wordprev.trimmed() == ".")
+        {
+            word.insert(0,",");
+        }
+        return word;
+
+
+    }
+
 public:
 
     inline bool HasBreakPointAt(int line_number)
@@ -375,6 +539,8 @@ public:
 
 
     void lineNumberAreaPaintEvent(QPaintEvent *event);
+    void overlayPaintEvent(QPaintEvent *event);
+
     int lineNumberAreaWidth();
     void setToolTipAtCursor(QTextCursor TextCursor, QList<QTextEdit::ExtraSelection>& extraSelection);
 

@@ -405,6 +405,13 @@ public:
         return 0.0;
     }
 
+    inline void SetProjection(GeoProjection proj) override
+    {
+        m_Projection = proj;
+        _projection = proj.GetWKT();
+
+    }
+
 private:
 
     //! Projection string as WKT string. Possibly empty.

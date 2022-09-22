@@ -1064,6 +1064,45 @@ public:
 
             m_ToolBoxl->addWidget(gbi);
         }
+
+        if(m_Style->m_HasVectorPolygonFill || m_Style->m_HasVectorPolygonLine)
+        {
+            //is vector polygon, so we can do it in 3d?
+            //with dem as base
+
+            QGroupBox * gbi = new QgsCollapsibleGroupBoxBasic();
+            QVBoxLayout * gbil = new QVBoxLayout();
+            gbi->setLayout(gbil);
+            gbi->setTitle("3D Polygons");
+
+            QDoubleSpinBox * elevationspin = new QDoubleSpinBox();
+            elevationspin->setValue(m_Style->m_VectorHeightValue);
+            QCheckBox * elevationpoly = new QCheckBox();
+            elevationpoly->setChecked(m_Style->m_VectorIsHeight);
+
+            QList<QString> attribs = m_Layer->GetAllAttributes();
+
+            attribs.prepend("<none>");
+            QComboBox * m_VHAttrib = new QComboBox();
+
+            m_VHAttrib->addItems(attribs);
+
+            if(attribs.contains(m_Style->m_VectorHeightParameter))
+            {
+                m_VHAttrib->setCurrentIndex(attribs.indexOf(m_Style->m_VectorHeightParameter));
+            }
+
+            gbil->addWidget(new QLabeledWidget("3D Polygons",elevationpoly));
+            gbil->addWidget(new QLabeledWidget("Polygon height",elevationspin));
+            gbil->addWidget(new QLabeledWidget("Polygon height param",m_VHAttrib));
+
+
+            gbil->setSizeConstraint(QLayout::SetFixedSize);
+
+            m_ToolBoxl->addWidget(gbi);
+        }
+
+
         if(m_Style->m_HasVectorPointLine)
         {
             QWidget * w = new LineStyleWidget(m_Layer,&(m_Style->m_PointLineStyle));
