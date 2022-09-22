@@ -14,9 +14,9 @@ Dont know which one you want? See the [documentation](/docs/home)!
 LISEM Classis provides a focus on detailed modelling of hydrology, flow and erosion.
 See the [github page](https://github.com/vjetten/openlisem) and [classic downloads](https://github.com/vjetten/openlisem/releases/tag/openLisem) for more details.
 
-Version 6.845
+Version 6.845 (select the zip-file under assets)
 
-| [Windows-64x Portable executable](https://github.com/vjetten/openlisem/releases/download/openLisem/lisem-v6.846-220321.zip) | ![LISEM](/assets/img/openLisem.png) |
+| [Windows-64x Portable executable](https://github.com/vjetten/openlisem/releases) | ![LISEM](/assets/img/openLisem.png) |
 
 
 #### LISEM
@@ -29,23 +29,17 @@ Version 0.2.4
 | [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.4-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.4-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
 
-Version 0.2.3
+Version 0.2.3 (Depricated)
 
 | [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.3.zip/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.3-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.3-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
 
-Version 0.2.2
+Version 0.2.2 (Depricated)
 
 | [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.2.zip/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.2-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
 | [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.2-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
-
-Version 0.2.1
-
-| [Windows-64x Portable zipped executable](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Portable/lisem_0.2.1.zip/download) | ![LISEM](/assets/img/logonav.png) |
-| [Windows-64x installer](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Installer/LISEM-0.2.1-win64.exe/download) | ![LISEM](/assets/img/logonav.png) |
-| [Windows-64x Python Wheel](https://sourceforge.net/projects/lisem/files/LISEM%20%28beta%20release%20new%20software%29/Python%20Wheel/lisem-0.2.1-py3-none-any.whl/download) | ![LISEM](/assets/img/logonav.png) |
 
 #### OpenLISEM Hazard
 The OpenLISEM Hazard model does not receive active support. It has become pretty stable, and is available here:
