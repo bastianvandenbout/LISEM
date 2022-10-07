@@ -78,6 +78,18 @@ public:
 
     }
 
+
+    std::vector<QString> m_CallBackVarNames;
+    std::vector<std::function<void(QString, QString)>> m_CallBackVarChanged;
+
+
+
+    inline void SetCallBackSettingChanged(QString name, std::function<void(QString,QString)> f)
+    {
+        m_CallBackVarNames.push_back(name);
+        m_CallBackVarChanged.push_back(f);
+    }
+
     inline void UpdateFile()
     {
         QFile fp(m_File);
@@ -123,6 +135,14 @@ public:
                 found = true;
                 m_Values.replace(i,val);
                 break;
+            }
+
+        }
+        for(int i = 0; i < m_CallBackVarNames.size(); i++)
+        {
+            if(m_CallBackVarNames.at(i).compare(name) == 0)
+            {
+                m_CallBackVarChanged.at(i)(name, val);
             }
 
         }

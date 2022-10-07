@@ -27,8 +27,9 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
    sm->RegisterGlobalFunction("Map &SaveThisMap(const string &in s)", asFUNCTION( AS_SaveThisMapToFile),  asCALL_CDECL);
    sm->RegisterGlobalFunction("void SetWorkDir(const string &in dir)", asFUNCTION( AS_SetASDefaultPath),  asCALL_CDECL);
    sm->RegisterGlobalFunction("void RestoreWorkDir()", asFUNCTION( AS_RestoreASDefaultPath),  asCALL_CDECL);
-   sm->RegisterGlobalFunction("void CopyFile(string dir1, string file1, string dir2, string file2)", asFUNCTION( CopyMap),  asCALL_CDECL);
-   sm->RegisterGlobalFunction("void CopyFile(string path1, string path2)", asFUNCTION( CopyMapByPath),  asCALL_CDECL);
+   sm->RegisterGlobalFunction("void CopyFile(string file1, string file2)", asFUNCTION( CopyFile1),  asCALL_CDECL);
+   sm->RegisterGlobalFunction("void CopyFile(string dir1, string file1, string dir2, string file2)", asFUNCTION( CopyFile3),  asCALL_CDECL);
+   sm->RegisterGlobalFunction("void CopyDir(string path1, string path2)", asFUNCTION( CopyDir),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetDir()", asFUNCTION( AS_GetASDefaultPath),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetDirOrg()", asFUNCTION( AS_GetASDefaultPathOrg),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetFileDir(string s)", asFUNCTION( AS_GetFileDir),  asCALL_CDECL);
@@ -47,18 +48,24 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
    sm->RegisterGlobalFunction("void SavePointCloudAbsPath(PointCloud &in sh, const string &in s)", asFUNCTION( AS_SavePointCloudToFileAbsPath), asCALL_CDECL);
    sm->RegisterGlobalFunction("PointCloud @SaveThisPointCloud(const string &in s)", asFUNCTION( AS_SaveThisPointCloudToFile),  asCALL_CDECL);
 
-   sm->RegisterGlobalFunction("Field @LoadFieldAbsPath(const string &in s)", asFUNCTION( AS_LoadFieldFromFileAbsPath), asCALL_CDECL);
-   sm->RegisterGlobalFunction("Field @LoadField(const string &in s)", asFUNCTION( AS_LoadFieldFromFile), asCALL_CDECL);
+   sm->RegisterGlobalFunction("Field @LoadFieldAbsPath(const string &in s, const string &in var = \"data\")", asFUNCTION( AS_LoadFieldFromFileAbsPath), asCALL_CDECL);
+   sm->RegisterGlobalFunction("Field @LoadField(const string &in s, const string &in var = \"data\")", asFUNCTION( AS_LoadFieldFromFile), asCALL_CDECL);
    sm->RegisterGlobalFunction("void SaveField(Field &in sh, const string &in s)", asFUNCTION( AS_SaveFieldToFile), asCALL_CDECL);
    sm->RegisterGlobalFunction("void SaveFieldAbsPath(Field &in sh, const string &in s)", asFUNCTION( AS_SaveFieldToFileAbsPath), asCALL_CDECL);
    sm->RegisterGlobalFunction("Field @SaveThisField(const string &in s)", asFUNCTION( AS_SaveThisFieldToFile),  asCALL_CDECL);
 
-   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetVarNames(const string&in s)",GetFuncConvert(GetVarNamesFromNetCDF));
-   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimNames(const string&in s)",GetFuncConvert(GetVarDimNames));
-   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimSizes(const string&in s)",GetFuncConvert(GetVarDimSizes));
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetVarNames(string s)",GetFuncConvert(AS_GetNetCDFVars));
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimNames(string s, string var)",GetFuncConvert(AS_GetNetCDFDims));
+   sm->RegisterGlobalSTDFunction("array<int>@ NCDFGetDimSizes(string s, string var)",GetFuncConvert(AS_GetNetCDFDimSize));
+   sm->RegisterGlobalSTDFunction("array<Map>@ NCDFGetVarData(string  s, string var)",GetFuncConvert(AS_GetNetCDFData));
 
-   sm->RegisterGlobalSTDFunction("void PrintHDF5(const string&in s)",GetFuncConvert(HDF5InfoPrint));
-   sm->RegisterGlobalSTDFunction("Map @ReadHDF5Map(const string&in file, const string&in variable)",GetFuncConvert(ReadHDF5Map));
+
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetVarNamesAbsPath(string s)",GetFuncConvert(GetVarNamesFromNetCDF));
+   sm->RegisterGlobalSTDFunction("array<string>@ NCDFGetDimNamesAbsPath(string s,string var)",GetFuncConvert(GetVarDimNames));
+   sm->RegisterGlobalSTDFunction("array<int>@ NCDFGetDimSizesAbsPath(string s, string var)",GetFuncConvert(GetVarDimSizes));
+
+   sm->RegisterGlobalSTDFunction("void PrintHDF5(string s)",GetFuncConvert(HDF5InfoPrint));
+   sm->RegisterGlobalSTDFunction("Map @ReadHDF5Map(string file, string variable)",GetFuncConvert(ReadHDF5Map));
 
 
    sm->RegisterGlobalFunction("string ValuesToXMLPost(string xmlname, array<string> &in namelist, array<string> &in valuelist)", asFUNCTION(AS_ValueListToXMLPost),  asCALL_CDECL);

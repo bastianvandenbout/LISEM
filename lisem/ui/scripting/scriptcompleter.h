@@ -1095,6 +1095,7 @@ public:
                                     token_func.nesting = nested_total;
                                     token_func.pos = token_this.pos;
                                     token_func.length = pos + len - token_this.pos;
+                                    token_func.memberclass = QString(currentClass.c_str());
 
                                     QString type = QString(decleration_noargs.c_str()).trimmed();
                                     token_func.Type = type.left(std::max(0,(int) (type.length() - name.length()))).trimmed();
@@ -1193,6 +1194,7 @@ public:
                                     QString type = QString(decleration_noargs.c_str()).trimmed();
                                     type = type.left(type.length()-1).trimmed();
                                     token_var.Type = type.left(std::max(0,(int) (type.length() - name.length())));
+                                    token_var.memberclass = QString(currentClass.c_str());
 
 
                                 }
@@ -1219,6 +1221,7 @@ public:
                                     QString type = QString(decleration.c_str()).trimmed();
                                     type = type.left(type.length()-1).trimmed();
                                     token_var.Type = type.left(std::max(0,(int) (type.length() - name.length())));
+                                    token_var.memberclass = QString(currentClass.c_str());
 
                                     //if non-global nesting is 0, it means it is an object member
                                     if(nested == 0)

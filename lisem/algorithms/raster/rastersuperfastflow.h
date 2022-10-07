@@ -1,3 +1,27 @@
+/*************************************************************************
+**  openLISEM: a spatial surface water balance and soil erosion model
+**  Copyright (C) 2010,2011, 2020  Victor Jetten
+**  contact: v.g.jetten AD utwente DOT nl
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License GPLv3 as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License v3 for more details.
+**
+**  You should have received a copy of the GNU General Public License GPLv3
+**  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+**  Authors: Bastian van de Bout, Victor Jetten
+**  Developed in: MingW/Qt/
+**  website, information and code: www.lisemmodel.com
+**
+*************************************************************************/
+
 #ifndef RASTERSUPERFASTFLOW_H
 #define RASTERSUPERFASTFLOW_H
 
@@ -62,6 +86,29 @@ inline cTMap *AS_DemMonotonicReconstruct(cTMap * DEM)
 
 }
 
+
+//super-fast flood algorithm
+//besides some multi-threading upportunities, SSE/AVX instructions, etc
+//from a data-dependency perspective I dont see how any physically-based method could be significantly faster than this
+//the number of iterations in space are reduced by carefully selected method so that there is only minimal number of iterations and complexity
+inline cTMap * AS_FlowSuperFastNChannel(cTMap * DEM,  cTMap * N,cTMap * Rain, float duration, bool do_depressions)
+{
+
+
+    return nullptr;
+
+}
+
+//super-fast flood algorithm
+//besides some multi-threading upportunities, SSE/AVX instructions, etc
+//from a data-dependency perspective I dont see how any physically-based method could be significantly faster than this
+//the number of iterations in space are reduced by carefully selected method so that there is only minimal number of iterations and complexity
+inline cTMap * AS_FlowSuperFastChannel(cTMap * DEM,  cTMap * N,cTMap * ChannelLDD, cTMap * ChannelWidth, cTMap * ChannelDepth, cTMap * ChannelN, cTMap * Rain, float duration, bool do_depressions)
+{
+
+    return nullptr;
+
+}
 
 //super-fast flood algorithm
 //besides some multi-threading upportunities, SSE/AVX instructions, etc

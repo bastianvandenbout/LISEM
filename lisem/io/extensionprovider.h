@@ -182,14 +182,12 @@ inline static bool GetGDALDriverForRasterFileBandCountSupport(QString file, int 
 
 inline static QString GetGDALDriverForRasterFile(QString file)
 {
-    std::cout << "get gdal driver for raste "<< std::endl;
     QList<QString> drivers = GetMapExtensionGDALDriver();
     QList<QString> extensions = GetMapExtensions();
     for(int i = 0; i < extensions.length(); i++)
     {
         if(file.endsWith(extensions.at(i)))
         {
-            std::cout << "done"<< std::endl;
             return drivers.at(i);
             break;
         }

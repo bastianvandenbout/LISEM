@@ -4,7 +4,7 @@
 #include "minimapproxystylehelper.h"
 #include "QTextBlock"
 #include "QTextFragment"
-
+#include "settings/generalsettingsmanager.h"
 
 #include <QPainter>
 #include <QScrollBar>
@@ -72,12 +72,17 @@ void MinimapProxyStyle::drawComplexControl(ComplexControl control,
                                            QPainter *painter,
                                            const QWidget *widget) const {
 
-    if (widget && control == QStyle::CC_ScrollBar  /*&&Settings::enabled()*/) {
+    int valmini = GetSettingsManager()->GetSettingInt("UseMinimap",0);
+
+    if (widget && control == QStyle::CC_ScrollBar  && valmini == 1) {
+
         QVariant v =
             widget->property(Constants::MINIMAP_STYLE_OBJECT_PROPERTY);
         if (v.isValid()) {
             auto *helper =
                 static_cast<MinimapProxyStyleHelper *>(v.value<QObject *>());
+
+
             int lineCount = helper->lineCount();
             if (lineCount > 0 && lineCount <= 8000/*Settings::lineCountThreshold()*/) {
                 if (this->drawMinimap(option, painter, widget, helper)) {
@@ -94,7 +99,9 @@ MinimapProxyStyle::hitTestComplexControl(ComplexControl control,
                                          const QStyleOptionComplex *option,
                                          const QPoint &pos,
                                          const QWidget *widget) const {
-    if (widget && control == QStyle::CC_ScrollBar /*&& Settings::enabled()*/) {
+    int valmini = GetSettingsManager()->GetSettingInt("UseMinimap",0);
+
+    if (widget && control == QStyle::CC_ScrollBar && valmini == 1) {
         QVariant v =
             widget->property(Constants::MINIMAP_STYLE_OBJECT_PROPERTY);
         if (v.isValid()) {
@@ -130,8 +137,10 @@ MinimapProxyStyle::hitTestComplexControl(ComplexControl control,
 int MinimapProxyStyle::pixelMetric(PixelMetric metric,
                                    const QStyleOption *option,
                                    const QWidget *widget) const {
-    if (widget && metric == QStyle::PM_ScrollBarExtent /*&&
-        Settings::enabled()*/) {
+    int valmini = GetSettingsManager()->GetSettingInt("UseMinimap",0);
+
+        if (widget && metric == QStyle::PM_ScrollBarExtent &&
+        valmini == 1) {
         int w = QProxyStyle::pixelMetric(metric, option, widget);
         QVariant v =
             widget->property(Constants::MINIMAP_STYLE_OBJECT_PROPERTY);
@@ -152,7 +161,10 @@ QRect MinimapProxyStyle::subControlRect(ComplexControl cc,
                                         const QStyleOptionComplex *opt,
                                         SubControl sc,
                                         const QWidget *widget) const {
-    if (widget && cc == QStyle::CC_ScrollBar /*&& Settings::enabled()*/) {
+
+    int valmini = GetSettingsManager()->GetSettingInt("UseMinimap",0);
+
+    if (widget && cc == QStyle::CC_ScrollBar && valmini == 1) {
         QVariant v =
             widget->property(Constants::MINIMAP_STYLE_OBJECT_PROPERTY);
         if (v.isValid()) {
@@ -184,6 +196,9 @@ bool MinimapProxyStyle::drawMinimap(const QStyleOptionComplex *option,
                                     const QWidget *widget,
                                     MinimapProxyStyleHelper *helper) const
     noexcept {
+
+
+
     /*if (TextEditor::TextEditorSettings::displaySettings().m_textWrapping) {
         return false;
     }*/

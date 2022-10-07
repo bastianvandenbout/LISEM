@@ -265,6 +265,8 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
     retval = nc_inq(ncid,&n_dims,&n_vars, &n_atts, &n_unlimited);
     if(retval != NC_NOERR)
     {
+
+        retval = nc_close(ncid);
         LISEMS_ERROR("Could not read file (can not inquire) " + path);
         return ret;
     }
@@ -309,6 +311,8 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
 
     if(!found)
     {
+
+        retval = nc_close(ncid);
         LISEMS_ERROR("Could not read file, no suitable variable found" + path + "variable name: " + variable);
         return ret;
     }
@@ -358,6 +362,8 @@ inline std::vector<Field*> ReadFieldList(QString path, QString variable = "", bo
 
     if(!found)
     {
+
+        retval = nc_close(ncid);
         LISEMS_ERROR("Could not read file (variable not found) " + path);
         return ret;
     }

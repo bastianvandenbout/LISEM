@@ -96,6 +96,8 @@ public:
     LISEMModel * m_Model;
     ScriptManager * m_ScriptManager;
 
+    QStyle *m_oldStyle;
+
     QWidget * m_MainWidget;
     QWidget * m_ParameterWidget;
 
@@ -549,6 +551,20 @@ public slots:
     }
 
     inline void ControlScheme()
+    {
+        ControlDialog *cd = new ControlDialog();
+        cd->show();
+        /*QMessageBox msgBox;
+        msgBox.setText("Control scheme for OpenLISEM Hazard");
+        msgBox.setInformativeText("Info");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.setDetailedText("Use the <shift> button to toggle between moving and selecting/dragging within the map viewer. \n When in 3D mode, use w/a/s/d to move the position of the camera, and drag the display to change view direction." );
+        int ret = msgBox.exec();*/
+
+    }
+
+    inline void SettingsScheme()
     {
         ControlDialog *cd = new ControlDialog();
         cd->show();

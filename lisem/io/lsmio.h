@@ -26,6 +26,8 @@
 #include "extensionprovider.h"
 #include "geo/raster/field.h"
 #include "site.h"
+#include "ionetcdf.h"
+
 
 #define LISEM_IO_ERROR_CANNOT_OPEN -1
 #define LISEM_IO_SUCCESS 1
@@ -171,6 +173,41 @@ inline bool FileExists(QString path)
         return false;
     }
 }
+
+inline std::vector<QString> AS_GetNetCDFVars(QString file)
+{
+    return GetVarNamesFromNetCDF(AS_DIR + file);
+}
+
+inline std::vector<QString> AS_GetNetCDFDims(QString file, QString variable)
+{
+    return GetVarDimNames(AS_DIR + file,variable);
+}
+
+inline std::vector<int> AS_GetNetCDFDimSize(QString file, QString variable)
+{
+    return GetVarDimSizes(AS_DIR + file,variable);
+}
+
+/*inline std::vector<double> AS_GetNetCDFDimData(QString file, QString variable)
+{
+
+}*/
+
+
+inline std::vector<cTMap *> AS_GetNetCDFData(QString file, QString variable)
+{
+    std::vector<Field *> res= ReadFieldList(AS_DIR +  file, variable, true);
+
+    if(res.size()> 0)
+    {
+        return res.at(0)->GetMapList();
+    }else
+    {
+        return {};
+    }
+}
+
 inline void AS_AddToFileAbsPath(QString path, QString text)
 {
     QFile f(path);
@@ -274,7 +311,7 @@ inline int AS_GetFileSizeAbsPath(QString path)
 
 inline void AS_AddToFile(QString path, QString text)
 {
-    AS_AddToFile(AS_DIR + path,text);
+    AS_AddToFileAbsPath(AS_DIR + path,text);
 }
 
 inline void AS_AddLineToFileAbsPath(QString path, QString text)
@@ -781,54 +818,61 @@ inline ShapeFile * AS_LoadVectorFromFileAbsPath(const QString &path)
 
 
 
-inline void CopyMapByPath(QString path1, QString path2)
+inline void CopyDir(QString path1, QString path2)
 {
-    QFileInfo f1((path1));
-    QFileInfo f2((path2));
+    QString src = AS_DIR + path1;
+    QString dst = AS_DIR + path2;
+    QDir dir(src);
+        if (! dir.exists())
+            return;
 
+        foreach (QString d, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            QString dst_path = dst + QDir::separator() + d;
+            dir.mkpath(dst_path);
+            CopyDir(src+ QDir::separator() + d, dst_path);
+        }
 
-    if(!QDir(QString(f2.absolutePath())).exists())
+        foreach (QString f, dir.entryList(QDir::Files)) {
+            QFile::copy(src + QDir::separator() + f, dst + QDir::separator() + f);
+        }
+
+}
+inline void CopyFile3(QString dir, QString file, QString dir2, QString file2)
+{
+    if(!(dir.endsWith("/") || dir.endsWith("\\")))
     {
-        if(!QDir(QString(f2.absolutePath())).mkdir(QString(f2.absolutePath())))
+        dir = dir + "/";
+    }
+    if(!(dir2.endsWith("/") || dir2.endsWith("\\")))
+    {
+        dir2 = dir2 + "/";
+    }
+    QFileInfo f1(AS_DIR + QString(dir) + QString(file));
+    QFileInfo f2(AS_DIR + QString(dir2)  + QString(file2));
+
+    if(!QDir(AS_DIR +QString(dir2)).exists())
+    {
+        if(!QDir(AS_DIR + QString(dir2)).mkdir(AS_DIR + QString(dir2)))
         {
-            LISEMS_DEBUG("Could not create target directory for copy: from " + QString(path1) + " to " + QString(path2));
+            LISEMS_DEBUG("Could not create target directory for copy: from " + QString(dir) + QString(file) + "  to: " + QString(dir2)  + QString(file2))
         }
     }
-
     if(f2.exists())
     {
-        QFile(path2).remove();
+        QFile(AS_DIR + QString(dir2)  + QString(file2)).remove();
     }
-    if(!QFile::copy(QString(path1),QString(path2)))
+    if(!QFile::copy(AS_DIR + QString(dir)  + QString(file),QString(dir2) + "/" + QString(file2)))
     {
-        LISEMS_DEBUG("Could not copy: from " + QString(path1) + " to " + QString(path2));
-
+            LISEMS_DEBUG("Could not copy: from " + AS_DIR +  QString(dir)  + QString(file) + "  to: " + AS_DIR + QString(dir2)  + QString(file2))
     }
 
 }
 
-inline void CopyMap(QString dir, QString file, QString dir2, QString file2)
+inline void CopyFile1(QString file,  QString file2)
 {
-    QFileInfo f1(QString(dir) + "/" + QString(file));
-    QFileInfo f2(QString(dir2) + "/" + QString(file2));
-
-    if(!QDir(QString(dir2)).exists())
-    {
-        if(!QDir(QString(dir2)).mkdir(QString(dir2)))
-        {
-            LISEMS_DEBUG("Could not create target directory for copy: from " + QString(dir) + "/" + QString(file) + "  to: " + QString(dir2) + "/" + QString(file2))
-        }
-    }
-    if(f2.exists())
-    {
-        QFile(QString(dir2) + "/" + QString(file2)).remove();
-    }
-    if(!QFile::copy(QString(dir) + "/" + QString(file),QString(dir2) + "/" + QString(file2)))
-    {
-            LISEMS_DEBUG("Could not copy: from " + QString(dir) + "/" + QString(file) + "  to: " + QString(dir2) + "/" + QString(file2))
-    }
-
+    CopyFile3("",file,"",file2);
 }
+
 
 inline void AS_SaveMapToFileAbsolute(cTMap *m, const QString &path)
 {
@@ -1375,15 +1419,15 @@ inline static Field * AS_LoadFieldFromFileAbsPath(const QString & name, QString 
     std::vector<Field *> ret = ReadFieldList(name,variable, true);
     if(ret.size() == 0)
     {
-        LISEMS_ERROR("Could not read Point Cloud from file: " + name);
-        LISEM_ERROR("Could not read Point Cloud from file: " + name);
+        LISEMS_ERROR("Could not read Field from file: " + name);
+        LISEM_ERROR("Could not read Field from file: " + name);
         throw 1;
     }else {
         return ret[0];
     }
 }
 
-inline static Field * AS_LoadFieldFromFile(const QString & name)
+inline static Field * AS_LoadFieldFromFile(const QString & name, QString variable = "")
 {
     return AS_LoadFieldFromFileAbsPath(AS_DIR + name);
 }

@@ -671,6 +671,11 @@ static inline void flow_saintvenantdtandflow(double _dt, cTMap * DEM,cTMap * N,c
 
         }
 
+        #pragma omp master
+        {
+            std::cout << "lisem flow step " << t << " " << dt << " " << iter << std::endl;
+        }
+
     }
     return;
 }

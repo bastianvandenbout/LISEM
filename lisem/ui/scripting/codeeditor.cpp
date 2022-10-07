@@ -11,9 +11,10 @@
 #include "widgets/minimap/minimapproxystyle.h"
 #include "extensionprovider.h"
 #include "ScriptAnalyzer.h"
+#include "settings/generalsettingsmanager.h"
+#include "scriptsearchwindow.h"
 
-
-CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm, QStatusBar * b) : QPlainTextEdit(parent)
+CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm, ScriptSearchWindow * b) : QPlainTextEdit(parent)
 {
     m_Bar = b;
     m_ScriptManager = sm;
@@ -28,7 +29,6 @@ CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm, QStatusBar * b) : QP
 
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(updateExtraSelection()));
     connect(this, SIGNAL(textChanged()),this,SLOT(OnTextChanged()));
-
 
     setMouseTracking(true);
 
@@ -150,7 +150,59 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
         int column = cursorForPosition(event->pos()).positionInBlock();
 
         std::cout << "line/col " << line << "  " << column << std::endl;
-        std::cout << "left of cursor " << textLeftUnderCursor(cursorForPosition(event->pos())).toStdString() << "  "  << textRightUnderCursor(cursorForPosition(event->pos())).toStdString() <<  "  "  << textRightRightUnderCursor(cursorForPosition(event->pos())).toStdString() <<  std::endl;
+        std::cout << "left of cursor " << textUnderCursorLeft(cursorForPosition(event->pos())).toStdString() << "  "  << textRightUnderCursor(cursorForPosition(event->pos())).toStdString() <<  "  "  << textRightRightUnderCursor(cursorForPosition(event->pos())).toStdString() <<  std::endl;
+
+        int pos = cursorForPosition(event->pos()).position() -textUnderCursorLeft(cursorForPosition(event->pos())).size();
+        //get position and check if quote
+
+        QString script = this->document()->toPlainText();
+        int linen = 0;
+        int coln = 0;
+        int pos_actual = 0;
+        bool quote = false;
+        QString fullquote;
+        bool dobreak = false;
+
+
+        int pos_start_quote = 0;
+        for(int i = 0; i < script.size(); i++)
+        {
+            if(script.at(i) == '"')
+            {
+                if(dobreak)
+                {
+                    break;
+                }
+                quote = !quote;
+                if(quote == true)
+                {
+                    pos_start_quote = i;
+                    fullquote = "";
+                }
+            }
+            if(quote)
+            {
+                fullquote += script.at(i);
+            }
+            if(script.at(i) == "\n")
+            {
+                linen ++;
+                coln = 0;
+            }
+
+            coln ++;
+
+            if(linen == line && coln == column)
+            {
+                pos_actual = i;
+                if(!quote)
+                {
+                    dobreak = true;
+                    break;
+                }
+            }
+        }
+
 
 
         if(text.size() > 1)
@@ -169,8 +221,10 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
         if(file)
         {
             text = textLeftUnderCursor(cursorForPosition(event->pos())) + text;
+            pos = pos - textLeftUnderCursor(cursorForPosition(event->pos())).size();
         }else if(text.startsWith("."))
         {
+            pos = pos + 1;
             text = text.remove(0,1);
         }
 
@@ -191,7 +245,31 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
 
 
 
-            if(file)
+        QString textq = fullquote;
+        if(fullquote.size() > 30)
+        {
+            textq = "";
+            for(int i = 0; i < 10; i++)
+            {
+                textq += fullquote.at(i);
+            }
+            textq += "...";
+            for(int i = fullquote.size()-10; i < fullquote.size(); i++)
+            {
+                textq += fullquote.at(i);
+            }
+        }
+
+            if(quote)
+            {
+                menu->addAction("Replace occurances of '" + textq + QString("'"));
+                menu->addAction("Search '" + textq + QString("'"));
+                if(file)
+                {
+                    menu->addAction("Open file location '" + text + QString("'"));
+                    menu->addAction("Open file '" + text + QString("'"));
+                }
+            }else if(file)
             {
                 menu->addAction("Open file location '" + text + QString("'"));
                 menu->addAction("Open file '" + text + QString("'"));
@@ -214,8 +292,45 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             ScriptAnalyzer s(m_ScriptManager);
             s.AnalyzeScript(this->document()->toPlainText());
 
-            if(select->text().startsWith("Replace Occurances of "))
+            if(select->text().startsWith("Replace occurances of "))
             {
+                std::vector<ScriptReferenceResult> res = s.GetReferencesTo(text,pos);
+                std::cout << "found references: " << res.size() << std::endl;
+
+                MatrixTable * t = new MatrixTable();
+                t->SetSize(res.size(),1);
+                t->SetColumnTitle(0,QString("Text"));
+                for(int i = 0; i < res.size(); i++)
+                {
+                    t->SetValue(i,0,res.at(i).line);
+                    t->SetRowTitle(i,QString::number(res.at(i).row_n));
+                }
+
+                if(m_Bar != nullptr)
+                {
+                    m_Bar->SetData(t);
+                    m_Bar->SetTitle("Ref to: " + text);
+                    m_Bar->SetCallBackItemClicked([this,res](int row, int col, QString line, int clicks)
+                    {
+
+
+                        if(clicks == 2)
+                        {
+
+                            if(row < res.size())
+                            {
+                                ScriptReferenceResult resh = res.at(row);
+
+                                QTextCursor text_cursor(this->document()->findBlockByLineNumber(resh.row_n));
+                                text_cursor.select(QTextCursor::BlockUnderCursor);
+                                this->setTextCursor(text_cursor);
+
+                            }
+
+                        }
+                        ;
+                    });
+                }
 
             }
             if(select->text().startsWith("Search "))
@@ -228,7 +343,7 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             }
             if(select->text().startsWith("Find references to "))
             {
-
+                s.GetReferencesTo(text,pos);
             }
             if(select->text().startsWith("Open file location '"))
             {
@@ -839,9 +954,20 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
 
 
     bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E); // CTRL+E
-    bool isShortcutSearch = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_F); // CTRL+E
-    bool isShortcutSave = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_S); // CTRL+E
+    bool isShortcutSearch = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_F); // CTRL+F
+    bool isShortcutSearchReplace = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_H); // CTRL+F
+    bool isShortcutSave = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_S); // CTRL+S
+    bool isShortcutAll = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_A); // CTRL+A
+    bool isShortcutbar = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_B); // CTRL+B
+    bool isShortcutnew = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_N); // CTRL+N
+    bool isShortcutopen = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_O); // CTRL+O
+    bool isShortcutstyle = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_J); // CTRL+J
+    bool isShortcutclose = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_W); // CTRL+J
 
+    if(isShortcutbar)
+    {
+        GetSettingsManager()->SetSetting("UseMinimap",QString::number(std::max(0,std::min(1,1-GetSettingsManager()->GetSettingInt("UseMinimap",0)))));
+    }
 
     if(isShortcutSearch)
     {
@@ -1351,7 +1477,7 @@ void CodeEditor::overlayPaintEvent(QPaintEvent * event)
     penb.setAlphaF(1.0 * alpha);
     painter.setPen(penb);
     painter.drawText(viewportRect.left() + viewportRect.size().width() * 0.35,viewportRect.top()+ viewportRect.size().height() * 0.42,viewportRect.size().width() * 0.3, fontMetrics().height(),
-                     Qt::AlignCenter, "test message");
+                     Qt::AlignCenter,this->m_OverlayMessage);
 
 }
 

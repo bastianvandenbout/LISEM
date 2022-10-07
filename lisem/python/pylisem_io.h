@@ -54,8 +54,8 @@ inline void init_pylisem_io(py::module &m)
     m.def("LoadMapAbsPath", &AS_LoadMapFromFile);
     m.def("SaveMap", &AS_SaveMapToFile);
     m.def("SaveMapAbsPath", &AS_SaveMapToFileAbsolute);
-    m.def("CopyFile", py::overload_cast<QString,QString,QString,QString>(CopyMap));
-    m.def("CopyFile", py::overload_cast<QString,QString>(CopyMapByPath));
+    m.def("CopyFile", py::overload_cast<QString,QString,QString,QString>(CopyFile3));
+    m.def("CopyFile", py::overload_cast<QString,QString>(CopyFile1));
     m.def("LoadShapes", &AS_LoadVectorFromFile);
     m.def("LoadShapesAbsPath", &AS_LoadVectorFromFile);
     m.def("SaveShapes", &AS_SaveVectorToFile);

@@ -285,6 +285,8 @@ public:
             builder->AddSectionFromFile(includesn.c_str());
         }else
         {
+            //file could not be found in relative path, let us check the special install directory
+
 
         }
 
@@ -551,6 +553,28 @@ public:
         m_StartWorkMutex.unlock();
         m_StartWorkWaitCondition.notify_all();
     }
+
+    QWaitCondition m_ScriptWaitDoneCondition;
+    QMutex m_ScriptWaitDoneMutex;
+
+    inline void RunScriptAndWait(SPHScript * s)
+    {
+
+        m_ScriptWaitDoneMutex.lock();
+
+        SPHCodeJob cj;
+        cj.program = s;
+
+        m_StartWorkMutex.lock();
+
+        m_Work.append(cj);
+        m_StartWorkMutex.unlock();
+        m_StartWorkWaitCondition.notify_all();
+
+        m_ScriptWaitDoneCondition.wait(&m_ScriptWaitDoneMutex);
+
+    }
+
 
     inline void RequestStop()
     {

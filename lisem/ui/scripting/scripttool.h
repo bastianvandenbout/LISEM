@@ -26,6 +26,7 @@
 #include "atomic"
 #include "site.h"
 #include "uihelper.h"
+#include "scriptsearchwindow.h"
 
 class ScriptTool : public QWidget
 {
@@ -41,6 +42,7 @@ public:
     QString m_Dir;
 
     QMenu * m_contextmenu;
+    ScriptSearchWindow * m_SearchResultWindow;
 
     QWaitCondition m_PauseWaitCondition;
     QMutex m_PauseMutex;
@@ -71,6 +73,7 @@ public:
 
     StackDisplay * m_StackDisplay;
     QSplitter *m_DebugSplitter;
+    QSplitter *m_SearchSplitter;
 
     QToolButton *StartButton;
     QToolButton *PauseButton;
@@ -103,6 +106,8 @@ public:
         m_MainLayout = new QVBoxLayout(this);
         m_MenuWidget = new QWidget(this);
         m_MenuLayout = new QHBoxLayout(m_MenuWidget);
+
+        m_SearchResultWindow = new ScriptSearchWindow();
 
         m_Bar = bar;
 
@@ -287,9 +292,16 @@ public:
 
         m_StackDisplay = new StackDisplay();
         m_DebugSplitter = new QSplitter();
+        m_SearchSplitter = new QSplitter();
+
+        m_SearchSplitter->setOrientation(Qt::Vertical);
+        m_SearchSplitter->addWidget(m_ScriptTabs);
+        m_SearchSplitter->addWidget(m_SearchResultWindow);
+        m_SearchSplitter->setSizes({1,0});
 
 
-        m_DebugSplitter->addWidget(m_ScriptTabs);
+
+        m_DebugSplitter->addWidget(m_SearchSplitter);
         m_DebugSplitter->addWidget(m_StackDisplay);
         m_DebugSplitter->setSizes({1,0});
 
@@ -378,7 +390,7 @@ public:
                     {
                         fin_temp.close();
 
-                        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
+                        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
                         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
 
 
@@ -727,7 +739,7 @@ public slots:
 
     inline void NewCode()
     {
-        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
+        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
         ce->SetHomeDir(m_HomeDir);
         m_ScriptTabs->addTab(ce,"");
@@ -780,7 +792,7 @@ public slots:
 
         if(!found)
         {
-            CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
+            CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
             ce->SetHomeDir(m_HomeDir);
             m_ScriptTabs->addTab(ce,"");
             m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
@@ -795,7 +807,7 @@ public slots:
     {
         QString openDir = GetSite();
 
-        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_Bar);
+        CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
         ce->SetHomeDir(m_HomeDir);
 

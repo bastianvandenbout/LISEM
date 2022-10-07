@@ -740,7 +740,7 @@ public slots:
 
             }else
             {
-                QMessageBox::critical(this, "SPHazard",
+                QMessageBox::critical(this, "LISEM",
                    QString("Error during table calculation. \n Code:\n " + code));
             }
         }catch(...)

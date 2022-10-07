@@ -11,6 +11,7 @@
 #include "site.h"
 #include "version.h"
 #include "QStyle"
+#include "settings/generalsettingsmanager.h"
 
 #include "widgets/minimap/minimapproxystylehelper.h"
 #include "widgets/minimap/minimapproxystyle.h"
@@ -25,10 +26,49 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
     defaultFont.setPointSize(defaultFont.pointSize()+2);
     qApp->setFont(defaultFont);
 
-        QStyle *m_oldStyle = QApplication::style();
+    int valmini = GetSettingsManager()->GetSettingInt("UseMinimap",0);
+    int valdark = GetSettingsManager()->GetSettingInt("UseDark",0);
+
+    //if(valmini == 1)
+    {
+        m_oldStyle = QApplication::style();
         auto *minimapStyle = new Minimap::Internal::MinimapProxyStyle(m_oldStyle);
         QApplication::setStyle(minimapStyle);
         QApplication::style()->moveToThread(QApplication::instance()->thread());
+    }
+    /*}else
+    {
+        m_oldStyle = QApplication::style();
+    }*/
+
+    GetSettingsManager()->SetCallBackSettingChanged("UseMinimap",[this](QString name, QString val)
+    {
+        std::cout << "setting minimap changed " <<  val.toStdString() <<  " " << m_oldStyle << std::endl;
+        bool ok = false;
+        int vali = val.toInt(&ok);
+        m_DatabaseWidget->update();
+        /*if(vali == 1 && ok == true)
+        {
+            QStyle *m_oldStyle = QApplication::style();
+            auto *minimapStyle = new Minimap::Internal::MinimapProxyStyle(m_oldStyle);
+            QApplication::setStyle(minimapStyle);
+            QApplication::style()->moveToThread(QApplication::instance()->thread());
+
+        }else
+        {
+            std::cout << "bartest1 " << std::endl;
+            QApplication::setStyle(m_oldStyle);
+
+            std::cout << "bartest2 " << std::endl;
+            QApplication::style()->moveToThread(QApplication::instance()->thread());
+
+            std::cout << "bartest3 " << std::endl;
+
+        }*/
+
+    });
+
+
 
     LISEM_DEBUG("Creating Interface using QT")
 
@@ -129,6 +169,11 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
     QAction * tcAct = new QAction(tr("&Controls"), this);
     tcAct->setStatusTip(tr("See Control Scheme"));
     connect(tcAct, &QAction::triggered, this, &QTInterfaceWindow::ControlScheme);
+
+    QAction * tgsAct = new QAction(tr("&Settings"), this);
+    tgsAct->setStatusTip(tr("See general settings"));
+    connect(tgsAct, &QAction::triggered, this, &QTInterfaceWindow::SettingsScheme);
+
 
     QAction * tfAct = new QAction(tr("&Font"), this);
     tfAct->setStatusTip(tr("Set Font Size"));

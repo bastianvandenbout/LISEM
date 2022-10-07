@@ -336,6 +336,8 @@ inline static QString GetOWSOperationValues()
 //http://ogc.bgs.ac.uk/fcgi-bin/exemplars/BGS_Bedrock_and_Superficial_Geology/wms?version=1.1.1&
 
 
+//elevation nasa .ght.zip
+//https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/%s%s.SRTMGL1.hgt.zip
 
 //request for capabilities, returns xml file
 //http://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=1.1.0&REQUEST=GetCapabilities

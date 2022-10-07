@@ -28,6 +28,7 @@
 #include "site.h"
 #include "QStatusBar"
 #include "QTimer"
+#include "scriptsearchwindow.h"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -75,9 +76,9 @@ public:
 
     QString m_HomeDir;
 
-    QStatusBar * m_Bar = nullptr;
+    ScriptSearchWindow * m_Bar = nullptr;
 
-    CodeEditor(QWidget *parent = 0, ScriptManager* sm = 0, QStatusBar * b = nullptr);
+    CodeEditor(QWidget *parent = 0, ScriptManager* sm = 0, ScriptSearchWindow * b = nullptr);
 
     void setCompleter(SPHScriptCompleter *m_Completer);
     QCompleter *completer() const;

@@ -201,6 +201,8 @@ void ScriptManager::run()
             //do the actual work
             QtConcurrent::run([this](asIScriptEngine *Engine,SPHCodeJob cj){
 
+                m_ScriptWaitDoneMutex.lock();
+
                 asIScriptContext *ctx = Engine->CreateContext();
                 asIScriptFunction *func = cj.program->scriptbuilder->GetModule()->GetFunctionByDecl("void main()");
                 ctx->Prepare(func);
@@ -254,6 +256,10 @@ void ScriptManager::run()
 
 
                 ctx->Release();
+
+                m_ScriptWaitDoneMutex.unlock();
+                m_ScriptWaitDoneCondition.notify_all();
+
 
 
             },m_Engine,worknow);

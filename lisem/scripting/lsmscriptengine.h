@@ -49,6 +49,23 @@ typedef struct ScriptFunctionInfo
 
 } ScriptFunctionInfo;
 
+typedef struct ScriptClassInfo
+{
+    QString classname;
+    int templates;
+
+} ScriptClassInfo;
+
+typedef struct ScriptClassPropertyInfo
+{
+
+    QString classname;
+    int templates;
+
+    QString Name;
+    QString Type;
+
+} ScriptClassPropertyInfo;
 
 class LISEM_API LSMScriptEngine : public asIScriptEngine
 {
@@ -570,6 +587,7 @@ public:
                 fi.is_constructor = true;
                 fi.ObjectName = name;
                 fi.ObjectType = ti;
+
 
                 ret.append(fi);
             }

@@ -740,7 +740,9 @@ int SPHazard::execute(int argc, char *argv[])
                             //if requested, run it
 
 
-                            m_ScriptManager->RunScript(s);
+                            m_ScriptManager->RunScriptAndWait(s);
+
+
 
                             //done
 

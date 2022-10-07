@@ -9,7 +9,7 @@
 #include "QMouseEvent"
 #include "settings/generalsettingsmanager.h"
 #include "widgets/labeledwidget.h"
-
+#include "QPushButton"
 
 //we use the qt codes for buttons, and let the opengl side of things convert this to glfw3 codes later on
 class ControlWidget : public QPushButton
@@ -27,6 +27,7 @@ public:
         if(must_be_mouse)
         {
             int enum_index = qt_getQtMetaObject()->indexOfEnumerator("Key");
+
               const char* string =
                   qt_getQtMetaObject()->enumerator(enum_index).valueToKey(current);
               if(string == nullptr)
@@ -39,6 +40,7 @@ public:
         }else
         {
             int enum_index = qt_getQtMetaObject()->indexOfEnumerator("MouseButton");
+            std::cout << "get key value(init):" << current << std::endl;
               const char* string =
                   qt_getQtMetaObject()->enumerator(enum_index).valueToKey(current);
             if(string == nullptr)
@@ -63,6 +65,7 @@ public:
             if(event->key() == Qt::Key::Key_Escape)
             {
                 int enum_index = qt_getQtMetaObject()->indexOfEnumerator("Key");
+                std::cout << "get key value(esc):" << value << std::endl;
                   const char* string =
                       qt_getQtMetaObject()->enumerator(enum_index).valueToKey(value);
                   if(string == nullptr)
@@ -78,6 +81,7 @@ public:
             value = event->key();
             m_onChanged(value);
             int enum_index = qt_getQtMetaObject()->indexOfEnumerator("Key");
+            std::cout << "get key value:" << value << std::endl;
               const char* string =
                   qt_getQtMetaObject()->enumerator(enum_index).valueToKey(value);
               if(string == nullptr)
