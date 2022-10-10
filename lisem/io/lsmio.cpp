@@ -3,7 +3,7 @@
 
 QString AS_DIR_Org;
 QString AS_DIR;
-
+std::function<void(QString)> AS_DIRCALLBACK;
 
 
 ModelGeometry * AS_LoadModelFromFileAbsPath(const QString & name)

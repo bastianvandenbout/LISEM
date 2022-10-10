@@ -398,6 +398,435 @@ inline cTMap * AS_Edge(cTMap * Other)
 }
 
 
+
+inline cTMap * AS_EdgeRightN(cTMap * Other, int n)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if( c == Other->nrCols() - 1)
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r][c+1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < n-1; i++)
+    {
+        for(int r = 0; r < Other->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(Other->data[r][c]) )
+                {
+                    if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeLeftN(cTMap * Other, int n)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(c == 0 )
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r][c-1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < n-1; i++)
+    {
+        for(int r = 0; r < Other->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(Other->data[r][c]) )
+                {
+                    if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeTopN(cTMap * Other, int n)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(r == 0 )
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                     if(pcr::isMV(Other->data[r-1][c]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < n-1; i++)
+    {
+        for(int r = 0; r < Other->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(Other->data[r][c]) )
+                {
+                    if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeBottomN(cTMap * Other, int n )
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(r == Other->nrRows() - 1)
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r+1][c]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < n-1; i++)
+    {
+        for(int r = 0; r < Other->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(Other->data[r][c]) )
+                {
+                    if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+
+}
+
+inline cTMap * AS_EdgeN(cTMap * Other, int n)
+{
+    MaskedRaster<float> raster_data(Other->data.nr_rows(), Other->data.nr_cols(), Other->data.north(), Other->data.west(), Other->data.cell_size(), Other->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),Other->projection(),"");
+
+    for(int r = 0; r < Other->data.nr_rows();r++)
+    {
+        for(int c = 0; c < Other->data.nr_cols();c++)
+        {
+            if(pcr::isMV(Other->data[r][c]) )
+            {
+                pcr::setMV(map->data[r][c]);
+            }else
+            {
+                if(r == 0 || c == 0 || r == Other->nrRows() - 1 || c == Other->nrCols() - 1)
+                {
+                    map->data[r][c] = 1.0;
+                }else
+                {
+                    if(pcr::isMV(Other->data[r][c-1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r][c+1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r][c+1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r+1][c-1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r-1][c-1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r+1][c+1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r-1][c+1]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r-1][c]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(pcr::isMV(Other->data[r+1][c]))
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+
+    for(int i = 0; i < n-1; i++)
+    {
+        for(int r = 0; r < Other->data.nr_rows();r++)
+        {
+            for(int c = 0; c < Other->data.nr_cols();c++)
+            {
+                if(!pcr::isMV(Other->data[r][c]) )
+                {
+                    if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else if(map->data[r][c-1] > 0.5)
+                    {
+                        map->data[r][c] = 1.0;
+                    }else
+                    {
+                        map->data[r][c] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    return map;
+
+}
+
+
+
+
+
 inline cTMap * AS_Cover(float Other, float Other2)
 {
     MaskedRaster<float> raster_data(1,1,0.0,0.0,1.0);

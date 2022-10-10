@@ -441,7 +441,7 @@ public:
     }
 
     bool OnFileOpenRequest(QString path, int type);
-
+    void OnToolBoxRequest(QString tool);
     bool first_onshow = true;
 public slots:
 

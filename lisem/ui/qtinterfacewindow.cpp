@@ -200,6 +200,9 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
 
     m_DatabaseWidget = new DatabaseTool(m_ScriptManager,this,statusBar());
     m_DatabaseWidget->SetCallBackFileOpened(&QTInterfaceWindow::OnFileOpenRequest,this);
+    m_DatabaseWidget->SetCallBackToolBox(&QTInterfaceWindow::OnToolBoxRequest,this);
+
+
     TabWidget->addTab(m_DatabaseWidget,"Script");
 
     m_WorldWindow->SetCallBackFileOpened(&QTInterfaceWindow::OnFileOpenRequest,this);
@@ -575,7 +578,14 @@ void QTInterfaceWindow::UpdateInterfaceFromModelData()
 
 
 }
+void QTInterfaceWindow::OnToolBoxRequest(QString tool)
+{
+    //set tab to toolbox and open function search
 
+    int index = TabWidget->indexOf(m_ToolBoxWidget);
+    TabWidget->setCurrentIndex(index);
+    m_ToolBoxWidget->SetSearch(tool);
+}
 
 bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
 {

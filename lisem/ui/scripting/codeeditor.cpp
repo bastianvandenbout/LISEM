@@ -13,6 +13,7 @@
 #include "ScriptAnalyzer.h"
 #include "settings/generalsettingsmanager.h"
 #include "scriptsearchwindow.h"
+#include "uihelper.h"
 
 CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm, ScriptSearchWindow * b) : QPlainTextEdit(parent)
 {
@@ -295,41 +296,52 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             if(select->text().startsWith("Replace occurances of "))
             {
                 std::vector<ScriptReferenceResult> res = s.GetReferencesTo(text,pos);
-                std::cout << "found references: " << res.size() << std::endl;
 
-                MatrixTable * t = new MatrixTable();
-                t->SetSize(res.size(),1);
-                t->SetColumnTitle(0,QString("Text"));
-                for(int i = 0; i < res.size(); i++)
+                if(res.size() == 0)
                 {
-                    t->SetValue(i,0,res.at(i).line);
-                    t->SetRowTitle(i,QString::number(res.at(i).row_n));
-                }
+                    ShowOverlayMessage("Found no references to  '" + text + QString("'"),2.0);
 
-                if(m_Bar != nullptr)
+                }else
                 {
-                    m_Bar->SetData(t);
-                    m_Bar->SetTitle("Ref to: " + text);
-                    m_Bar->SetCallBackItemClicked([this,res](int row, int col, QString line, int clicks)
+                    ShowOverlayMessage("Found " + QString::number(res.size()) + " references to  '" + text + QString("'"),2.0);
+
+
+                    m_Bar->Open();
+                    MatrixTable * t = new MatrixTable();
+                    t->SetSize(res.size(),1);
+                    t->SetColumnTitle(0,QString("Text"));
+                    for(int i = 0; i < res.size(); i++)
                     {
+                        t->SetValue(i,0,res.at(i).line);
+                        t->SetRowTitle(i,QString::number(res.at(i).row_n));
+                    }
 
-
-                        if(clicks == 2)
+                    if(m_Bar != nullptr)
+                    {
+                        m_Bar->SetData(t);
+                        m_Bar->SetTitle("Ref to: " + text);
+                        m_Bar->Open();
+                        m_Bar->SetCallBackItemClicked([this,res](int row, int col, QString line, int clicks)
                         {
 
-                            if(row < res.size())
-                            {
-                                ScriptReferenceResult resh = res.at(row);
 
-                                QTextCursor text_cursor(this->document()->findBlockByLineNumber(resh.row_n));
-                                text_cursor.select(QTextCursor::BlockUnderCursor);
-                                this->setTextCursor(text_cursor);
+                            if(clicks == 2)
+                            {
+
+                                if(row < res.size())
+                                {
+                                    ScriptReferenceResult resh = res.at(row);
+
+                                    QTextCursor text_cursor(this->document()->findBlockByLineNumber(resh.row_n));
+                                    text_cursor.select(QTextCursor::BlockUnderCursor);
+                                    this->setTextCursor(text_cursor);
+
+                                }
 
                             }
-
-                        }
-                        ;
-                    });
+                            ;
+                        });
+                    }
                 }
 
             }
@@ -339,18 +351,118 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             }
             if(select->text().startsWith("Follow "))
             {
+                ScriptLocation res = s.GetExpressionDefinition(text,pos);
+                if(res.is_cpp)
+                {
+                    //open toolbox to the right function
+                    if(m_ToolCallBackSet)
+                    {
+                        m_ToolCallBack(text);
+                    }
 
+                }else
+                {
+                    if(res.pos == 0)
+                    {
+                        ShowOverlayMessage("Could not follow '" + text + QString("'"),2.0);
+                    }else
+                    {
+                        //get position of the token defining the item
+                        std::cout << "position: " << res.line_n << " " << res.pos << std::endl;
+                        //go to script location
+                        ShowOverlayMessage("Follow '" + text + QString("'"),2.0);
+                        QTextCursor text_cursor(this->document()->findBlockByLineNumber(res.line_n));
+                        text_cursor.select(QTextCursor::BlockUnderCursor);
+                        this->setTextCursor(text_cursor);
+
+                    }
+
+
+                }
             }
             if(select->text().startsWith("Find references to "))
             {
-                s.GetReferencesTo(text,pos);
+                std::vector<ScriptReferenceResult> res = s.GetReferencesTo(text,pos);
+
+                if(res.size() == 0)
+                {
+                    ShowOverlayMessage("Found no references to  '" + text + QString("'"),2.0);
+
+                }else
+                {
+                    ShowOverlayMessage("Found " + QString::number(res.size()) + " references to  '" + text + QString("'"),2.0);
+
+
+                    m_Bar->Open();
+                    MatrixTable * t = new MatrixTable();
+                    t->SetSize(res.size(),1);
+                    t->SetColumnTitle(0,QString("Text"));
+                    for(int i = 0; i < res.size(); i++)
+                    {
+                        t->SetValue(i,0,res.at(i).line);
+                        t->SetRowTitle(i,QString::number(res.at(i).row_n));
+                    }
+
+                    if(m_Bar != nullptr)
+                    {
+                        m_Bar->SetData(t);
+                        m_Bar->Open();
+                        m_Bar->SetTitle("Ref to: " + text);
+                        m_Bar->SetCallBackItemClicked([this,res](int row, int col, QString line, int clicks)
+                        {
+
+
+                            if(clicks == 2)
+                            {
+
+                                if(row < res.size())
+                                {
+                                    ScriptReferenceResult resh = res.at(row);
+
+                                    QTextCursor text_cursor(this->document()->findBlockByLineNumber(resh.row_n));
+                                    text_cursor.select(QTextCursor::BlockUnderCursor);
+                                    this->setTextCursor(text_cursor);
+
+                                }
+
+                            }
+                            ;
+                        });
+                    }
+                }
+
             }
             if(select->text().startsWith("Open file location '"))
             {
 
+                QFile f(m_HomeDir + "/" + text);
+                if(f.exists())
+                {
+                    showInGraphicalShell(this, m_HomeDir + "/" +text);
+                }else
+                {
+                    ShowOverlayMessage("File can not be found: " + m_HomeDir + "/" +  text,2.0);
+
+                }
+
+
+
             }
             if(select->text().startsWith("Open file '"))
             {
+                QFile f(m_HomeDir + text);
+                if(f.exists())
+                {
+                    if(m_OpenCallBackSet)
+                    {
+                        m_OpenCallBack(text);
+                    }
+                }else
+                {
+                    ShowOverlayMessage("File can not be found: " + m_HomeDir + text,2.0);
+
+                }
+
 
             }
             if(select->text().startsWith("Replace file references to '"))

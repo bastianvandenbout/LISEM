@@ -34,6 +34,24 @@
 
 LISEM_API extern QString AS_DIR_Org;
 LISEM_API extern QString AS_DIR;
+LISEM_API extern std::function<void(QString)> AS_DIRCALLBACK;
+
+inline void SetUIASPathCallBack(std::function<void(QString)> func)
+{
+    AS_DIRCALLBACK = func;
+
+}
+
+inline void UpdateUIASPath()
+{
+    std::cout << "UIASPATH update " << (AS_DIRCALLBACK?1:0) << std::endl;
+
+    if(AS_DIRCALLBACK)
+    {
+        AS_DIRCALLBACK(AS_DIR);
+    }
+}
+
 
 inline void SetASDefaultPath(QString path, bool org = true)
 {
@@ -1551,11 +1569,16 @@ inline bool AS_cd(QString dir)
     bool done=d.cd(dir);
     if(done )
     {
-        AS_DIR_Org = AS_DIR;
+
+        AS_DIR_Org = d.absolutePath();
         AS_DIR = d.absolutePath();
+        UpdateUIASPath();
+
+
         return true;
     }else
     {
+        LISEM_STATUS("Could not open directory: " + dir);
         return false;
     }
 }

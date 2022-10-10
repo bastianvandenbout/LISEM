@@ -67,6 +67,12 @@ public:
 
         QWidget * bar = new QWidget();
         QHBoxLayout * barl = new QHBoxLayout();
+
+        barl->setMargin(2);
+        barl->setSpacing(2);
+        barl->setMargin(2);
+        barl->setSpacing(2);
+
         barl->addWidget(m_Label);
         barl->addWidget(m_ButtonPrev);
         barl->addWidget(m_ButtonNext);
@@ -78,6 +84,10 @@ public:
 
         QVBoxLayout *lv = new QVBoxLayout();
         this->setLayout(lv);
+        lv->setMargin(2);
+        lv->setSpacing(2);
+        lv->setMargin(2);
+        lv->setSpacing(2);
         lv->addWidget(bar);
         lv->addWidget(m_Table);
 
@@ -98,6 +108,22 @@ public:
 
     }
 
+    inline void Open()
+    {
+        if(m_HasCallBackOpen )
+        {
+            m_funcopen();
+        }
+    }
+
+    inline void Close()
+    {
+        if(m_HasCallBackClose )
+        {
+            m_funcclose();
+        }
+    }
+
     inline void SetTitle(QString title)
     {
         m_Label->setText(title);
@@ -112,10 +138,29 @@ public:
         //proxyModel = new QSortFilterProxyModel();
         //proxyModel->setSourceModel( model );
         m_Table->setModel( proxyModel );
-
+        m_Table->verticalHeader()->setDefaultSectionSize(10);
+        m_Table->resizeRowsToContents();
+        m_Table->setColumnWidth(1,1000);
 
     }
 
+    bool m_HasCallBackClose = false;
+    std::function<void(void)> m_funcclose; //arguments are item row, item column, text in line, type of click
+    bool m_HasCallBackOpen = false;
+    std::function<void(void)> m_funcopen; //arguments are item row, item column, text in line, type of click
+
+    inline void SetCallBackOpen(std::function<void(void)> f)
+    {
+        m_HasCallBackOpen = true;
+        m_funcopen = f;
+
+    }
+    inline void SetCallBackClose(std::function<void(void)> f)
+    {
+        m_HasCallBackClose = true;
+        m_funcclose= f;
+
+    }
     bool m_HasCallBackClicked = false;
     std::function<void(int,int,QString,int)> m_func; //arguments are item row, item column, text in line, type of click
 

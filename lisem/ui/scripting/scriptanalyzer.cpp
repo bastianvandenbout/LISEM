@@ -418,11 +418,13 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
             std::cout << "identifier found " << std::endl;
             pos = pos + len;
 
+            bool is_property_assignment = false;
             //first check if there is a dot after this identifier. if so, we have a write to an object member or a script-recognized file
             if(pos < (int)modifiedScript.size())
             {
                 if(modifiedScript[pos] == '.')
                 {
+                    is_property_assignment = true;
                     pos=pos + 1;
                     if(pos < (int)modifiedScript.size())
                     {
@@ -436,6 +438,61 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                     }
                 }
             }
+
+            //cover any white-spaces
+            //now check for closing bracket
+            //this shouldnt normally exist, but it can because in autocomplete the user has not added the semicolon yet
+
+            bool done_closingb = false;
+            for(; pos < (int)modifiedScript.size();)
+            {
+                t = m_ScriptEngine->ParseToken(&modifiedScript[pos], modifiedScript.size() - pos, &len);
+
+                std::string token_temp;
+                token_temp.assign(&modifiedScript[pos], len);
+                if(t == asTC_WHITESPACE)
+                {
+
+                }else if(token_temp == "}")
+                {
+                    //we leave a nested scope, so nesting level decreases
+                    /*nested -= 1;
+                    nested_total -= 1;
+                    nested = std::max(nested,0);
+                    nested_total = std::max(nested_total,0);
+
+                    //edit scope ending
+                    ScriptScope * scope = nullptr;
+                    if(scopestack.size() > 0)
+                    {
+                        scope = scopestack.at(scopestack.size()-1);
+
+                        scope->pos_end = pos;
+
+                        //remove from stack
+                        scopestack.removeLast();
+                    }*/
+                    done_closingb = true;
+                    break;
+
+
+
+
+                }else
+                {
+                    break;
+                }
+
+                pos += len;
+
+            }
+
+            if(done_closingb)
+            {
+                continue;
+            }
+
+
 
             //check for return statement
             if(pos < (int)modifiedScript.size())
@@ -1339,7 +1396,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                                 if(ScopeContains(fi.scope,scriptpos))
                                 {
                                     std::cout << "scope okey" << std::endl;
-                                    return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn(name,fi.Type));
+                                    return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn(name,fi.Type,false,{},false,"",fi));
 
                                 }
 
@@ -1360,6 +1417,46 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                 std::cout << "call is object member func " << std::endl;
 
                 QString ptype =parent_type.GetLast().type;
+                QString ptypefull=  ptype;
+                QString ttype = "";
+                int brack_temp_here= 0;
+                bool stop_temp_one = false;
+                if(ptypefull.contains("<"))
+                {
+                    ptype = "";
+                    for(int i = 0; i < ptypefull.length(); i++)
+                    {
+                        if(ptypefull.at(i) == "," && brack_temp_here == 1)
+                        {
+                            stop_temp_one = true;
+                        }
+
+                        if(ptypefull.at(i) != "<" && ptypefull.at(i) != " ")
+                        {
+                            if(brack_temp_here == 0)
+                            {
+                                ptype = ptype + ptypefull.at(i);
+                            }else if(!stop_temp_one)
+                            {
+                                ttype = ttype + ptypefull.at(i);
+                            }
+                        }
+
+                        if(ptypefull.at(i) == "<")
+                        {
+                            brack_temp_here += 1;
+                        }
+                        if(ptypefull.at(i) == "<")
+                        {
+                            brack_temp_here -= 1;
+                            if(brack_temp_here == 0)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                }
 
                 //check global class methods
                 for(int i = 0; i < funcmemberlist.size(); i++)
@@ -1368,17 +1465,20 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                     int tid = fi.Function->GetReturnTypeId();
                     QString type = m_ScriptManager->m_Engine->GetTypeName(tid);
 
+
                     std::cout << "check member func " <<  fi.ObjectName.toStdString() << " " << fi.Function->GetName() << " " << type.toStdString() << " " << ptype.toStdString() << " " << fi.ObjectName.toStdString() << std::endl;
                     if(QString(fi.Function->GetName()) == name && ptype == fi.ObjectName)
                     {
                         std::cout << "found member func  " << std::endl;
                         std::cout << "return " << type.toStdString() << std::endl;
 
+                        if(type == "T")
+                        {
+                            type = ttype;
+                        }
                         //correct the return type if object is a templated class
 
-
-
-                        return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromCppFunctionReturn(name,type,false,{},true,ptype));
+                        return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromCppFunctionReturn(name,type,false,{},true,ptypefull));
 
                     }
                 }
@@ -1400,7 +1500,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
 
 
                                 std::cout << "scope okey" << std::endl;
-                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn(name,t.Type,false,{},true,ptype));
+                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn(name,t.Type,false,{},true,ptype,t));
                             }
                         }
                     }
@@ -1430,7 +1530,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                             //if(ScopeContains(fi.scope,scriptpos))
                             {
 
-                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn(name,fi.Type));
+                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn(name,fi.Type,false,{},false,"",fi));
 
                             }
                         }
@@ -1510,6 +1610,46 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                 //get all class methods, and check those
 
                 QString ptype =type_prev.GetLast().type;
+                QString ptypefull=  ptype;
+                QString ttype = "";
+                int brack_temp_here= 0;
+                bool stop_temp_one = false;
+                if(ptypefull.contains("<"))
+                {
+                    ptype = "";
+                    for(int i = 0; i < ptypefull.length(); i++)
+                    {
+                        if(ptypefull.at(i) == "," && brack_temp_here == 1)
+                        {
+                            stop_temp_one = true;
+                        }
+
+                        if(ptypefull.at(i) != "<" && ptypefull.at(i) != " ")
+                        {
+                            if(brack_temp_here == 0)
+                            {
+                                ptype = ptype + ptypefull.at(i);
+                            }else if(!stop_temp_one)
+                            {
+                                ttype = ttype + ptypefull.at(i);
+                            }
+                        }
+
+                        if(ptypefull.at(i) == "<")
+                        {
+                            brack_temp_here += 1;
+                        }
+                        if(ptypefull.at(i) == "<")
+                        {
+                            brack_temp_here -= 1;
+                            if(brack_temp_here == 0)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                }
 
                 //check global class methods
                 for(int i = 0; i < funcmemberlist.size(); i++)
@@ -1526,7 +1666,10 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
 
                         //correct the return type if object is a templated class
 
-
+                        if(type == "T")
+                        {
+                            type = ttype;
+                        }
 
                         return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromCppFunctionReturn("opIndex",type,false,{},true,ptype));
 
@@ -1550,7 +1693,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
 
 
                                 std::cout << "scope okey" << std::endl;
-                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn("opIndex",t.Type,false,{},true,ptype));
+                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromFunctionReturn("opIndex",t.Type,false,{},true,ptype,t));
                             }
                         }
                     }
@@ -1677,7 +1820,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
 
                         if(ScopeContains(ti.scope,scriptpos))
                         {
-                            std::cout << "scope checked"<<  std::endl;
+                            std::cout << "scope checked, found type, empty parent"<<  std::endl;
 
                             return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromType(name,ti.Type,false,{},false,{},ti));
                         }
@@ -1708,7 +1851,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                             if(ti.memberclass == parent_type.GetLast().type)
                             {
                                 std::cout << "class checked " << std::endl;
-                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromCppType(name,ti.Type));
+                                return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromType(name,ti.Type,false,{},true,ti.memberclass,ti));
                             }
                         }
                     }
@@ -2148,6 +2291,48 @@ std::vector<AutoCompleteOption> ScriptAnalyzer::GetAutoCompletes(QString name, i
 
 
     return {};
+}
+
+ScriptLocation ScriptAnalyzer::GetExpressionDefinition(QString name, int pos)
+{
+
+    //first get the requested scope
+    ScriptScope * scope = GetScopeAtPos(pos);
+
+    //check if we are looking at a member of a class or namespace
+    QString namespaceleft = GetExpressionLeftFull(pos);
+    QString termright = GetExpressionRightFull(pos + name.size());
+
+    namespaceleft = namespaceleft + name + termright +  ".";
+
+    std::cout << "get type of " << namespaceleft.toStdString() << std::endl;
+
+    ScriptExpressionTypeSequence ets = GetExpressionTypeString(namespaceleft,namespaceleft.size(),pos);
+
+    ScriptExpressionType type;
+
+    if(ets.m_ExpressionTypes.size() > 0)
+    {
+        type = ets.m_ExpressionTypes.at(ets.m_ExpressionTypes.size()-1);
+    }else
+    {
+        type = ScriptExpressionType();
+    }
+
+    std::cout << "type is " << type.name.toStdString() << " " << type.type.toStdString() << std::endl;
+
+
+    if(type.is_cpp)
+    {
+        ScriptLocation ret = ScriptLocation();
+        ret.is_cpp =true;
+        return ret;
+    }else
+    {
+        ScriptLocation ret = ScriptLocation();
+        ret = GetLocationFromPosition(type.def.pos);
+        return ret;
+    }
 }
 
 

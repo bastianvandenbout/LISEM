@@ -76,7 +76,7 @@ typedef struct SPHScript
     QString HomeDir;
     bool is_singleline = false;
     bool is_preprocess = false;
-    bool is_allowinclude = false;
+    bool is_allowinclude = true;
     bool compiled = false;
 
     CScriptBuilder * scriptbuilder;
@@ -243,7 +243,7 @@ public:
     inline static int IncludeCallback(const char *include, const char *from, CScriptBuilder *builder, void *userParam)
     {
 
-        std::cout << "include additional script1 " <<  include << std::endl;
+        std::cout << "include additional script1 " <<  include << " " << from <<  std::endl;
 
 
         std::string path = from;
@@ -277,6 +277,8 @@ public:
             }
         }
 
+        std::cout << "try to find " << includesn << std::endl;
+
         QFileInfo f(QString(includesn.c_str()));
         if(f.exists())
         {
@@ -295,6 +297,7 @@ public:
 
     inline static int IncludeIgnoreCallback(const char *include, const char *from, CScriptBuilder *builder, void *userParam)
     {
+        std::cout << "ignored include: " << include << std::endl;
 
         return 0;
     }

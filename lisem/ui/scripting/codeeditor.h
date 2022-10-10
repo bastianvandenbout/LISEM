@@ -96,6 +96,24 @@ public:
     QTimer m_OverlayTimer;
     bool m_OverlayDeactivated = false;
 
+    bool m_ToolCallBackSet = false;
+    std::function<void(QString)> m_ToolCallBack;
+
+    inline void setToolCallBack(std::function<void(QString)> f)
+    {
+        m_ToolCallBackSet = true;
+        m_ToolCallBack = f;
+    }
+
+
+    bool m_OpenCallBackSet = false;
+    std::function<void(QString)> m_OpenCallBack;
+
+    inline void setOpenCallBack(std::function<void(QString)> f)
+    {
+        m_OpenCallBackSet = true;
+        m_OpenCallBack = f;
+    }
 
     inline void ShowOverlayMessage(QString m, float time)
     {

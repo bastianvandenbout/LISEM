@@ -503,6 +503,21 @@ public:
 
      m_FileEditor = new ScriptTool(sm, bar);
 
+     m_FileEditor->setCallBackToolBox([this](QString s)
+     {
+         if(m_ToolCallBackSet)
+         {
+             m_ToolCallBack(s);
+         }
+
+     });
+
+     m_FileEditor->setCallBackOpen([this](QString s)
+     {
+         this->OnOpenFile(s);
+
+     });
+
      m_FileEditor->SetCallBackStart(&DatabaseTool::OnScriptStarted,this);
      m_FileEditor->SetCallBackStop(&DatabaseTool::OnScriptStopped,this);
 
@@ -692,6 +707,9 @@ public:
      connect(m_BrowseTree2,SIGNAL(clicked(const QModelIndex &)),this, SLOT(OnFileModel2Clicked(const QModelIndex &)));
      connect(m_BrowseTree2,SIGNAL(doubleClicked(const QModelIndex &)),this, SLOT(OnFileModel2DClicked(const QModelIndex &)));
 
+     m_BrowseTree2->setContextMenuPolicy(Qt::CustomContextMenu);
+     connect(m_BrowseTree2, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onCustomContextMenuFB(const QPoint &)));
+
      connect(DeleteButton,SIGNAL(pressed()),this,SLOT(OnDelete()));
      connect(NewFButton,SIGNAL(pressed()),this,SLOT(OnNewFolder()));
      connect(OpenButton,SIGNAL(pressed()),this,SLOT(OnOpen()));
@@ -746,7 +764,30 @@ public:
 
      ExportOpenLoc();
 
+     SetUIASPathCallBack([this](QString dir)
+     {
+        this->int_script_dir_change(dir);
+
+
+
+     });
+
+     connect(this,&DatabaseTool::ScriptDirChange, this,&DatabaseTool::OnScriptDirChange, Qt::ConnectionType::QueuedConnection);
     }
+
+private:
+
+    QMutex m_int_dirmutex;
+    QString m_int_dir;
+    inline void int_script_dir_change(QString dir)
+    {
+        this->m_int_dirmutex.lock();
+        m_int_dir = dir;
+        this->m_int_dirmutex.unlock();
+        emit ScriptDirChange();
+    }
+
+public:
 
     inline void ExportOpenLoc()
     {
@@ -805,6 +846,18 @@ public:
         //now we store this function pointer and call it later when a file is openened
         m_FileCallBack = std::bind(std::forward<_Callable>(__f),std::forward<_Args>(__args)...,std::placeholders::_1,std::placeholders::_2);
         m_FileCallBackSet = true;
+    }
+
+
+    std::function<void(QString)> m_ToolCallBack;
+    bool m_ToolCallBackSet = false;
+
+    template<typename _Callable, typename... _Args>
+    inline void SetCallBackToolBox(_Callable&& __f, _Args&&... __args)
+    {
+        //now we store this function pointer and call it later when a file is openened
+        m_ToolCallBack = std::bind(std::forward<_Callable>(__f),std::forward<_Args>(__args)...,std::placeholders::_1);
+        m_ToolCallBackSet = true;
     }
 
 
@@ -900,9 +953,9 @@ public slots:
 
     }
 
-    inline void OnFileModel2DClicked(const QModelIndex &index)
+    inline void OnOpenFile(QString path)
     {
-        QString filepath = model->filePath(index);
+        QString filepath = path;
 
         QFileInfo f = QFileInfo(filepath);
         if(f.exists())
@@ -939,8 +992,11 @@ public slots:
 
             LISEMS_ERROR("Could not open file: " +filepath);
         }
-
-
+    }
+    inline void OnFileModel2DClicked(const QModelIndex &index)
+    {
+        QString filepath = model->filePath(index);
+        OnOpenFile(filepath);
     }
 
     inline void OnFileModel2Clicked(const QModelIndex &index)
@@ -1401,6 +1457,56 @@ public slots:
         m_FileEditor->SaveUnsavedFiles();
     }
 
+
+public slots:
+    inline void OnScriptDirChange()
+    {
+        this->m_int_dirmutex.lock();
+        SetWorkingDir(m_int_dir);
+        this->m_int_dirmutex.unlock();
+
+    }
+
+    inline void onCustomContextMenuFB(const QPoint &point)
+    {
+        QMenu *menu=new QMenu(this);
+        menu->addAction(new QAction("Open", this));
+        menu->addAction(new QAction("Delete", this));
+        menu->addAction(new QAction("Rename", this));
+        menu->addAction(new QAction("Open Location", this));
+        menu->addAction(new QAction("Duplicate", this));
+        QModelIndex index = m_BrowseTree2->indexAt(point);
+           if (index.isValid()) {
+               QAction * select = menu->exec(this->m_BrowseTree2->viewport()->mapToGlobal(point));
+               if(select)
+               {
+
+                   if(select->text() == "Open")
+                   {
+
+                   }else if(select->text().startsWith("Delete"))
+                   {
+
+                   }else if(select->text().startsWith("Rename"))
+                   {
+
+                   }else if(select->text().startsWith("Open Location"))
+                   {
+
+                   }else if(select->text().startsWith("Duplicate"))
+                   {
+
+                   }
+
+               }
+           }
+
+
+
+    }
+
+signals:
+    void ScriptDirChange();
 };
 
 #endif // DATABASETOOL_H

@@ -48,7 +48,6 @@ typedef struct ScriptToken
 typedef struct ScriptExpressionType
 {
 
-    ScriptToken definition;
     QString type_full;
     QString type;
     QString name;
@@ -123,7 +122,7 @@ typedef struct ScriptExpressionType
         return t;
     }
 
-    inline static ScriptExpressionType FromFunctionReturn(QString funcname, QString returntype, bool templated = false, std::vector<QString> temptypes = {}, bool ismember= false, QString parent_type = "")
+    inline static ScriptExpressionType FromFunctionReturn(QString funcname, QString returntype, bool templated = false, std::vector<QString> temptypes = {}, bool ismember= false, QString parent_type = "", ScriptToken ti = ScriptToken())
     {
         ScriptExpressionType t;
         t.is_empty = false;
@@ -133,6 +132,7 @@ typedef struct ScriptExpressionType
         t.is_function = true;
         t.is_member = ismember;
         t.is_templated = templated;
+        t.def = ti;
         t.template_types = temptypes;
         t.name = funcname;
         t.type = returntype;
@@ -149,7 +149,7 @@ typedef struct ScriptExpressionType
         t.is_class = false;
         t.is_object = true;
         t.is_member = ismember;
-        t.definition = ti;
+        t.def = ti;
         t.is_templated = templated;
         t.template_types = temptypes;
         t.name = funcname;
@@ -349,6 +349,7 @@ typedef struct ScriptReferenceResult
 
 typedef struct ScriptLocation
 {
+    bool is_cpp = false;
     int line_n = 0;
     int col_n = 0;
     int pos = 0;
@@ -451,6 +452,7 @@ public:
     void FindSomeErrors();
     std::vector<ScriptReferenceResult> GetReferencesTo(QString name, int pos);
     std::vector<AutoCompleteOption> GetAutoCompletes(QString name, int pos);
+    ScriptLocation GetExpressionDefinition(QString name, int pos);
 
     ScriptLocation GetLocationFromPosition(int pos);
 

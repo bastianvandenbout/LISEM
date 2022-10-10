@@ -340,6 +340,12 @@ inline void RegisterMapMathToScriptEngine(asIScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @MapEdgeTop(const Map &in m)", asFUNCTION(AS_EdgeTop), asCALL_CDECL);
     r = engine->RegisterGlobalFunction("Map @MapEdgeBottom(const Map &in m)", asFUNCTION(AS_EdgeBottom), asCALL_CDECL);
 
+    r = engine->RegisterGlobalFunction("Map @MapEdgeN(const Map &in m,int n = 1)", asFUNCTION(AS_EdgeN), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeNLeft(const Map &in m,int n = 1)", asFUNCTION(AS_EdgeLeftN), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeNRight(const Map &in m,int n = 1)", asFUNCTION(AS_EdgeRightN), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeNTop(const Map &in m,int n = 1)", asFUNCTION(AS_EdgeTopN), asCALL_CDECL);
+    r = engine->RegisterGlobalFunction("Map @MapEdgeNBottom(const Map &in m,int n = 1)", asFUNCTION(AS_EdgeBottomN), asCALL_CDECL);
+
 
     //register map averages (normal and reductive->meaning not a map but single float is returned)
     r = engine->RegisterGlobalFunction("Map @MapTotal(const Map &in s)", asFUNCTION( AS_MapTotal),  asCALL_CDECL); assert( r >= 0 );

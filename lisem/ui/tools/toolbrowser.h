@@ -240,6 +240,11 @@ public:
 
     }
 
+    inline void SetSearch(QString s)
+    {
+        m_SearchEdit->setText(s);
+    }
+
     inline void InitializeFunctions(ScriptManager * sm)
     {
         QList<ScriptFunctionInfo> items = sm->m_Engine->GetGlobalFunctionList();

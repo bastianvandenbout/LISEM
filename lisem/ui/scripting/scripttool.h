@@ -299,6 +299,14 @@ public:
         m_SearchSplitter->addWidget(m_SearchResultWindow);
         m_SearchSplitter->setSizes({1,0});
 
+        m_SearchResultWindow->SetCallBackClose([this]()
+        {
+            m_SearchSplitter->setSizes({1,0});
+        });
+        m_SearchResultWindow->SetCallBackOpen([this]()
+        {
+            m_SearchSplitter->setSizes({5,1});
+        });
 
 
         m_DebugSplitter->addWidget(m_SearchSplitter);
@@ -391,6 +399,21 @@ public:
                         fin_temp.close();
 
                         CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
+                        ce->setToolCallBack([this](QString s)
+                        {
+                            if(m_ToolCallBackSet)
+                            {
+                                m_ToolCallBack(s);
+                            }
+
+                        });
+                        ce->setOpenCallBack([this](QString s)
+                        {
+                            if(m_OpenCallBackSet)
+                            {
+                                m_OpenCallBack(s);
+                            }
+                        });
                         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
 
 
@@ -532,6 +555,20 @@ public:
         m_StartCallBackSet = true;
     }
 
+    bool m_ToolCallBackSet = false;
+    std::function<void(QString)> m_ToolCallBack;
+    inline void setCallBackToolBox(std::function<void(QString)> f)
+    {
+        m_ToolCallBackSet = true;
+        m_ToolCallBack = f;
+    }
+    bool m_OpenCallBackSet = false;
+    std::function<void(QString)> m_OpenCallBack;
+    inline void setCallBackOpen(std::function<void(QString)> f)
+    {
+        m_OpenCallBackSet = true;
+        m_OpenCallBack = f;
+    }
 
     std::function<void(QString, int)> m_StopCallBack;
     bool m_StopCallBackSet = false;
@@ -740,6 +777,21 @@ public slots:
     inline void NewCode()
     {
         CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
+        ce->setToolCallBack([this](QString s)
+        {
+            if(m_ToolCallBackSet)
+            {
+                m_ToolCallBack(s);
+            }
+
+        });
+        ce->setOpenCallBack([this](QString s)
+        {
+            if(m_OpenCallBackSet)
+            {
+                m_OpenCallBack(s);
+            }
+        });
         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
         ce->SetHomeDir(m_HomeDir);
         m_ScriptTabs->addTab(ce,"");
@@ -780,6 +832,22 @@ public slots:
         for(int i = 0;i < m_ScriptTabs->count();i++)
         {
             CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(i);
+            ce->setToolCallBack([this](QString s)
+            {
+                if(m_ToolCallBackSet)
+                {
+                    m_ToolCallBack(s);
+                }
+
+            });
+            ce->setOpenCallBack([this](QString s)
+            {
+                if(m_OpenCallBackSet)
+                {
+                    m_OpenCallBack(s);
+                }
+            });
+
             QString name = ce->m_FileName;
             if(name == path)
             {
@@ -793,6 +861,21 @@ public slots:
         if(!found)
         {
             CodeEditor * ce = new CodeEditor(this,m_ScriptManager,m_SearchResultWindow);
+            ce->setToolCallBack([this](QString s)
+            {
+                if(m_ToolCallBackSet)
+                {
+                    m_ToolCallBack(s);
+                }
+
+            });
+            ce->setOpenCallBack([this](QString s)
+            {
+                if(m_OpenCallBackSet)
+                {
+                    m_OpenCallBack(s);
+                }
+            });
             ce->SetHomeDir(m_HomeDir);
             m_ScriptTabs->addTab(ce,"");
             m_ScriptTabs->setCurrentIndex(m_ScriptTabs->count()-1);
