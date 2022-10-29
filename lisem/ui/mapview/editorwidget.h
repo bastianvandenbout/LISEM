@@ -161,7 +161,7 @@ public slots:
         if(m_Editor->GetCurrentFilePath().isEmpty())
         {
 
-            QString path = QFileDialog::getOpenFileName(this,QString("Select a save file"),
+            QString path = QFileDialog::getSaveFileName(this,QString("Select a save file"),
                                                         m_Editor->GetCurrentFilePath(),QString("*.*"));
             m_Editor->OnSaveAs(path);
 
@@ -173,7 +173,7 @@ public slots:
 
     inline void saveas()
     {
-        QString path = QFileDialog::getOpenFileName(this,QString("Select a save file"),
+        QString path = QFileDialog::getSaveFileName(this,QString("Select a save file"),
                                                     m_Editor->GetCurrentFilePath(),QString("*.*"));
 
         if(!path.isEmpty())

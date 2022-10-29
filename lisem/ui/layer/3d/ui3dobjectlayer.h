@@ -1,5 +1,6 @@
 #pragma once
 
+#include "layer/geo/uigeolayer.h"
 #include "layer/uilayer.h"
 #include "gl3dgeometry.h"
 #include "models/3dmodel.h"

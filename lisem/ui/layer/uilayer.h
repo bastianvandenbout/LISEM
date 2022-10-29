@@ -263,6 +263,7 @@ public:
 
     inline virtual void Scale(LSMVector3 s)
     {
+        std::cout << "scale object by " << s.x << " " << s.y << " " << s.z << std::endl;
 
 
         m_Scale.x *=s.x;
@@ -272,6 +273,7 @@ public:
 
     inline virtual void Move(LSMVector3 m)
     {
+        std::cout << "move object by " << m.x << " " << m.y << " " << m.z << std::endl;
 
         m_Position.x += m.x;
         m_Position.y += m.y;
@@ -280,6 +282,10 @@ public:
     }
     inline virtual void Rotate(LSMVector3 r)
     {
+        LSMVector4 q = LSMVector4::QFromEulerAngles(m_Rotation);
+
+        LSMVector4 qnew;
+
 
 
     }

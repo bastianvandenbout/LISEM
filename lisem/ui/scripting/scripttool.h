@@ -108,6 +108,22 @@ public:
         m_MenuLayout = new QHBoxLayout(m_MenuWidget);
 
         m_SearchResultWindow = new ScriptSearchWindow();
+        m_SearchResultWindow->SetCallBackEditorOpen([this](CodeEditor* c)
+        {
+            if(m_ScriptTabs->indexOf(c) > -1)
+            {
+                m_ScriptTabs->setCurrentWidget(c);
+            }
+
+
+        });
+
+        m_SearchResultWindow->SetCallBackEditorCurrent([this]()
+        {
+            CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
+
+            return ce;
+        });
 
         m_Bar = bar;
 
@@ -413,6 +429,26 @@ public:
                             {
                                 m_OpenCallBack(s);
                             }
+                        });
+                        ce->setRunCallBack([this]()
+                        {
+
+                            if(this->m_CodeIsRunning.load())
+                            {
+                                    this->OnRequestPauseCode();
+                            }else
+                            {
+                                this->OnRequestRunCode();
+                            }
+                        });
+                        ce->setStopCallBack([this]()
+                        {
+                            this->OnRequestStopCode();
+                        });
+
+                        ce->setCompileCallBack([this]()
+                        {
+                            this->OnRequestCompileCode();
                         });
                         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
 
@@ -792,6 +828,27 @@ public slots:
                 m_OpenCallBack(s);
             }
         });
+
+        ce->setRunCallBack([this]()
+        {
+
+            if(this->m_CodeIsRunning.load())
+            {
+                    this->OnRequestPauseCode();
+            }else
+            {
+                this->OnRequestRunCode();
+            }
+        });
+        ce->setStopCallBack([this]()
+        {
+            this->OnRequestStopCode();
+        });
+
+        ce->setCompileCallBack([this]()
+        {
+            this->OnRequestCompileCode();
+        });
         connect(ce,SIGNAL(OnEditedSinceSave()),this,SLOT(OnTitleChanged()));
         ce->SetHomeDir(m_HomeDir);
         m_ScriptTabs->addTab(ce,"");
@@ -848,6 +905,27 @@ public slots:
                 }
             });
 
+            ce->setRunCallBack([this]()
+            {
+
+                if(this->m_CodeIsRunning.load())
+                {
+                        this->OnRequestPauseCode();
+                }else
+                {
+                    this->OnRequestRunCode();
+                }
+            });
+            ce->setStopCallBack([this]()
+            {
+                this->OnRequestStopCode();
+            });
+
+            ce->setCompileCallBack([this]()
+            {
+                this->OnRequestCompileCode();
+            });
+
             QString name = ce->m_FileName;
             if(name == path)
             {
@@ -875,6 +953,27 @@ public slots:
                 {
                     m_OpenCallBack(s);
                 }
+            });
+
+            ce->setRunCallBack([this]()
+            {
+
+                if(this->m_CodeIsRunning.load())
+                {
+                        this->OnRequestPauseCode();
+                }else
+                {
+                    this->OnRequestRunCode();
+                }
+            });
+            ce->setStopCallBack([this]()
+            {
+                this->OnRequestStopCode();
+            });
+
+            ce->setCompileCallBack([this]()
+            {
+                this->OnRequestCompileCode();
             });
             ce->SetHomeDir(m_HomeDir);
             m_ScriptTabs->addTab(ce,"");
@@ -950,7 +1049,7 @@ public slots:
             {
                 return;
             }
-            ce->SetHighlightErrorLocation(-1,-1);
+            ce->SetHighlightErrorLocation({},{});
         }
 
 
@@ -980,7 +1079,8 @@ public slots:
             CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
 
 
-            ce->SetHighlightErrorLocation( -1, -1);
+
+            ce->SetHighlightErrorLocation({},{});
 
             QString command = ce->document()->toPlainText();
 
@@ -989,6 +1089,7 @@ public slots:
             s->SetSingleLine(false);
             s->SetPreProcess(true);
             s->SetHomeDir(m_HomeDir+"/");
+            s->SetScriptDir(ce->GetFileDir() + "/");
 
             s->SetCallBackPrint(std::function<void(ScriptTool *,SPHScript*,QString)>([](ScriptTool *,SPHScript*,QString) ->
                                                                         void{
@@ -1033,7 +1134,7 @@ public slots:
                 LISEMS_ERROR(QString(type) + " Line: (" + QString::number(msg->row) + " (" + QString::number(msg->col) + ") " + " : " + QString(msg->message));
                 ;
 
-                ced->SetHighlightErrorLocation(msg->row, msg->col);
+                ced->SetHighlightErrorLocation({msg->row}, {msg->col});
 
                                             if(m_StopCallBackSet)
                                             {
@@ -1075,9 +1176,9 @@ public slots:
                                             m_StopCallBack("",0);
                                         }
 
-                ce->SetHighlightErrorLocation( ctx->GetLineNumber(), -1);
+                ce->SetHighlightErrorLocation( {ctx->GetLineNumber()},{ -1});
                 std::cout << 1  << std::endl;
-                st->m_StackDisplay->SetFromContext(ctx,0,true);
+                st->m_StackDisplay->SetFromContext(ctx,1,true);
                 std::cout << 2  << std::endl;
                 //pause by setting up waitcondition
                 st->m_PauseMutex.lock();
@@ -1099,7 +1200,7 @@ public slots:
 
                 st->m_StackDisplay->Clear();
 
-                ce->SetHighlightErrorLocation( -1, -1);
+                ce->SetHighlightErrorLocation({},{});
 
                 ;
                                                                         }),this,s,std::placeholders::_1);
@@ -1110,7 +1211,7 @@ public slots:
 
                 if(st->m_CodeIsPauseRequested.load())
                 {
-                    st->m_StackDisplay->SetFromContext(ctx,0,true);
+                    st->m_StackDisplay->SetFromContext(ctx,1,true);
 
                     //pause by setting up waitcondition
                     st->m_PauseMutex.lock();
@@ -1147,7 +1248,7 @@ public slots:
                 if(ce->HasBreakPointAt(ctx->GetLineNumber()))
                 {
 
-                           st->m_StackDisplay->SetFromContext(ctx,0,true);
+                           st->m_StackDisplay->SetFromContext(ctx,1,true);
 
                            //pause by setting up waitcondition
                            st->m_PauseMutex.lock();
@@ -1244,7 +1345,7 @@ public slots:
             {
                 return;
             }
-            ce->SetHighlightErrorLocation(-1,-1);
+            ce->SetHighlightErrorLocation({},{});
         }
 
 
@@ -1274,7 +1375,7 @@ public slots:
             CodeEditor * ce = (CodeEditor *)m_ScriptTabs->widget(m_ScriptTabs->currentIndex());
 
 
-            ce->SetHighlightErrorLocation( -1, -1);
+            ce->SetHighlightErrorLocation({},{});
 
             QString command = ce->document()->toPlainText();
 
@@ -1283,6 +1384,8 @@ public slots:
             s->SetSingleLine(false);
             s->SetPreProcess(true);
             s->SetHomeDir(m_HomeDir+"/");
+            s->SetScriptDir(ce->GetFileDir() + "/");
+
 
             //now set up a compile/run request
             s->SetCallBackPrint(std::function<void(SPHScript*,QString)>([](SPHScript*,QString) ->
@@ -1575,7 +1678,7 @@ public slots:
             return;
         }
 
-        ce->SetHighlightErrorLocation( -1, -1);
+        ce->SetHighlightErrorLocation({},{});
 
         QString command = ce->document()->toPlainText();
 

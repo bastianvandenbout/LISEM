@@ -596,7 +596,7 @@ public slots:
 
 
             exts += ";*.*";
-            QString path = QFileDialog::getOpenFileName(this,QString("Select a save file"),
+            QString path = QFileDialog::getSaveFileName(this,QString("Select a save file"),
                                                         m_maplayer->GetFilePath(),extss);
 
 

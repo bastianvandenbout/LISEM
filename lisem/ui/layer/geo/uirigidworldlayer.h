@@ -56,12 +56,14 @@ public:
 
     inline UIRigidWorldLayer() : UIGeoLayer()
     {
+        m_Editable = true;
 
     }
 
 
     inline UIRigidWorldLayer(RigidPhysicsWorld * world,QString name,QString file, bool is_model = false) : UIGeoLayer()
     {
+        m_Editable = !is_model;
         m_IsModel = is_model;
         Initialize(world,name,file,!is_model);
 
@@ -625,6 +627,10 @@ public:
     {
         return LayerProbeResult();
     }
+
+
+
+    UILayerEditor* GetEditor();
 };
 
 

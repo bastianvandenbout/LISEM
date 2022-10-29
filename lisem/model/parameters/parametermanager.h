@@ -117,17 +117,24 @@ public:
         AddParameter(2, LISEM_PARAMETER_FLOAT, "Elastic Modulus",             QList<QString>(),                              "Elastic Modulus (mPa)",               10000000000000.0f,               0.0f,   0.0f,   0.0f   );
         AddParameter(2, LISEM_PARAMETER_FLOAT, "Shear Modulus",             QList<QString>(),                                "Shear Modulus (mPa)",               1000000000000.0f,               0.0f,   0.0f,   0.0f   );
         AddParameter(2, LISEM_PARAMETER_FLOAT, "Particle Fractional Dimension",             QList<QString>(),                "fraction of cell size to use for particle volume (-)",              0.2f,              0.0001f,   100.0f,  0.0f   );
-        AddLabel(1,"Numerical","Numerical settings for ");
+        AddLabel(1,"Hydrology","Physical parameters for water flow");
+        AddParameter(2, LISEM_PARAMETER_BOOL, "Include ET0",             QList<QString>(),                   "Use the provided Reference Evapotranspiration",               1.0f,               0.0f,   0.0f,   0.0f   );
+
+        AddLabel(1,"Numerical","Numerical settings for flow scheme");
 
         AddLabel(-1,"","");
         AddLabel(0,"Time Input","Temporal input describing climate and other boundary conditions");
         AddLabel(1,"Climate Input","Files containing timeseries describing weather");
         AddParameter(2, LISEM_PARAMETER_FILE,   "Rainfall",          QList<QString>(),                                  "",                                                         "rain",              0.001f,   999.00f,  1.0,true,[](ParameterManager*p){return p->GetParameterValueBool("Include Rainfall");} );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Temperature",          QList<QString>(),                                  "",                                                      "temp",             0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Radiation",          QList<QString>(),                                  "",                                                        "rad",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Wind",          QList<QString>(),                                  "",                                                             "wind",             0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "Vapor Pressure",          QList<QString>(),                                  "",                                                   "vap",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
-        AddParameter(2, LISEM_PARAMETER_FILE,   "ndvi",          QList<QString>(),                                  "",                                                             "ndvi",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration");} );
+        AddLabel(1,"Evapotranspiration","Files containing timeseries describing evapotranspiration");
+
+        AddParameter(2, LISEM_PARAMETER_FILE,   "et0",          QList<QString>(),                                  "",                                                             "et0",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include ET0") && p->GetParameterValueBool("Include Evapotranspiration");} );
+
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Temperature",          QList<QString>(),                                  "",                                                      "temp",             0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration") && !p->GetParameterValueBool("Include ET0") ;} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Radiation",          QList<QString>(),                                  "",                                                        "rad",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration") && !p->GetParameterValueBool("Include ET0") ;} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Wind",          QList<QString>(),                                  "",                                                             "wind",             0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration") && !p->GetParameterValueBool("Include ET0") ;} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "Vapor Pressure",          QList<QString>(),                                  "",                                                   "vap",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration") && !p->GetParameterValueBool("Include ET0") ;} );
+        AddParameter(2, LISEM_PARAMETER_FILE,   "ndvi",          QList<QString>(),                                  "",                                                             "ndvi",              0.001f,   999.00f,  1.0,true ,[](ParameterManager*p){return p->GetParameterValueBool("Include Evapotranspiration") && !p->GetParameterValueBool("Include ET0") ;} );
 
         AddLabel(-1,"","");
         AddLabel(0,"Input Maps","Spatial input data that describes terrain, surface properties and boundary conditions");

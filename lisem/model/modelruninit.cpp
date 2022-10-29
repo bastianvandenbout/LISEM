@@ -21,7 +21,12 @@ void LISEMModel::ModelRunInitialize()
     m_Vapr.Clear();
     m_NDVI.Clear();
 
-    m_Rain.LoadFromFile(m_Dir_Time + GetOptionString("Rainfall"),true,true,GetMapMult("Rainfall"));
+    if(m_DoRainfall)
+    {
+        m_Rain.LoadFromFile(m_Dir_Time + GetOptionString("Rainfall"),true,true,GetMapMult("Rainfall"));
+
+
+    }
 
     if(m_DoEvapoTranspiration)
     {
@@ -248,6 +253,18 @@ void LISEMModel::ModelRunLoadData()
     m_SimulateSubSectionIndex = GetOptionInt("SubSection Value");
 
 
+    if(m_SimulateSubSection)
+    {
+        QString subsec =  GetOptionString("SubSection Value");
+        bool subsecok = false;
+        subsec.toInt(&subsecok);
+        if(!subsecok)
+        {
+            LISEM_ERROR("Subsection to be simulated is not a single integer number: " + subsec);
+            throw 1;
+
+        }
+    }
     //Get Directories and settingss
     m_DoInfiltration =  GetOptionInt("Include Infiltration") == 1;
     //m_DoDoubleLayer = GetOptionInt("Include Second Soil Layer") == 1;
@@ -256,6 +273,8 @@ void LISEMModel::ModelRunLoadData()
     m_DoEvapoTranspiration = GetOptionInt("Include Evapotranspiration") == 1;
     m_DoGroundWater = GetOptionInt("Include GroundWater Flow") == 1;
     m_DoChannel = GetOptionInt("Include Channel") == 1;
+    m_DoRainfall = GetOptionInt("Include Rainfall") == 1;
+    m_DoET0 = GetOptionInt("Include ETO") == 1;
     m_DoErosion = GetOptionInt("Include Erosion") == 1;
     m_DoEntrainment = GetOptionInt("Include Loose Material Layer") == 1;
     m_DoSlopeStability = GetOptionInt("Include Slope Stability") == 1;

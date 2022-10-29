@@ -511,8 +511,12 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
             int nestedOtherParenthesis = 0;
             std::string name;
             bool name_found = false;
-            std::string decleration = token;
-            std::string decleration_noargs = token;
+            std::string decleration = token + " ";
+            std::string decleration_noargs = token + " ";
+            std::string decleration_args = "";
+            bool istrackingargs = false;
+            int pos_start_args = 0;
+
 
             //detect if function or otherwise variable?
             for(; pos < (int)modifiedScript.size();)
@@ -528,6 +532,10 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                         decleration_noargs += token;
                     }
                     decleration += token;
+                    if(istrackingargs)
+                    {
+                        decleration_args += token;
+                    }
                     if (token == "{" && nestedParenthesis == 0)
                     {
                         if (hasParenthesis)
@@ -589,7 +597,260 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                                 scopes.push_back(scope);
                                 scopestack.push_back(scope);
 
-                            }else if(token == "= ")
+
+                                //now add all the function arguments as additional local variables
+
+                                std::cout << "function args are: " << decleration_args <<std::endl;
+
+                                //split by commas at top bracket level
+
+                                std::vector<QString> args;
+                                bool arg_has_type = false;
+                                bool arg_track_name = false;
+                                bool arg_track_type = false;
+                                bool arg_has_name = false;
+                                bool arg_has_comment = false;
+                                bool bracket_nest_level = 0;
+                                bool var_this_done = false;
+                                bool arg_comment = false;
+                                bool arg_comment2 = false;
+                                QString type_cur = "";
+                                QString name_cur = "";
+
+                                for(unsigned long long k = 0; k < decleration_args.size(); k++)
+                                {
+                                    QString sh = QString(decleration_args.at(k));
+                                    QString shn = QString(decleration_args.at(std::min(k+1, decleration_args.size()-1)));
+                                    QString shnn = QString(decleration_args.at(std::min(k+2, decleration_args.size()-1)));
+                                    QString shnnn = QString(decleration_args.at(std::min(k+3, decleration_args.size()-1)));
+                                    QString shnnnn = QString(decleration_args.at(std::min(k+4, decleration_args.size()-1)));
+                                    QString shnnnnn = QString(decleration_args.at(std::min(k+5, decleration_args.size()-1)));
+
+
+                                    if(!arg_comment2)
+                                    {
+                                        if(sh == "\n")
+                                        {
+                                             arg_comment = false;
+                                        }
+                                        if(sh == "/" && shn == "/")
+                                        {
+                                             arg_comment = true;
+                                        }
+                                    }
+                                    if(!arg_comment)
+                                    {
+                                        if(sh == "/" && shn == "*")
+                                        {
+                                             arg_comment2 = true;
+                                        }
+                                        if(sh == "*" && shn == "/")
+                                        {
+                                             arg_comment2 = false;
+                                        }
+
+                                        if(!arg_comment2)
+                                        {
+                                            if(sh == "(" || sh == "<" || sh =="[")
+                                            {
+                                                bracket_nest_level +=1;
+                                            }
+                                            if(sh == "}" || sh == ")" || sh =="]")
+                                            {
+                                                bracket_nest_level -=1;
+                                            }
+                                            if(bracket_nest_level == 0)
+                                            {
+                                                if(sh == "c" && shn =="o" && shnnn == "n" && shnnnn == "s" && shnnnnn == "t")
+                                                {
+                                                      k = k+5;
+                                                      continue;
+                                                }
+                                                if(sh == "&")
+                                                {
+                                                    continue;
+                                                }
+                                                if(sh == "@")
+                                                {
+                                                    continue;
+                                                }
+                                                if(sh == "i" && shn=="n" & shnn ==" ")
+                                                {
+                                                    k = k + 3;
+                                                    continue;
+                                                }
+                                            }
+
+                                            if(sh == " ")
+                                            {
+                                                if(bracket_nest_level == 0)
+                                                {
+                                                    if(arg_has_type)
+                                                    {
+                                                        arg_track_type = false;
+                                                    }
+                                                    if(arg_has_name && !var_this_done)
+                                                    {
+
+                                                        //add new variable
+                                                        ScriptToken token_var;
+                                                        token_var.is_variable = true;
+                                                        token_var.name = QString(name_cur);
+                                                        token_var.text = QString(type_cur + " " + name_cur);
+                                                        token_var.nspace = QString(currentNamespace.c_str());
+                                                        token_var.nesting = nested_total;
+                                                        token_var.pos = pos_start_args + k;
+                                                        token_var.length = token_var.text.size();
+                                                        token_var.Type = type_cur;
+                                                        {
+                                                            ScriptScope * scope = nullptr;
+                                                            if(scopestack.size() > 0)
+                                                            {
+                                                                scope = scopestack.at(scopestack.size()-1);
+                                                            }
+                                                            token_var.scope = scope;
+                                                        }
+
+                                                        std::cout << "variable " << name_cur.toStdString() << " " << type_cur.toStdString() <<  std::endl;
+                                                        VariableTokens.append(token_var);
+
+
+                                                        var_this_done = true;
+                                                        arg_track_type = false;
+                                                        arg_track_name = false;
+                                                        arg_has_name = false;
+                                                        arg_has_type = false;
+                                                        type_cur = "";
+                                                        name_cur = "";
+
+                                                    }
+                                                }
+                                                continue;
+                                            }
+                                            if(k == decleration_args.size() -1)
+                                            {
+                                                if(arg_track_name && sh != " ")
+                                                {
+                                                    name_cur += sh;
+                                                }
+                                                if(arg_has_name&& !var_this_done)
+                                                {
+
+                                                    //add new variable
+                                                    ScriptToken token_var;
+                                                    token_var.is_variable = true;
+                                                    token_var.name = QString(name_cur);
+                                                    token_var.text = QString(type_cur + " " + name_cur);
+                                                    token_var.nspace = QString(currentNamespace.c_str());
+                                                    token_var.nesting = nested_total;
+                                                    token_var.pos = pos_start_args + k;
+                                                    token_var.length = token_var.text.size();
+                                                    token_var.Type = type_cur;
+                                                    {
+                                                        ScriptScope * scope = nullptr;
+                                                        if(scopestack.size() > 0)
+                                                        {
+                                                            scope = scopestack.at(scopestack.size()-1);
+                                                        }
+                                                        token_var.scope = scope;
+                                                    }
+
+                                                    std::cout << "variable " << name_cur.toStdString() << " " << type_cur.toStdString() <<  std::endl;
+                                                    VariableTokens.append(token_var);
+
+
+
+                                                    var_this_done = true;
+                                                    arg_track_type = false;
+                                                    arg_track_name = false;
+                                                    arg_has_name = false;
+                                                    arg_has_type = false;
+                                                    type_cur = "";
+                                                    name_cur = "";
+
+                                                    continue;
+                                                }
+                                            }
+                                            if(sh == ",")
+                                            {
+                                                if(bracket_nest_level == 0)
+                                                {
+                                                    if(arg_has_name)
+                                                    {
+
+                                                        //add new variable
+                                                        ScriptToken token_var;
+                                                        token_var.is_variable = true;
+                                                        token_var.name = QString(name_cur);
+                                                        token_var.text = QString(type_cur + " " + name_cur);
+                                                        token_var.nspace = QString(currentNamespace.c_str());
+                                                        token_var.nesting = nested_total;
+                                                        token_var.pos = pos_start_args + k;
+                                                        token_var.length = token_var.text.size();
+                                                        token_var.Type = type_cur;
+                                                        {
+                                                            ScriptScope * scope = nullptr;
+                                                            if(scopestack.size() > 0)
+                                                            {
+                                                                scope = scopestack.at(scopestack.size()-1);
+                                                            }
+                                                            token_var.scope = scope;
+                                                        }
+
+                                                        std::cout << "variable " << name_cur.toStdString() << " " << type_cur.toStdString() <<  std::endl;
+                                                        VariableTokens.append(token_var);
+
+
+                                                    }
+                                                    var_this_done = false;
+                                                    arg_track_type = false;
+                                                    arg_track_name = false;
+                                                    arg_has_name = false;
+                                                    arg_has_type = false;
+                                                    type_cur = "";
+                                                    name_cur = "";
+                                                }
+                                                continue;
+                                            }
+
+                                            if(bracket_nest_level == 0)
+                                            {
+                                                if(arg_track_type)
+                                                {
+
+                                                }
+
+                                                if(!arg_has_type)
+                                                {
+                                                    arg_track_type = true;
+                                                    arg_has_type = true;
+                                                }
+
+                                                if(arg_has_type && !arg_track_type)
+                                                {
+                                                    arg_has_name = true;
+                                                    arg_track_name = true;
+
+                                                }
+                                            }
+
+                                            if(!var_this_done)
+                                            {
+                                                if(arg_track_type)
+                                                {
+                                                    //add char to type
+                                                    type_cur += sh;
+                                                }else if(arg_track_name)
+                                                {
+                                                    //add char to name
+                                                    name_cur += sh;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }else if(token == "=")
                             {
                                 int nested_inner = 0;
                                 for(; pos < (int)modifiedScript.size();)
@@ -690,7 +951,7 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                         {
                             //variable
                             // Substitute the declaration with just the name
-                            if(name_found)
+                            if(name_found && !(QString(name.c_str()).contains("[") || QString(name.c_str()).contains("]")))
                             {
                                 int nested_inner = 0;
 
@@ -704,25 +965,28 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                                 token_var.length = pos + len - token_this.pos;
                                 QString type = QString(decleration.c_str()).trimmed();
                                 type = type.left(type.length()-1).trimmed();
-                                token_var.Type = type.left(std::max(0,(int) (type.length() - name.length()))).trimmed();
+                                if(!(type.contains("[") || type.contains("[")))
                                 {
-                                    ScriptScope * scope = nullptr;
-                                    if(scopestack.size() > 0)
+                                    token_var.Type = type.left(std::max(0,(int) (type.length() - name.length()))).trimmed();
                                     {
-                                        scope = scopestack.at(scopestack.size()-1);
+                                        ScriptScope * scope = nullptr;
+                                        if(scopestack.size() > 0)
+                                        {
+                                            scope = scopestack.at(scopestack.size()-1);
+                                        }
+                                        token_var.scope = scope;
                                     }
-                                    token_var.scope = scope;
+
+                                    std::cout << "variable " << name << " d:" << decleration << " t: " << token_var.Type.toStdString() <<  std::endl;
+
+                                    //if non-global nesting is 0, it means it is an object member
+                                    if(nested == 0)
+                                    {
+                                        token_var.memberclass = QString(currentClass.c_str());
+                                    }
+
+                                    VariableTokens.append(token_var);
                                 }
-
-                                std::cout << "variable " << name << " d:" << decleration << " t: " << token_var.Type.toStdString() <<  std::endl;
-
-                                //if non-global nesting is 0, it means it is an object member
-                                if(nested == 0)
-                                {
-                                    token_var.memberclass = QString(currentClass.c_str());
-                                }
-
-                                VariableTokens.append(token_var);
 
                                 for(; pos < (int)modifiedScript.size();)
                                 {
@@ -865,12 +1129,19 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                     }
                     else if (token == "(")
                     {
+                        //we can start tracking args
+                        if(nestedParenthesis == 0)
+                        {
+                            istrackingargs = true;
+                            pos_start_args = pos + 1;
+                        }
                         nestedParenthesis++;
 
                         // This is the first parenthesis we encounter. If the parenthesis isn't followed
                         // by a statement block, then this is a variable declaration, in which case we
                         // should only store the type and name of the variable, not the initialization parameters.
                         hasParenthesis = true;
+
                     }else if(token == "[")
                     {
                         nestedOtherParenthesis++;
@@ -890,6 +1161,15 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
                     }
                     else if (token == ")")
                     {
+                        //done tracking args
+                        if(nestedParenthesis == 1)
+                        {
+                            istrackingargs = false;
+                            if(decleration_args.size() > 0)
+                            {
+                                decleration_args.pop_back();
+                            }
+                        }
                         nestedParenthesis--;
                     }
 
@@ -908,9 +1188,17 @@ void ScriptAnalyzer::AnalyzeScript(QString qscript)
 
                     }
                     decleration += token;
+                    if(istrackingargs)
+                    {
+                        decleration_args += token;
+                    }
                 }else if(!(t == asTC_COMMENT) && token != "\n")
                 {
                     decleration += token;
+                    if(istrackingargs)
+                    {
+                        decleration_args += token;
+                    }
                     if(!hasParenthesis)
                     {
                         decleration_noargs += token;
@@ -1711,7 +1999,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
         //object method (or static class method dont exist)
         }else if(expr.at(pos-1) == ".")
         {
-            std::cout << "object prop detected " << std::endl;
+            std::cout << "object prop or class name detected " << std::endl;
             int posn = pos -2;
             //get object name
             QString name = "";
@@ -1800,6 +2088,38 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
 
             if(parent_type.GetLast().is_empty)
             {
+                //check if the name matches a class name
+                //check c++ available classes
+                for(int i = 0; i < m_classes.size(); i++)
+                {
+                    if(name == m_classes.at(i))
+                    {
+                        return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromCppClass(name));
+                    }
+                }
+
+                for(int i = 0; i < classlist.size(); i++)
+                {
+                    if(classlist.at(i).classname == name)
+                    {
+                        return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromCppClass(name));
+                    }
+
+                }
+
+                //check local classes
+                for(int i = 0; i < ClassTokens.size(); i++)
+                {
+                    if(ClassTokens.at(i).name == name)
+                    {
+                        return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromClass(name,ClassTokens.at(i)));
+                    }
+
+                }
+
+
+
+
                 for(int i = 0; i < VariableTokens.size(); i++)
                 {
                     ScriptToken ti = VariableTokens.at(i);
@@ -1821,7 +2141,7 @@ ScriptExpressionTypeSequence ScriptAnalyzer::GetExpressionTypeString(QString exp
                         if(ScopeContains(ti.scope,scriptpos))
                         {
                             std::cout << "scope checked, found type, empty parent"<<  std::endl;
-
+                            std::cout << "defining token pos: " << ti.pos << " " << ti.length << std::endl;
                             return ScriptExpressionTypeSequence::FromType(ScriptExpressionType::FromType(name,ti.Type,false,{},false,{},ti));
                         }
                     }
@@ -2330,6 +2650,11 @@ ScriptLocation ScriptAnalyzer::GetExpressionDefinition(QString name, int pos)
     }else
     {
         ScriptLocation ret = ScriptLocation();
+        if(type.is_unknown || type.is_empty)
+        {
+            ret.pos = -1;
+            return ret;
+        }
         ret = GetLocationFromPosition(type.def.pos);
         return ret;
     }
@@ -2370,6 +2695,7 @@ ScriptLocation ScriptAnalyzer::GetLocationFromPosition(int pos)
 
     sl.line_n = linen;
     sl.col_n = coln;
+    sl.pos =pos;
     return sl;
 
 }

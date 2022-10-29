@@ -1,13 +1,13 @@
 #include "worldwindow.h"
 #include "gl/openglcldatamanager.h"
-
+#include "lisemmath.h"
 LSMVector2 WorldWindow::WorldToScreenPix(LSMMatrix4x4 m, LSMVector3 DrawCenter)
 {
 
          LSMVector4 pixlx = m * LSMVector4(DrawCenter.x,DrawCenter.y,DrawCenter.z,1.0);
          pixlx = pixlx/pixlx.w;
          pixlx.x = ((pixlx.x+1.0)/2.0) *((float)( m_OpenGLCLManager->m_width));
-         pixlx.y = m_OpenGLCLManager->m_height -  - ((pixlx.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
+         pixlx.y = m_OpenGLCLManager->m_height - ((pixlx.y+1.0)/2.0) *((float)( m_OpenGLCLManager->m_height));
 
          return LSMVector2(pixlx.x,pixlx.y);
 }
@@ -180,14 +180,14 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                         lzpixv.y =1.0;
                     }
 
-                    std::cout << "arrow stuff " << 0.3 * DrawCenter.length() << " " << lxpixv.x << " " << lxpixv.y << std::endl;
+                    //std::cout << "arrow stuff " << 0.3 * DrawCenter.length() << " " << lxpixv.x << " " << lxpixv.y << " " << lypixv.x << " " << lypixv.y << " " << lzpixv.x << " " << lzpixv.y << std::endl;
 
-                    lx.fac_x =  0.3 * DrawCenter.length()*lxpixv.x;
-                    lx.fac_y = 0.3 * DrawCenter.length()*lxpixv.y;
-                    ly.fac_x = 0.3 * DrawCenter.length()*lypixv.x;
-                    ly.fac_y =  0.3 * DrawCenter.length()*lypixv.y;
-                    lz.fac_x = 0.3 * DrawCenter.length()*lzpixv.x;
-                    lz.fac_y =  0.3 * DrawCenter.length()*lzpixv.y;
+                    lx.fac_x =  0.01 * DrawCenter.length()*absMax(0.1f,lxpixv.x)/std::max(0.001f,std::sqrt(lxpixv.x * lxpixv.x + lxpixv.y * lxpixv.y));
+                    lx.fac_y = 0.01 * DrawCenter.length()*absMax(0.1f,lxpixv.y)/std::max(0.001f,std::sqrt(lxpixv.x * lxpixv.x + lxpixv.y * lxpixv.y));
+                    ly.fac_x = 0.01 * DrawCenter.length()*absMax(0.1f,lypixv.x)/std::max(0.001f,std::sqrt(lypixv.x * lypixv.x + lypixv.y * lypixv.y));
+                    ly.fac_y =  0.01 * DrawCenter.length()*absMax(0.1f,lypixv.y)/std::max(0.001f,std::sqrt(lypixv.x * lypixv.x + lypixv.y * lypixv.y));
+                    lz.fac_x = 0.01 * DrawCenter.length()*absMax(0.1f,lzpixv.x)/std::max(0.001f,std::sqrt(lzpixv.x * lzpixv.x + lzpixv.y * lzpixv.y));
+                    lz.fac_y =  0.01 * DrawCenter.length()*absMax(0.1f,lzpixv.y)/std::max(0.001f,std::sqrt(lzpixv.x * lzpixv.x + lzpixv.y * lzpixv.y));
 
 
 
@@ -197,16 +197,16 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     sx.GizmoType = 2;
                     sx.GizmoAction = 0;
                     sx.CollisionType = 0;
-                    sx.fac_x = 1.0/lxpixv.x ;
-                    sx.fac_y = 1.0/lxpixv.y;
+                    sx.fac_x = 0.1 * 1.0/lxpixv.x ;
+                    sx.fac_y = 0.1 * 1.0/lxpixv.y;
 
                     sy.Layer = l;
                     sy.GizmoDirection = 1;
                     sy.GizmoType = 2;
                     sy.GizmoAction = 0;
                     sy.CollisionType = 0;
-                    sy.fac_x = 1.0/ lypixv.x;
-                    sy.fac_y = 1.0/lypixv.y;
+                    sy.fac_x = 0.1 * 1.0/lypixv.y;
+                    sy.fac_y = 0.1 * 1.0/lypixv.x;
 
 
                     sz.Layer = l;
@@ -214,8 +214,8 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     sz.GizmoType = 2;
                     sz.GizmoAction = 0;
                     sz.CollisionType = 0;
-                    sz.fac_x = 1.0/ lzpixv.x;
-                    sz.fac_y = 1.0/lzpixv.y;
+                    sz.fac_x = 0.1 * 1.0/lzpixv.y;
+                    sz.fac_y = 0.1 * 1.0/lzpixv.x;
 
 
 
@@ -256,25 +256,25 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     px.GizmoType = 0;
                     px.GizmoAction = 1;
                     px.CollisionType = 1;
-                    px.fac_x = 0.3 * DrawCenter.length()/lxpixv.x;
-                    px.fac_y = 0.3 * DrawCenter.length()/lzpixv.y;
 
                     py.Layer = l;
                     py.GizmoDirection = 1;
                     py.GizmoType = 0;
                     py.GizmoAction = 1;
                     py.CollisionType = 1;
-                    py.fac_x = 0.3 * DrawCenter.length()/lypixv.x;
-                    py.fac_y = 0.3 * DrawCenter.length()/lypixv.y;
-
 
                     pz.Layer = l;
                     pz.GizmoDirection = 2;
                     pz.GizmoType = 0;
                     pz.GizmoAction = 1;
                     pz.CollisionType = 1;
-                    pz.fac_x = 0.3 * DrawCenter.length()/lzpixv.x;
-                    pz.fac_y = 0.3 * DrawCenter.length()/lzpixv.y;
+
+                    px.fac_x =  -0.01 * DrawCenter.length()*absMax(0.1f,lxpixv.x)/std::max(0.001f,std::sqrt(lxpixv.x * lxpixv.x + lxpixv.y * lxpixv.y));
+                    px.fac_y = -0.01 * DrawCenter.length()*absMax(0.1f,lxpixv.y)/std::max(0.001f,std::sqrt(lxpixv.x * lxpixv.x + lxpixv.y * lxpixv.y));
+                    py.fac_x = -0.01 * DrawCenter.length()*absMax(0.1f,lypixv.x)/std::max(0.001f,std::sqrt(lypixv.x * lypixv.x + lypixv.y * lypixv.y));
+                    py.fac_y =  -0.01 * DrawCenter.length()*absMax(0.1f,lypixv.y)/std::max(0.001f,std::sqrt(lypixv.x * lypixv.x + lypixv.y * lypixv.y));
+                    pz.fac_x = -0.01 * DrawCenter.length()*absMax(0.1f,lzpixv.x)/std::max(0.001f,std::sqrt(lzpixv.x * lzpixv.x + lzpixv.y * lzpixv.y));
+                    pz.fac_y =  -0.01 * DrawCenter.length()*absMax(0.1f,lzpixv.y)/std::max(0.001f,std::sqrt(lzpixv.x * lzpixv.x + lzpixv.y * lzpixv.y));
 
 
 
@@ -326,8 +326,8 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     rx.GizmoAction = 0;
                     rx.CollisionType = 0;
                     rx.lines_seperated = true;
-                    rx.fac_x = 0.3 * DrawCenter.length()/lxpixv.x;
-                    rx.fac_y = 0.3 * DrawCenter.length()/lxpixv.y;
+                    rx.fac_x = 0.3 * DrawCenter.length()/absMax(0.01,lxpixv.x);
+                    rx.fac_y = 0.3 * DrawCenter.length()/absMax(0.01,lxpixv.y);
 
                     ry.Layer = l;
                     ry.GizmoDirection = 1;
@@ -335,8 +335,8 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     ry.GizmoAction = 0;
                     ry.CollisionType = 0;
                     ry.lines_seperated = true;
-                    ry.fac_x = 0.3 * DrawCenter.length()/lypixv.x;
-                    ry.fac_y = 0.3 * DrawCenter.length()/lypixv.y;
+                    ry.fac_x = 0.3 * DrawCenter.length()/absMax(0.01,lypixv.x);
+                    ry.fac_y = 0.3 * DrawCenter.length()/absMax(0.01,lypixv.y);
 
                     rz.Layer = l;
                     rz.GizmoDirection = 2;
@@ -344,9 +344,8 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     rz.GizmoAction = 0;
                     rz.CollisionType = 0;
                     rz.lines_seperated = true;
-                    rz.fac_x = 0.3 * DrawCenter.length()/lzpixv.x;
-                    rz.fac_y = 0.3 * DrawCenter.length()/lzpixv.y;
-
+                    rz.fac_x = 0.3 * DrawCenter.length()/absMax(0.01,lzpixv.x);
+                    rz.fac_y = 0.3 * DrawCenter.length()/absMax(0.01,lzpixv.y);
 
 
                     //translation arrows
@@ -384,6 +383,13 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     }
 
 
+                    //add rototaional line arc to the collision detection elements
+
+
+                    //check collision to determine colors
+
+
+                    //draw the actual line arcs
                     for(int j = 0; j < 90; j++)
                     {
                         //get position along great circle made by intersection of plane
@@ -412,13 +418,6 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                         }
                     }
 
-
-
-
-
-
-
-
                     m_DragElements.push_back(lx);
                     m_DragElements.push_back(ly);
                     m_DragElements.push_back(lz);
@@ -436,7 +435,7 @@ void WorldWindow::Draw3DArrows(GeoWindowState s, bool external)
                     m_DragElements.push_back(rz);
 
 
-                    std::cout << "pix " << pix.x << " " << pix.y << " " << pix.z << " " << pix.w << std::endl;
+                    //std::cout << "pix " << pix.x << " " << pix.y << " " << pix.z << " " << pix.w << std::endl;
 
                 }
                 if(l->IsRotateAble() && m_GizmoMode == GIZMO_ROTATE)

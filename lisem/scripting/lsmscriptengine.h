@@ -615,6 +615,23 @@ public:
         return ret;
     }
 
+    inline QList<ScriptClassInfo> GetObjectList()
+    {
+        QList<ScriptClassInfo> ret;
+
+        uint count = GetObjectTypeCount();
+        for(uint i = 0; i < count; i++)
+        {
+            ScriptClassInfo reti;
+            asITypeInfo * ti = GetObjectTypeByIndex(i);
+            QString name = QString(ti->GetName());
+            reti.classname = name;
+            reti.templates = ti->GetSubTypeCount();
+            ret.push_back(reti);
+        }
+        return ret;
+    }
+
     inline QStringList GetObjectNameList()
     {
         QStringList ret;

@@ -138,7 +138,7 @@ int SPHazard::execute(int argc, char *argv[])
     LISEM_STATUS(QString("ARCH: ") + QSysInfo::currentCpuArchitecture());
     LISEM_STATUS(QString("OMP:  ") + QString::number(omp_thread_count()));
     LISEM_STATUS(QString("ITC:  ") + QString::number(QThread::idealThreadCount()));
-    LISEM_STATUS("");
+    LISEM_STATUS(" ");
 
     //allow for usage from command line
 
@@ -644,6 +644,7 @@ int SPHazard::execute(int argc, char *argv[])
                     }
                     s->SetPreProcess(true);
                     s->SetHomeDir(dir + "/");
+                    s->SetScriptDir(QFileInfo(file).absoluteDir().path());
 
 
                     if(file_read)

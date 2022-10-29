@@ -13,6 +13,8 @@
 #include "resourcemanager.h"
 #include "QHeaderView"
 
+class CodeEditor;
+
 class ScriptSearchWindow : public QWidget
 {
     Q_OBJECT
@@ -25,123 +27,61 @@ class ScriptSearchWindow : public QWidget
     QToolButton * m_ButtonNext;
     QToolButton * m_ButtonPrev;
     QLabel * m_LabelCount;
+    QLineEdit * m_SearchEdit;
     QLineEdit * m_ReplaceEdit;
     QToolButton * m_Replace;
+    QToolButton * m_Replace1;
+    QToolButton * m_Search;
     QLabel * m_Label;
     QToolButton * m_Close;
 
+    CodeEditor * m_Link = nullptr;
+    QString * m_CurrentName;
+    int m_CurrentPos = -1;
+
+    std::vector<int> m_SR_Position;
+    std::vector<int> m_SR_Line;
+    std::vector<int> m_SR_Col;
+    std::vector<int> m_SR_Length;
+
+    QString m_Text;
+    bool m_CanReplaceAll = false;
+
 public:
-    inline ScriptSearchWindow() :QWidget()
+    ScriptSearchWindow();
+
+    void Clear();
+    void OpenAsReferencesTo(CodeEditor* c, QString name, int pos);
+    void OpenAsSearch(CodeEditor* c, QString name, int pos);
+    void OpenAsReplace(CodeEditor* c, QString name, int pos);
+    void OpenAsReplaceFile(CodeEditor* c, QString name, int pos);
+    void Link(CodeEditor*);
+    CodeEditor * GetLink();
+    void UnLink();
+    void Open();
+    void Close();
+    void SetTitle(QString title);
+    void SetData(MatrixTable * T);
+    void FindNext();
+    void FindPrevious();
+    void LinkCurrent();
+
+    bool m_HasCallBackEditorOpen = false;
+    std::function<void(CodeEditor*)> m_funceditoropen; //arguments are item row, item column, text in line, type of click
+    bool m_HasCallBackEditorCurrent = false;
+    std::function<CodeEditor*(void)> m_funceditorcurrent; //arguments are item row, item column, text in line, type of click
+
+    inline void SetCallBackEditorOpen(std::function<void(CodeEditor*)> f)
     {
 
-        mt = new MatrixTable();
-        model = new TableModel(mt);
-        m_Table = new QTableView();
-
-        proxyModel = new QSortFilterProxyModel();
-        proxyModel->setSourceModel( model );
-        m_Table->setModel( proxyModel );
-
-        m_Table->horizontalHeader()->setSectionsMovable(true);
-        m_Table->verticalHeader()->setSectionsMovable(true);
-
-
-        m_Label = new QLabel();
-        m_ButtonNext = new QToolButton();
-        m_ButtonPrev = new QToolButton();
-        m_LabelCount = new QLabel();
-        m_ReplaceEdit = new QLineEdit();
-        m_Replace = new QToolButton();
-        m_Close = new QToolButton();
-
-        m_Label->setText("no search");
-
-
-        m_Replace->setText("Search and Replace");
-        m_ButtonNext->setIcon(*GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_ADD)));
-        m_ButtonPrev->setIcon(*GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_REMOVE)));
-
-        m_Close->setIcon(*GetResourceManager()->GetIcon(GetResourceManager()->GetDefaultIconName(LISEM_ICON_DELETE)));
-
-        //create widgets and set empty data
-
-        QWidget * bar = new QWidget();
-        QHBoxLayout * barl = new QHBoxLayout();
-
-        barl->setMargin(2);
-        barl->setSpacing(2);
-        barl->setMargin(2);
-        barl->setSpacing(2);
-
-        barl->addWidget(m_Label);
-        barl->addWidget(m_ButtonPrev);
-        barl->addWidget(m_ButtonNext);
-        barl->addWidget(m_LabelCount);
-        barl->addWidget(m_ReplaceEdit);
-        barl->addWidget(m_Replace);
-        barl->addWidget(m_Close);
-        bar->setLayout(barl);
-
-        QVBoxLayout *lv = new QVBoxLayout();
-        this->setLayout(lv);
-        lv->setMargin(2);
-        lv->setSpacing(2);
-        lv->setMargin(2);
-        lv->setSpacing(2);
-        lv->addWidget(bar);
-        lv->addWidget(m_Table);
-
-        connect(m_Table, SIGNAL(clicked(const QModelIndex &)), this, SLOT(onTableClicked(const QModelIndex &)));        connect(m_Table, SIGNAL(clicked(const QModelIndex &)), this, SLOT(onTableClicked(const QModelIndex &)));
-        connect(m_Table, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(onTableDClicked(const QModelIndex &)));        connect(m_Table, SIGNAL(clicked(const QModelIndex &)), this, SLOT(onTableClicked(const QModelIndex &)));
+        m_HasCallBackOpen = true;
+        m_funceditoropen = f;
     }
 
-    inline void Clear()
+    inline void SetCallBackEditorCurrent(std::function<CodeEditor*(void)> f)
     {
-        mt->Empty();
-        delete mt;
-        mt = new MatrixTable();
-        model->SetAllData(mt);
-        //proxyModel = new QSortFilterProxyModel();
-        //proxyModel->setSourceModel( model );
-        m_Table->setModel( proxyModel );
-
-
-    }
-
-    inline void Open()
-    {
-        if(m_HasCallBackOpen )
-        {
-            m_funcopen();
-        }
-    }
-
-    inline void Close()
-    {
-        if(m_HasCallBackClose )
-        {
-            m_funcclose();
-        }
-    }
-
-    inline void SetTitle(QString title)
-    {
-        m_Label->setText(title);
-    }
-    inline void SetData(MatrixTable * T)
-    {
-        mt->Empty();
-        delete mt;
-        mt = T->Copy();
-
-        model->SetAllData(mt);
-        //proxyModel = new QSortFilterProxyModel();
-        //proxyModel->setSourceModel( model );
-        m_Table->setModel( proxyModel );
-        m_Table->verticalHeader()->setDefaultSectionSize(10);
-        m_Table->resizeRowsToContents();
-        m_Table->setColumnWidth(1,1000);
-
+        m_HasCallBackEditorCurrent = true;
+        m_funceditorcurrent = f;
     }
 
     bool m_HasCallBackClose = false;
@@ -149,6 +89,17 @@ public:
     bool m_HasCallBackOpen = false;
     std::function<void(void)> m_funcopen; //arguments are item row, item column, text in line, type of click
 
+    inline void DisableReplaceAll()
+    {
+        m_CanReplaceAll = false;
+
+        m_Replace->setEnabled(false);
+    }
+    inline void EnableReplaceAll()
+    {
+        m_CanReplaceAll = true;
+        m_Replace->setEnabled(true);
+    }
     inline void SetCallBackOpen(std::function<void(void)> f)
     {
         m_HasCallBackOpen = true;
@@ -173,9 +124,17 @@ public:
 
 public slots:
 
+    void OnSearchTextChanged(QString s);
+    void OnReplaceTextChanged(QString s);
+
 
     inline void onTableClicked(const QModelIndex &index)
     {
+        if(m_HasCallBackEditorOpen)
+        {
+            m_funceditoropen(m_Link);
+        }
+
         if (index.isValid()) {
             QString cellText = index.data().toString();
             std::cout << "table clicked: " << cellText.toStdString() << std::endl;
@@ -188,6 +147,10 @@ public slots:
     }
     inline void onTableDClicked(const QModelIndex &index)
     {
+        if(m_HasCallBackEditorOpen)
+        {
+            m_funceditoropen(m_Link);
+        }
         if (index.isValid()) {
             QString cellText = index.data().toString();
             std::cout << "table dclicked: " << cellText.toStdString() << std::endl;
@@ -200,6 +163,7 @@ public slots:
     }
 
 
+    void onLinkDestroyed();
 
 };
 

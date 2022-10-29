@@ -2875,28 +2875,260 @@ The second Map containing classes
 
 
 #SlopeStabilityIS
-Calculates slope stability and the depth of the predicted falilures over a landscape. This function uses the infinite slope assumption, where the gradient of the surface elevation is considered identical to the gradient of the failure plane. As a result, the forces are only an estimation of local forces, but the Factor of Safety represents the theoretically valid point of failure under the infinite slope assumption.
+Calculates slope stability and the depth of the predicted falilures over a landscape. This function uses the infinite slope assumption, where the gradient of the surface elevation is considered identical to the gradient of the failure plane. As a result, the forces are only an estimation of local forces, but the Factor of Safety represents the theoretically valid point of failure under the infinite slope assumption. The resulting failure depths are either the full soil, or no failure at all. For more detialed estimates of failure depth, see the other SlopeStability.. functions.
 @return failures
 A list of maps, with the first item containing the Factor of Safety (ratio between resisting and driving forces), and the second item the depth of the failures.
-@param map1
-map1
+@param DEM
+Digital elevation model (meter)
+@param SoilDepth
+The depth of the top soil/rock layer above the bedrock (Meter)
+@param Cohesion
+Cohesion of the top soil/rock layer (Pascal)
+@param IFA
+Internal friction angle of the top soil/rock layer (Radians)
+@param Density
+The density of the top soil/rock layer (Kilograms per cubic meter)
+@param WaterHeight
+The height of the soil water table above the bedrock interface (meter)
+@param SafetyThreshold
+The minimum value for the factor of safety that is considered safe (1 is the defeault and theoretical expectation)
 
 #SlopeStabilityIFM
+Calculates slope stability using the iterative failure method. This method iterates of the 2.5 dimensional space to obtain the minimum amount of slope failure required to obtain a stable slope. At each iteration, an adapted infinite slope model is applied where inter-cell slope variation due to failure is considered in the depth calculation.
+@return failures
+A list of maps, with the first item containing the Factor of Safety (ratio between resisting and driving forces), and the second item the depth of the failures.
+@param DEM
+Digital elevation model (meter)
+@param SoilDepth
+The depth of the top soil/rock layer above the bedrock (Meter)
+@param Cohesion
+Cohesion of the top soil/rock layer (Pascal)
+@param IFA
+Internal friction angle of the top soil/rock layer (Radians)
+@param Density
+The density of the top soil/rock layer (Kilograms per cubic meter)
+@param WaterHeight
+The height of the soil water table above the bedrock interface (meter)
+@param SafetyThreshold
+The minimum value for the factor of safety that is considered safe (1 is the defeault and theoretical expectation)
+@param Iterations
+The maximum number of iterations carried out to propagate local instabilities to surrounding cells. This should be at least equal to the typical slope failure size in pixels.
+
 #SlopeStabilityISS
+Calculates slope stability and the depth of the predicted falilures over a landscape, and includes seismic shaking as a force. This function uses the infinite slope assumption, where the gradient of the surface elevation is considered identical to the gradient of the failure plane. As a result, the forces are only an estimation of local forces, but the Factor of Safety represents the theoretically valid point of failure under the infinite slope assumption. The resulting failure depths are either the full soil, or no failure at all. For more detialed estimates of failure depth, see the other SlopeStability.. functions.
+@return failures
+A list of maps, with the first item containing the Factor of Safety (ratio between resisting and driving forces), and the second item the depth of the failures.
+@param DEM
+Digital elevation model (meter)
+@param SoilDepth
+The depth of the top soil/rock layer above the bedrock (Meter)
+@param Cohesion
+Cohesion of the top soil/rock layer (Pascal)
+@param IFA
+Internal friction angle of the top soil/rock layer (Radians)
+@param Density
+The density of the top soil/rock layer (Kilograms per cubic meter)
+@param WaterHeight
+The height of the soil water table above the bedrock interface (meter)
+@param PGA
+The peak seismic shaking intensity (m/s2)
+@param SafetyThreshold
+The minimum value for the factor of safety that is considered safe (1 is the defeault and theoretical expectation)
+
 #SlopeStabilityRES
+Calculates slope stability using the Random Ellipsoid Sampling method. This method searches the full 3-dimensional space using random truncated ellipsoids to obtain the probability of failure for each location, as well as the likely failure depth and Factor of Safety.
+@return failures
+A list of maps, with the factor of safety, failure depth and probability of failure. Then, properties of the most critical ellipsoid (x center, y center, z center, size, lateral size, vertical size, angle relative to slope, lateral angle)
+@param DEM
+The digital elevation model in meters
+@param LayerDepth
+The thickness of the layer in meters, provided from top layer first to bottom layer last (or soil depth in case of one layer). Layers can be zero depth, and vary in depth spatially
+@param Cohesion
+The cohesion of the layer in Pascal
+@param IFA
+The internal friction angle of the layers in radians
+@param density
+The density of the solids (porous matrix) of the layers in kg/m3
+@param Saturation
+The average fractional water content in the layer (fraction)
+@param WH
+The surface water height that exerts additional pressure on the materials.
+@param sampledensity
+The average number of ellipsoids sampled per pixel
+@param h_min
+The minimum ellipsoid height in meters
+@param h_max
+The maximum ellipsoid height in meters
+@param size_min
+The minimum size in meters
+@param size_max
+The maximum size in meters
+@param size_lateral_min
+The minimum lateral size in meters
+@param size_lateral_max
+The maximum lateral size in meters
+@param size_vertical_min
+The minimum vertical size in meters
+@param size_vertical_max
+The maximum vertical size in meters
+@param rotation_min
+The minimum rotational angle in radians (relative to terrain slope)
+@param rotation_max
+The maximum rotaitonal angle in radians (relative to terrain slope)
+@param rotation_lateral_min
+The minimum lateral rotation angle in radians
+@param rotation_lateral_max
+The maximum lateral rotation angle in radians
+@param minimum_volume
+The minimum volume in cubic meters for an ellipsoid to be valid
+
 #SlopeStabilityRESAll
+Calculates slope stability using the Random Ellipsoid Sampling method. This method searches the full 3-dimensional space using random truncated ellipsoids to obtain the probability of failure for each location, as well as the likely failure depth and Factor of Safety.
+@return failures
+A list of a list of maps. sampledensity +1 maps are reserved so that for each pixel, for the (sampledensity+1) most unstable ellipsoids, all properties can be obtained.
+The first returned list contains number of sampled ellipsoids, number of unstsable ellipsoids, factor of safety, failure depth, failure probability, critical ellipsoid properties (x center, y center, z center, size, lateral size, vertical size, angle relative to slope, lateral angle),
+The second list contains tracked ellipsoid landslide areas
+the third list contains tracked ellipsoid landslide volume
+the fourth list contains tracked ellipsoid intersectional volumes (actual failure volumes)
+the fifth list contains tracked elevation for each ellipsoid
+the sixth list contains the factor of safety for the tracked ellipsoids
+the seventh list contains the deepest point for each tracked ellipsoid.
+@param DEM
+The digital elevation model in meters
+@param LayerDepth
+The thickness of the layer in meters, provided from top layer first to bottom layer last (or soil depth in case of one layer). Layers can be zero depth, and vary in depth spatially
+@param Cohesion
+The cohesion of the layer in Pascal
+@param IFA
+The internal friction angle of the layers in radians
+@param density
+The density of the solids (porous matrix) of the layers in kg/m3
+@param Saturation
+The average fractional water content in the layer (fraction)
+@param WH
+The surface water height that exerts additional pressure on the materials.
+@param sampledensity
+The average number of ellipsoids sampled per pixel
+@param h_min
+The minimum ellipsoid height in meters
+@param h_max
+The maximum ellipsoid height in meters
+@param size_min
+The minimum size in meters
+@param size_max
+The maximum size in meters
+@param size_lateral_min
+The minimum lateral size in meters
+@param size_lateral_max
+The maximum lateral size in meters
+@param size_vertical_min
+The minimum vertical size in meters
+@param size_vertical_max
+The maximum vertical size in meters
+@param rotation_min
+The minimum rotational angle in radians (relative to terrain slope)
+@param rotation_max
+The maximum rotaitonal angle in radians (relative to terrain slope)
+@param rotation_lateral_min
+The minimum lateral rotation angle in radians
+@param rotation_lateral_max
+The maximum lateral rotation angle in radians
+@param minimum_volume
+The minimum volume in cubic meters for an ellipsoid to be valid
 
 #FlowKinematicSuspendedTransport
+Transport some suspended matter (sediment, pesticides, anything equally dissolved in water) through the 1D kinematic flow equations. Do this before FlowKinematic as this function doesnt transport, but calculates water fluxes to transport suspended matter fluxes
+@return suspended
+The new suspended matter amount.
+@param LDD
+Local drainage network, see DrainageNetwork.
+@param Slope
+The slope of the 1D flow network in meters/meter
+@param Width
+The width of the 1D flow network in meters
+@param N
+The mannings surface roughness coefficient for the channel.
+@param H
+The flow height in meters
+@param S
+The total amount of suspended material (units dont matter, e.g. kilograms)
+@param dt
+The timestep to be taken in seconds
+
 #SimilaritySpread
+This function propagates a variable to neighbors where value1 and value2 are approximately different. It is a ratio-biased anisotropic diffusion filter.
+This function is mostly deprecated (although it might prove usefull for some)
+It can be used for example to spread a property of high flow height in val1 to areas of similar flow height in val2.
+@return SpreadProperty
+The spread (or diffused) property.
+@param Val1
+The first variable
+@param Val2
+The second variable
+@param Property
+The old values for the property
+@param iter_max
+The maximum number of iterations
+@param wp
+The power for the weights assignes based on the ration of val1 and val2
+@param wself
+The weight for the current cell
+@param coeff
+A coefficient for relaxing the solution to be more gradual (0 is no relaxing, 1 is no change at all)
+@param w_original
+The weight of the old original value in the calculations
+@param only_larger
+Only spread to areas of larger val2 compared the local value
+
 #Accuflux2D
+An implementation of 2D flow accumulation that includes pressure driven flow over terrain. This is not a flood model, and only features pressure effects in a very limited manner.
+@return fluxlist
+
+#Accuflux2D2
+A more detailed version of Accuflux2D. Here, you can specify the water sources, accumulation sources, and number of iterations used in determining the 2D flow accumulation.
+@return Flow accumulation
+The flow accumulation value (the source material accumulated through the network
+@param DEM
+Digital elevation model
+@param Source
+The source material for the flow accumulation
+@param max_iterations
+The maximum number of iterations
+@param height_scale
+The height scale used for the iterative pressure estimation (acc *scale = height)
+
 #SSAccumulate
+Accumulate material over a 2D velocity field. Can be provided for example with a steady-state velocity field. Uses semi-langrangian backtracking technique to determine contributions of neighboring cells.
+@return Accumulated
+The 2d accumulated material.
+@param DEM
+Digital elevation model (only used as Mask)
+@param UX
+The x-direction velocity
+@param UY
+The y-directionl velocity
+@param Source
+The source material to accumulat
+@param iter_max
+The maximum number of iterations, should be approximately equal to at least max(rows,cols) of the dem.
+
 #AccufluxSoil
+A steady-state soil model where you can provide your own flow accumulation map (e.g. using Accuflux2D or Accuflux2D2). This model estimates a balance between soil weathering and soil movement, estimating both using empericla relationships. This model is meant to be calibrated using observations.
+
+
+#Quantize
+Alters to values within a map to be exactly one of n possible options. The range min-max is divided over n sub-values that are equally spaced. The map values are assigned the closest of those values. This function does NOT do equal-frequency quantiles using an histogram.
+@return Quantized
+The quantized map
+
+
 #FlowIncompressible
+
 #FlowErosionDeposition
 #SplashErosion
 #ConductiveDiffuse
 #ConductiveFeedbackDiffuse
-#Quantize
+
 #SpreadProperty
 #Accumulate2D
 #Accumulate2DT

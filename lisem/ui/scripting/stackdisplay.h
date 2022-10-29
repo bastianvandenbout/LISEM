@@ -101,6 +101,7 @@ public:
     SDTreeModel * m_VariableTree;
     QStringList m_CallStackList;
 
+    asIScriptModule * m_Module = nullptr;
     QMutex m_Mutex;
     SDTreeItem * m_RootItem = nullptr;
     int m_CurrentStack = -1;
@@ -162,6 +163,10 @@ public:
         {
 
             m_CallStackList.clear();
+            m_Module = nullptr;
+
+
+            m_CallStackList.append("global");
 
             // Show the call stack
             for( asUINT n = 0; n < ctx->GetCallstackSize(); n++ )
@@ -170,6 +175,10 @@ public:
               const char *scriptSection;
               int line, column;
               func = ctx->GetFunction(n);
+              if(m_Module == nullptr)
+              {
+                  m_Module = func->GetModule();
+              }
               line = ctx->GetLineNumber(n, &column, &scriptSection);
 
               m_CallStackList.append("l:"+ QString::number(line)+ " c:" + QString::number(column)+ " s:" + scriptSection + "   " + QString(func->GetDeclaration()));
@@ -179,10 +188,48 @@ public:
             m_StackView->addItems(m_CallStackList);
         }
 
+        int do_global = false;
+        if(stack == 0)
+        {
+            do_global = true;
+
+
+
+        }
+        stack = stack - 1;
         if((m_CurrentStack != stack) || reset)
         {
 
-            if(stack > -1 && stack < ctx->GetCallstackSize())//m_CallStackList.length())
+            //special stack (global variables)
+            if(stack == -1)
+            {
+
+
+                m_CurrentStack = stack;
+                //get the module that this context is within
+                QVector<QVariant> headers = {"Variable","Type","Value"};
+                SDTreeItem * root = new SDTreeItem(headers);
+
+                std::vector<SDTreeItem*> Roots;
+
+                asIScriptEngine *engine = ctx->GetEngine();
+
+
+
+                if(m_Module != nullptr)
+                {
+                    AddGlobalScriptItemsToTree(Roots,nullptr,0,nullptr,m_Module,engine,nullptr);
+
+                }
+
+
+                for(int i = 0; i < Roots.size(); i++)
+                {
+                    root->insertChildren(Roots.at(i));
+                }
+                m_RootItem = root;
+                emit OnDataChanged();
+            }else if(stack > -1 && stack < ctx->GetCallstackSize())//m_CallStackList.length())
             {
 
                 m_CurrentStack = stack;
@@ -206,6 +253,7 @@ public:
             }else {
 
             }
+
         }
 
         m_Mutex.unlock();
@@ -220,42 +268,33 @@ public:
         {
             QVector<void*> data_doner;
 
-            std::cout << "a1 " << std::endl;
             //get all base items
             int typeId = ctx->GetThisTypeId(stacklevel);
 
-            std::cout << "a1 " << std::endl;
             void *varPointer = ctx->GetThisPointer(stacklevel);
             if( typeId )
             {
 
-                std::cout << "a2 " << std::endl;
                 SDTreeItem * item = GetTreeItem(typeId, varPointer,ctx,stacklevel,engine, "this");
                 data_doner.push_back(varPointer);
                 Roots.push_back(item);
             }
 
 
-            std::cout << "a3 " << std::endl;
             int numVars = ctx->GetVarCount(stacklevel);
             for( int n = 0; n < numVars; n++ )
             {
 
-                std::cout << "a4 " << std::endl;
               int typeId = ctx->GetVarTypeId(n, stacklevel);
               void *varPointer = ctx->GetAddressOfVar(n, stacklevel);
-              std::cout << "a5 " << std::endl;
+
               QString name = QString(ctx->GetVarDeclaration(n,stacklevel));
 
 
               if( typeId )
               {
 
-
-                  std::cout << "a6 " << std::endl;
                   SDTreeItem * item = GetTreeItem(typeId, varPointer,ctx,stacklevel,engine,name);
-
-                  std::cout << "a7 " << std::endl;
 
                   data_doner.push_back(varPointer);
                   Roots.push_back(item);
@@ -264,17 +303,12 @@ public:
                   {
 
 
-                      std::cout << "a8 " << std::endl;
                         AddScriptItemsToTree(Roots,item,typeId,varPointer,ctx,stacklevel,engine,&data_doner);
 
                   }
 
               }
             }
-
-
-
-            std::cout << "a9 " << std::endl;
 
         }else {
 
@@ -318,19 +352,105 @@ public:
         }
     }
 
+    inline void AddGlobalScriptItemsToTree(std::vector<SDTreeItem*> &Roots, SDTreeItem * parent, int p_typeId, void*p_varPointer, asIScriptModule *ctx, asIScriptEngine *engine, QVector<void*> *data_done)
+    {
+
+
+        if(parent == nullptr)
+        {
+            QVector<void*> data_doner;
+
+
+
+
+            int numVars = ctx->GetGlobalVarCount();
+            for( int n = 0; n < numVars; n++ )
+            {
+
+              int typeId = -1;
+              const char *x;
+              int rtid =ctx->GetGlobalVar(n,&x,0,&typeId);
+              if(typeId == -1 || rtid < 0)
+              {
+                  continue;
+              }
+
+              void *varPointer = ctx->GetAddressOfGlobalVar(n);
+
+              QString name = QString(ctx->GetGlobalVarDeclaration(n));
+
+
+              if( typeId )
+              {
+
+                  SDTreeItem * item = GetTreeItem(typeId, varPointer,nullptr,-1,engine,name);
+
+                  data_doner.push_back(varPointer);
+                  Roots.push_back(item);
+
+                  if( typeId & asTYPEID_SCRIPTOBJECT )
+                  {
+
+
+                        AddGlobalScriptItemsToTree(Roots,item,typeId,varPointer,ctx,engine,&data_doner);
+
+                  }
+
+              }
+            }
+
+        }else {
+
+            //get all sub items for parentasITypeInfo
+            asITypeInfo* info = engine->GetTypeInfoById(p_typeId);
+            if(info != nullptr)
+            {
+                int propcount =  info->GetPropertyCount();
+
+
+                for(int i = 0; i < propcount; i++)
+                {
+                    const char ** name;
+                    int typeId;
+                    bool is_private;
+                    bool is_protected;
+                    int offset;
+                    bool is_reference;
+                    info->GetProperty(i,name,&typeId,&is_private,&is_protected,&offset,&is_reference);
+
+                    SDTreeItem * item = GetTreeItem(typeId,(void*)((char*)p_varPointer + offset),nullptr,-1,engine,"prop");
+                    parent->insertChildren(item);
+
+                    if( typeId )
+                    {
+
+                        if(!(data_done->contains((void*)((char*)p_varPointer + offset))))
+                        {
+                            data_done->push_back((void*)((char*)p_varPointer + offset));
+
+                            if( typeId & asTYPEID_SCRIPTOBJECT )
+                            {
+                                  AddGlobalScriptItemsToTree(Roots,item,typeId,(void*)((char*)p_varPointer + offset),ctx,engine,data_done);
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
+    }
+
     inline SDTreeItem * GetTreeItem(int typeId,void *varPointer,asIScriptContext *ctx, int stacklevel, asIScriptEngine *engine, QString declarename)
     {
 
 
-        std::cout << "b1 " << std::endl;
         LSMScriptEngine * sphengine = (LSMScriptEngine*)(engine->GetUserData());
 
         QString name = sphengine->GetTypeName(typeId);
 
         QString value = "{...}";
 
-
-        std::cout << "b2 " << std::endl;
 
         int typeId_l = typeId;
         asITypeInfo * info = sphengine->GetTypeInfoById(typeId);
@@ -347,7 +467,6 @@ public:
             }
         }
 
-        std::cout << "b3 " << std::endl;
         value = sphengine->GetTypeDebugValue(typeId,varPointer);
 
         if(value == "{...}")
@@ -374,11 +493,9 @@ public:
 
             if(sphengine->GetTypeIsDebugList(typeId_l))
             {
-                std::cout << "ib5"<<std::endl;
                 std::vector<int> x =  sphengine->GetTypeDebugListDims(typeId_l,varPointer);
                 int type_id_l = sphengine->GetTypeDebugListType(typeId_l,varPointer);
 
-                std::cout << "ib6"<<std::endl;
                 if(x.size() > 0 )
                 {
                     if(x.at(0) > 0)
@@ -398,7 +515,6 @@ public:
                         bool is_next = true;
                         int n = 0;
 
-                        std::cout << "ib7"<<std::endl;
 
                         while(is_next)
                         {
@@ -406,19 +522,16 @@ public:
 
                             void * var_index = sphengine->GetTypeDebugListGet(typeId_l,varPointer,index);
 
-                            std::cout << "ib8 "<< var_index << std::endl;
-
                             QString name_l = sphengine->GetTypeName(type_id_l);//declarename;
 
                             for(int i = 0; i < index.size(); i++)
                             {
                                 name_l += "[" + QString::number(index.at(i)) + "]";
                             }
-                            std::cout << "ib9"<<std::endl;
+
                             SDTreeItem * item_l = GetTreeItem(type_id_l,var_index,ctx, stacklevel, engine, name_l);
                             ret->insertChildren(item_l);
 
-                            std::cout << "ib10" << std::endl;
                             n++;
 
                             //increment
@@ -454,8 +567,6 @@ public:
                 }
             }
 
-
-            std::cout << "b5 " << std::endl;
 
         return ret;
     }

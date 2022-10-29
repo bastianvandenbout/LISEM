@@ -256,6 +256,305 @@ inline cTMap * AS_SpreadConserveHydro(cTMap * source, cTMap * DEM, int iter_max 
 
 }*/
 
+
+inline cTMap * AS_SpreadMonotonicReconstruct(cTMap * DEM, float delta,int iter_max = 0)
+{
+
+    MaskedRaster<float> raster_data(DEM->data.nr_rows(), DEM->data.nr_cols(), DEM->data.north(), DEM->data.west(), DEM->data.cell_size(),DEM->data.cell_sizeY());
+    cTMap *map = new cTMap(std::move(raster_data),DEM->projection(),"");
+
+
+    //initialize the map with friction values
+    for(int r = 0; r < map->data.nr_rows();r++)
+    {
+        for(int c = 0; c < map->data.nr_cols();c++)
+        {
+            if(pcr::isMV(DEM->data[r][c]))
+            {
+                pcr::setMV(map->data[r][c]);
+            }else {
+                map->data[r][c] = 1e31;
+            }
+        }
+    }
+
+
+    float dx = map->cellSize();
+
+    //we keep iterating through this algorithm untill there is no change left to make
+    bool change = true;
+    bool first = true;
+
+    int iter = 0;
+
+    while(change && ((iter_max <= 0) || (iter_max > 0 && iter < iter_max)))
+    {
+        iter ++;
+        change = false;
+
+        if(iter%2 == 0)
+        {
+            //first we move in right-lower direction
+            for(int r = 0; r < map->data.nr_rows();r++)
+            {
+                for(int c = 0; c < map->data.nr_cols();c++)
+                {
+                    float v_points = DEM->data[r][c];
+
+                    if(!pcr::isMV(v_points))
+                    {
+                        if((r-1 > -1))
+                        {
+                            float vn_points = DEM->data[r-1][c];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r-1][c] + delta,DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+
+                        if((c-1 > -1))
+                        {
+                            float vn_points = DEM->data[r][c-1];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r][c-1]+ delta,DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+                    }
+                }
+            }
+
+            //then we move in left-upper direction
+            for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+            {
+                for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                {
+                    float v_points = DEM->data[r][c];
+
+                    if(!pcr::isMV(v_points))
+                    {
+                        if((r+1 < map->data.nr_rows()))
+                        {
+                            float vn_points = DEM->data[r+1][c];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r+1][c]+ delta,DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+
+                        if((c+1 < map->data.nr_cols()))
+                        {
+                            float vn_points = DEM->data[r][c+1];
+                            if(pcr::isMV(vn_points))
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }else
+                            {
+                                float demh;
+
+                                    demh = std::max(map->data[r][c+1]+ delta,DEM->data[r][c]);
+
+                                float mapn = std::min(demh,map->data[r][c]);
+                                if(mapn < map->data[r][c])
+                                {
+                                    change = true;
+                                    map->data[r][c] = mapn;
+                                }
+                            }
+                        }else
+                        {
+                            map->data[r][c] = DEM->data[r][c];
+                        }
+                    }
+
+                }
+
+            }
+        }else
+            {
+                //first we move in right-lower direction
+                for(int r = 0; r < map->data.nr_rows();r++)
+                {
+                    for(int c = map->data.nr_cols()-1; c > -1 ;c--)
+                    {
+                        float v_points = DEM->data[r][c];
+
+                        if(!pcr::isMV(v_points))
+                        {
+                            if((r-1 > -1))
+                            {
+                                float vn_points = DEM->data[r-1][c];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+                                        demh = std::max(map->data[r-1][c]+ delta,DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+
+
+                            if((c+1 < map->data.nr_cols()))
+                            {
+                                float vn_points = DEM->data[r][c+1];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+                                        demh = std::max(map->data[r][c+1]+ delta,DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+                        }
+                    }
+                }
+
+
+                //then we move in left-upper direction
+                for(int r = map->data.nr_rows()-1; r > -1 ;r--)
+                {
+                    for(int c = 0; c < map->data.nr_cols();c++)
+                    {
+                        float v_points = DEM->data[r][c];
+
+                        if(!pcr::isMV(v_points))
+                        {
+                            if((r+1 < map->data.nr_rows()))
+                            {
+                                float vn_points = DEM->data[r+1][c];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+                                        demh = std::max(map->data[r+1][c]+ delta,DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+
+                            if((c-1 > -1))
+                            {
+                                float vn_points = DEM->data[r][c-1];
+                                if(pcr::isMV(vn_points))
+                                {
+                                    map->data[r][c] = DEM->data[r][c];
+                                }else
+                                {
+                                    float demh;
+
+
+                                        demh = std::max(map->data[r][c-1]+ delta,DEM->data[r][c]);
+
+                                    float mapn = std::min(demh,map->data[r][c]);
+                                    if(mapn < map->data[r][c])
+                                    {
+                                        change = true;
+                                        map->data[r][c] = mapn;
+                                    }
+                                }
+                            }else
+                            {
+                                map->data[r][c] = DEM->data[r][c];
+                            }
+                        }
+
+                    }
+            }
+
+
+        }
+
+
+        first = false;
+
+    }
+
+    return map;
+
+}
+
+
+
 inline cTMap * AS_SpreadDepressionFind(cTMap * DEM, int iter_max = 0)
 {
 

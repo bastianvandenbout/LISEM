@@ -597,9 +597,7 @@ inline static cTMap * AS_TextureClass(cTMap * SAND, cTMap * CLAY)
 
         if((silt + 1.5*clay) < 15)
         {
-
             ret->data[r][c] = 0;// 'Sand';
-
         }
         else if((silt + 1.5*clay >= 15) && (silt + 2*clay < 30))
         {

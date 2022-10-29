@@ -4,7 +4,7 @@
 #include <QString>
 
 #include "error.h"
-
+#include "site.h"
 #include "angelscript.h"
 #include "extensions/scriptqstdstring.h"
 #include "scripthelper.h"
@@ -74,6 +74,7 @@ typedef struct SPHScript
     QString name;
     QString code;
     QString HomeDir;
+    QString ScriptDir = "";
     bool is_singleline = false;
     bool is_preprocess = false;
     bool is_allowinclude = true;
@@ -111,6 +112,10 @@ typedef struct SPHScript
     inline void SetHomeDir(QString dir)
     {
         HomeDir = dir;
+    }
+    inline void SetScriptDir(QString dir)
+    {
+        ScriptDir = dir;
     }
 
     inline void SetAllowInclude(bool x)
@@ -243,10 +248,10 @@ public:
     inline static int IncludeCallback(const char *include, const char *from, CScriptBuilder *builder, void *userParam)
     {
 
-        std::cout << "include additional script1 " <<  include << " " << from <<  std::endl;
+        std::cout << "include additional script1 " <<  include << " " << from << " " << ((SPHScript *)userParam)->HomeDir.toStdString() <<  std::endl;
 
 
-        std::string path = from;
+        std::string path = ((SPHScript *)userParam)->HomeDir.toStdString();
         size_t posOfSlash = path.find_last_of("/\\");
         if( posOfSlash != std::string::npos )
         {
@@ -257,6 +262,10 @@ public:
 
             path = "";
         }
+
+        std::string path_script = ((SPHScript *)userParam)->ScriptDir.toStdString();
+        std::string path_lisem = GetSite().toStdString() + "script/";
+
 
         std::string includesn = std::string(include);
 
@@ -272,8 +281,30 @@ public:
                 includesn = path + std::string(include);
             }else
             {
-                includesn = path + std::string(include);
+                includesn = path_script + std::string(include);
+                QFileInfo f2(QString(includesn.c_str()));
+                if(f2.exists())
+                {
 
+                    includesn = path_script + std::string(include);
+
+                }else
+                {
+
+                    includesn = path_lisem + std::string(include);
+                    QFileInfo f3(QString(includesn.c_str()));
+                    if(f3.exists())
+                    {
+
+                        includesn = path_lisem + std::string(include);
+
+                    }else
+                    {
+
+                        includesn = path + std::string(include);
+
+                    }
+                }
             }
         }
 

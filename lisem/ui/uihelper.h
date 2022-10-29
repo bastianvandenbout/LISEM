@@ -11,6 +11,8 @@
 #include "QPlainTextEdit"
 #include "QSettings"
 #include "QDir"
+#include "iostream"
+
 namespace Minimap::Internal::Constants {
 
 constexpr const char MINIMAP_SETTINGS[] = "MinimapSettings";
@@ -25,6 +27,7 @@ constexpr const int MINIMAP_ALPHA_DEFAULT = 32;
 inline static void ShowTextfile(QString name, QWidget* parent = nullptr)
 {
 
+    std::cout << "open file for view/edit " << name.toStdString() << std::endl;
     QFile file(name);
     if (!file.open(QFile::ReadWrite | QFile::Text))
     {
@@ -38,7 +41,11 @@ inline static void ShowTextfile(QString name, QWidget* parent = nullptr)
     QString modifiedContents;
     QTextStream in(&file);
 
-    QPlainTextEdit *view = new QPlainTextEdit(in.readAll());
+    QString all = in.readAll();
+
+    std::cout << "opened: " << all.toStdString() << std::endl;
+
+    QPlainTextEdit *view = new QPlainTextEdit(all);
     view->setWindowTitle(name);
     view->setMinimumWidth(400);
     view->setMinimumHeight(500);

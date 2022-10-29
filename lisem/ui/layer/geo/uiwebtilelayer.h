@@ -491,6 +491,7 @@ public:
 
             if(QNetworkReply::NetworkError::NoError == dl->Download->error())
             {
+                std::cout << "tile success " << std::endl;
 
                 if(m_CentralDetailTile.download == dl)
                 {
@@ -660,6 +661,7 @@ public:
 
             }else
             {
+                std::cout << "tile no success " << std::endl;
             }
 
         }

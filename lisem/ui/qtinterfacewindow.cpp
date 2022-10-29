@@ -28,44 +28,18 @@ int QTInterfaceWindow::Create(ParameterManager * pm, LISEMModel * m, ScriptManag
 
     int valmini = GetSettingsManager()->GetSettingInt("UseMinimap",0);
     int valdark = GetSettingsManager()->GetSettingInt("UseDark",0);
-
-    //if(valmini == 1)
     {
         m_oldStyle = QApplication::style();
         auto *minimapStyle = new Minimap::Internal::MinimapProxyStyle(m_oldStyle);
         QApplication::setStyle(minimapStyle);
         QApplication::style()->moveToThread(QApplication::instance()->thread());
     }
-    /*}else
-    {
-        m_oldStyle = QApplication::style();
-    }*/
 
     GetSettingsManager()->SetCallBackSettingChanged("UseMinimap",[this](QString name, QString val)
     {
-        std::cout << "setting minimap changed " <<  val.toStdString() <<  " " << m_oldStyle << std::endl;
         bool ok = false;
         int vali = val.toInt(&ok);
         m_DatabaseWidget->update();
-        /*if(vali == 1 && ok == true)
-        {
-            QStyle *m_oldStyle = QApplication::style();
-            auto *minimapStyle = new Minimap::Internal::MinimapProxyStyle(m_oldStyle);
-            QApplication::setStyle(minimapStyle);
-            QApplication::style()->moveToThread(QApplication::instance()->thread());
-
-        }else
-        {
-            std::cout << "bartest1 " << std::endl;
-            QApplication::setStyle(m_oldStyle);
-
-            std::cout << "bartest2 " << std::endl;
-            QApplication::style()->moveToThread(QApplication::instance()->thread());
-
-            std::cout << "bartest3 " << std::endl;
-
-        }*/
-
     });
 
 

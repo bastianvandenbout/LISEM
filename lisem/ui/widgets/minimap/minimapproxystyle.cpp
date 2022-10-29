@@ -92,6 +92,16 @@ void MinimapProxyStyle::drawComplexControl(ComplexControl control,
         }
     }
     QProxyStyle::drawComplexControl(control, option, painter, widget);
+
+
+    //get highlight locations for scroll bar
+
+    //error
+    //search
+    //warning
+
+
+    //draw these on top
 }
 
 QStyle::SubControl
@@ -208,6 +218,8 @@ bool MinimapProxyStyle::drawMinimap(const QStyleOptionComplex *option,
     }
     int h = helper->editor()->size().height();
 
+    CodeEditor* editor = helper->editor();
+
     qreal factor = helper->factor();
     if (factor < 1.0) {
         h = helper->lineCount();
@@ -230,8 +242,71 @@ bool MinimapProxyStyle::drawMinimap(const QStyleOptionComplex *option,
     bool folded = false;
     int revision = 0;
 
+    std::vector<int> ErrorLines = helper->editor()->GetHighlightErrorLines();
+    std::vector<int> SearchLines = helper->editor()->GetHighlightSearchLines();
+
+    QColor Errorcolor = QColor(255,0,0);
+    QColor Searchcolor = QColor(0,255,0);
+    QColor hlcolor;
+    int blockn = 0;
+
+
+    bool is_error = false;
+    bool is_search = false;
+    int index_last_error = 0;
+    int index_last_search = 0;
+
+    int last_error = -10;
+    int last_search = -10;
+
     for (QTextBlock b = doc->begin(); b.isValid() && y < h; b = b.next()) {
         bool updateY = true;
+
+        if(ErrorLines.size() > index_last_error)
+        {
+            while(ErrorLines.at(index_last_error) <= blockn)
+            {
+                last_error = blockn;
+                index_last_error ++;
+                if(!(ErrorLines.size() > index_last_error))
+                {
+                    break;
+                }
+            }
+        }
+
+        if(SearchLines.size() > index_last_search)
+        {
+            while(SearchLines.at(index_last_search) <= blockn)
+            {
+                last_search = blockn;
+                index_last_search ++;
+                if(!(SearchLines.size() > index_last_search))
+                {
+                    break;
+                }
+            }
+        }
+
+
+        is_search = (blockn -last_search) < 3;
+        is_error = (blockn -last_error) < 3;
+        hlcolor = is_error? Errorcolor : baseBg;
+        if(is_search)
+        {
+            if(is_error)
+            {
+                hlcolor = QColor(255,255,0);
+
+            }else
+            {
+                hlcolor = Searchcolor;
+            }
+        }
+
+
+
+        blockn ++;
 
         if (b.isVisible()) {
             if (qRound(r) != i++) {
@@ -254,6 +329,12 @@ bool MinimapProxyStyle::drawMinimap(const QStyleOptionComplex *option,
                 }
             }
         }*/
+
+        //does this line have a search result?
+
+        //does this line have an error?
+
+
         int x = 0;
         bool cont = true;
         QRgb *scanLine = reinterpret_cast<QRgb *>(image.scanLine(y));
@@ -269,8 +350,8 @@ bool MinimapProxyStyle::drawMinimap(const QStyleOptionComplex *option,
                       }
                       return r1.length < r2.length;
                   });
-        QColor bBg = baseBg;
-        QColor bFg = baseFg;
+        QColor bBg = (is_error || is_search)? hlcolor: baseBg;
+        QColor bFg = (is_error  || is_search)? QColor((baseFg.red() + hlcolor.red())/2,(baseFg.green() + hlcolor.green())/2,(baseFg.blue()+ hlcolor.blue())/2) : baseFg;
         merge(bBg, bFg, b.charFormat());
         auto it2 = formats.begin();
         for (QTextBlock::iterator it = b.begin(); !(it.atEnd()); ++it) {
@@ -305,12 +386,38 @@ bool MinimapProxyStyle::drawMinimap(const QStyleOptionComplex *option,
                         break;
                     }
                 }
+
+
                 if (!cont) {
                     break;
                 }
             } else {
                 cont = false;
                 break;
+            }
+
+            if(is_error || is_search)
+            {
+                for(int l = 0; l < 200; l++)
+                {
+
+                    QColor bg = bBg;
+                    QColor fg = bFg;
+                    cont = updatePixel(
+                        &scanLine[Constants::MINIMAP_EXTRA_AREA_WIDTH],
+                        !updateY,
+                        QChar(' '),
+                        x,
+                        w,
+                        tab,
+                        bg,
+                        fg);
+                    if (!cont) {
+                        break;
+                    }
+                }
+
+
             }
         }
         if (updateY) {

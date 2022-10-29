@@ -13,6 +13,24 @@
 #include "tooldialog.h"
 #include "QFont"
 
+
+class QTreeWidgetLSM : public QTreeWidget
+{
+
+    Q_OBJECT;
+
+public:
+    inline QTreeWidgetLSM():QTreeWidget()
+    {
+
+    }
+
+    inline void do_layout_update()
+    {
+        this->scheduleDelayedItemsLayout();
+    }
+};
+
 class ToolWidget : public QWidget
 {
 
@@ -23,7 +41,8 @@ public:
 
     ScriptFunctionInfo m_Function;
     ScriptManager * m_ScriptManager;
-
+    QLabel * functionname;
+    QLabel * description;
     inline ToolWidget(ScriptManager * sm, ScriptFunctionInfo f)
     {
         m_ScriptManager = sm;
@@ -33,12 +52,12 @@ public:
         m_MainLayout->setSizeConstraint( QLayout::SetFixedSize );
         this->setLayout(m_MainLayout);
 
-        QLabel * functionname = new QLabel(name());
+        functionname = new QLabel(name());
         QFont font = functionname->font();
-        font.setPointSize(15);
+        font.setPointSize(14);
         functionname->setFont(font);
 
-        QLabel * description = new QLabel();
+        description = new QLabel();
         description->setWordWrap(false);
         description->setText(f.Description);
 
@@ -86,6 +105,31 @@ public:
         m_MainLayout->addWidget(functionout);
         functionname->setMinimumSize(100,20);
 
+
+    }
+
+    bool m_IsHighLight = false;
+
+    inline void setHighlight(bool hl)
+    {
+        if(hl && ! m_IsHighLight)
+        {
+            QFont font = functionname->font();
+            font.setPointSize(18);
+            functionname->setFont(font);
+            description->setWordWrap(true);
+            description->adjustSize();
+
+        }else if(!hl && m_IsHighLight)
+        {
+            QFont font = functionname->font();
+            font.setPointSize(14);
+            functionname->setFont(font);
+            description->setWordWrap(false);
+
+            description->adjustSize();
+        }
+        m_IsHighLight = hl;
 
     }
 
@@ -202,13 +246,14 @@ class ToolBrowser : public QWidget
 
 
     QLineEdit * m_SearchEdit;
-    QTreeWidget * m_ToolList;
+    QTreeWidgetLSM * m_ToolList;
     QVBoxLayout * m_MainLayout;
 
     QList<QTreeWidgetItem *> m_ListItems;
     QList<ToolWidget * > m_ListWidgets;
     QList<ScriptFunctionInfo> m_ListFunctions;
     QList<QString> m_Titles;
+    QList<QString> m_TitlesS;
 public:
 
     inline ToolBrowser(ScriptManager * sm, DatabaseTool * dbt, MapViewTool * mvt)
@@ -222,7 +267,7 @@ public:
 
         m_SearchEdit = new QLineEdit();
 
-        m_ToolList = new QTreeWidget();
+        m_ToolList = new QTreeWidgetLSM();
 
 
         m_ToolModel = new QStringListModel();
@@ -294,6 +339,7 @@ public:
             m_ListItems.append(item);
             m_ListFunctions.append(func);
             m_Titles.append(QString(func.Function->GetDeclaration(true,false,true)));
+            m_TitlesS.append(QString(func.Function->GetName()));
 
             m_ToolList->setItemWidget(item,0,w);
         }
@@ -314,6 +360,7 @@ public:
             m_ListItems.append(item);
             m_ListFunctions.append(func);
             m_Titles.append(QString(func.Function->GetDeclaration(true,false,true)));
+            m_TitlesS.append(QString(func.Function->GetName()));
             m_ToolList->setItemWidget(item,0,w);
         }
 
@@ -346,6 +393,7 @@ public:
                    m_ListItems.append(item);
                    m_ListFunctions.append(func);
                    m_Titles.append(QString(func.Function->GetDeclaration(true,false,true)));
+                   m_TitlesS.append(QString(func.Function->GetName()));
                    m_ToolList->setItemWidget(item,0,w);
 
                 }
@@ -380,6 +428,7 @@ public:
                    m_ListItems.append(item);
                    m_ListFunctions.append(func);
                    m_Titles.append(QString(func.Function->GetDeclaration(true,false,true)));
+                   m_TitlesS.append(QString(func.Function->GetName()));
                    m_ToolList->setItemWidget(item,0,w);
 
                 }
@@ -412,6 +461,7 @@ public:
                    m_ListItems.append(item);
                    m_ListFunctions.append(func);
                    m_Titles.append(QString(func.Function->GetDeclaration(true,false,true)));
+                   m_TitlesS.append(QString(func.Function->GetName()));
                    m_ToolList->setItemWidget(item,0,w);
 
             }
@@ -437,6 +487,7 @@ public:
            m_ListItems.append(item);
            m_ListFunctions.append(func);
            m_Titles.append(QString(func.Function->GetDeclaration(true,false,true)));
+           m_TitlesS.append(QString(func.Function->GetName()));
            m_ToolList->setItemWidget(item,0,w);
 
         }
@@ -456,15 +507,37 @@ public slots:
             for(int i = 0; i < m_ListItems.length(); i++)
             {
                 m_ToolList->setItemHidden(m_ListItems.at(i),false);
+                m_ListWidgets.at(i)->setHighlight(false);
             }
         }else
         {
             for(int i = 0; i < m_ListItems.length(); i++)
             {
                 bool find = m_Titles.at(i).contains(t,Qt::CaseSensitivity::CaseInsensitive);
+
                 m_ToolList->setItemHidden(m_ListItems.at(i),!find);
+
+                if(m_TitlesS.at(i).compare(t,Qt::CaseSensitivity::CaseInsensitive) == 0)
+                {
+                    m_ListItems.at(i)->setHidden(true);
+
+                    m_ListWidgets.at(i)->setHighlight(true);
+                    m_ListItems.at(i)->setSizeHint(0,QSize(1000.0,m_ListWidgets.at(i)->description->size().height()));
+
+                    m_ListItems.at(i)->setHidden(false);
+
+
+                }else
+                {
+                    m_ListItems.at(i)->setSizeHint(0,QSize(-1,-1));
+                    m_ListWidgets.at(i)->setHighlight(false);
+                }
             }
         }
+
+        this->m_ToolList->update();
+        this->m_ToolList->repaint();
+        this->m_ToolList->do_layout_update();
     }
 
     inline void ItemDoubleClicked(QTreeWidgetItem * i)

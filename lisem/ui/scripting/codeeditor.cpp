@@ -96,6 +96,21 @@ CodeEditor::CodeEditor(QWidget *parent, ScriptManager * sm, ScriptSearchWindow *
 
     StartDrawUpdateOnLine();
 
+    GetSettingsManager()->SetCallBackSettingChanged("UseMinimap",[this](QString name, QString val)
+    {
+        bool ok = false;
+        int vali = val.toInt(&ok);
+
+        QEvent event(QEvent::StyleChange);
+        QApplication::sendEvent(this, &event);
+        this->ensurePolished();
+        this->update();
+        this->repaint();
+        this->update();
+        this->updateGeometry();
+    });
+
+
 
     emit OnEditedSinceSave();
 }
@@ -295,58 +310,11 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
 
             if(select->text().startsWith("Replace occurances of "))
             {
-                std::vector<ScriptReferenceResult> res = s.GetReferencesTo(text,pos);
-
-                if(res.size() == 0)
-                {
-                    ShowOverlayMessage("Found no references to  '" + text + QString("'"),2.0);
-
-                }else
-                {
-                    ShowOverlayMessage("Found " + QString::number(res.size()) + " references to  '" + text + QString("'"),2.0);
-
-
-                    m_Bar->Open();
-                    MatrixTable * t = new MatrixTable();
-                    t->SetSize(res.size(),1);
-                    t->SetColumnTitle(0,QString("Text"));
-                    for(int i = 0; i < res.size(); i++)
-                    {
-                        t->SetValue(i,0,res.at(i).line);
-                        t->SetRowTitle(i,QString::number(res.at(i).row_n));
-                    }
-
-                    if(m_Bar != nullptr)
-                    {
-                        m_Bar->SetData(t);
-                        m_Bar->SetTitle("Ref to: " + text);
-                        m_Bar->Open();
-                        m_Bar->SetCallBackItemClicked([this,res](int row, int col, QString line, int clicks)
-                        {
-
-
-                            if(clicks == 2)
-                            {
-
-                                if(row < res.size())
-                                {
-                                    ScriptReferenceResult resh = res.at(row);
-
-                                    QTextCursor text_cursor(this->document()->findBlockByLineNumber(resh.row_n));
-                                    text_cursor.select(QTextCursor::BlockUnderCursor);
-                                    this->setTextCursor(text_cursor);
-
-                                }
-
-                            }
-                            ;
-                        });
-                    }
-                }
-
+                m_Bar->OpenAsReplace(this,text,pos);
             }
             if(select->text().startsWith("Search "))
             {
+                m_Bar->OpenAsSearch(this,text,pos);
 
             }
             if(select->text().startsWith("Follow "))
@@ -362,13 +330,12 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
 
                 }else
                 {
-                    if(res.pos == 0)
+                    if(res.pos < 0)
                     {
                         ShowOverlayMessage("Could not follow '" + text + QString("'"),2.0);
                     }else
                     {
                         //get position of the token defining the item
-                        std::cout << "position: " << res.line_n << " " << res.pos << std::endl;
                         //go to script location
                         ShowOverlayMessage("Follow '" + text + QString("'"),2.0);
                         QTextCursor text_cursor(this->document()->findBlockByLineNumber(res.line_n));
@@ -382,55 +349,8 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             }
             if(select->text().startsWith("Find references to "))
             {
-                std::vector<ScriptReferenceResult> res = s.GetReferencesTo(text,pos);
 
-                if(res.size() == 0)
-                {
-                    ShowOverlayMessage("Found no references to  '" + text + QString("'"),2.0);
-
-                }else
-                {
-                    ShowOverlayMessage("Found " + QString::number(res.size()) + " references to  '" + text + QString("'"),2.0);
-
-
-                    m_Bar->Open();
-                    MatrixTable * t = new MatrixTable();
-                    t->SetSize(res.size(),1);
-                    t->SetColumnTitle(0,QString("Text"));
-                    for(int i = 0; i < res.size(); i++)
-                    {
-                        t->SetValue(i,0,res.at(i).line);
-                        t->SetRowTitle(i,QString::number(res.at(i).row_n));
-                    }
-
-                    if(m_Bar != nullptr)
-                    {
-                        m_Bar->SetData(t);
-                        m_Bar->Open();
-                        m_Bar->SetTitle("Ref to: " + text);
-                        m_Bar->SetCallBackItemClicked([this,res](int row, int col, QString line, int clicks)
-                        {
-
-
-                            if(clicks == 2)
-                            {
-
-                                if(row < res.size())
-                                {
-                                    ScriptReferenceResult resh = res.at(row);
-
-                                    QTextCursor text_cursor(this->document()->findBlockByLineNumber(resh.row_n));
-                                    text_cursor.select(QTextCursor::BlockUnderCursor);
-                                    this->setTextCursor(text_cursor);
-
-                                }
-
-                            }
-                            ;
-                        });
-                    }
-                }
-
+                m_Bar->OpenAsReferencesTo(this,text,pos);
             }
             if(select->text().startsWith("Open file location '"))
             {
@@ -450,16 +370,16 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             }
             if(select->text().startsWith("Open file '"))
             {
-                QFile f(m_HomeDir + text);
+                QFile f(m_HomeDir + "/" +  text);
                 if(f.exists())
                 {
                     if(m_OpenCallBackSet)
                     {
-                        m_OpenCallBack(text);
+                        m_OpenCallBack(m_HomeDir + "/" + text);
                     }
                 }else
                 {
-                    ShowOverlayMessage("File can not be found: " + m_HomeDir + text,2.0);
+                    ShowOverlayMessage("File can not be found: " + m_HomeDir + "/" + text,2.0);
 
                 }
 
@@ -467,6 +387,7 @@ void CodeEditor::mousePressEvent ( QMouseEvent * event )
             }
             if(select->text().startsWith("Replace file references to '"))
             {
+                m_Bar->OpenAsReplaceFile(this,text,pos);
 
             }
 
@@ -1074,8 +995,34 @@ void CodeEditor::keyPressEvent(QKeyEvent *e)
     bool isShortcutnew = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_N); // CTRL+N
     bool isShortcutopen = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_O); // CTRL+O
     bool isShortcutstyle = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_J); // CTRL+J
-    bool isShortcutclose = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_W); // CTRL+J
+    bool isShortcutclose = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_W); // CTRL+W
 
+    bool isShortCutRun = ((e->key() == Qt::Key_F5)); // F5
+    bool isShortCutStop = ((e->key() == Qt::Key_F6)); // F5
+    bool isShortCutCompile = ((e->key() == Qt::Key_F7)); // F5
+
+    if(isShortCutRun)
+    {
+        if(this->m_RunCallBackSet)
+        {
+            m_RunCallBack();
+        }
+    }
+    if(isShortCutStop)
+    {
+        if(this->m_StopCallBackSet)
+        {
+            m_StopCallBack();
+        }
+    }
+
+    if(isShortCutCompile)
+    {
+        if(this->m_CompileCallBackSet)
+        {
+            m_CompileCallBack();
+        }
+    }
     if(isShortcutbar)
     {
         GetSettingsManager()->SetSetting("UseMinimap",QString::number(std::max(0,std::min(1,1-GetSettingsManager()->GetSettingInt("UseMinimap",0)))));
@@ -1418,26 +1365,77 @@ void CodeEditor::highlightErrorLine(QList<QTextEdit::ExtraSelection>& extraSelec
 {
     QList<QTextEdit::ExtraSelection> extraSelections;
 
-    if(m_ErrorLine > -1)
-     {
-        //if (!isReadOnly())
-        {
-            QTextEdit::ExtraSelection selection;
+    for(int i = 0; i < m_ErrorLine.size(); i++)
+    {
+        int ErrorLine = m_ErrorLine.at(i);
+        if(ErrorLine > -1)
+         {
+            //if (!isReadOnly())
+            {
+                QTextEdit::ExtraSelection selection;
 
-            QColor lineColor = QColor(Qt::red).lighter(160);
+                QColor lineColor = QColor(Qt::red).lighter(160);
 
-            selection.format.setBackground(lineColor);
-            selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-            selection.cursor = textCursor();
-            selection.cursor.setPosition(this->document()->findBlockByLineNumber(m_ErrorLine -1).position());
-            selection.cursor.clearSelection();
-            selection.cursor.select(QTextCursor::LineUnderCursor);
-            extraSelection.append(selection);
+                selection.format.setBackground(lineColor);
+                selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+                selection.cursor = textCursor();
 
+                selection.cursor.setPosition(this->document()->findBlockByNumber(ErrorLine-1).position());
+                selection.cursor.clearSelection();
+                selection.cursor.select(QTextCursor::LineUnderCursor);
+                extraSelection.append(selection);
+
+            }
         }
     }
 
+    for(int i = 0; i < m_HighlightLine.size(); i++)
+    {
+        int ErrorLine = m_HighlightLine.at(i);
+        if(ErrorLine > -1)
+         {
+            //if (!isReadOnly())
+            {
+                QTextEdit::ExtraSelection selection;
 
+                QColor lineColor = QColor(Qt::yellow).lighter(160);
+
+                selection.format.setBackground(lineColor);
+                selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+                selection.cursor = textCursor();
+
+                selection.cursor.setPosition(this->document()->findBlockByNumber(ErrorLine).position());
+                selection.cursor.clearSelection();
+                selection.cursor.select(QTextCursor::LineUnderCursor);
+                extraSelection.append(selection);
+
+            }
+        }
+    }
+
+    for(int i = 0; i < m_HighlightLine.size(); i++)
+    {
+        int ErrorLine = m_HighlightLine.at(i);
+        if(ErrorLine > -1)
+         {
+            //if (!isReadOnly())
+            {
+                QTextEdit::ExtraSelection selection;
+
+                QColor lineColor = QColor(Qt::green).lighter(160);
+
+                selection.format.setBackground(lineColor);
+                selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+                selection.cursor = textCursor();
+
+                selection.cursor.setPosition(this->document()->findBlockByNumber(ErrorLine).position() + m_HighlightCharacter.at(i));
+                selection.cursor.clearSelection();
+                selection.cursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor,m_HighlightLength.at(i));
+                extraSelection.append(selection);
+
+            }
+        }
+    }
 }
 
 

@@ -93,4 +93,28 @@ public:
     }
 };
 
+
+
+
+inline float absMax(float a, float b)
+{
+    a = std::fabs(a);
+    if(std::fabs(b) < a)
+    {
+        return b<0.0? -a:a;
+    }
+    return b;
+}
+inline float absMin(float a, float b)
+{
+    return abs(a) < abs(b) ? a : b;
+}
+
+inline float negSign(float v)
+{
+    return v < 0.0 ? -1.0 : 1.0;
+}
+
+
+
 #endif // LISEMMATH_H

@@ -81,7 +81,13 @@
 #define LISEM_ICON_COMPILE 71
 #define LISEM_ICON_ADD 72
 #define LISEM_ICON_REMOVE 73
-#define LISEM_ICON_COUNT 74
+#define LISEM_ICON_SEARCH2 74
+#define LISEM_ICON_REPLACE 75
+#define LISEM_ICON_NEXT 76
+#define LISEM_ICON_PREVIOUS 77
+#define LISEM_ICON_REPLACE1 78
+#define LISEM_ICON_CASESENSITIVE 79
+#define LISEM_ICON_COUNT 80
 
 class SPHResourceManager
 {
@@ -196,6 +202,12 @@ public:
             case LISEM_ICON_COMPILE: return "compile.png";break;
             case LISEM_ICON_ADD: return "add.png";break;
             case LISEM_ICON_REMOVE: return "remove.png";break;
+            case LISEM_ICON_SEARCH2: return "search.png";break;
+            case LISEM_ICON_REPLACE: return "findreplace.png";break;
+            case LISEM_ICON_NEXT: return "next.png";break;
+            case LISEM_ICON_PREVIOUS: return "previous.png";break;
+            case LISEM_ICON_REPLACE1: return "findreplace1.png";break;
+            case LISEM_ICON_CASESENSITIVE: return "casesensitive.png";break;
         }
 
         return QString();

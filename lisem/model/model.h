@@ -267,6 +267,8 @@ public:
     bool m_DoHydrology = false;
     bool m_DoCustomInfiltration = false;
     bool m_DoEvapoTranspiration = false;
+    bool m_DoRainfall = true;
+    bool m_DoET0 = false;
     bool m_DoChannel = false;
     bool m_DoGroundWater = false;
     bool m_DoErosion = false;

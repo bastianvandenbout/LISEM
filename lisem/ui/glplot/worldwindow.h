@@ -218,75 +218,77 @@ typedef struct DragElement
         if(Layer != nullptr)
         {
 
-            if(GizmoType == 0)
+            if(GizmoType == 0) //translate
             {
-                if(GizmoAction == 0)
+                if(GizmoAction == 0) // simple translation
                 {
-                    if(GizmoDirection == 0)
+                    if(GizmoDirection == 0) //x-translation
                     {
                         Layer->Move(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
                     }
-                    if(GizmoDirection == 1)
+                    if(GizmoDirection == 1) //y-translation
                     {
                         Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
                     }
-                    if(GizmoDirection == 2)
+                    if(GizmoDirection == 2) //z-translation
+                    {
+                        Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
+                    }
+                }else if(GizmoType  == 1) //2d translation
+                {
+                    if(GizmoDirection == 0) //plane x translate
+                    {
+                        Layer->Move(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
+                    }
+                    if(GizmoDirection == 1) //plane y translation
+                    {
+                        Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
+                    }
+                    if(GizmoDirection == 2) //plane z translation
                     {
                         Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
                     }
 
-                    if(GizmoDirection == 3) //both x and y
-                    {
-                        Layer->Move(LSMVector3(fac_x * x,0.0,fac_y * y));
-
-                    }
-                }else if(GizmoType  == 1)
-                {
-                    if(GizmoDirection == 0)
-                    {
-                        Layer->Move(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
-                    }
-                    if(GizmoDirection == 1)
-                    {
-                        Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
-                    }
-                    if(GizmoDirection == 2)
-                    {
-                        Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
-                    }
-                    if(GizmoDirection == 3) //both x and y
-                    {
-                        Layer->Move(LSMVector3(fac_x * x,0.0,fac_y * y));
-
-                    }
                 }
 
-            }else if(GizmoType  == 1)
+            }else if(GizmoType  == 1) // rotate
+            {
+
+                if(GizmoDirection == 0) //plane x translate
+                {
+                    Layer->Rotate(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
+                }
+                if(GizmoDirection == 1) //plane y translation
+                {
+                    Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
+                }
+                if(GizmoDirection == 2) //plane z translation
+                {
+                    Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
+                }
+
+
+
+
+
+            }else if(GizmoType  == 2) //scale
             {
 
 
 
-
-
-
-            }else if(GizmoType  == 2)
-            {
-
-
-
-                if(GizmoDirection == 0)
+                if(GizmoDirection == 0) //scale over x
                 {
                     Layer->Scale(LSMVector3(1.0 + 1.0*( fac_x * x + fac_y * y),1.0,1.0) );
                 }
-                if(GizmoDirection == 1)
+                if(GizmoDirection == 1) //scale over y
                 {
                     Layer->Scale(LSMVector3(1.0,1.0 + 1.0*( fac_x * x + fac_y * y),1.0) );
                 }
-                if(GizmoDirection == 2)
+                if(GizmoDirection == 2) //scale over z
                 {
                     Layer->Scale(LSMVector3(1.0,1.0,1.0 + 1.0*( fac_x * x + fac_y * y)) );
                 }
-                if(GizmoDirection == 3)
+                if(GizmoDirection == 3) //scale over x and y????
                 {
                     Layer->Scale(LSMVector3(1.0 + 1.0*(fac_x * x),1.0,1.0 + 1.0*( fac_y * y)) );
                 }
@@ -325,9 +327,11 @@ typedef struct DragElement
                 LSMVector2 point(x,y);
                 LSMVector2 outside(10000000, 100000000);
 
-                int intersections = 0;
-                for (int i = 0; i < xc.size() - 1; ++i) {
 
+                int intersections = 0;
+                for (int i = 0; i < xc.size() - 1; i++){
+
+                    std::cout << "compare segment " << x << " " << y << " " << xc[i] << " " << yc[i] << " " << xc[i+1] << " " << yc[i+1] <<  std::endl;
                     if (segmentIntersect(point, outside,LSMVector2(xc[i],yc[i]),LSMVector2(xc[i+1],yc[i+1]))) {
                         intersections++;
                     }
@@ -337,6 +341,7 @@ typedef struct DragElement
                     intersections++;
                 }
 
+                std::cout << "intersections " << intersections << std::endl;
                 return (intersections % 2 != 0);
             }else
             {

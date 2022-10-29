@@ -1,27 +1,3 @@
-/*************************************************************************
-**  openLISEM: a spatial surface water balance and soil erosion model
-**  Copyright (C) 2010,2011, 2020  Victor Jetten
-**  contact: v.g.jetten AD utwente DOT nl
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License GPLv3 as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License v3 for more details.
-**
-**  You should have received a copy of the GNU General Public License GPLv3
-**  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**
-**  Authors: Bastian van de Bout, Victor Jetten
-**  Developed in: MingW/Qt/
-**  website, information and code: www.lisemmodel.com
-**
-*************************************************************************/
-
 #ifndef RASTERSUPERFASTFLOW_H
 #define RASTERSUPERFASTFLOW_H
 
@@ -91,31 +67,12 @@ inline cTMap *AS_DemMonotonicReconstruct(cTMap * DEM)
 //besides some multi-threading upportunities, SSE/AVX instructions, etc
 //from a data-dependency perspective I dont see how any physically-based method could be significantly faster than this
 //the number of iterations in space are reduced by carefully selected method so that there is only minimal number of iterations and complexity
-inline cTMap * AS_FlowSuperFastNChannel(cTMap * DEM,  cTMap * N,cTMap * Rain, float duration, bool do_depressions)
+inline cTMap * AS_FlowSuperFast(cTMap * DEM,  cTMap * N,cTMap * Rain, float duration, bool do_depressions, bool corr, int itersp = -1)
 {
-
-
-    return nullptr;
-
-}
-
-//super-fast flood algorithm
-//besides some multi-threading upportunities, SSE/AVX instructions, etc
-//from a data-dependency perspective I dont see how any physically-based method could be significantly faster than this
-//the number of iterations in space are reduced by carefully selected method so that there is only minimal number of iterations and complexity
-inline cTMap * AS_FlowSuperFastChannel(cTMap * DEM,  cTMap * N,cTMap * ChannelLDD, cTMap * ChannelWidth, cTMap * ChannelDepth, cTMap * ChannelN, cTMap * Rain, float duration, bool do_depressions)
-{
-
-    return nullptr;
-
-}
-
-//super-fast flood algorithm
-//besides some multi-threading upportunities, SSE/AVX instructions, etc
-//from a data-dependency perspective I dont see how any physically-based method could be significantly faster than this
-//the number of iterations in space are reduced by carefully selected method so that there is only minimal number of iterations and complexity
-inline cTMap * AS_FlowSuperFast(cTMap * DEM,  cTMap * N,cTMap * Rain, float duration, bool do_depressions)
-{
+    if(itersp < 0)
+    {
+        itersp = 40;
+    }
     //first we get the right gradient maps
 
     float dx = DEM->cellSizeX();
@@ -172,7 +129,7 @@ inline cTMap * AS_FlowSuperFast(cTMap * DEM,  cTMap * N,cTMap * Rain, float dura
     std::vector<std::thread> workers1;
     workers1.push_back(std::thread([&DEM2,DEM,Seeds,Rain,N,GradX1,GradX2,GradY1,GradY2,iters]()
     {
-        DEM2 = AS_SpreadDirectionalAbsMaxMD(Seeds,DEM,GradX1,GradX2,GradY1,GradY2);
+        DEM2 = AS_SpreadMonotonicReconstruct(DEM,0.00001,iters);//AS_SpreadDirectionalAbsMaxMD(Seeds,DEM,GradX1,GradX2,GradY1,GradY2);
 
 
     }));
@@ -486,11 +443,11 @@ inline cTMap * AS_FlowSuperFast(cTMap * DEM,  cTMap * N,cTMap * Rain, float dura
                 //fill with h
                 if(!do_depressions)
                 {
-                    one->data[r][c] = std::pow((1.0/(dx)) * ss_comp * q->data[r][c] * RainN->data[r][c]/std::max(0.001f,Slope),5.0/6.0);
+                    one->data[r][c] = std::pow((1.0/(dx)) * ss_comp * q->data[r][c] * RainN->data[r][c]/std::max(0.001f,Slope),3.0/5.0);
 
                 }else
                 {
-                    one->data[r][c] = std::pow((1.0/(dx)) *ss_comp * accqreal->data[r][c] * RainN->data[r][c]/std::max(0.001f,Slope),5.0/6.0);
+                    one->data[r][c] = std::pow((1.0/(dx)) *ss_comp * accqreal->data[r][c] * RainN->data[r][c]/std::max(0.001f,Slope),3.0/5.0);
 
                 }
 
@@ -517,16 +474,31 @@ inline cTMap * AS_FlowSuperFast(cTMap * DEM,  cTMap * N,cTMap * Rain, float dura
 
 
 
+    std::cout << "iters " << itersp << std::endl;
+
 
     //water redistribution for pressure advection
     cTMap * hfinal;
-    if(!do_depressions)
+    if(corr)
     {
-        //if we dont do depressions, we better use the corrected dem as it improves throughflow in low resolution rough terrain
-       hfinal = AS_DiffusiveMaxWave(DEM2,one /*is filled with H*/,40,0.15);
+        if(!do_depressions)
+        {
+            //if we dont do depressions, we better use the corrected dem as it improves throughflow in low resolution rough terrain
+           hfinal = AS_DiffusiveQMaxWave(DEM2,one /*is filled with H*/,itersp,0.15);
+        }else
+        {
+            hfinal = AS_DiffusiveQMaxWave(DEM,one /*is filled with H*/,itersp,0.15);
+        }
     }else
     {
-        hfinal = AS_DiffusiveMaxWave(DEM,one /*is filled with H*/,40,0.15);
+        if(!do_depressions)
+        {
+            //if we dont do depressions, we better use the corrected dem as it improves throughflow in low resolution rough terrain
+           hfinal = AS_DiffusiveMaxWave(DEM2,one /*is filled with H*/,itersp,0.15);
+        }else
+        {
+            hfinal = AS_DiffusiveMaxWave(DEM,one /*is filled with H*/,itersp,0.15);
+        }
     }
     //return flow height
 

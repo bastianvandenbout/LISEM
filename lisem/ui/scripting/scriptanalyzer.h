@@ -155,9 +155,37 @@ typedef struct ScriptExpressionType
         t.name = funcname;
         t.type = returntype;
         t.type_full = returntype;
+
         return t;
     }
 
+    inline static ScriptExpressionType FromCppClass(QString name)
+    {
+        ScriptExpressionType t;
+        t.is_empty = false;
+        t.is_unknown = false;
+        t.is_cpp = true;
+        t.is_class = true;
+        t.is_object = false;
+        t.is_member = false;
+        t.name = name;
+
+        return t;
+    }
+    inline static ScriptExpressionType FromClass(QString name,ScriptToken ti = ScriptToken())
+    {
+        ScriptExpressionType t;
+        t.is_empty = false;
+        t.is_unknown = false;
+        t.is_cpp = false;
+        t.is_class = true;
+        t.is_object = false;
+        t.is_member = false;
+        t.def = ti;
+        t.name = name;
+
+        return t;
+    }
 
     inline bool operator==(const ScriptExpressionType &t)
     {
@@ -403,7 +431,7 @@ public:
 
         funclist = m_ScriptManager->m_Engine->GetGlobalFunctionList();
         funcmemberlist = m_ScriptManager->m_Engine->GetMemberFunctionList();
-        //classlist = m_ScriptManager->m_Engine->();
+        classlist = m_ScriptManager->m_Engine->GetObjectList();
         //classproplist = m_ScriptManager->m_Engine->();
 
         m_classes.push_back("int8");
@@ -416,6 +444,8 @@ public:
         m_classes.push_back("uint64");
         m_classes.push_back("float");
         m_classes.push_back("double");
+        m_classes.push_back("void");
+        m_classes.push_back("bool");
 
         m_FileExtensionsList.append(GetMapExtensions());
         m_FileTypesList.append("Map");

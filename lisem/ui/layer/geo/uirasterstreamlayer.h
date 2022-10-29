@@ -663,27 +663,36 @@ public:
 
     inline void ReadDataThread()
     {
+        std::cout << "read loop 1" << std::endl;
+        m_ReadThreadStartMutex.lock();
 
         while(true)
         {
-            m_ReadThreadStartMutex.lock();
+
+            std::cout << "read loop 2" << std::endl;
             m_ReadThreadWaitCondition.wait(&m_ReadThreadStartMutex);
 
-            m_ReadThreadDoneMutex.lock();
+            std::cout << "read loop 3" << std::endl;
+            //m_ReadThreadDoneMutex.lock();
 
+            std::cout << "read loop 4" << std::endl;
             if(m_ReadThreadStop)
             {
-                m_ReadThreadDoneMutex.unlock();
+                //m_ReadThreadDoneMutex.unlock();
                 m_ReadThreadStartMutex.unlock();
                 m_ReadThreadDoneCondition.notify_all();
                 break;
             }
+            std::cout << "read loop 5" << std::endl;
             m_ReadThreadWork();
 
 
-            m_ReadThreadDoneMutex.unlock();
-            m_ReadThreadDoneCondition.notify_all();
-            m_ReadThreadStartMutex.unlock();
+            std::cout << "read loop 6" << std::endl;
+            //m_ReadThreadDoneMutex.unlock();
+            std::cout << "read loop 7" << std::endl;
+            //m_ReadThreadDoneCondition.notify_all();
+            std::cout << "read loop 8" << std::endl;
+            //m_ReadThreadStartMutex.unlock();
         }
 
     }
@@ -1070,9 +1079,12 @@ public:
 
                 std::cout << "do stuff with rsb"<<std::endl;
                 rsb->m_SignMutex->lock();
+                std::cout << "sign mutex locked "<< rsb << std::endl;
                 if(rsb->write_done)
                 {
 
+
+                    std::cout << "ask write " << std::endl;
                     rsb->rRead_Started = true;
 
 
@@ -1083,12 +1095,19 @@ public:
                     rsb->tRead = std::thread([bfinal,band,this,rsb]()
                     {
 
+                        std::cout << "write thread start" << std::endl;
                         m_ReadInstructMutex.lock();
 
+                        std::cout << "write thread start1" << std::endl;
                         m_ReadThreadStartMutex.lock();
-                        m_ReadThreadDoneMutex.lock();
+
+                        std::cout << "write thread start2" << std::endl;
+                        //m_ReadThreadDoneMutex.lock();
+
+                        std::cout << "start subthread" << std::endl;
 
                         m_ReadThreadWork =  [rsb,bfinal,band,this](){
+                            std::cout << "read work thread " << rsb << std::endl;
                             rsb->m_SignMutex->lock();
                             rsb->write_done = false;
 
@@ -1100,7 +1119,7 @@ public:
                             m_RDP->FillValuesToRaster(bfinal,rsb->Map,rsb->m_MapMutex,&(rsb->write_done),rsb->m_SignMutex,band,m_CurrentTimeIndex,[this, rsb,bfinal,band]()
                             {
 
-                                std::cout << "raster fill start2 "<< std::endl;
+                                std::cout << "raster fill start2 "<< rsb <<  std::endl;
                                 rsb->m_SignMutex->lock();
 
                                 rsb->SetFutureFrom(bfinal,GetProjection(),band);
@@ -1128,9 +1147,9 @@ public:
                         std::cout << "postfill2 " << std::endl;
                         m_ReadThreadWaitCondition.notify_all();
                         std::cout << "postfill3 " << std::endl;
-                        m_ReadThreadDoneCondition.wait(&m_ReadThreadDoneMutex);
+                        //m_ReadThreadDoneCondition.wait(&m_ReadThreadDoneMutex);
                         std::cout << "postfill4 " << std::endl;
-                        m_ReadThreadDoneMutex.unlock();
+                       // m_ReadThreadDoneMutex.unlock();
                         std::cout << "postfill5 " << std::endl;
 
 
@@ -1242,6 +1261,23 @@ public:
                     return;
                 }
             }
+
+            std::cout << "check_rsb " << std::endl;
+
+            if(rsb_r != nullptr)
+            {
+                std::cout << &rsb_r->projection << std::endl;
+            }
+            if(rsb_g != nullptr)
+            {
+                std::cout << &rsb_g->projection << std::endl;
+            }
+            if(rsb_b != nullptr)
+            {
+                std::cout << &rsb_b->projection << std::endl;
+            }
+
+            std::cout << "check_rsb_end " << std::endl;
 
 
             BoundingBox b;
@@ -3235,13 +3271,14 @@ public:
                 if(rsb_i->write_done == true && !rsb_i->rRead_Started && !rsb_i->update_gpu)
                 {
 
-                    std::cout << "delete rsb " << i << std::endl;
+                    std::cout << "delete rsb " << i << " " << rsb_i << std::endl;
                     rsb_i->m_MapMutex->lock();
                     rsb_i->m_MapMutex->unlock();
+
+                    rsb_i->m_SignMutex->unlock();
                     rsb_i->Destroy(m);
                     list.removeAt(i);
 
-                    rsb_i->m_SignMutex->unlock();
                     delete rsb_i;
                 }else
                 {
@@ -3298,7 +3335,7 @@ public:
 
     inline void OnDraw(OpenGLCLManager * m,GeoWindowState s) override
     {
-        //std::cout << "raster on draw" << std::endl;
+        std::cout << "raster on draw" << std::endl;
         UpdateGLData();
 
         m_DataHasChanged = false;
@@ -3306,6 +3343,7 @@ public:
 
         if(m_CurrentTime != time)
         {
+            std::cout << "update data for time" << std::endl;
             m_CurrentTime = time;
             m_CurrentTimeIndex = m_RDP->GetClosestTimeIndex(time);
             CreateGLTextures(m,s);
@@ -3313,6 +3351,8 @@ public:
 
         }else if(m_HasbeenChangedByScript)
         {
+            std::cout << "update data for time script" << std::endl;
+
             m_HasbeenChangedByScript = false;
             CreateGLTextures(m,s);
             m_DataHasChanged = true;
@@ -3634,10 +3674,10 @@ public:
 
         m_ReadInstructMutex.lock();
         m_ReadThreadStartMutex.lock();
-        m_ReadThreadDoneMutex.lock();
+        //m_ReadThreadDoneMutex.lock();
         m_ReadThreadStop = true;
         m_ReadThreadStartMutex.unlock();
-        m_ReadThreadDoneMutex.unlock();
+        //m_ReadThreadDoneMutex.unlock();
         m_ReadThreadWaitCondition.notify_all();
         m_ReadInstructMutex.unlock();
 

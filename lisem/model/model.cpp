@@ -216,10 +216,26 @@ cTMap *LISEMModel::GetMapWithMultByName(QString Dir, QString name, double mult_u
         }
 
         m_MapList.append(_M);
+
+        if(_M->nrRows() != m_BaseHeight)
+        {
+
+            LISEM_ERROR("ERROR in loading map " + Dir + name + " nr of rows is not identical " + QString::number(_M->nrRows()) + " vs " + QString::number(m_BaseHeight));
+            throw 1;
+        }
+        if(_M->nrCols() != m_BaseWidth)
+        {
+
+            LISEM_ERROR("ERROR in loading map " + Dir + name + " nr of rows is not identical " + QString::number(_M->nrCols()) + " vs " + QString::number(m_BaseWidth));
+            throw 1;
+        }
     }else
     {
         LISEM_ERROR("ERROR in loading map " + Dir + name);
+        throw 1;
     }
+
+
 
     return(_M);
 

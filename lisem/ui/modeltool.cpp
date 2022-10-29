@@ -706,6 +706,7 @@ void ModelTool::CreateParameterWidgets()
                 QLineEdit *l = new QLineEdit();
                 l->setText(p.m_Value);
                 l->setFont(QFont( "Helvetica", 10 ));
+                l->setToolTip(p.m_Description);
                 templayout->addWidget(l);
 
 

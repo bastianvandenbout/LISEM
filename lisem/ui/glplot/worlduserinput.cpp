@@ -528,7 +528,7 @@ void WorldWindow::InputToLayers()
                 if(m_MouseState.MouseButtonEvents.at(j) == GLFW_MOUSE_BUTTON_1 && m_MouseState.MouseButtonKeyAction.at(j) == GLFW_PRESS)
                 {
                     std::cout << "check collide " << std::endl;
-                    if(e.Collides(m_MouseState.Pos_x,m_CurrentWindowState.scr_height - 1- m_MouseState.Pos_y))
+                    if(e.Collides(m_MouseState.Pos_x,m_MouseState.Pos_y))
                     {
                         std::cout << "selected drag element "<< std::endl;
                         m_SelectedDragElement = e;

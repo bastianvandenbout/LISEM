@@ -96,40 +96,6 @@ public:
     QTimer m_OverlayTimer;
     bool m_OverlayDeactivated = false;
 
-
-    bool m_RunCallBackSet = false;
-    std::function<void(void)> m_RunCallBack;
-
-    inline void setRunCallBack(std::function<void(void)> f)
-    {
-        m_RunCallBackSet = true;
-        m_RunCallBack = f;
-    }
-
-
-
-    bool m_StopCallBackSet = false;
-    std::function<void(void)> m_StopCallBack;
-
-    inline void setStopCallBack(std::function<void(void)> f)
-    {
-        m_StopCallBackSet = true;
-        m_StopCallBack = f;
-    }
-
-    bool m_CompileCallBackSet = false;
-    std::function<void(void)> m_CompileCallBack;
-
-    inline void setCompileCallBack(std::function<void(void)> f)
-    {
-        m_CompileCallBackSet = true;
-        m_CompileCallBack = f;
-    }
-
-
-
-
-
     bool m_ToolCallBackSet = false;
     std::function<void(QString)> m_ToolCallBack;
 
@@ -212,11 +178,6 @@ public:
         }
         viewport()->update();
 
-    }
-
-    inline QString GetFileDir()
-    {
-        return QFileInfo(m_File).absoluteDir().path();
     }
 
     int getIndentationSpaces();
@@ -513,34 +474,22 @@ public:
     }
 
 
-    std::vector<int> m_ErrorLine;
-    std::vector<int> m_ErrorCharacter;
-    bool m_ErrorLineChanged = false;
-    std::vector<int> m_HighlightLine;
-    std::vector<int> m_HighlightCharacter;
-    std::vector<int> m_HighlightLength;
-    bool m_HighlightLineChanged = false;
 
-    inline std::vector<int> GetHighlightSearchLines()
-    {
 
-        return m_HighlightLine;
-    }
 
     inline void SetHighlightSearch(std::vector<int> lines, std::vector<int> positions, std::vector<int> lengths)
     {
-        m_HighlightLine = lines;
-        m_HighlightCharacter = positions;
-        m_HighlightLength = lengths;
+        m_CurrentRunLineMutex.lock();
+        std::vector<int> ret =  m_ErrorLine;
+        m_CurrentRunLineMutex.lock();
+        return ert;
     }
     inline std::vector<int> GetHighlightErrorLines()
     {
-        m_CurrentRunLineMutex.lock();
-        std::vector<int> ret =  m_ErrorLine;
-        m_CurrentRunLineMutex.unlock();
-        return ret;
     }
-
+    std::vector<int> m_ErrorLine;
+    std::vector<int> m_ErrorCharacter;
+    bool m_ErrorLineChanged = false;
 
     inline void SetHighlightErrorLocation(std::vector<int> line, std::vector<int> character)
     {
