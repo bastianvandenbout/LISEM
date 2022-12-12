@@ -1415,6 +1415,16 @@ public:
 
     }
 
+    void AddRigidWorldLayerFromFile(QString path)
+    {
+        UILayer *ml2 = m_WorldWindow->GetUIRigidWorldLayerFromFile(path);
+        if(ml2 != nullptr)
+        {
+            m_WorldWindow->AddUILayer(ml2,true);
+        }
+
+    }
+
     void AddPointCloudLayerFromFile(QString path)
     {
 

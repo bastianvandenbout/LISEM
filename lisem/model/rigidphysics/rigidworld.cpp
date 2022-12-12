@@ -9,6 +9,8 @@ void RigidPhysicsWorld::CopyFrom(RigidPhysicsWorld * w)
 
     m_system.Set_G_acc(w->m_system.Get_G_acc());
 
+    m_GeoOrigin.x = w->m_GeoOrigin.x;
+    m_GeoOrigin.y = w->m_GeoOrigin.y;
 
     //copy the objects
 
@@ -84,6 +86,25 @@ int RigidPhysicsWorld::GetObjectCount( bool has_mutex, bool include_terrain )
 
     return objects;
 
+}
+
+void RigidPhysicsWorld::SetObjectHighlight(RigidPhysicsObject*obj, LSMVector4 highlight,bool has_mutex)
+{
+    if(!has_mutex)
+    {
+        m_Mutex.lock();
+        m_Mutex_internal.lock();
+    }
+
+    m_HasChanges = true;
+    //set object highlight values
+    obj->int_sethighlight(highlight);
+
+    if(!has_mutex)
+    {
+        m_Mutex.unlock();
+        m_Mutex_internal.unlock();
+    }
 }
 
 void RigidPhysicsWorld::AddObject(RigidPhysicsObject*obj , bool has_mutex, bool add_geo )

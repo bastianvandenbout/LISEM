@@ -29,6 +29,15 @@ inline static void ShowTextfile(QString name, QWidget* parent = nullptr)
 
     std::cout << "open file for view/edit " << name.toStdString() << std::endl;
     QFile file(name);
+    QFileInfo fi(name);
+    if(!fi.exists())
+    {
+        QMessageBox::warning(parent, QString("LISEM"),
+                             QString("Cannot read file %1")
+                             .arg(name));
+        return;
+    }
+
     if (!file.open(QFile::ReadWrite | QFile::Text))
     {
         QMessageBox::warning(parent, QString("LISEM"),
@@ -38,13 +47,17 @@ inline static void ShowTextfile(QString name, QWidget* parent = nullptr)
         return;
     }
 
+
     QString modifiedContents;
     QTextStream in(&file);
 
-    QString all = in.readAll();
+    QString all;
 
-    std::cout << "opened: " << all.toStdString() << std::endl;
-
+    while (!file.atEnd())
+    {
+        QString S = file.readLine();
+        all.append(S);
+    }
     QPlainTextEdit *view = new QPlainTextEdit(all);
     view->setWindowTitle(name);
     view->setMinimumWidth(400);

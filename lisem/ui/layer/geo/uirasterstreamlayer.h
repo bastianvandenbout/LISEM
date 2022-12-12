@@ -1070,6 +1070,8 @@ public:
 
 
                     rsb = new RasterStreamBuffer(m,state.scr_pixwidth,state.scr_pixheight,bfinal,GetProjection(),band);
+
+                    std::cout << "new rsb " << rsb << std::endl;
                     //rsb->SetFutureFrom(bfinal,GetProjection(),band);
                     Buffers.prepend(rsb);
 
@@ -1087,13 +1089,14 @@ public:
                     std::cout << "ask write " << std::endl;
                     rsb->rRead_Started = true;
 
-
+                    //already locked
                     //rsb->m_SignMutex->lock();
                     rsb->write_done = false;
                     //rsb->m_SignMutex->unlock();
 
-                    rsb->tRead = std::thread([bfinal,band,this,rsb]()
+                    //rsb->tRead = std::thread([bfinal,band,this,rsb]()
                     {
+                        std::cout << "write thread " << rsb << " " << rsb->m_SignMutex << std::endl;
 
                         std::cout << "write thread start" << std::endl;
                         m_ReadInstructMutex.lock();
@@ -1103,15 +1106,19 @@ public:
 
                         std::cout << "write thread start2" << std::endl;
                         //m_ReadThreadDoneMutex.lock();
+                        //rsb->m_SignMutex->lock();
+                        std::cout << "read work thread1 " << rsb << std::endl;
+                        rsb->write_done = false;
+                        std::cout << "read work thread2 " << rsb << std::endl;
+
+                        //rsb->m_SignMutex->unlock();
+                        std::cout << "read work thread3 " << rsb << std::endl;
 
                         std::cout << "start subthread" << std::endl;
 
                         m_ReadThreadWork =  [rsb,bfinal,band,this](){
                             std::cout << "read work thread " << rsb << std::endl;
-                            rsb->m_SignMutex->lock();
-                            rsb->write_done = false;
 
-                            rsb->m_SignMutex->unlock();
 
 
                             std::cout << "raster fill start 1"<< std::endl;
@@ -1157,7 +1164,7 @@ public:
                         std::cout << "postfill6 " << std::endl;
 
 
-                    });
+                    };//);
                     std::cout << "postfill7 " << std::endl;
 
                     rsb->m_SignMutex->unlock();
@@ -3268,10 +3275,10 @@ public:
 
 
                 //destroy and remove buffer
-                if(rsb_i->write_done == true && !rsb_i->rRead_Started && !rsb_i->update_gpu)
+                if(!(rsb_i->write_done == false || rsb_i->rRead_Started || rsb_i->update_gpu) )
                 {
 
-                    std::cout << "delete rsb " << i << " " << rsb_i << std::endl;
+                    std::cout << "delete rsb " << i << " " << rsb_i << " " << rsb_i->m_SignMutex << std::endl;
                     rsb_i->m_MapMutex->lock();
                     rsb_i->m_MapMutex->unlock();
 

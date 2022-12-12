@@ -817,6 +817,7 @@ inline static QString PreProcessScript(QString script)
     QList<QString> pointexts = GetPointCloudExtensions();
     QList<QString> modelexts = GetModelExtensions();
     QList<QString> fieldexts = GetFieldExtensions();
+    QList<QString> rigidworldexts = GetRigidWorldExtensions();
 
     QStringList exts;
     std::vector<bool> shape;
@@ -825,6 +826,7 @@ inline static QString PreProcessScript(QString script)
     std::vector<bool> map;
     std::vector<bool> model;
     std::vector<bool> field;
+    std::vector<bool> rigidworld;
 
     for(int i = 0; i < mapexts.length(); i++)
     {
@@ -835,6 +837,7 @@ inline static QString PreProcessScript(QString script)
         map.push_back(true);
         model.push_back(false);
         field.push_back(false);
+        rigidworld.push_back(false);
     }
 
     for(int i = 0; i < shapeexts.length(); i++)
@@ -846,6 +849,7 @@ inline static QString PreProcessScript(QString script)
         map.push_back(false);
         model.push_back(false);
          field.push_back(false);
+         rigidworld.push_back(false);
     }
 
     for(int i = 0; i < pointexts.length(); i++)
@@ -857,6 +861,7 @@ inline static QString PreProcessScript(QString script)
         map.push_back(false);
         model.push_back(false);
          field.push_back(false);
+         rigidworld.push_back(false);
     }
     for(int i = 0; i < tableexts.length(); i++)
     {
@@ -867,6 +872,7 @@ inline static QString PreProcessScript(QString script)
         map.push_back(false);
         model.push_back(false);
          field.push_back(false);
+         rigidworld.push_back(false);
     }
 
 
@@ -879,6 +885,7 @@ inline static QString PreProcessScript(QString script)
         map.push_back(false);
         model.push_back(true);
          field.push_back(false);
+         rigidworld.push_back(false);
     }
 
     for(int i = 0; i < fieldexts.length(); i++)
@@ -890,6 +897,18 @@ inline static QString PreProcessScript(QString script)
         map.push_back(false);
         model.push_back(false);
          field.push_back(true);
+         rigidworld.push_back(false);
+    }
+    for(int i = 0; i < rigidworldexts.length(); i++)
+    {
+        exts.append(rigidworldexts.at(i));
+        shape.push_back(false);
+        table.push_back(false);
+        pointcloud.push_back(false);
+        map.push_back(false);
+        model.push_back(false);
+         field.push_back(false);
+         rigidworld.push_back(true);
     }
 
     /*QStringList exts = {".map",".tif",".asc",".shp",".gpkg",".osm",".csv",".tbl",".las"};
@@ -951,6 +970,7 @@ inline static QString PreProcessScript(QString script)
             bool is_map = map[i];
             bool is_model = model[i];
             bool is_field = field[i];
+            bool is_rigidworld = rigidworld[i];
 
             int loc = scriptline.indexOf(sstring,0);
 
@@ -1204,6 +1224,31 @@ inline static QString PreProcessScript(QString script)
                         }else
                         {
                             QString replace = "LoadPointCloud(\"" + fullname + "\")";
+                            //scriptline.replace((int)begin,(int)(end-begin+1),replace);
+                            list_namesload.append(fullname);
+
+                            reparg1.append((int)begin);
+                            reparg2.append((int)(end-begin));
+                            reparg3.append(replace);
+                            reparg4.append(18);
+                            add_search += 18 + fullname.length();
+                        }
+                    }else if(is_rigidworld)
+                    {
+                        if(is_assign)
+                        {
+                             QString replace = "SaveThisRigidWorld(\"" + fullname + "\")";
+                             //scriptline.replace((int)begin,(int)(end-begin+1),replace);
+                             list_namessave.append(fullname);
+
+                             reparg1.append((int)begin);
+                             reparg2.append((int)(end-begin));
+                             reparg3.append(replace);
+                             reparg4.append(22);
+                             add_search += 22 + fullname.length();
+                        }else
+                        {
+                            QString replace = "LoadRigidWorld(\"" + fullname + "\")";
                             //scriptline.replace((int)begin,(int)(end-begin+1),replace);
                             list_namesload.append(fullname);
 

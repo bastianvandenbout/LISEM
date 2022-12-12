@@ -50,6 +50,17 @@ public:
     bool m_IsConvex = true;
     int m_UniqueID = 0;
 
+    bool m_IsSimpleHeight = false;
+    bool m_IsSimpleEllipsoid = false;
+    bool m_IsSimpleCube = false;
+    bool m_IsSimpleCilinder = false;
+    bool m_IsSimpleMesh = false;
+    double m_Density = 1.0;
+    LSMVector3 m_SimpleSize = LSMVector3(1.0,1.0,1.0);
+
+    LSMVector4 m_Highlight = LSMVector4(0.0,0.0,0.0,0.0);
+
+
     double m_Volume = 0.0;
 
     ModelGeometry * m_TriangulatedModel= nullptr;
@@ -72,6 +83,16 @@ public:
 
 public:
 
+    inline void int_sethighlight(LSMVector4 highlight)
+    {
+        m_Highlight = highlight;
+
+    }
+    inline LSMVector4 int_gethighlight()
+    {
+        return m_Highlight;
+    }
+
     inline bool IsConvex()
     {
         return m_IsConvex;
@@ -91,7 +112,7 @@ public:
     {
         if(m_Frem)
         {
-            m_Frem;
+            m_Frem();
         }
     }
 
@@ -318,7 +339,9 @@ public:
     static inline RigidPhysicsObject * RigidPhysicsObject_AsEllipsoid(LSMVector3 radius, double density, LSMVector3 position = LSMVector3(0.0,0.0,0.0), LSMVector3 rotation = LSMVector3(0.0,0.0,0.0), LSMVector3 vel = LSMVector3(0.0,0.0,0.0), LSMVector3 rotvel = LSMVector3(0.0,0.0,0.0), double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "", bool is_static = false)
     {
 
+
         RigidPhysicsObject * ret = new RigidPhysicsObject();
+        ret->m_Density= density;
         ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         ret->m_chMaterial->SetFriction(friction);
         ret->m_chMaterial->SetCompliance(compliance);
@@ -352,14 +375,16 @@ public:
         m1.Scale(radius.x,radius.y,radius.z);
         model->AddMesh(m1);
         ret->m_TriangulatedModel = model;
+        ret->m_IsSimpleEllipsoid = true;
+        ret->m_SimpleSize = radius;
         return ret;
 
     }
 
     static inline RigidPhysicsObject * RigidPhysicsObject_AsCilinder(double radius,double length, double density, LSMVector3 position = LSMVector3(0.0,0.0,0.0), LSMVector3 rotation = LSMVector3(0.0,0.0,0.0), LSMVector3 vel = LSMVector3(0.0,0.0,0.0), LSMVector3 rotvel = LSMVector3(0.0,0.0,0.0), double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "", bool is_static = false)
     {
-
         RigidPhysicsObject * ret = new RigidPhysicsObject();
+        ret->m_Density= density;
         ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         ret->m_chMaterial->SetFriction(friction);
         ret->m_chMaterial->SetCompliance(compliance);
@@ -391,14 +416,16 @@ public:
         m1.SetAsCone(radius,radius,length/2.0,16);
         model->AddMesh(m1);
         ret->m_TriangulatedModel = model;
+        ret->m_IsSimpleCilinder = true;
+        ret->m_SimpleSize = LSMVector3(radius,length,0.0);
         return ret;
 
     }
 
     static inline RigidPhysicsObject * RigidPhysicsObject_AsBox(LSMVector3 Size, double density, LSMVector3 position = LSMVector3(0.0,0.0,0.0), LSMVector3 rotation = LSMVector3(0.0,0.0,0.0),LSMVector3 vel = LSMVector3(0.0,0.0,0.0), LSMVector3 rotvel = LSMVector3(0.0,0.0,0.0), double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "", bool is_static = false)
     {
-
         RigidPhysicsObject * ret = new RigidPhysicsObject();
+        ret->m_Density= density;
         ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         ret->m_chMaterial->SetFriction(friction);
         ret->m_chMaterial->SetCompliance(compliance);
@@ -431,6 +458,8 @@ public:
         m1.SetAsCube(Size);
         model->AddMesh(m1);
         ret->m_TriangulatedModel = model;
+        ret->m_IsSimpleCube = true;
+        ret->m_SimpleSize = Size;
         return ret;
 
     }
@@ -438,6 +467,7 @@ public:
     static inline RigidPhysicsObject * RigidPhysicsObject_AsASMesh(ModelGeometry * gmodel,double density, LSMVector3 position = LSMVector3(0.0,0.0,0.0), LSMVector3 rotation = LSMVector3(0.0,0.0,0.0),LSMVector3 vel = LSMVector3(0.0,0.0,0.0), LSMVector3 rotvel = LSMVector3(0.0,0.0,0.0), double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "", bool is_static = false)
     {
         RigidPhysicsObject * ret = new RigidPhysicsObject();
+        ret->m_Density= density;
         ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         ret->m_chMaterial->SetFriction(friction);
         ret->m_chMaterial->SetCompliance(compliance);
@@ -544,6 +574,9 @@ public:
         ret->m_chBody->SetRot(ChQuaternion<double>(rotq.x,rotq.y,rotq.z,rotq.w));
         ret->m_chBody->SetPos_dt(ChVector<double>(vel.x,vel.y,vel.z));
         ret->m_TriangulatedModel = gmodel->GetCopy();
+
+        ret->m_IsSimpleMesh = true;
+
         return ret;
 
     }
@@ -551,6 +584,7 @@ public:
     static inline RigidPhysicsObject * RigidPhysicsObject_AsMesh(ModelGeometry * gmodel,bool is_closed, bool is_static, double density = 1.0f, double friction = 0.4, double compliance = 0.0, double complianceT = 0.0, double DampingF = 0.2, QString family = "")
     {
         RigidPhysicsObject * ret = new RigidPhysicsObject();
+        ret->m_Density= density;
         ret->m_chMaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         ret->m_chMaterial->SetFriction(friction);
         ret->m_chMaterial->SetCompliance(compliance);
@@ -651,6 +685,8 @@ public:
                                                (1.0 / 12.0) * 1.0  ,
                                                (1.0 / 12.0) * 1.0  ));
         ret->m_TriangulatedModel = gmodel;
+        ret->m_IsSimpleMesh = true;
+
         return ret;
     }
 
@@ -743,13 +779,43 @@ public:
                 RigidPhysicsObject * ret = RigidPhysicsObject_AsMesh(model,false,true);
 
                 ret->m_IsTerrain = true;
-
+                ret->m_IsSimpleHeight = true;
                 retlist.append(ret);
             }
         }
 
-
         return retlist;
+
+    }
+
+    inline double GetDensity()
+    {
+        return m_Density;
+    }
+
+    inline double GetMass()
+    {
+        return GetVolume() * GetDensity();
+    }
+
+    inline LSMMatrix3x3 GetInertia()
+    {
+
+        ChMatrix33<> inertia = m_chBody->GetInertia();
+
+        LSMMatrix3x3 ret;
+        ret.data[0][0] = inertia(0,0);
+        ret.data[0][1] = inertia(0,1);
+        ret.data[0][2] = inertia(0,2);
+        ret.data[1][0] = inertia(1,0);
+        ret.data[1][1] = inertia(1,1);
+        ret.data[1][2] = inertia(1,2);
+        ret.data[2][0] = inertia(2,0);
+        ret.data[2][1] = inertia(2,1);
+        ret.data[2][2] = inertia(2,2);
+
+        return ret;
+
 
     }
 

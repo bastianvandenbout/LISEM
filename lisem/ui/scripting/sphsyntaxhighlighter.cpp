@@ -23,8 +23,10 @@ Highlighter::Highlighter(QTextDocument *parent)
         QStringLiteral("\\bfloat\\b"),QStringLiteral("\\bMap\\b"),QStringLiteral("\\bTable\\b"),
         QStringLiteral("\\bShapes\\b"),QStringLiteral("\\bstring\\b"),QStringLiteral("\\barray\\b"),
         QStringLiteral("\\bUILayer\\b"),QStringLiteral("\\bPointCloud\\b"),QStringLiteral("\\bField\\b"),
-        QStringLiteral("\\bGPUMap\\b")
+        QStringLiteral("\\bGPUMap\\b"),QStringLiteral("\\b#include\\b"),QStringLiteral("\\b#ifdefined\\b")
+        ,QStringLiteral("\\b#else\\b"),QStringLiteral("\\b#endif\\b"),QStringLiteral("\\b#define\\b")
     };
+
     for (const QString &pattern : keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;

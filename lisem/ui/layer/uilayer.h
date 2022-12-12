@@ -54,6 +54,8 @@ typedef struct LayerProbeResult
     QList<QString> AttrNames;
     QList<QString> AttrValues;
 
+    LSMVector3 Position;
+    LSMVector3 Direction;
 } LayerProbeResult;
 
 
@@ -282,12 +284,15 @@ public:
     }
     inline virtual void Rotate(LSMVector3 r)
     {
-        LSMVector4 q = LSMVector4::QFromEulerAngles(m_Rotation);
+        //convert to quaternion representation to avoid gimble lock issues and have smooth interpolating rotation
+        /*LSMVector4 q = LSMVector4::QFromEulerAngles(m_Rotation.x,m_Rotation.y,m_Rotation.z);
+        LSMVector4 qadd = LSMVector4::QFromEulerAngles(r.x,r.y,r.z);
 
-        LSMVector4 qnew;
+        LSMVector4 qnew= LSMVector4::QMultiply(q,qadd);
 
+        LSMVector3 angles =  qnew.ToEulerAngles();*/
 
-
+        m_Rotation = m_Rotation + r;// angles;
     }
     //virtual methods implemented by other classes
 

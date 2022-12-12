@@ -187,6 +187,11 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
 {
     return vertices.at(i);
 }
+
+ Vertex *LSMMesh::GetVertexPtr(int i)
+{
+    return &(vertices.at(i));
+}
  Face LSMMesh::GetFace(int i)
 {
     Face f;
@@ -199,6 +204,63 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
  void LSMMesh::SetMaterial(ModelMaterial m)
 {
     m_Material = m;
+}
+
+ float LSMMesh::RayCastNormal(LSMVector3 O, LSMVector3 Dir, LSMVector3 &Normal)
+{
+
+    bool found = false;
+    float dist_min = 0.0f;
+    int triangleCount = indices.size()/3;
+
+    for (long a = 0; a < triangleCount; a++)
+    {
+        long i1 = indices.at(a * 3 + 0);
+        long i2 = indices.at(a * 3 + 1);
+        long i3 = indices.at(a * 3 + 2);
+
+        const LSMVector3& v1 = vertices[i1].position();
+        const LSMVector3& v2 = vertices[i2].position();
+        const LSMVector3& v3 = vertices[i3].position();
+
+
+        float dist = rayTriangleIntersect(Ray(O,Dir,false),v1,v2,v3);
+
+
+            if(std::isfinite(dist) && dist != -INFINITYFLTLSM)
+            {
+
+                if(dist  > 0.0)
+                {
+                    LSMVector3 posn = O + dist * Dir;
+
+                    if(found == false)
+                    {
+                        found = true;
+                        dist_min = dist;
+
+                        LSMVector3 normal = LSMVector3::CrossProduct(v2-v1,v3-v1).Normalize();
+                        Normal = normal;
+
+                    }else if(dist < dist_min)
+                    {
+                        dist_min = dist;
+                        LSMVector3 normal = LSMVector3::CrossProduct(v2-v1,v3-v1).Normalize();
+                        Normal = normal;
+
+                    }
+            }
+        }
+    }
+
+    if(found)
+    {
+        return dist_min;
+    }else
+    {
+        return -INFINITYFLTLSM;
+    }
+
 }
 
  float LSMMesh::RayCast(LSMVector3 O, LSMVector3 Dir)
@@ -219,13 +281,16 @@ LSMMesh::LSMMesh(std::vector<Vertex> in_vertices, std::vector<unsigned int> in_i
         const LSMVector3& v3 = vertices[i3].position();
 
 
-        float dist = rayTriangleIntersect(Ray(O,Dir),v1,v2,v3);
+        float dist = rayTriangleIntersect(Ray(O,Dir,false),v1,v2,v3);
 
 
-            if(std::isfinite(dist))
+            if(std::isfinite(dist) && dist != -INFINITYFLTLSM)
             {
+
                 if(dist  > 0.0)
                 {
+                    LSMVector3 posn = O + dist * Dir;
+
                     if(found == false)
                     {
                         found = true;

@@ -311,6 +311,7 @@ public:
 
     inline AS_ByteArray * AS_Download(QString url, QString post, int timeout, QString username, QString password)
     {
+        std::cout << "download task start " << url.toStdString() << std::endl;
         DownloadTask * task = new DownloadTask(url,"",username,password,timeout);
 
             task->shouldbesaved = false;
@@ -412,15 +413,6 @@ public:
 
         int r = 1;
 
-        r = sm->m_Engine->RegisterObjectType("ByteArray",0,asOBJ_REF);//Shapes
-
-        //register reference counting for garbage collecting
-        r = sm->m_Engine->RegisterObjectBehaviour("ByteArray",asBEHAVE_ADDREF,"void f()",asMETHOD(AS_ByteArray,AS_AddRef),asCALL_THISCALL); assert( r >= 0 );
-        r = sm->m_Engine->RegisterObjectBehaviour("ByteArray",asBEHAVE_RELEASE,"void f()",asMETHOD(AS_ByteArray,AS_ReleaseRef),asCALL_THISCALL); assert( r >= 0 );
-        r = sm->m_Engine->RegisterObjectMethod("ByteArray", "ByteArray& opAssign(ByteArray &in m)", asMETHOD(AS_ByteArray,AS_Assign), asCALL_THISCALL); assert( r >= 0 );
-        r = sm->m_Engine->RegisterObjectBehaviour("ByteArray",asBEHAVE_FACTORY,"ByteArray@ CSF0()",asFUNCTIONPR(AS_ByteArrayFactory,(),AS_ByteArray *),asCALL_CDECL); assert( r >= 0 );
-
-
 
         sm->m_Engine->RegisterGlobalFunction("ByteArray @Download(string url, string post = \"\", int timeout = 0, string username = \"\", string password = \"\")", asMETHODPR(DownloadManagerWidget,AS_Download,(QString,QString, int, QString, QString),AS_ByteArray*),  asCALL_THISCALL_ASGLOBAL,this);
         sm->m_Engine->RegisterGlobalFunction("bool DownloadFilePost(string url, string filename, string post, bool wait = false, int timeout = 0, string username = \"\", string password = \"\")", asMETHODPR(DownloadManagerWidget,AS_AddDownloadPost,(QString,QString,QString, bool, int, QString, QString),bool),  asCALL_THISCALL_ASGLOBAL,this);
@@ -428,13 +420,6 @@ public:
         sm->m_Engine->RegisterGlobalFunction("bool DownloadFile(string url, string filename, bool wait = false, int timeout = 0, string username = \"\", string password = \"\")", asMETHODPR(DownloadManagerWidget,AS_AddDownload,(QString,QString, bool, int, QString, QString),bool),  asCALL_THISCALL_ASGLOBAL,this);
         sm->m_Engine->RegisterGlobalFunction("bool DownloadFileAbsPath(string url, string filename,bool wait = false, int timeout = 0, string username = \"\", string password = \"\")", asMETHODPR(DownloadManagerWidget,AS_AddDownloadAbsPath,(QString,QString, bool, int, QString, QString),bool),  asCALL_THISCALL_ASGLOBAL,this);
         sm->m_Engine->RegisterGlobalFunction("bool WaitForAllDownloads(int timeout = 0)", asMETHODPR(DownloadManagerWidget,AS_WaitForDownloads,(int),bool),  asCALL_THISCALL_ASGLOBAL,this);
-
-        sm->m_Engine->RegisterGlobalFunction("string ToText(const ByteArray &in ba)", asFUNCTION( ToText),  asCALL_CDECL);
-        sm->m_Engine->RegisterGlobalFunction("string ToXML(const ByteArray &in ba)", asFUNCTION( ToXML),  asCALL_CDECL);
-        sm->m_Engine->RegisterGlobalFunction("array<Map> @ToMap(const ByteArray &in ba, const string &in format)",asFUNCTION(ToMap),asCALL_CDECL);
-
-        sm->m_Engine->RegisterGlobalFunction("string OWSCapabilities(const string &in xml)", asFUNCTION( GetOWSCapabilitiesType),  asCALL_CDECL);
-
 
 
     }

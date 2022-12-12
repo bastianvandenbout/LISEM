@@ -26,6 +26,7 @@
 #include "masked_raster.h"
 #include <functional>
 #include <iostream>
+#include <cmath>
 #include "lisemmath.h"
 #define FOR_ROW_COL_MV(map) for(int r = 0; r < map->nrRows(); r++)\
     for (int c = 0; c < map->nrCols(); c++)\
@@ -64,12 +65,21 @@ class cTMap
 
 public:
 
+std::string m_projection = "";
+
     //! The actual raster.
     MaskedRaster<float> data;
 
                    cTMap               ()=default;
-
+				   
+				   cTMap 			   (float * data, int width, int height, float north, float west,float dx, float dy);
+					
+					cTMap               (MaskedRaster<float>&& data,
+                                        bool is_ldd = false);
+										
                    cTMap               (MaskedRaster<float>&& data,
+										std::string projection,
+                                        std::string mapName,
                                         bool is_ldd = false);
 
                    cTMap               (cTMap const& other)=default;
@@ -114,14 +124,16 @@ public:
     cTMap*         GetCopy1             () const;
     cTMap*         GetCopyMask          () const;
 
+	inline std::string projection()
+	{
+		return m_projection;
+	}
     RasterBandStats GetRasterBandStats  (bool stdev);
 
     //functions related to the Angelscript Scripting Access for maps
     //NOTE: maps can have a single numerical value, as indicated by member AS_IsSingleValue
     //the value itself is contained in the 1x1 raster data accasable by map->data[0][0]
 public:
-
-    bool           AS_IsLDD             = false;
 
     float&         Value             (int r, int c);
     int            Rows              ();
@@ -206,6 +218,41 @@ public:
 
 };
 
+inline cTMap::cTMap(float * datain, int width, int height, float north, float west, float dx,float dy)
+{
+	data = MaskedRaster<float>(height,width, north,west,dx,dy);
+	if(datain != nullptr)
+	{
+		
+		for(int r = 0; r < height; r++)
+		{
+			for(int c = 0; c < width; c++)
+			{
+				int index = r * width + c;
+				if(datain[index] < -1e30)
+				{
+					pcr::setMV(data[r][c]);
+				}else{
+					
+				data[r][c] = datain[index];
+				}
+			}
+		}
+	}else{
+		for(int r = 0; r < height; r++)
+		{
+			for(int c = 0; c < width; c++)
+			{
+				
+				data[r][c] = 0.0;
+				
+			}
+		}
+		
+	}
+	
+}
+
 
 inline cTMap::cTMap(
     MaskedRaster<float>&& data,
@@ -214,7 +261,20 @@ inline cTMap::cTMap(
     : data(std::forward<MaskedRaster<float>>(data))
 
 {
-    AS_IsLDD = is_ldd;
+    
+}
+inline cTMap::cTMap(
+    MaskedRaster<float>&& da0ta,
+	std::string project,
+	std::string nam,
+        bool is_ldd)
+
+    : data(std::forward<MaskedRaster<float>>(data))
+
+{
+	
+	m_projection = project;
+    
 }
 
 inline int cTMap::nrRows() const
@@ -307,11 +367,11 @@ inline void cTMap::MakeMap(
 inline cTMap * cTMap::GetCopy() const
 {
     const cTMap * dup = this;
-    MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
-        dup->west(), dup->cellSizeX(),dup->cellSizeY());
+    //MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
+    //   dup->west(), dup->cellSizeX(),dup->cellSizeY());
 
-    cTMap * m = new cTMap(std::move(datac),AS_IsLDD);
-    m->AS_IsLDD = AS_IsLDD;
+    cTMap * m = new cTMap(nullptr, dup->nrCols(),dup->nrRows(), dup->north(),
+        dup->west(), dup->cellSizeX(),dup->cellSizeY());
 
     m->setAllMV();
 
@@ -335,8 +395,7 @@ inline cTMap * cTMap::GetCopyMask() const
     MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
         dup->west(), dup->cellSizeX(),dup->cellSizeY());
 
-    cTMap * m = new cTMap(std::move(datac),AS_IsLDD);
-    m->AS_IsLDD = AS_IsLDD;
+    cTMap * m = new cTMap(std::move(datac),false);
     m->setAllMV();
 
     for(int r=0; r < m->nrRows(); r++)
@@ -358,11 +417,12 @@ inline cTMap * cTMap::GetCopyMask() const
 inline cTMap * cTMap::GetCopy0() const
 {
     const cTMap * dup = this;
-    MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
+    //MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
+    //    dup->west(), dup->cellSizeX(),dup->cellSizeY());
+
+    cTMap * m = new cTMap(nullptr, dup->nrCols(),dup->nrRows(), dup->north(),
         dup->west(), dup->cellSizeX(),dup->cellSizeY());
 
-    cTMap * m = new cTMap(std::move(datac),AS_IsLDD);
-    m->AS_IsLDD = AS_IsLDD;
     return m;
 }
 
@@ -370,11 +430,11 @@ inline cTMap * cTMap::GetCopy0() const
 inline cTMap * cTMap::GetCopy1() const
 {
     const cTMap * dup = this;
-    MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
-        dup->west(), dup->cellSizeX(),dup->cellSizeY());
+    //MaskedRaster<REAL4> datac = MaskedRaster<REAL4>(dup->nrRows(), dup->nrCols(), dup->north(),
+    //    dup->west(), dup->cellSizeX(),dup->cellSizeY());
 
-    cTMap * m = new cTMap(std::move(datac),AS_IsLDD);
-    m->AS_IsLDD = AS_IsLDD;
+    cTMap * m = new cTMap(nullptr, dup->nrCols(),dup->nrRows(), dup->north(),
+        dup->west(), dup->cellSizeX(),dup->cellSizeY());
 
 
     for(int r=0; r < m->nrRows(); r++)

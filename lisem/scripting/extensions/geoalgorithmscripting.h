@@ -64,6 +64,8 @@ inline static void RegisterGeoAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Shapes @RasterContour(const Map &in s,float interval)", asFUNCTIONPR( AS_RasterContour,(cTMap *,float),ShapeFile*),  asCALL_CDECL);
 
 
+    engine->RegisterGlobalFunction("void PrintGDALInfo()", asFUNCTIONPR(PrintGDALDrivers,(void),void),asCALL_CDECL);
+
     r = engine->RegisterGlobalSTDFunction("Map @RasterWarp(const Map &in target,array<Map> &in sources, string interpolation = \"bilinear\")", GetFuncConvert(static_cast<cTMap* (*)(cTMap*,std::vector<cTMap*>,QString)>(&AS_RasterWarp)));
     r = engine->RegisterGlobalFunction("Map @RasterWarp(const Map &in target,const Map &in sources, string interpolation = \"bilinear\")", asFUNCTIONPR( AS_RasterWarp,(cTMap *,cTMap*,QString),cTMap *),  asCALL_CDECL);
     r = engine->RegisterGlobalSTDFunction("Map @RasterMerge(array<Map> &in sources, string interpolation = \"bilinear\")", GetFuncConvert(static_cast<cTMap* (*)(std::vector<cTMap*>,QString)>(&AS_RasterMerge)));

@@ -91,6 +91,7 @@ void ScriptManager::Initialize()
     RegisterGPUToScriptEngine(m_Engine);
     RegisterMeshToScriptEngine(m_Engine);
     RegisterScriptFunctionsIO(m_Engine);
+    RegisterScriptFunctionsWeb(m_Engine);
     RegisterModelScriptFunctions(m_Engine);
 
     RegisterPrecipitationAnalysisToScriptEngine(m_Engine);

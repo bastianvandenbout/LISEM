@@ -74,6 +74,17 @@ public:
         m_MaxZ = zmin < zmax? zmax : zmin;
     }
 
+    inline void Move(LSMVector3 p)
+    {
+        m_MinX += p.x;
+        m_MinY += p.y;
+        m_MinZ += p.z;
+        m_MaxX += p.x;
+        m_MaxY += p.y;
+        m_MaxZ += p.z;
+
+    }
+
     inline void Merge(BoundingBox3D p)
     {
 

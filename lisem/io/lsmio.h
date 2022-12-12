@@ -1244,6 +1244,18 @@ inline cTMap * AS_SaveThisMapToFile(const QString &path)
 }
 
 
+inline static int GetMapBandCount(const QString &name)
+{
+    return readRasterBandCount(AS_DIR + name);
+
+}
+inline static cTMap * LoadMapBand(const QString &name, int band)
+{
+    cTMap* bandd = new cTMap(readRaster(AS_DIR + name,band));
+
+    return bandd;
+}
+
 inline static std::vector<cTMap *> LoadMapBandList(const QString &name)
 {
     QList<cTMap*> bands = readRasterList(AS_DIR + name);

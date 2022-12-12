@@ -24,8 +24,10 @@ class LSMMesh;
 
 typedef struct ModelRayCastResult
 {
+    bool m_IsHit = true;
     LSMMesh * m_Mesh = nullptr;
     LSMVector3 m_Position;
+    LSMVector3 m_Normal;
 
 } ModelRayCastResult;
 
@@ -138,7 +140,7 @@ public:
 
     }
 
-    ModelRayCastResult RayCast(LSMVector3 O, LSMVector3 Dir, LSMMatrix4x4 ObjtoWorld, LSMMatrix4x4 WorldtoObj)
+    ModelRayCastResult RayCast(LSMVector3 O, LSMVector3 Dir, LSMMatrix4x4 ObjtoWorld, LSMMatrix4x4 WorldtoObj, bool do_normal = true)
     {
         LSMVector3 O_o = WorldtoObj * O;
         LSMVector3 O_opd = WorldtoObj * (O+Dir);
@@ -146,31 +148,64 @@ public:
 
         //raycast in local coordinates against all meshes
 
+        LSMVector3 Normalf;
         bool found = false;
         double dist_min = 0.0;
         LSMMesh * mesh = nullptr;
         for(int i = 0; i < meshes.size(); i++)
         {
-            float dist = meshes.at(i).RayCast(O_o,O_D);
-            if(std::isfinite(dist))
+            if(do_normal)
             {
-                if(found == false)
+                LSMVector3 Normal;
+                float dist = meshes.at(i).RayCastNormal(O_o,O_D, Normal);
+                if(std::isfinite(dist))
                 {
-                    found = true;
-                    mesh = &meshes.at(i);
-                    dist_min = dist;
-                }else if(dist <dist_min)
+                    if(found == false)
+                    {
+                        found = true;
+                        mesh = &meshes.at(i);
+                        dist_min = dist;
+                        Normalf = Normal;
+                    }else if(dist <dist_min)
+                    {
+                        mesh = &meshes.at(i);
+                        dist_min = dist;
+                        Normalf = Normal;
+                    }
+                }
+            }else
+            {
+                float dist = meshes.at(i).RayCast(O_o,O_D);
+                if(std::isfinite(dist))
                 {
-                    mesh = &meshes.at(i);
-                    dist_min = dist;
+                    if(found == false)
+                    {
+                        found = true;
+                        mesh = &meshes.at(i);
+                        dist_min = dist;
+                    }else if(dist <dist_min)
+                    {
+                        mesh = &meshes.at(i);
+                        dist_min = dist;
+                    }
                 }
             }
         }
 
+        if(found)
+        {
+            //LSMVector3 hitpos = O_o+O_D * dist_min;
+             }
+
 
         ModelRayCastResult res;
+        res.m_IsHit = found;
         res.m_Mesh = mesh;
         res.m_Position = ObjtoWorld * (O_o+O_D * dist_min);
+        if(do_normal)
+        {
+            res.m_Normal = Normalf;
+        }
         return res;
     }
 

@@ -8,6 +8,7 @@ layout(location = 4) in highp vec3 bitangentAttr;
 layout(location = 5) in highp vec3 colorAttr;
 
 uniform highp mat4 OMatrix;
+uniform highp mat4 ONMatrix;
 uniform highp mat4 CMatrix;
 uniform highp vec3 ObjTranslate;
 
@@ -19,5 +20,5 @@ void main() {
    gl_Position = CMatrix *(vec4((OMatrix*vec4(posAttr , 1.0)).xyz,1.0));
    frag_position = (OMatrix*vec4(posAttr , 1.0)).xyz;
    frag_texcoords = UVAttr;
-   frag_in_normal = (OMatrix*vec4(normalAttr,0.0)).xyz;
+   frag_in_normal = (ONMatrix*vec4(normalAttr,0.0)).xyz;
 }

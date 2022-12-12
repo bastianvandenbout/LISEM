@@ -404,6 +404,19 @@ UILayer * WorldWindow::GetUIFieldLayerFromFile(QString path)
 
 }
 
+UILayer * WorldWindow::GetUIRigidWorldLayerFromFile(QString path)
+{
+    RigidPhysicsWorld * w = new RigidPhysicsWorld();
+    w->ImportFromFile(path);
+
+    std::cout << "test n objects " << w->GetObjectCount(false) << std::endl;
+    UIRigidWorldLayer *UIP = new UIRigidWorldLayer(w,QFileInfo(path).fileName(),"",false);
+
+
+    return UIP;
+
+}
+
 
 
 UILayer * WorldWindow::GetUIObjectLayerFromFile(QString path)
@@ -731,6 +744,12 @@ BoundingBox WorldWindow::GetLook()
 void WorldWindow::LookAt(UIGeoLayer* geolayer)
 {
     BoundingBox bb_orgref = geolayer->GetBoundingBox();
+    if(geolayer->Is3D())
+    {
+
+        BoundingBox3D b3d = geolayer->GetBoundingBox3D();
+        bb_orgref = BoundingBox(b3d.GetMinX(),b3d.GetMaxX(),b3d.GetMinZ(),b3d.GetMaxZ());
+    }
     GeoCoordTransformer * transformer = GeoCoordTransformer::GetCoordTransformer(geolayer->GetProjection(),m_CurrentWindowState.projection);
 
     BoundingBox bb_newref = transformer->Transform(bb_orgref);
@@ -765,7 +784,7 @@ void WorldWindow::LookAt(BoundingBox3D b3d)
 
 
     BoundingBox b;
-    b.Set(b3d.GetMinX(),b.GetMaxX(), b.GetMinY(), b.GetMaxY());
+    b.Set(b3d.GetMinX(),b3d.GetMaxX(), b3d.GetMinZ(), b3d.GetMaxZ());
     m_Camera2D->LookAt(b);
 
     m_Camera3D->PlaceAndLookAtAuto(b3d);

@@ -563,7 +563,6 @@ void QTInterfaceWindow::OnToolBoxRequest(QString tool)
 
 bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
 {
-    std::cout << "fopen request " << type << " " << filepath.toStdString() << std::endl;
     bool use = false;
 
     if(type == LISEM_FILE_TYPE_UNKNOWN)
@@ -577,7 +576,6 @@ bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
 
     }
 
-    std::cout << "file type " << type << std::endl;
     if(type == LISEM_FILE_TYPE_RUN)
     {
 
@@ -635,6 +633,11 @@ bool QTInterfaceWindow::OnFileOpenRequest(QString filepath, int type)
             {
                 use = true;
                 m_MapViewTool->AddObjectLayerFromFile(filepath);
+            }
+            if(IsRigidWorldFile(filepath))
+            {
+                use = true;
+                m_MapViewTool->AddRigidWorldLayerFromFile(filepath);
             }
 
             if((ext.compare(".run") == 0))

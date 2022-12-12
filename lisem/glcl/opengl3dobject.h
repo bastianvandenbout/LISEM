@@ -6,13 +6,15 @@
 class gl3dMesh
 {
     public:
-    unsigned int VAO, VBO, EBO, InstanceMBO;
+    unsigned int VAO, VBO, EBO, InstanceMBO,InstanceMBOP,InstanceMBON;
     int m_NumInstances = 0;
     ModelMaterial m_Material;
     int m_MaterialIndex = -1;
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
+    LSMMatrix4x4 * m_InstanceNMatrices = nullptr;
     LSMMatrix4x4 * m_InstanceMatrices = nullptr;
+    LSMMatrix4x4 * m_InstanceMatricesP = nullptr;
     bool m_IsSetup = false;
     bool m_IsInstanced = false;
 
@@ -88,15 +90,31 @@ class gl3dMesh
                 {
                     glad_glDeleteBuffers(1,&InstanceMBO);
                     delete[] m_InstanceMatrices;
+                    glad_glDeleteBuffers(1,&InstanceMBOP);
+                    delete[] m_InstanceMatricesP;
+                    glad_glDeleteBuffers(1,&InstanceMBON);
+                    delete[] m_InstanceNMatrices;
                 }
                 m_NumInstances = n_instance;
 
+                m_InstanceNMatrices = new LSMMatrix4x4[n_instance];
                 m_InstanceMatrices = new LSMMatrix4x4[n_instance];
+                m_InstanceMatricesP = new LSMMatrix4x4[n_instance];
 
                 // vertex buffer object
                 glad_glGenBuffers(1, &InstanceMBO);
                 glad_glBindBuffer(GL_ARRAY_BUFFER, InstanceMBO);
                 glad_glBufferData(GL_ARRAY_BUFFER, n_instance * sizeof(LSMMatrix4x4), &m_InstanceMatrices[0], GL_STATIC_DRAW);
+
+                // vertex buffer object
+                glad_glGenBuffers(1, &InstanceMBOP);
+                glad_glBindBuffer(GL_ARRAY_BUFFER, InstanceMBOP);
+                glad_glBufferData(GL_ARRAY_BUFFER, n_instance * sizeof(LSMMatrix4x4), &m_InstanceMatricesP[0], GL_STATIC_DRAW);
+
+                // vertex buffer object
+                glad_glGenBuffers(1, &InstanceMBON);
+                glad_glBindBuffer(GL_ARRAY_BUFFER, InstanceMBON);
+                glad_glBufferData(GL_ARRAY_BUFFER, n_instance * sizeof(LSMMatrix4x4), &m_InstanceNMatrices[0], GL_STATIC_DRAW);
 
                 m_IsInstanced = true;
 
@@ -115,10 +133,39 @@ class gl3dMesh
                 glad_glEnableVertexAttribArray(9);
                 glad_glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
 
+                glad_glEnableVertexAttribArray(10);
+                glad_glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
+                glad_glEnableVertexAttribArray(11);
+                glad_glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
+                glad_glEnableVertexAttribArray(12);
+                glad_glVertexAttribPointer(12, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
+                glad_glEnableVertexAttribArray(13);
+                glad_glVertexAttribPointer(13, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
+
+                glad_glEnableVertexAttribArray(14);
+                glad_glVertexAttribPointer(14, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
+                glad_glEnableVertexAttribArray(15);
+                glad_glVertexAttribPointer(15, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
+                glad_glEnableVertexAttribArray(16);
+                glad_glVertexAttribPointer(16, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
+                glad_glEnableVertexAttribArray(17);
+                glad_glVertexAttribPointer(17, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
+
                 glad_glVertexAttribDivisor(6, 1);
                 glad_glVertexAttribDivisor(7, 1);
                 glad_glVertexAttribDivisor(8, 1);
                 glad_glVertexAttribDivisor(9, 1);
+
+                glad_glVertexAttribDivisor(10, 1);
+                glad_glVertexAttribDivisor(11, 1);
+                glad_glVertexAttribDivisor(12, 1);
+                glad_glVertexAttribDivisor(13, 1);
+
+                glad_glVertexAttribDivisor(14, 1);
+                glad_glVertexAttribDivisor(15, 1);
+                glad_glVertexAttribDivisor(16, 1);
+                glad_glVertexAttribDivisor(17, 1);
+
 
                 //setup of textures
 
@@ -136,11 +183,26 @@ class gl3dMesh
             glad_glBindBuffer(GL_ARRAY_BUFFER, InstanceMBO);
             glad_glBufferSubData(GL_ARRAY_BUFFER, 0,m_NumInstances* sizeof(LSMMatrix4x4), &m_InstanceMatrices[0]);
             glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, InstanceMBOP);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0,m_NumInstances* sizeof(LSMMatrix4x4), &m_InstanceMatricesP[0]);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, InstanceMBON);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, 0,m_NumInstances* sizeof(LSMMatrix4x4), &m_InstanceNMatrices[0]);
+            glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
             return true;
         }
         return false;
 
     }
+    inline void SetInstanceNMatrix(int n,const LSMMatrix4x4 & objrotm)
+    {
+        if(n < m_NumInstances && n > -1)
+        {
+            m_InstanceNMatrices[n] = objrotm;
+        }
+
+    }
+
     inline void SetInstanceMatrix(int n,const LSMMatrix4x4 & objrotm)
     {
         if(n < m_NumInstances && n > -1)
@@ -149,6 +211,16 @@ class gl3dMesh
         }
 
     }
+
+    inline void SetInstanceProps(int n,const LSMMatrix4x4 & objrotm)
+    {
+        if(n < m_NumInstances && n > -1)
+        {
+            m_InstanceMatricesP[n] = objrotm;
+        }
+
+    }
+
 
     inline void Destroy(OpenGLCLManager* m)
     {
@@ -196,6 +268,23 @@ public:
        for(int i = 0; i < m_Mesh.size(); i++)
        {
            m_Mesh.at(i)->SetInstanceMatrix(j,objrotm);
+       }
+
+   }
+   inline void SetInstanceNMatrix(int j,LSMMatrix4x4 objrotm)
+   {
+       for(int i = 0; i < m_Mesh.size(); i++)
+       {
+           m_Mesh.at(i)->SetInstanceNMatrix(j,objrotm);
+       }
+
+   }
+
+   inline void SetInstanceProps(int j,LSMMatrix4x4 objprops)
+   {
+       for(int i = 0; i < m_Mesh.size(); i++)
+       {
+           m_Mesh.at(i)->SetInstanceProps(j,objprops);
        }
 
    }

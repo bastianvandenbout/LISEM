@@ -29,6 +29,7 @@
 #include "QStatusBar"
 #include "QTimer"
 #include "scriptsearchwindow.h"
+#include "QMimeData"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -95,6 +96,7 @@ public:
     float m_OverlayAlpha = 1.0;
     QTimer m_OverlayTimer;
     bool m_OverlayDeactivated = false;
+
 
 
     bool m_RunCallBackSet = false;
@@ -402,6 +404,40 @@ public:
         }
         return word;
 
+
+    }
+
+    inline void insertFromMimeData(const QMimeData *source) override
+    {
+        if(source->hasUrls())
+        {
+            QList<QUrl> urls = source->urls();
+            for(int i = 0; i < urls.size(); i++)
+            {
+                if(urls.at(i).isLocalFile())
+                {
+                    QString file = urls.at(i).toLocalFile();
+
+                    if(m_OpenCallBackSet)
+                    {
+                        std::cout <<"open file from mime " << file.toStdString() << std::endl;
+                        m_OpenCallBack(file);
+                    }
+
+
+                }
+            }
+
+
+        }else if(source->hasImage())
+        {
+            //should not have been accepted anyway
+
+        }else
+        {
+            QPlainTextEdit::insertFromMimeData(source);
+
+        }
 
     }
 

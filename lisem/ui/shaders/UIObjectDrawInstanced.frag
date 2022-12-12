@@ -3,6 +3,8 @@
 in vec3 frag_position;
 in vec2 frag_texcoords;
 in vec3 frag_in_normal;
+in vec4 frag_highlight;
+
 
 layout (location = 0) out vec4 frag_colour;
 layout (location = 1) out vec4 frag_posx;

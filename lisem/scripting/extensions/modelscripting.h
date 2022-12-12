@@ -226,6 +226,11 @@ inline void RegisterModelScriptFunctions(LSMScriptEngine *sm)
     sm->RegisterGlobalSTDFunction("void RigidWorldApplyPressure(const RigidModel &in rm, Field &in Block, Field &in Pressure)", GetFuncConvert(RigidWorldApplyPressureField)); assert( r >= 0 );
 
 
+    sm->RegisterGlobalFunction("RigidModel @LoadRigidModelAbsPath(const string &in s)", asFUNCTION( AS_LoadRigidWorldFromFileAbsPath), asCALL_CDECL);
+    sm->RegisterGlobalFunction("RigidModel @LoadRigidModel(const string &in s)", asFUNCTION( AS_LoadRigidWorldFromFile), asCALL_CDECL);
+    sm->RegisterGlobalFunction("void SaveRigidModel(RigidModel &in sh, const string &in s)", asFUNCTION( AS_SaveRigidWorldToFile), asCALL_CDECL);
+    sm->RegisterGlobalFunction("void SaveRigidModelAbsPath(RigidModel &in sh, const string &in s)", asFUNCTION( AS_SaveRigidWorldToFileAbsPath), asCALL_CDECL);
+    sm->RegisterGlobalFunction("RigidModel @SaveThisRigidModel(const string &in s)", asFUNCTION( AS_SaveThisRigidWorldToFile),  asCALL_CDECL);
 
 
 

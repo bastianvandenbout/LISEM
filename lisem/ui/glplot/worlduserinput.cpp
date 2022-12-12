@@ -497,6 +497,15 @@ void WorldWindow::InputToLayers()
             {
                 l->OnMousePressed(m_MouseState.MouseButtonEvents.at(i),m_MouseState.MouseButtonKeyAction.at(i));
 
+                if(m_CurrentWindowState.is_3d)
+                {
+                    double tolerence = 0.02 *std::min(m_CurrentWindowState.width,m_CurrentWindowState.height);
+                    LSMVector3 pos = m_CurrentWindowState.Camera3D->GetPosition();
+                    LSMVector3 dir = m_CurrentWindowState.Camera3D->GetViewDir();
+                    dir = m_CurrentWindowState.Camera3D->GetRayFromWindow(m_CurrentWindowState.MousePosX,m_CurrentWindowState.scr_height -m_CurrentWindowState.MousePosY).xyz();
+                    LSMVector2 ppos = LSMVector2(m_CurrentWindowState.MousePosX,m_CurrentWindowState.scr_height -m_CurrentWindowState.MousePosY);
+                    l->OnMouse3DPressed(m_MouseState.MouseButtonEvents.at(i),m_MouseState.MouseButtonKeyAction.at(i),m_CurrentWindowState,ppos,pos,dir);
+                }
                 if(GeoHit)
                 {
                     l->OnGeoMousePressed(m_MouseState.MouseButtonEvents.at(i),m_MouseState.MouseButtonKeyAction.at(i),m_CurrentWindowState,GeoLoc);
@@ -511,11 +520,7 @@ void WorldWindow::InputToLayers()
             }
         }
     }
-
-
     //now do any drag element detection
-
-
 
     for(int j = 0;j < m_MouseState.MouseButtonEvents.length(); j++)
     {

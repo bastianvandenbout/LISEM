@@ -21,6 +21,7 @@ public:
     QString m_Family;
     bool m_ShouldBeRemoved = false;
 
+    LSMVector4 m_Highlight = LSMVector4(0.0,0.0,0.0,0.0);
     LSMVector3 m_Position = LSMVector3(0.0,0.0,0.0);
     LSMVector3 m_Scale = LSMVector3(1.0,1.0,1.0);
     LSMMatrix4x4 m_RotationMatrix; //defeault is identity matrix
@@ -45,8 +46,9 @@ public:
 
 class UIRigidWorldLayer : public UIGeoLayer
 {
-
+public:
     RigidPhysicsWorld * m_RigidWorld = nullptr;
+private:
     QList<UIRigidObjectVisualizer*> m_Visualizers;
     QMap<QString,QList<UIRigidObjectVisualizer*>> m_Families;
     QMap<QString,ModelGeometry *> m_FamilyModels;
@@ -57,6 +59,8 @@ public:
     inline UIRigidWorldLayer() : UIGeoLayer()
     {
         m_Editable = true;
+        m_BoundingBox3D = BoundingBox3D(-1.0,1.0,-1.0,1.0,-1.0,1.0);
+        m_Position = LSMVector3(0.0,0.0,0.0);
 
     }
 
@@ -76,6 +80,15 @@ public:
         m_File = file;
 
         m_RigidWorld = world;
+
+        m_IsMovable = true;
+        m_IsScaleable = true;
+        m_IsRotateable = true;
+
+        m_is3D = true;
+        m_BoundingBox3D = world->GetBoundingBox();
+        std::cout << "3d extent rigid world " << m_BoundingBox3D.GetMinX() << " " << m_BoundingBox3D.GetMaxX() << " " << m_BoundingBox3D.GetMinY() << " " << m_BoundingBox3D.GetMaxY() << " " << m_BoundingBox3D.GetMinZ() << " " << m_BoundingBox3D.GetMaxZ() << std::endl;
+        m_Position = LSMVector3(m_BoundingBox3D.GetCenterX(),m_BoundingBox3D.GetCenterY(),m_BoundingBox3D.GetCenterZ());
 
     }
 
@@ -189,6 +202,7 @@ public:
                         std::cout << "update position" << std::endl;
                         vis->m_Position = obj->GetPosition();
                         vis->m_RotationMatrix = obj->GetRotationMatrix();
+                        vis->m_Highlight = obj->int_gethighlight();
 
 
                     }
@@ -244,7 +258,7 @@ public:
 
                 if(m_Families.contains(vis->m_Family) )
                 {
-                    if((familiesdone[vis->m_Family] == false))
+                    if(familiesdone[vis->m_Family] == false)
                     {
                         familiesdone[vis->m_Family] = true;
 
@@ -276,13 +290,22 @@ public:
                         {
                             UIRigidObjectVisualizer* vis2 = objvislist->at(j);
 
+                            //get properties
+                            //highlight color r,g,b, highlight visibility
+
+
                             LSMVector3 objpos = vis2->m_Position;
                             LSMMatrix4x4 objrotm = vis2->m_RotationMatrix;
                             LSMMatrix4x4 objtrans;
                             objtrans.Translate(LSMVector3(objpos.x + offset.x- camerapos.x,objpos.y,objpos.z + offset.y - camerapos.z));
                             objrotm = objtrans*objrotm;
 
+                            LSMMatrix4x4 modelmti = objrotm;
+                            modelmti.Invert();
+                            modelmti.Transpose();
+
                             vis->m_Actor->SetInstanceMatrix(j,objrotm);
+                            vis->m_Actor->SetInstanceNMatrix(j,modelmti);
 
                         }
 
@@ -360,6 +383,14 @@ public:
                         LSMVector3 camerapos = s.Camera3D->GetPosition();
                         LSMVector3 objpos = vis->m_Position;
                         LSMMatrix4x4 objrotm = vis->m_RotationMatrix;
+                        LSMMatrix4x4 objpropm;
+
+                        LSMMatrix4x4 modelmti = objrotm;
+                        modelmti.Invert();
+                        modelmti.Transpose();
+                        //proprty matrix has:
+                        //highlight color r,g,b, highlight visibility
+                        //
 
 
                         LSMMatrix4x4 objtrans;
@@ -379,6 +410,12 @@ public:
                         glad_glUseProgram(program->m_program);
 
                         glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"OMatrix"),1,GL_FALSE,(float*)(&objrotm));//.GetMatrixDataPtr());
+                        glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"ONMatrix"),1,GL_FALSE,(float*)(&modelmti));//.GetMatrixDataPtr());
+                        glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"PMatrix"),1,GL_FALSE,(float*)(&objpropm));//.GetMatrixDataPtr());
+
+                        glad_glUniform4f(glad_glGetUniformLocation(program->m_program,"highlight"),vis->m_Highlight.x,vis->m_Highlight.y,vis->m_Highlight.z,vis->m_Highlight.w);
+
+
 
                         glad_glUniformMatrix4fv(glad_glGetUniformLocation(program->m_program,"CMatrix"),1,GL_FALSE,s.Camera3D->GetProjectionMatrixNoTranslationXZ().GetMatrixDataPtr());
                         glad_glUniform1f(glad_glGetUniformLocation(program->m_program,"SResolutionX"),s.scr_pixwidth);
@@ -573,11 +610,21 @@ public:
                 float CursorY = (s.scr_height * (offset.y + position.z - s.tly)/s.height) ;
 
                 float width_black = std::max(1.0,2.0 * s.ui_scale2d3d);
+                float width_hl = std::max(2.0,4.0 * s.ui_scale2d3d);
                 float size = std::max(1.0,5.0 *s.ui_scale2d3d);
+                float size_hl = std::max(2.0,7.0 *s.ui_scale2d3d);
+
+                LSMVector4 highlight = vis->m_Highlight;
 
                 //draw black dot on cursor location
                 m->m_ShapePainter->DrawLine(CursorX-size,CursorY,CursorX+size,CursorY,width_black,LSMVector4(0.0,0.0,0.0,1.0));
                 m->m_ShapePainter->DrawLine(CursorX,CursorY-size,CursorX,CursorY+size,width_black,LSMVector4(0.0,0.0,0.0,1.0));
+                if(highlight.w>0.001)
+                {
+                    m->m_ShapePainter->DrawLine(CursorX-size_hl,CursorY,CursorX+size_hl,CursorY,width_hl,highlight);
+                    m->m_ShapePainter->DrawLine(CursorX,CursorY-size_hl,CursorX,CursorY+size_hl,width_hl,highlight);
+
+                }
             }
         }
     }
@@ -620,12 +667,144 @@ public:
 
     inline virtual LayerProbeResult Probe(LSMVector2 Pos, GeoProjection proj, double tolerence)
     {
-        return LayerProbeResult();
+
+        LayerProbeResult res = LayerProbeResult();
+        m_RigidWorld->LockMutex();
+        QList<RigidPhysicsObject *> objl = m_RigidWorld->GetObjectList();
+        double dist_min = 0.0;
+        bool found = false;
+        RigidPhysicsObject * objf = nullptr;
+        for(int i = 0; i < objl.size(); i++)
+        {
+            RigidPhysicsObject * robj = objl.at(i);
+
+            LSMVector3 item = robj->GetPosition()  + LSMVector3(m_RigidWorld->GetSimpleGeoOrigin().x,0.0,m_RigidWorld->GetSimpleGeoOrigin().y);;
+            double dist= (LSMVector2(item.x,item.z)- Pos).length();
+            if(dist < tolerence)
+            {
+                if(!found)
+                {
+                    dist_min = dist;
+                    objf = robj;
+                    found =true;
+                }else if(dist < dist_min)
+                {
+                    dist_min = dist;
+                    objf = robj;
+                }
+
+            }
+        }
+        if(found)
+        {
+            LSMVector3 posf = objf->GetPosition()  + LSMVector3(m_RigidWorld->GetSimpleGeoOrigin().x,0.0,m_RigidWorld->GetSimpleGeoOrigin().y);;
+            LSMVector3 velf = objf->GetVelocity();
+
+            res.hit = true;
+            res.AttrNames.push_back("Rigid 3D object");
+            res.AttrValues.push_back("pos: (" + QString::number(posf.x) + "," + QString::number(posf.y)+ "," +QString::number(posf.z)+ ")");
+            res.AttrValues.push_back("vel: (" + QString::number(velf.x) + "," + QString::number(velf.y)+ "," +QString::number(velf.z)+ ")");
+
+
+        }else
+        {
+            res.hit = false;
+        }
+
+
+        m_RigidWorld->UnLockMutex();
+        return res;
     }
 
-    inline virtual LayerProbeResult Probe3D(LSMVector2 Pos, GeoProjection proj, double tolerence)
+    inline virtual LayerProbeResult Probe3D(LSMVector3 Pos, LSMVector3 Dir, GeoProjection proj, double tolerence)
     {
-        return LayerProbeResult();
+        Dir = Dir.Normalize();
+
+        LayerProbeResult res = LayerProbeResult();
+        //raytrace our world, and check if we get an intersection
+
+        m_RigidWorld->LockMutex();
+        RigidPhysicsObject * objf = nullptr;
+        double dist_min = 0.0;
+        bool found = false;
+        ModelRayCastResult castf;
+        LSMMatrix4x4 modelmtif;
+
+        QList<RigidPhysicsObject *> objl = m_RigidWorld->GetObjectList();
+        for(int i = 0; i < objl.size(); i++)
+        {
+            RigidPhysicsObject * robj = objl.at(i);
+
+            LSMVector3 Position = robj->GetPosition() + LSMVector3(m_RigidWorld->GetSimpleGeoOrigin().x,0.0,m_RigidWorld->GetSimpleGeoOrigin().y);
+            LSMVector3 Rotation = robj->GetRotation();
+
+            ModelGeometry * model = robj->GetModel();
+            LSMVector3 objpos = LSMVector3(0.0,0.0,0.0) + Position;
+            LSMMatrix4x4 objrotm = LSMMatrix4x4();
+            objrotm.SetRotation3(Rotation.x,Rotation.y,Rotation.z);
+            LSMMatrix4x4 scalem = LSMMatrix4x4();
+            scalem.SetScaling(1.0,1.0,1.0);
+
+            //std::cout << "pos " << m_Position.x << " " << m_Position.y << " " << m_Position.z << std::endl;
+            //std::cout << "rot " << m_Rotation.x << " " << m_Rotation.y << " " << m_Rotation.z << std::endl;
+            //std::cout << "scal " << m_Scale.x << " " << m_Scale.y << " " << m_Scale.z << std::endl;
+
+            LSMMatrix4x4 modelmti = objrotm*scalem;
+            modelmti.Invert();
+            modelmti.Transpose();
+
+            LSMMatrix4x4 objtrans;
+            objtrans.Translate(LSMVector3(objpos.x,objpos.y,objpos.z));
+            objrotm = objtrans*objrotm*scalem;
+
+            LSMMatrix4x4 objw =objrotm;
+            objw.Invert();
+            LSMMatrix4x4 objtoworld = objrotm;
+            LSMMatrix4x4 worldtoobj = objw;
+
+            ModelRayCastResult cast = model->RayCast(Pos,Dir,objtoworld,worldtoobj);
+            double dist= (Pos-cast.m_Position).length();
+
+            if(cast.m_Mesh != nullptr)
+            {
+                if(!found)
+                {
+                    dist_min = dist;
+                    objf = robj;
+                    found =true;
+                    castf = cast;
+                    modelmtif = modelmti;
+                }else if(dist < dist_min)
+                {
+                    dist_min = dist;
+                    objf = robj;
+                    castf = cast;
+                    modelmtif = modelmti;
+                }
+
+            }
+
+        }
+
+        if(found)
+        {
+            LSMVector3 posf = objf->GetPosition()  + LSMVector3(m_RigidWorld->GetSimpleGeoOrigin().x,0.0,m_RigidWorld->GetSimpleGeoOrigin().y);
+            LSMVector3 velf = objf->GetVelocity();
+
+            res.Position = castf.m_Position;
+            res.Direction = (modelmtif * castf.m_Normal).Normalize();
+            res.hit=true;
+            res.AttrNames.push_back("Rigid 3D object");
+            res.AttrValues.push_back("pos: (" + QString::number(posf.x) + "," + QString::number(posf.y)+ "," +QString::number(posf.z)+ ")");
+            res.AttrValues.push_back("vel: (" + QString::number(velf.x) + "," + QString::number(velf.y)+ "," +QString::number(velf.z)+ ")");
+
+        }else
+        {
+            res.hit = false;
+        }
+
+        m_RigidWorld->UnLockMutex();
+        return res;
     }
 
 

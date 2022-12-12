@@ -159,9 +159,12 @@ public:
      int GetFaceCount();
 
      Vertex GetVertex(int i);
+     Vertex *GetVertexPtr(int i);
+
      Face GetFace(int i);
      void SetMaterial(ModelMaterial m);
      float RayCast(LSMVector3 O, LSMVector3 Dir);
+     float RayCastNormal(LSMVector3 O, LSMVector3 Dir, LSMVector3 &Normal);
      bool IsPointInside(LSMVector3 O);
 
      void Move(LSMVector3 m);

@@ -50,6 +50,16 @@ void RigidPhysicsObject::CopyFrom(RigidPhysicsObject * body)
     m_chBody->GetCollisionModel()->BuildModel();
 
 
+
+    m_SimpleSize = body->m_SimpleSize;
+    m_Volume = body->m_Volume;
+    m_IsTerrain = body->m_IsTerrain;
+    m_IsSimpleHeight = body->m_IsSimpleHeight;
+    m_IsSimpleEllipsoid = body->m_IsSimpleEllipsoid;
+    m_IsSimpleCube = body->m_IsSimpleCube;
+    m_IsSimpleCilinder = body->m_IsSimpleCilinder;
+    m_IsSimpleMesh = body->m_IsSimpleMesh;
+
     m_Family = body->m_Family;
     m_FamilyScale = body->m_FamilyScale;
     this->m_IsConvex =  body->m_IsConvex;
@@ -66,7 +76,8 @@ void RigidPhysicsObject::CopyFrom(RigidPhysicsObject * body)
     m_chBody->SetRot(body->m_chBody->GetRot());
     m_chBody->SetRot_dt(body->m_chBody->GetRot_dt());
     m_chBody->SetMass(body->m_chBody->GetMass());
-    m_chBody->SetDensity(1000.0f);
+    m_chBody->SetDensity(body->GetDensity());
+    m_Density = body->GetDensity();
     m_chBody->SetInertia(body->m_chBody->GetInertia());
 
     m_TriangulatedModel = body->m_TriangulatedModel->GetCopy();

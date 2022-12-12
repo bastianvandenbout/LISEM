@@ -20,6 +20,8 @@ uniform highp float SResolutionX;
 uniform highp float SResolutionY;
 uniform highp float iTime;
 
+uniform highp vec4 highlight = vec4(0.0,0.0,0.0,0.0);
+
 uniform highp vec3 iSunDir;
 
 uniform highp float iCloudCover;
@@ -48,7 +50,7 @@ void main() {
 
 
 
-    frag_colour = vec4(vec3(1.0,0.702,0.278) * (0.4 +0.6 * max(0.0f,dot(normalize(frag_in_normal),normalize(iSunDir)))),1.0);
+    frag_colour = vec4(highlight.w * highlight.xyz + (1.0-highlight.w)*(vec3(1.0,0.702,0.278) * (0.4 +0.6 * max(0.0f,dot(normalize(frag_in_normal),normalize(iSunDir))))),1.0);
 
     frag_posx = vec4(frag_position.x,frag_position.x,frag_position.x,1.0);
     frag_posy = vec4(frag_position.y,frag_position.y,frag_position.y,1.0);

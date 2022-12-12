@@ -212,7 +212,7 @@ public:
     //DEM properties
     ColorF SunColor;
     float angle_vert = 70.0;
-    float angle_hor = 240.0;
+    float angle_hor = 140.0;
     float DemScale = 1.0;
     bool m_IsDEM = false;
     bool m_IsHS = false;

@@ -390,6 +390,8 @@ inline void RegisterMapAlgorithmsToScriptEngine(LSMScriptEngine *engine)
     r = engine->RegisterGlobalFunction("Map @SpreadFlowFieldMDCP(const Map &in source,const Map &in fx_norm1,const Map &in fx_norm2,const Map &in fy_norm1,const Map &in fy_norm2, const Map &in S, const Map &in scale, float power, int iter_max = 0)", asFUNCTIONPR( AS_SpreadFlowMDCP,(cTMap*,cTMap*,cTMap*,cTMap *,cTMap *,cTMap *,cTMap * ,float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @Depressions(const Map &in DEM,int iter_max = 0)", asFUNCTIONPR( AS_SpreadDepressionFind,(cTMap*,int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterGlobalFunction("Map @FlowSuperFast(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, bool do_depressions = false, bool do_corr = true, int iters_max = -1)", asFUNCTIONPR( AS_FlowSuperFast,(cTMap*,cTMap *,cTMap *,float, bool,bool,int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("Map @FlowSuperFastPI(const Map &in DEM, const Map &in N, const Map &in Rain, float duration, int pressure_iterations = 5, bool do_depressions = false, bool do_corr = true, int iters_max = -1)", asFUNCTIONPR( AS_FlowSuperFastPI,(cTMap*,cTMap *,cTMap *,float,int, bool,bool,int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
+
     r = engine->RegisterGlobalFunction("Map @DEMMonotonicReconstruct(const Map &in DEM, float delta = 0.0000001, int max_iter =-1)", asFUNCTIONPR( AS_SpreadMonotonicReconstruct,(cTMap*, float, int),cTMap*),  asCALL_CDECL); assert( r >= 0 );
 
 

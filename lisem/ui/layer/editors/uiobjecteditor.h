@@ -1,0 +1,4 @@
+#ifndef UIOBJECTEDITOR_H
+#define UIOBJECTEDITOR_H
+
+#endif // UIOBJECTEDITOR_H

@@ -739,6 +739,23 @@ inline RasterBandStats readRasterStats(
 
 }
 
+inline int readRasterBandCount(
+    QString const& pathName)
+{
+
+    // Open raster dataset and obtain some properties.
+    GDALDatasetPtr dataset(static_cast<GDALDataset*>(GDALOpen(
+        pathName.toLatin1().constData(), GA_ReadOnly)), close_gdal_dataset);
+    if(!dataset) {
+        return 0;
+    }
+
+    int nr_bands = dataset->GetRasterCount();
+
+    return nr_bands;
+
+}
+
 inline cTMapProps readRasterProps(
     QString const& pathName, int band = 0)
 {

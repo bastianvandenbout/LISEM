@@ -60,6 +60,8 @@ inline static std::vector<cTMap*> ToMap(AS_ByteArray * data, QString Format)
     QList<QString> exts = GetMapExtensions();
     QList<QString> drivers = GetMapExtensionGDALDriver();
 
+    std::cout << "find driver gdal? " << std::endl;
+    std::cout << "test " << Format.toStdString() << std::endl;
     bool found_gdal = false;
     QString ext = ".tif";
     if(!(Format == "PNG" || Format == "JPG"))
@@ -74,6 +76,8 @@ inline static std::vector<cTMap*> ToMap(AS_ByteArray * data, QString Format)
             }
         }
     }
+
+    std::cout << "found_gdal?  " << found_gdal << std::endl;
 
     QList<cTMap *> maps;
 

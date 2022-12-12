@@ -14,6 +14,7 @@
 #define LISEM_FILE_TYPE_POINTCLOUD 6
 #define LISEM_FILE_TYPE_FIELD 7
 #define LISEM_FILE_TYPE_MODEL 8
+#define LISEM_FILE_TYPE_RIGIDWORLD 8
 
 inline static QList<QString> GetImageAndMapExtensions()
 {
@@ -388,6 +389,31 @@ inline static bool IsPointCloudFile(QString file)
     return false;
 }
 
+
+inline static QList<QString> GetRigidWorldExtensions()
+{
+    QList<QString> ret;
+    ret.append(".rgw");//netcdf - version 4, could also be a raster
+    return ret;
+}
+
+
+inline static bool IsRigidWorldFile(QString file)
+{
+    QList<QString> extensions = GetRigidWorldExtensions();
+
+    for(int i = 0; i < extensions.length(); i++)
+    {
+        if(file.endsWith(extensions.at(i)))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 inline static QString GetExtensionsFileFilter(QList<QString> exts)
 {
     QString ret;
@@ -436,8 +462,10 @@ inline static QList<QString> GetAllExtensions()
     QList<QString> ext4 = GetModelExtensions();
     QList<QString> ext5 = GetPointCloudExtensions();
     QList<QString> ext6 = GetFieldExtensions();
+    QList<QString> ext7 = GetRigidWorldExtensions();
+    QList<QString> ext8 = GetScriptExtensions();
 
-    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5,ext6};
+    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5,ext6,ext7,ext8};
 
     QList<QString> ret;
 
@@ -480,8 +508,9 @@ inline static QList<QString> GetAllExtensionsFilter()
     QList<QString> ext4 = GetModelExtensions();
     QList<QString> ext5 = GetPointCloudExtensions();
     QList<QString> ext6 = GetFieldExtensions();
-
-    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5,ext6};
+    QList<QString> ext7 = GetRigidWorldExtensions();
+    QList<QString> ext8 = GetScriptExtensions();
+    QList<QList<QString>> exts = {ext1,ext2,ext3,ext4,ext5,ext6,ext7};
 
     QList<QString> ret;
 
@@ -526,6 +555,9 @@ inline int GetFileTypeFromExtension(QString filepath)
     }else if(IsTableFile((filepath)))
     {
         return LISEM_FILE_TYPE_TABLE;
+    }else if(IsRigidWorldFile((filepath)))
+    {
+        return LISEM_FILE_TYPE_RIGIDWORLD;
     }else if(filepath.endsWith(".run"))
     {
         return LISEM_FILE_TYPE_RUN;

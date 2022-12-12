@@ -403,16 +403,44 @@ public:
 
         }
 
-        if(s.FocusLayer != nullptr && s.MouseHit && m_shift_pressed)
+        if(s.FocusLayer != nullptr && m_shift_pressed)
         {
-            double tolerence = 0.02 *std::min(s.width,s.height);
-            LayerProbeResult pr = s.FocusLayer->Probe(LSMVector2(s.MouseGeoPosX,s.MouseGeoPosZ), s.projection,tolerence);
-            QString text = "(x:" +  QString::number(s.MouseGeoPosX) +" ,y:"+ QString::number(s.MouseGeoPosZ) + ")   ";
-            for(int i = 0; i < pr.AttrNames.length(); i++)
+            if(s.is_3d && s.FocusLayer->Is3D())
             {
-                text += pr.AttrNames.at(i) + " : " + pr.AttrValues.at(i);
+
+                double tolerence = 0.02 *std::min(s.width,s.height);
+                LSMVector3 pos = s.Camera3D->GetPosition();
+                LSMVector3 dir = s.Camera3D->GetViewDir();
+                dir = s.Camera3D->GetRayFromWindow(s.MousePosX,s.scr_height -s.MousePosY).xyz();
+                LayerProbeResult pr = s.FocusLayer->Probe3D(pos,dir,s.projection,tolerence);
+                QString text = "(x:" +  QString::number(s.MouseGeoPosX) +" ,y:"+ QString::number(s.MouseGeoPosZ) + ")   ";
+                for(int i = 0; i < pr.AttrNames.length(); i++)
+                {
+                    text += pr.AttrNames.at(i) + " : " + pr.AttrValues.at(i);
+                }
+                m->m_TextPainter->DrawString(text,NULL,0,5,LSMVector4(0.0,0.0,0.0,1.0),ui_ticktextscale*12);
+
+                //draw a point where we have the intersection with the object
+                //draw normal, tangent and bitangent of model?
+
+                LSMVector3 camerapos = s.Camera3D->GetPosition();
+                LSMVector3 dirh = pr.Direction;
+                LSMVector3 posh = pr.Position;
+                float distance = (camerapos - posh).length();
+
+                m->m_ShapePainter->DrawLine3D(posh - LSMVector3(camerapos.x,0.0,camerapos.z),posh - LSMVector3(camerapos.x,0.0,camerapos.z) + 0.2 * distance * dirh,LSMVector3(0.0,camerapos.y,0.0),0.1,LSMVector4(0.0,1.0,0.0,1.0),s.Camera3D->GetProjectionMatrixNoTranslationXZ(),false);
+
+            }else if(s.MouseHit){
+                double tolerence = 0.02 *std::min(s.width,s.height);
+                LayerProbeResult pr = s.FocusLayer->Probe(LSMVector2(s.MouseGeoPosX,s.MouseGeoPosZ), s.projection,tolerence);
+                QString text = "(x:" +  QString::number(s.MouseGeoPosX) +" ,y:"+ QString::number(s.MouseGeoPosZ) + ")   ";
+                for(int i = 0; i < pr.AttrNames.length(); i++)
+                {
+                    text += pr.AttrNames.at(i) + " : " + pr.AttrValues.at(i);
+                }
+                m->m_TextPainter->DrawString(text,NULL,0,5,LSMVector4(0.0,0.0,0.0,1.0),ui_ticktextscale*12);
+
             }
-            m->m_TextPainter->DrawString(text,NULL,0,5,LSMVector4(0.0,0.0,0.0,1.0),ui_ticktextscale*12);
 
 
         }else if(s.MouseHit && m_shift_pressed)

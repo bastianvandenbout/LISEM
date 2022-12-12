@@ -334,6 +334,10 @@ public:
     {
 
     }
+    inline virtual void OnMouse3DPressed(int button, int pressed, GeoWindowState s,LSMVector2 ppos, LSMVector3 Pos, LSMVector3 Dir)
+    {
+
+    }
 
     inline virtual void OnMouseLeave(bool leave)
     {

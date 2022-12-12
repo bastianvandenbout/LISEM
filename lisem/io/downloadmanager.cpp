@@ -24,6 +24,9 @@ void DownloadManager::StartDownload(DownloadTask * t, bool wait)
 
     QNetworkRequest * request = new QNetworkRequest(t->Url);
     t->OnStart();
+    std::cout << "max n redirect " << request->maximumRedirectsAllowed() << std::endl;
+    request->setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+
     if(!t->UserName.isEmpty())
     {
         QString concatenated = t->UserName + ":" + t->Password;

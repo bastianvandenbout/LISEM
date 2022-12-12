@@ -234,8 +234,13 @@ typedef struct DragElement
                     {
                         Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
                     }
-                }else if(GizmoType  == 1) //2d translation
+                    if(GizmoDirection == 3) //z-translation
+                    {
+                        Layer->Move(LSMVector3( fac_x * x,0.0,fac_y * y));
+                    }
+                }else if(GizmoAction  == 1) //2d translation
                 {
+                    std::cout << "translate in 2d " << std::endl;
                     if(GizmoDirection == 0) //plane x translate
                     {
                         Layer->Move(LSMVector3(1.0,0.0,0.0) *( fac_x * x + fac_y * y));
@@ -260,11 +265,11 @@ typedef struct DragElement
                 }
                 if(GizmoDirection == 1) //plane y translation
                 {
-                    Layer->Move(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
+                    Layer->Rotate(LSMVector3(0.0,-1.0,0.0) *( fac_x * x + fac_y * y));
                 }
                 if(GizmoDirection == 2) //plane z translation
                 {
-                    Layer->Move(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
+                    Layer->Rotate(LSMVector3(0.0,0.0,1.0) *( fac_x * x + fac_y * y));
                 }
 
 
@@ -273,8 +278,6 @@ typedef struct DragElement
 
             }else if(GizmoType  == 2) //scale
             {
-
-
 
                 if(GizmoDirection == 0) //scale over x
                 {
@@ -306,13 +309,13 @@ typedef struct DragElement
         {
             if(xc.size() > 1)
             {
-                for (int i = 0; i < xc.size() - 1; ++i) {
+                for (int i = 0; i < xc.size() - 1; i = i+2) {
 
                     double LineDista =LineDist(x,y,xc[i],yc[i],xc[i+1],yc[i+1]);
 
                     //std::cout << "check collision line " << LineDista << " " <<  x << " " << y << " " << xc[i] << " " << yc[i] << " " << xc[i+1] << " " << yc[i+1]  << " " << std::endl;
 
-                    if(LineDista < 10)
+                    if(LineDista < 5)
                     {
                         return true;
                     }
@@ -331,7 +334,6 @@ typedef struct DragElement
                 int intersections = 0;
                 for (int i = 0; i < xc.size() - 1; i++){
 
-                    std::cout << "compare segment " << x << " " << y << " " << xc[i] << " " << yc[i] << " " << xc[i+1] << " " << yc[i+1] <<  std::endl;
                     if (segmentIntersect(point, outside,LSMVector2(xc[i],yc[i]),LSMVector2(xc[i+1],yc[i+1]))) {
                         intersections++;
                     }
@@ -341,7 +343,6 @@ typedef struct DragElement
                     intersections++;
                 }
 
-                std::cout << "intersections " << intersections << std::endl;
                 return (intersections % 2 != 0);
             }else
             {
@@ -641,6 +642,7 @@ public:
     UILayer * GetUIFieldLayerFromFile(QString path);
     UILayer * GetUIPointCloudLayerFromFile(QString path);
     UILayer * GetUIObjectLayerFromFile(QString path);
+    UILayer * GetUIRigidWorldLayerFromFile(QString path);
 
     UILayer * GetUILayerFromShapeFile(ShapeFile * map, QString name = "", bool native = false);
     UILayer * GetGoogleLayer();

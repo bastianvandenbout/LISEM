@@ -161,6 +161,8 @@ public slots:
 
         m_Data = Download->readAll();
 
+        std::cout << "m_Data " << m_Data.size() << std::endl;// << " " << m_Data.toStdString() << std::endl;
+
         std::cout << "done " << canbesaved << " " << file.toStdString()  << std::endl;
         if(canbesaved && shouldbesaved)
         {
@@ -218,6 +220,10 @@ public slots:
     }
     inline void OnRedirected(const QUrl &url)
     {
+        std::cout << "download redirect " << url.toString().toStdString() << std::endl;
+
+
+
     }
 };
 

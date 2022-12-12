@@ -5,7 +5,33 @@
 #include "lsmio.h"
 #include "scriptarrayhelpers.h"
 #include "iohdf5.h"
+#include "webgeoservice.h"
 
+inline static void RegisterScriptFunctionsWeb(LSMScriptEngine * sm)
+{
+
+    int r = sm->RegisterObjectType("ByteArray",0,asOBJ_REF);//Shapes
+
+    //register reference counting for garbage collecting
+    r = sm->RegisterObjectBehaviour("ByteArray",asBEHAVE_ADDREF,"void f()",asMETHOD(AS_ByteArray,AS_AddRef),asCALL_THISCALL); assert( r >= 0 );
+    r = sm->RegisterObjectBehaviour("ByteArray",asBEHAVE_RELEASE,"void f()",asMETHOD(AS_ByteArray,AS_ReleaseRef),asCALL_THISCALL); assert( r >= 0 );
+    r = sm->RegisterObjectMethod("ByteArray", "ByteArray& opAssign(ByteArray &in m)", asMETHOD(AS_ByteArray,AS_Assign), asCALL_THISCALL); assert( r >= 0 );
+    r = sm->RegisterObjectBehaviour("ByteArray",asBEHAVE_FACTORY,"ByteArray@ CSF0()",asFUNCTIONPR(AS_ByteArrayFactory,(),AS_ByteArray *),asCALL_CDECL); assert( r >= 0 );
+
+
+
+
+    sm->RegisterGlobalFunction("string ToText(const ByteArray &in ba)", asFUNCTION( ToText),  asCALL_CDECL);
+    sm->RegisterGlobalFunction("string ToXML(const ByteArray &in ba)", asFUNCTION( ToXML),  asCALL_CDECL);
+    sm->RegisterGlobalSTDFunction("array<Map> @ToMap(const ByteArray &in ba, string format)",GetFuncConvert(ToMap));
+
+    sm->RegisterGlobalFunction("string OWSCapabilities(const string &in xml)", asFUNCTION( GetOWSCapabilitiesType),  asCALL_CDECL);
+
+
+
+
+
+}
 inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
 {
    sm->RegisterGlobalFunction("Table @LoadTable(const string &in s)", asFUNCTION( AS_LoadTableFromFile), asCALL_CDECL);
@@ -36,6 +62,9 @@ inline static void RegisterScriptFunctionsIO(LSMScriptEngine * sm)
    sm->RegisterGlobalFunction("string GetFileName(string s)", asFUNCTION( AS_GetFileName),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetFileExt(string s)", asFUNCTION( AS_GetFileExt),  asCALL_CDECL);
    sm->RegisterGlobalSTDFunction("array<Map>@ LoadMapBandList(string s)", ( GetFuncConvert(LoadMapBandList)),  asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("Map@ LoadMapBand(string s, int i)", ( GetFuncConvert(LoadMapBand)),  asCALL_CDECL);
+   sm->RegisterGlobalSTDFunction("int GetMapBandCount(string s)", ( GetFuncConvert(GetMapBandCount)),  asCALL_CDECL);
+
    sm->RegisterGlobalSTDFunction("array<Map>@ LoadMapBandList(array<string> &in s)", ( GetFuncConvert(LoadMapBandListFromStrings)),  asCALL_CDECL);
    sm->RegisterGlobalSTDFunction("array<string>@ GetMapListNames(string & in name, int count, int start = 0, string between = \"_\")", ( GetFuncConvert(GetMapBandListStrings)),  asCALL_CDECL);
    sm->RegisterGlobalFunction("string GetMapListNames(string & in name, int index_file, string between = \"_\")", asFUNCTION( GetMapBandListString),  asCALL_CDECL);

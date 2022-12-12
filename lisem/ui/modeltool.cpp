@@ -1201,11 +1201,11 @@ void ModelTool::SignalFunction_File2(int index)
     SPHParameter p = m_ParameterManager->m_Parameters.at(pw.m_ParameterIndex);
 
 
-    QString dir = m_ParameterManager->GetParameterValueString("Map Directory");
+    QString dir = m_ParameterManager->GetParameterValueString("TimeInput Directory");
 
     for(int i= 0; i < m_ParameterManager->m_Parameters.length(); i++)
     {
-        if(m_ParameterManager->m_Parameters.at(i).m_Name == "Map Directory")
+        if(m_ParameterManager->m_Parameters.at(i).m_Name == "TimeInput Directory")
         {
             SPHParameter p = (m_ParameterManager->m_Parameters.at(i));
             dir = p.m_Value;

@@ -919,7 +919,10 @@ void TablePlotter::SetTime(int x)
     m_Time = x;
     if(m_Slider != nullptr)
     {
+        this->blockSignals(true);
         m_Slider->setValue(x);
+
+        this->blockSignals(false);
     }
 
 }

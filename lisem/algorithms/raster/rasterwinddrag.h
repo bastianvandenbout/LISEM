@@ -24,13 +24,5 @@ inline std::vector<cTMap *> AS_FlowWindDrag(cTMap * H, cTMap * UX, cTMap * UY, c
 
 }
 
-//sewer model
-//we have manholes, connection with pipe networks of specified diameter, direction and mannings N
-//each of the manholes has an associated depth
-//slope for the pipes is based on the manhole depth differences
-//manhole info as raster?
-//manhole variables (height in particular as raster)
-//flow paths
-
 
 #endif // RASTERWINDDRAG_H

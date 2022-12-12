@@ -591,4 +591,71 @@ inline static cTMap * AS_FlowKinematicSubstance(cTMap * LDD, cTMap * Slope, cTMa
 }
 
 
+
+//sewer model
+//we have manholes, connection with pipe networks of specified diameter, direction and mannings N
+//each of the manholes has an associated depth
+//slope for the pipes is based on the manhole depth differences
+//manhole info as raster?
+//manhole variables (height in particular as raster)
+//flow paths
+inline static std::vector<cTMap *> AS_FlowKinematicPipe(cTMap * LDD, cTMap * ManHoleDepth, cTMap * ManHoleRadius, cTMap * Slope,cTMap * Manning, cTMap * Radius,cTMap * Open,cTMap * ManHoleFlowH, cTMap * FlowVol)
+{
+    cTMap * NodeP = LDD->GetCopy0();
+
+    //classify each pixel (full, partially, empty, node, open)
+
+    //calculate pressure at nodes
+    #pragma omp parallel for collapse(2)
+    for(int r = 0; r < LDD->nrRows(); r++)
+    {
+        for(int c = 0; c < LDD->nrCols(); c++)
+        {
+            if(!pcr::isMV(LDD->data[r][c]))
+            {
+                NodeP->data[r][c];
+            }
+        }
+    }
+
+    //estimate pressure gradients, including pressure losses from size-variations and bends
+
+    //determine flow direction
+
+    //walk ldd downstream, if we find an increasing pressure node, we keep downstream flow direction, but if we find decreasing pressure, we flip the flow direction upstream up to the earliest encountered node
+    //get pipes capacity
+
+    //with current volumes, get pipe flow heights
+
+    //determine discharge capacity
+
+    //flow pipe water to manholes
+
+    //flow manhole water into pipes from feeding nodes
+
+    //check outlet for water removal
+
+    //return FlowVol, FlowV
+    return {};
+}
+
+inline static cTMap * GetPipeFlowDischarge(cTMap * vol, cTMap * radius, cTMap * Manning)
+{
+
+
+    return nullptr;
+}
+
+inline static cTMap * GetPipeFlowVelocity(cTMap * vol, cTMap * radius, cTMap * Manning)
+{
+
+    return nullptr;
+
+}
+inline static cTMap * GetPipeFlowHeight(cTMap * vol, cTMap * radius)
+{
+
+    return nullptr;
+}
+
 #endif // RASTERKINEMATIC_H

@@ -31,6 +31,8 @@
 #include "site.h"
 #include "defines.h"
 #include "QStatusBar"
+#include "rigidphysics/rigidworld.h"
+#include "ioassimp.h"
 
 class SPHFileSystemModel : public QFileSystemModel
 {
@@ -54,6 +56,7 @@ class SPHFileSystemModel : public QFileSystemModel
     QIcon *icon_debug;
     QIcon *icon_field;
     QIcon *icon_model;
+    QIcon *icon_rigidworld;
 
     QString m_Dir;
 public:
@@ -80,6 +83,7 @@ public:
         icon_table = new QIcon();
         icon_vector = new QIcon();
         icon_pointcloud = new QIcon();
+        icon_rigidworld = new QIcon();
         //icon_debug = new QIcon();
 
         icon_start->addFile((m_Dir + LISEM_FOLDER_ASSETS + "start1.png"), QSize(), QIcon::Normal, QIcon::Off);
@@ -100,6 +104,7 @@ public:
         icon_pointcloud->addFile((m_Dir + LISEM_FOLDER_ASSETS + "pointcloud.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_field->addFile((m_Dir + LISEM_FOLDER_ASSETS + "field.png"), QSize(), QIcon::Normal, QIcon::Off);
         icon_model->addFile((m_Dir + LISEM_FOLDER_ASSETS + "mesh.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon_rigidworld->addFile((m_Dir + LISEM_FOLDER_ASSETS + "rigidworld.png"), QSize(), QIcon::Normal, QIcon::Off);
 
         //icon_debug->addFile((m_Dir + LISEM_FOLDER_ASSETS + "debug.png"), QSize(), QIcon::Normal, QIcon::Off);
     }
@@ -138,6 +143,9 @@ public:
                 }else if(IsModelFile(info.filePath()))
                 {
                     return *icon_model;
+                }else if(IsRigidWorldFile(info.filePath()))
+                {
+                    return *icon_rigidworld;
                 }
             }
         }
@@ -1266,10 +1274,22 @@ public slots:
                 {
                     //if(loaded > 0)
                     {
+                        ModelGeometry * model = Read3DModel(file);
                         LISEMS_STATUS("3D Model file format");
-                        //LISEMS_STATUS("meshes:    " +QString::number(t->GetNumberOfRows()));
-                        //LISEMS_STATUS("triangles:  " +QString::number(t->GetNumberOfCols()));
+                        LISEMS_STATUS("meshes:    " +QString::number(model->GetMeshCount()));
+                        LISEMS_STATUS("triangles:  " +QString::number(model->GetVertexCount()));
+
+                        delete model;
                     }
+
+                }else if(IsRigidWorldFile(file))
+                {
+
+                    RigidPhysicsWorld *w = new RigidPhysicsWorld();
+                    w->ImportFromFile(file);
+                    LISEMS_STATUS("Rigid Physics file format");
+                    LISEMS_STATUS("Objects:    " +QString::number(w->GetObjectCount(false)));
+                    w->Destroy();
 
                 }else if(IsFieldFile(file))
                 {

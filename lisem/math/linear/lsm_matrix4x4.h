@@ -316,6 +316,16 @@ public:
 
     }
 
+    inline void SetRotation3(float x, float y, float z)
+    {
+        LSMMatrix4x4 rotx, roty, rotz;
+        rotx.SetRotation(LSMVector3(1.0,0.0,0.0),x);
+        roty.SetRotation(LSMVector3(0.0,1.0,0.0),y);
+        rotz.SetRotation(LSMVector3(0.0,0.0,1.0),z);
+
+        this->operator=(rotx*roty*rotz);
+    }
+
     inline void SetRotation(LSMVector3 axis, float angle)
     {
         float x = axis.x;
@@ -512,6 +522,7 @@ public:
         }
         return ret;
     }
+
 
 
 

@@ -20,6 +20,20 @@
 #include "raster/rasternetwork.h"
 #include "geo/raster/map.h"
 
+inline void PrintGDALDrivers()
+{
+
+    int count = GetGDALDriverManager()->GetDriverCount();
+    LISEMS_STATUS("Number of drivers: " + QString::number(count));
+    LISEMS_STATUS(QString("GDAL Version: ") + GDALVersionInfo("RELEASE_NAME"));
+
+    for(int i = 0; i < count; i++)
+    {
+        LISEMS_STATUS(GetGDALDriverManager()->GetDriver(i)->GetDescription())
+    }
+
+}
+
 
 inline ShapeFile* RasterContour(cTMap * m,float interval,float start = 0.0, QString attributename = "value")
 {

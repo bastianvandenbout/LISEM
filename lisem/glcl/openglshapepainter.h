@@ -419,8 +419,8 @@ public:
 
         for(int i = 0; i < npoints; i++)
         {
-            float thetai = float(i) * 2.0f * 3.14159f/((float)(npoints));
-            float thetaip = float(i+1) * 2.0f * 3.14159f/((float)(npoints));
+            float thetai = ((float)(i)) * 2.0f * 3.14159f/((float)(npoints));
+            float thetaip = ((float)(i+1)) * 2.0f * 3.14159f/((float)(npoints));
 
             float x_i = x + r*sin(thetai);
             float y_i = y + r*cos(thetai);
@@ -449,8 +449,8 @@ public:
 
         for(int i = 0; i < npoints; i++)
         {
-            float thetai = float(i) * 2.0f * 3.14159f/((float)(npoints));
-            float thetaip = float(i+1) * 2.0f * 3.14159f/((float)(npoints));
+            float thetai = ((float)(i)) * 2.0f * 3.14159f/((float)(npoints));
+            float thetaip = ((float)(i+1)) * 2.0f * 3.14159f/((float)(npoints));
 
             float x_i = x + r*sin(thetai);
             float y_i = y + r*cos(thetai);
@@ -458,15 +458,14 @@ public:
             float x_ip = x + r*sin(thetaip);
             float y_ip = y + r*cos(thetaip);
 
-            bool connect = (i > 0);
-
+            //std::cout << "draw polygon outline " << i << " "  << x_i << " "<< y_i << std::endl;
             v_x.push_back(x_i);
             v_y.push_back(y_i);
             v_x.push_back(x_ip);
             v_y.push_back(y_ip);
         }
 
-        DrawLines(v_x.data(),v_y.data(),v_x.size(),width,color);
+        DrawLinesInduvidual(v_x.data(),v_y.data(),v_x.size(),width,color);
 
     }
 

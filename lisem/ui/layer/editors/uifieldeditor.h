@@ -1,0 +1,4 @@
+#ifndef UIFIELDEDITOR_H
+#define UIFIELDEDITOR_H
+
+#endif // UIFIELDEDITOR_H

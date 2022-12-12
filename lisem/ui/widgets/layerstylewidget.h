@@ -1178,7 +1178,9 @@ public:
     {
         if(m_Timeslider != nullptr)
         {
+            this->blockSignals(true);
             m_Timeslider->setValue(m_Style->m_CurrentTime);
+            this->blockSignals(false);
         }
     }
 
